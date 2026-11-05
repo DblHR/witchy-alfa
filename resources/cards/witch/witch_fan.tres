@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="CardDef" format=3 uid="uid://bj5rvist8lffn"]
+
+[ext_resource type="Script" path="res://scripts/card/effects/CardEffect.gd" id="1_pe5kp"]
+[ext_resource type="Script" path="res://scripts/card/effects/EffExtendStatus.gd" id="2_gd4cx"]
+[ext_resource type="Script" path="res://scripts/card/data/CardDef.gd" id="3_2y6cl"]
+
+[sub_resource type="Resource" id="Resource_pe5kp"]
+script = ExtResource("2_gd4cx")
+status = "burn"
+turns = 2
+
+[resource]
+script = ExtResource("3_2y6cl")
+id = "witch_fan"
+title = "Раздуть пламя"
+cost = 2
+target = 1
+tags = PackedStringArray("support")
+description = "[e]+{0} хода[/e] всему горению на врагах."
+effects = Array[ExtResource("1_pe5kp")]([SubResource("Resource_pe5kp")])

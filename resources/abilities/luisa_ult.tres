@@ -1,0 +1,34 @@
+[gd_resource type="Resource" script_class="StepAbility" format=3 uid="uid://7s7tjuw41ekv"]
+
+[ext_resource type="Script" uid="uid://dlah64rwgbdgk" path="res://scripts/abilities/steps/StepAbility.gd" id="1_65mj3"]
+[ext_resource type="Script" uid="uid://lo4jtwb6hlk5" path="res://scripts/abilities/steps/AbilityStep.gd" id="2_2ed1j"]
+[ext_resource type="Script" uid="uid://bsxrg4rs717jk" path="res://scripts/abilities/steps/SelectFrontEnemyStep.gd" id="3_ckcgm"]
+[ext_resource type="Script" uid="uid://c3x2jnilbswvx" path="res://scripts/abilities/steps/DealDamageStep.gd" id="4_w6p0h"]
+[ext_resource type="Texture2D" uid="uid://back5scldw1e0" path="res://ui/status_icons/slow.png" id="5_2ed1j"]
+[ext_resource type="Script" uid="uid://c7xhmb8ketweg" path="res://scripts/status/SlowEffect.gd" id="5_bmadw"]
+[ext_resource type="Script" uid="uid://bdctm2hj2xn1j" path="res://scripts/abilities/steps/ApplyEffectStep.gd" id="6_c3b05"]
+
+[sub_resource type="Resource" id="Resource_y52d2"]
+script = ExtResource("3_ckcgm")
+metadata/_custom_type_script = "uid://bsxrg4rs717jk"
+
+[sub_resource type="Resource" id="Resource_3kbqb"]
+script = ExtResource("4_w6p0h")
+amount = 18
+metadata/_custom_type_script = "uid://c3x2jnilbswvx"
+
+[sub_resource type="Resource" id="Resource_6pqdm"]
+script = ExtResource("5_bmadw")
+mult = 0.7
+icon = ExtResource("5_2ed1j")
+duration = 3.0
+metadata/_custom_type_script = "uid://c7xhmb8ketweg"
+
+[sub_resource type="Resource" id="Resource_ag7qt"]
+script = ExtResource("6_c3b05")
+effect = SubResource("Resource_6pqdm")
+metadata/_custom_type_script = "uid://bdctm2hj2xn1j"
+
+[resource]
+script = ExtResource("1_65mj3")
+steps = Array[ExtResource("2_2ed1j")]([SubResource("Resource_y52d2"), SubResource("Resource_3kbqb"), SubResource("Resource_ag7qt")])

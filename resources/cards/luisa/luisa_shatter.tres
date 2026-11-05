@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="CardDef" format=3 uid="uid://beb3yfrdhyplu"]
+
+[ext_resource type="Script" path="res://scripts/card/effects/CardEffect.gd" id="1_nsqhk"]
+[ext_resource type="Script" path="res://scripts/card/effects/EffDamage.gd" id="2_vd3ua"]
+[ext_resource type="Script" path="res://scripts/card/data/CardDef.gd" id="3_61anu"]
+
+[sub_resource type="Resource" id="Resource_nsqhk"]
+script = ExtResource("2_vd3ua")
+atk_ratio = 0.375
+stack_status = "sticky_slime"
+stack_mode = 1
+consume_stacks = true
+
+[resource]
+script = ExtResource("3_61anu")
+id = "luisa_shatter"
+title = "Раскол"
+cost = 2
+tags = PackedStringArray("attack")
+description = "[d]{0}[/d] урона за каждую [e]липкую слизь[/e].
+Слизь снимается."
+effects = Array[ExtResource("1_nsqhk")]([SubResource("Resource_nsqhk")])

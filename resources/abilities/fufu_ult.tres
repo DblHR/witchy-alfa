@@ -1,0 +1,39 @@
+[gd_resource type="Resource" script_class="StepAbility" format=3 uid="uid://cd2q2o7ra8n8g"]
+
+[ext_resource type="Script" uid="uid://dlah64rwgbdgk" path="res://scripts/abilities/steps/StepAbility.gd" id="1_fft7g"]
+[ext_resource type="Script" uid="uid://lo4jtwb6hlk5" path="res://scripts/abilities/steps/AbilityStep.gd" id="2_nw8sk"]
+[ext_resource type="Script" uid="uid://oscu3ijihq26" path="res://scripts/abilities/steps/SelectAllEnemiesStep.gd" id="3_mohfc"]
+[ext_resource type="Script" uid="uid://c3x2jnilbswvx" path="res://scripts/abilities/steps/DealDamageStep.gd" id="4_pso4l"]
+[ext_resource type="Script" uid="uid://bsxrg4rs717jk" path="res://scripts/abilities/steps/SelectFrontEnemyStep.gd" id="5_673s7"]
+[ext_resource type="Script" uid="uid://dr0inpdaw4xud" path="res://scripts/status/StunEffect.gd" id="6_kwmh7"]
+[ext_resource type="Texture2D" uid="uid://mkirv8lketpj" path="res://ui/status_icons/stun.png" id="6_pso4l"]
+[ext_resource type="Script" uid="uid://bdctm2hj2xn1j" path="res://scripts/abilities/steps/ApplyEffectStep.gd" id="7_oso76"]
+
+[sub_resource type="Resource" id="Resource_so1aw"]
+script = ExtResource("3_mohfc")
+metadata/_custom_type_script = "uid://oscu3ijihq26"
+
+[sub_resource type="Resource" id="Resource_5gsiv"]
+script = ExtResource("4_pso4l")
+use_caster_damage = true
+metadata/_custom_type_script = "uid://c3x2jnilbswvx"
+
+[sub_resource type="Resource" id="Resource_utbrf"]
+script = ExtResource("5_673s7")
+metadata/_custom_type_script = "uid://bsxrg4rs717jk"
+
+[sub_resource type="Resource" id="Resource_xeyuv"]
+script = ExtResource("6_kwmh7")
+icon = ExtResource("6_pso4l")
+duration = 2.0
+metadata/_custom_type_script = "uid://dr0inpdaw4xud"
+
+[sub_resource type="Resource" id="Resource_th2at"]
+script = ExtResource("7_oso76")
+effect = SubResource("Resource_xeyuv")
+metadata/_custom_type_script = "uid://bdctm2hj2xn1j"
+
+[resource]
+script = ExtResource("1_fft7g")
+steps = Array[ExtResource("2_nw8sk")]([SubResource("Resource_so1aw"), SubResource("Resource_5gsiv"), SubResource("Resource_utbrf"), SubResource("Resource_th2at")])
+name = "Большие тити"

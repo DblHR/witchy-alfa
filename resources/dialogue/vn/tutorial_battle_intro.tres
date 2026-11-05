@@ -1,0 +1,33 @@
+[gd_resource type="Resource" script_class="DialogueSequence" format=3]
+
+[ext_resource type="Script" path="res://scripts/dialogue/DialogueSequence.gd" id="1_seq"]
+[ext_resource type="Script" path="res://scripts/dialogue/DialogueLine.gd" id="2_line"]
+[ext_resource type="Texture2D" path="res://assets/pics/cards/witch_card.png" id="3_witch"]
+[ext_resource type="Texture2D" path="res://assets/pics/actorSprite/slime.png" id="4_slime"]
+
+[sub_resource type="Resource" id="DialogueLine_1" script=ExtResource("2_line")]
+speaker_name = "Ведьмочка"
+text = "О-о-о! Слизень!"
+left_portrait = ExtResource("3_witch")
+right_portrait = ExtResource("4_slime")
+active_slot = "left"
+
+[sub_resource type="Resource" id="DialogueLine_2" script=ExtResource("2_line")]
+speaker_name = "Ведьмочка"
+text = "Так, надо достать блокнот и всё подробно записать! Мистер слизень, а вы мистер или мисс слизень?"
+left_portrait = ExtResource("3_witch")
+right_portrait = ExtResource("4_slime")
+active_slot = "left"
+
+[sub_resource type="Resource" id="DialogueLine_3" script=ExtResource("2_line")]
+speaker_name = "Слизень"
+text = "*бульк*"
+left_portrait = ExtResource("3_witch")
+right_portrait = ExtResource("4_slime")
+active_slot = "right"
+
+[resource]
+script = ExtResource("1_seq")
+sequence_id = "tutorial_battle_intro"
+lines = [SubResource("DialogueLine_1"), SubResource("DialogueLine_2"), SubResource("DialogueLine_3")]
+metadata/_custom_type_script = "res://scripts/dialogue/DialogueSequence.gd"

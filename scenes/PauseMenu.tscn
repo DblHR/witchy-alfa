@@ -1,0 +1,55 @@
+[gd_scene format=3 uid="uid://bsolb2q6njjg7"]
+
+[ext_resource type="Script" uid="uid://rpt8omrb8rsl" path="res://ui/PauseMenu.gd" id="1_jvnd5"]
+
+[node name="PauseMenu" type="CanvasLayer" unique_id=1068996815]
+layer = 100
+script = ExtResource("1_jvnd5")
+
+[node name="BackGround" type="ColorRect" parent="." unique_id=1410825129]
+modulate = Color(1, 1, 1, 0.15686275)
+offset_right = 1920.0
+offset_bottom = 1080.0
+
+[node name="Panel" type="Panel" parent="." unique_id=677844118]
+custom_minimum_size = Vector2(500, 350)
+offset_left = 710.0
+offset_top = 365.0
+offset_right = 1210.0
+offset_bottom = 715.0
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Panel" unique_id=1169466485]
+custom_minimum_size = Vector2(400, 300)
+layout_mode = 0
+offset_left = 50.0
+offset_top = 100.0
+offset_right = 450.0
+offset_bottom = 400.0
+
+[node name="Resume" type="Button" parent="Panel/VBoxContainer" unique_id=1191175535]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 60)
+layout_mode = 2
+text = "Вернуться"
+
+[node name="Abandon" type="Button" parent="Panel/VBoxContainer" unique_id=1023255668]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 60)
+layout_mode = 2
+text = "Закончить забег"
+
+[node name="Quit" type="Button" parent="Panel/VBoxContainer" unique_id=1434785180]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 60)
+layout_mode = 2
+text = "Выйти
+"
+
+[node name="MenuLabel" type="Label" parent="Panel" unique_id=2026709391]
+custom_minimum_size = Vector2(500, 100)
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 23.0
+text = "ПАУЗА"
+horizontal_alignment = 1
+vertical_alignment = 1

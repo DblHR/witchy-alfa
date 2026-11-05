@@ -1,0 +1,37 @@
+[gd_resource type="Resource" script_class="CharacterData" format=3 uid="uid://bsjesl37k5jig"]
+
+[ext_resource type="Texture2D" path="res://assets/pics/actorSprite/aki.png" id="1_724k4"]
+[ext_resource type="Script" path="res://scripts/CharacterData.gd" id="1_ak87d"]
+[ext_resource type="Texture2D" path="res://assets/pics/cards/aki_card.png" id="2_j5b4p"]
+[ext_resource type="Script" path="res://scripts/card/data/CardDef.gd" id="2_jamtm"]
+[ext_resource type="Texture2D" path="res://icon.svg" id="4_583m7"]
+[ext_resource type="Resource" path="res://resources/cards/aki/aki_care.tres" id="4_60506"]
+[ext_resource type="Resource" path="res://resources/abilities/aki_skill.tres" id="5_aki_skill"]
+[ext_resource type="Resource" path="res://resources/cards/aki/aki_slap.tres" id="5_hfrrb"]
+[ext_resource type="Resource" path="res://resources/cards/aki/aki_hug.tres" id="6_8wqgy"]
+[ext_resource type="Resource" path="res://resources/abilities/aki_ult.tres" id="6_aki_ult"]
+[ext_resource type="Resource" path="res://resources/cards/aki/aki_grip.tres" id="6_jamtm"]
+[ext_resource type="Resource" path="res://resources/cards/aki/aki_ult.tres" id="13_3ylxj"]
+
+[resource]
+script = ExtResource("1_ak87d")
+id = "aki"
+display_name = "Aki"
+unit_class = "саппорт"
+battle_texture = ExtResource("1_724k4")
+base_hp = 50
+attack = 4
+magic = 12
+hp_per_level = 5
+attack_per_level = 1
+magic_per_level = 1
+card_color = Color(0.88, 0.42, 0.64, 1)
+card_pool = Array[ExtResource("2_jamtm")]([ExtResource("4_60506"), ExtResource("6_8wqgy"), ExtResource("5_hfrrb"), ExtResource("6_jamtm")])
+ult_card = ExtResource("13_3ylxj")
+base_damage = 6
+base_aps = 0.84
+card_portrait = ExtResource("2_j5b4p")
+skill_icon = ExtResource("4_583m7")
+skill_ability = ExtResource("5_aki_skill")
+ult_ability = ExtResource("6_aki_ult")
+metadata/_custom_type_script = "uid://cp2soljk8es5d"

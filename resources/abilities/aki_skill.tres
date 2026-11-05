@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="StepAbility" format=3 uid="uid://dysjhnkel35hp"]
+
+[ext_resource type="Script" uid="uid://dlah64rwgbdgk" path="res://scripts/abilities/steps/StepAbility.gd" id="1_hkpvr"]
+[ext_resource type="Script" uid="uid://lo4jtwb6hlk5" path="res://scripts/abilities/steps/AbilityStep.gd" id="2_awa0w"]
+[ext_resource type="Script" uid="uid://cviki04sn4r34" path="res://scripts/abilities/steps/SelectMostWoundedAlly.gd" id="3_6t3px"]
+[ext_resource type="Script" uid="uid://cmecy2r7suldj" path="res://scripts/abilities/steps/RegenHealStep.gd" id="4_sulci"]
+
+[sub_resource type="Resource" id="Resource_7pirb"]
+script = ExtResource("3_6t3px")
+metadata/_custom_type_script = "uid://cviki04sn4r34"
+
+[sub_resource type="Resource" id="Resource_nlfsg"]
+script = ExtResource("4_sulci")
+metadata/_custom_type_script = "uid://cmecy2r7suldj"
+
+[resource]
+script = ExtResource("1_hkpvr")
+steps = Array[ExtResource("2_awa0w")]([SubResource("Resource_7pirb"), SubResource("Resource_nlfsg")])

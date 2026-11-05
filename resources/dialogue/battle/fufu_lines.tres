@@ -1,0 +1,63 @@
+[gd_resource type="Resource" script_class="BattleLineSet" format=3 uid="uid://b1kuyt158183i"]
+
+[ext_resource type="Script" uid="uid://cehy2v47l4xqm" path="res://scripts/dialogue/BattleLineSet.gd" id="1_set"]
+[ext_resource type="Script" uid="uid://cndmdopdx70pw" path="res://scripts/dialogue/BattleLine.gd" id="2_line"]
+
+[sub_resource type="Resource" id="L1"]
+script = ExtResource("2_line")
+line_id = "fufu_battle_start_01"
+speaker_id = "fufu"
+text = "Шоу начинается!"
+chance = 0.2
+once_per_battle = true
+
+[sub_resource type="Resource" id="L2"]
+script = ExtResource("2_line")
+line_id = "fufu_battle_start_02"
+speaker_id = "fufu"
+line_type = "joke"
+text = "Во мне много желания победить! И слизи."
+chance = 0.2
+once_per_battle = true
+
+[sub_resource type="Resource" id="L3"]
+script = ExtResource("2_line")
+line_id = "fufu_ability_cast_01"
+speaker_id = "fufu"
+trigger = "ability_cast"
+line_type = "joke"
+text = "Не переживай, слизь легко отмывается от волос!"
+cooldown_sec = 2.0
+
+[sub_resource type="Resource" id="L4"]
+script = ExtResource("2_line")
+line_id = "fufu_ability_cast_02"
+speaker_id = "fufu"
+trigger = "ability_cast"
+line_type = "joke"
+text = "Не хочешь пообниматься?"
+chance = 0.22
+cooldown_sec = 2.0
+
+[sub_resource type="Resource" id="L5"]
+script = ExtResource("2_line")
+line_id = "fufu_basic_attack_01"
+speaker_id = "fufu"
+trigger = "basic_attack"
+text = "Ммм~"
+chance = 0.3
+cooldown_sec = 1.5
+
+[sub_resource type="Resource" id="L6"]
+script = ExtResource("2_line")
+line_id = "fufu_basic_attack_02"
+speaker_id = "fufu"
+trigger = "basic_attack"
+line_type = "joke"
+text = "Вот это шлепок, да?"
+chance = 0.18
+cooldown_sec = 2.0
+
+[resource]
+script = ExtResource("1_set")
+lines = Array[ExtResource("2_line")]([SubResource("L1"), SubResource("L2"), SubResource("L3"), SubResource("L4"), SubResource("L5"), SubResource("L6")])

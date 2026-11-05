@@ -1,0 +1,52 @@
+[gd_resource type="Resource" script_class="BattleLineSet" format=3 uid="uid://cmkharyxcaai7"]
+
+[ext_resource type="Script" uid="uid://cehy2v47l4xqm" path="res://scripts/dialogue/BattleLineSet.gd" id="1_set"]
+[ext_resource type="Script" uid="uid://cndmdopdx70pw" path="res://scripts/dialogue/BattleLine.gd" id="2_line"]
+
+[sub_resource type="Resource" id="L1"]
+script = ExtResource("2_line")
+line_id = "witch_battle_start_01"
+speaker_id = "witch"
+line_type = "joke"
+text = "Снова отмываться от слизи..."
+chance = 0.1
+once_per_battle = true
+
+[sub_resource type="Resource" id="L2"]
+script = ExtResource("2_line")
+line_id = "witch_battle_start_02"
+speaker_id = "witch"
+text = "Давайте быстрее перейдём к самому интересному..."
+chance = 0.1
+once_per_battle = true
+
+[sub_resource type="Resource" id="L3"]
+script = ExtResource("2_line")
+line_id = "witch_ability_cast_01"
+speaker_id = "witch"
+trigger = "ability_cast"
+line_type = "taunt"
+text = "Смотри внимательно, сейчас полетит искорка~"
+chance = 0.3
+cooldown_sec = 6.0
+
+[sub_resource type="Resource" id="L4"]
+script = ExtResource("2_line")
+line_id = "witch_ability_cast_02"
+speaker_id = "witch"
+trigger = "ability_cast"
+text = "Главное не поджечь шляпу..."
+chance = 0.25
+cooldown_sec = 5.0
+
+[sub_resource type="Resource" id="L5"]
+script = ExtResource("2_line")
+line_id = "witch_basic_attack_01"
+speaker_id = "witch"
+trigger = "basic_attack"
+text = "Лови!"
+cooldown_sec = 1.5
+
+[resource]
+script = ExtResource("1_set")
+lines = Array[ExtResource("2_line")]([SubResource("L1"), SubResource("L2"), SubResource("L3"), SubResource("L4"), SubResource("L5")])

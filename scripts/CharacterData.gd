@@ -1,0 +1,75 @@
+extends Resource
+class_name CharacterData
+
+@export var id: String
+@export var display_name: String
+@export_enum("воин", "маг", "саппорт", "танк", "рядовой враг", "босс") var unit_class: String = "маг"
+@export var tags: Array[String] = []
+
+## Ранг героя: A — до 5 карт и простая механика, S — до 8 карт и более сложная.
+@export_enum("A", "S") var rank: String = "A"
+const RANK_CARD_CAP := {"A": 5, "S": 8}
+
+func card_cap() -> int:
+	return int(RANK_CARD_CAP.get(rank, 5))
+
+# Для UI/иконок/спрайтов (пока можно оставить пустым)
+@export var icon: Texture2D
+@export var battle_texture: Texture2D
+
+# --- Характеристики карточного боя (на 1 уровне) ---
+## Максимальное HP.
+@export var base_hp: int = 10
+## Сила атаки: скейлит урон карт (значение = база + доля × Атака).
+@export var attack: int = 5
+## Сила магии: скейлит щиты, лечение и прочие числа карт поддержки.
+@export var magic: int = 5
+## Энергия ульты: сколько карт героя нужно сыграть, чтобы ульта зарядилась.
+@export var max_energy: int = 5
+
+# Рост за каждый уровень после первого
+@export var hp_per_level: int = 1
+@export var attack_per_level: int = 0
+@export var magic_per_level: int = 0
+
+# --- Карты ---
+## Цвет карт героя.
+@export var card_color: Color = Color(0.45, 0.45, 0.50, 1.0)
+## Все карты героя. Пока в колоду идут первые card_cap() штук (по рангу).
+@export var card_pool: Array[CardDef] = []
+## Ульта (не карта колоды: копит заряд и жмётся кнопкой).
+@export var ult_card: CardDef
+## Пассивка в карточном бою (необязательно).
+@export var card_passive: CardPassive
+
+# --- Наследие автобаттлера (в карточном бою не используется) ---
+@export var base_damage: int = 1
+@export var base_aps: float = 1.0
+@export var damage_per_level: int = 0
+@export var aps_per_level: float = 0.0
+
+@export var battle_scale: float = 0.25
+@export var battle_offset_y: float = -500
+
+@export var card_portrait: Texture2D
+@export var skill_icon: Texture2D
+
+@export var skill_cost: int = 3
+@export var skill_name: String = "Умение"
+@export_multiline var codex_description: String = ""
+@export_multiline var codex_notes: String = ""
+
+# Data-driven abilities (альфа): если заданы, BattleSim/PlayerCard будут использовать их.
+@export var skill_ability: Ability
+@export var ult_ability: Ability
+
+# Считает статы для героя/компаньона по уровню
+func stats_for_level(level: int) -> Dictionary:
+	var lvl: int = maxi(level, 1)
+	return {
+		"max_hp": int(base_hp + hp_per_level * (lvl - 1)),
+		"attack": int(attack + attack_per_level * (lvl - 1)),
+		"magic": int(magic + magic_per_level * (lvl - 1)),
+		"damage": int(base_damage + damage_per_level * (lvl - 1)),
+		"aps": float(base_aps + aps_per_level * (lvl - 1)),
+	}

@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="CardDef" format=3 uid="uid://c0nij11vux6me"]
+
+[ext_resource type="Script" path="res://scripts/card/effects/CardEffect.gd" id="1_2a6o5"]
+[ext_resource type="Script" path="res://scripts/card/effects/EffConsumeStatus.gd" id="2_3wmsu"]
+[ext_resource type="Script" path="res://scripts/card/data/CardDef.gd" id="3_t3std"]
+
+[sub_resource type="Resource" id="Resource_h2p73"]
+script = ExtResource("2_3wmsu")
+status = "wrap_slime"
+max_stacks = 2
+mag_ratio = 0.75
+
+[resource]
+script = ExtResource("3_t3std")
+id = "fufu_digest"
+title = "Переварить"
+target = 2
+tags = PackedStringArray("support")
+description = "Тратит до {0b} [e]обволакивающей слизи[/e]: [h]{0}[/h] лечения за стак."
+effects = Array[ExtResource("1_2a6o5")]([SubResource("Resource_h2p73")])

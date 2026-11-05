@@ -1,0 +1,163 @@
+[gd_scene format=3 uid="uid://brl750jd7dwdx"]
+
+[ext_resource type="Script" uid="uid://cyor2c42dvi6h" path="res://scripts/dialogue/DialogueOverlay.gd" id="1_overlay"]
+[ext_resource type="Shader" uid="uid://c5hwpil61mxtl" path="res://ui/dialogue_background_blur.gdshader" id="2_blur"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_blur"]
+shader = ExtResource("2_blur")
+shader_parameter/blur_strength = 8.4
+shader_parameter/tint_color = Color(0.04, 0.03, 0.06, 0.34)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_dialoguebox"]
+bg_color = Color(0.48, 0.24, 0.36, 0.92)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.97, 0.86, 0.92, 0.95)
+corner_radius_top_left = 18
+corner_radius_top_right = 18
+corner_radius_bottom_right = 18
+corner_radius_bottom_left = 18
+shadow_color = Color(0, 0, 0, 0.3)
+shadow_size = 4
+
+[node name="DialogueOverlay" type="Control" unique_id=356585765]
+custom_minimum_size = Vector2(1920, 1080)
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 1
+script = ExtResource("1_overlay")
+
+[node name="BlurRect" type="ColorRect" parent="." unique_id=99887766]
+unique_name_in_owner = true
+material = SubResource("ShaderMaterial_blur")
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(1, 1, 1, 0)
+
+[node name="PortraitsSlots" type="Control" parent="." unique_id=1786038254]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(1920, 880)
+anchors_preset = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="LeftPortrait" type="TextureRect" parent="PortraitsSlots" unique_id=755143744]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(600, 880)
+layout_mode = 0
+offset_right = 600.0
+offset_bottom = 880.0
+mouse_filter = 2
+expand_mode = 2
+stretch_mode = 5
+
+[node name="CentralPortrait" type="TextureRect" parent="PortraitsSlots" unique_id=1571847451]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(600, 880)
+layout_mode = 0
+offset_left = 660.0
+offset_right = 1260.0
+offset_bottom = 880.0
+mouse_filter = 2
+expand_mode = 2
+stretch_mode = 5
+
+[node name="RightPortrait" type="TextureRect" parent="PortraitsSlots" unique_id=879783681]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(600, 880)
+layout_mode = 0
+offset_left = 1320.0
+offset_right = 1920.0
+offset_bottom = 880.0
+mouse_filter = 2
+expand_mode = 2
+stretch_mode = 5
+
+[node name="TextBox" type="Panel" parent="." unique_id=986291103]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(1920, 300)
+layout_mode = 0
+offset_top = 780.0
+offset_right = 1920.0
+offset_bottom = 1080.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_dialoguebox")
+
+[node name="SpeakerName" type="Label" parent="TextBox" unique_id=1417977450]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 810.0
+offset_right = 1110.0
+offset_bottom = 60.0
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="BodyText" type="Label" parent="TextBox" unique_id=439657817]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(1920, 200)
+layout_mode = 0
+offset_top = 80.0
+offset_right = 1920.0
+offset_bottom = 280.0
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="SkipButton" type="Button" parent="TextBox" unique_id=1644538372]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 1778.0
+offset_top = 21.0
+offset_right = 1891.0
+offset_bottom = 59.0
+text = "ПРОПУСТИТЬ"
+
+[node name="AutoButton" type="Button" parent="TextBox" unique_id=133657604]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 1653.0
+offset_top = 21.0
+offset_right = 1769.0
+offset_bottom = 59.0
+text = "АВТО
+"
+
+[node name="NextButton" type="Button" parent="TextBox" unique_id=999111222]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 1403.0
+offset_top = 21.0
+offset_right = 1519.0
+offset_bottom = 59.0
+text = "ДАЛЬШЕ"
+
+[node name="LogButton" type="Button" parent="TextBox" unique_id=1684695030]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 1528.0
+offset_top = 21.0
+offset_right = 1644.0
+offset_bottom = 59.0
+text = "ИСТОРИЯ"
+
+[node name="HideUIButton" type="CheckButton" parent="." unique_id=400288729]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 1736.0
+offset_top = 1049.0
+offset_right = 1919.0
+offset_bottom = 1080.0
+text = "СКРЫТЬ ПАНЕЛЬ"

@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="CardDef" format=3 uid="uid://c823uenfkljen"]
+
+[ext_resource type="Script" path="res://scripts/card/effects/CardEffect.gd" id="1_r2sjm"]
+[ext_resource type="Script" path="res://scripts/card/effects/EffDamage.gd" id="2_bye2h"]
+[ext_resource type="Script" path="res://scripts/card/effects/EffApplyStatus.gd" id="3_f4cun"]
+[ext_resource type="Script" path="res://scripts/card/data/CardDef.gd" id="4_n7sp4"]
+
+[sub_resource type="Resource" id="Resource_x1wbl"]
+script = ExtResource("2_bye2h")
+atk_ratio = 0.375
+
+[sub_resource type="Resource" id="Resource_x35ln"]
+script = ExtResource("3_f4cun")
+status = "sticky_slime"
+stacks = 1
+
+[resource]
+script = ExtResource("4_n7sp4")
+id = "luisa_snow"
+title = "Липкий снежок"
+tags = PackedStringArray("attack")
+description = "[d]{0}[/d] урона переднему.
+[e]Липкая слизь +{1}[/e]."
+effects = Array[ExtResource("1_r2sjm")]([SubResource("Resource_x1wbl"), SubResource("Resource_x35ln")])

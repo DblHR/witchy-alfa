@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="CardDef" format=3 uid="uid://c6riog81vft1s"]
+
+[ext_resource type="Script" path="res://scripts/card/effects/CardEffect.gd" id="1_lyh05"]
+[ext_resource type="Script" path="res://scripts/card/effects/EffTriggerStatus.gd" id="2_1s4gb"]
+[ext_resource type="Script" path="res://scripts/card/effects/EffApplyStatus.gd" id="3_rv8up"]
+[ext_resource type="Script" path="res://scripts/card/data/CardDef.gd" id="4_qe2vj"]
+
+[sub_resource type="Resource" id="Resource_lyh05"]
+script = ExtResource("2_1s4gb")
+status = "burn"
+
+[sub_resource type="Resource" id="Resource_1s4gb"]
+script = ExtResource("3_rv8up")
+status = "vuln"
+turns = 2
+
+[resource]
+script = ExtResource("4_qe2vj")
+id = "witch_ult"
+title = "Пожар"
+cost = 0
+target = 1
+tags = PackedStringArray("attack")
+description = "[e]Горение[/e] срабатывает на всех врагах сразу (и остаётся).
+Все получают [e]Уязвимость[/e]."
+effects = Array[ExtResource("1_lyh05")]([SubResource("Resource_lyh05"), SubResource("Resource_1s4gb")])

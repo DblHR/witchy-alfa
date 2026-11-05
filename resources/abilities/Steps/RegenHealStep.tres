@@ -1,0 +1,7 @@
+[gd_resource type="Resource" script_class="RegenHealStep" format=3 uid="uid://cbxv4t514qjqs"]
+
+[ext_resource type="Script" uid="uid://cmecy2r7suldj" path="res://scripts/abilities/steps/RegenHealStep.gd" id="1_m65kg"]
+
+[resource]
+script = ExtResource("1_m65kg")
+metadata/_custom_type_script = "uid://cmecy2r7suldj"

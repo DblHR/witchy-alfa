@@ -1,0 +1,13 @@
+[gd_scene format=3 uid="uid://cmdc3wqkrx0pl"]
+
+[ext_resource type="Script" uid="uid://b1llipy5kid20" path="res://scripts/CharacterDatabase.gd" id="1_bjbmo"]
+[ext_resource type="Resource" uid="uid://bcqr84qgru8vg" path="res://resources/characters/witch.tres" id="3_xj575"]
+[ext_resource type="Resource" uid="uid://dddm8lfc50q2l" path="res://resources/characters/Luisa.tres" id="4_6hy5t"]
+[ext_resource type="Resource" uid="uid://cukpsyg0jc5wf" path="res://resources/characters/Fufu.tres" id="5_d23bh"]
+[ext_resource type="Resource" uid="uid://cnp8njnyrjddn" path="res://resources/characters/base_slime.tres" id="6_qi7gj"]
+[ext_resource type="Resource" uid="uid://bsjesl37k5jig" path="res://resources/characters/Aki.tres" id="7_yt68h"]
+[ext_resource type="Resource" path="res://resources/characters/warrior.tres" id="8_warrior"]
+
+[node name="CharDB" type="Node" unique_id=1118931233]
+script = ExtResource("1_bjbmo")
+characters = [ExtResource("3_xj575"), ExtResource("4_6hy5t"), ExtResource("5_d23bh"), ExtResource("6_qi7gj"), ExtResource("7_yt68h"), ExtResource("8_warrior")]

@@ -1,0 +1,64 @@
+[gd_resource type="Resource" script_class="BattleLineSet" format=3 uid="uid://jfjvyc08yydu"]
+
+[ext_resource type="Script" uid="uid://cehy2v47l4xqm" path="res://scripts/dialogue/BattleLineSet.gd" id="1_set"]
+[ext_resource type="Script" uid="uid://cndmdopdx70pw" path="res://scripts/dialogue/BattleLine.gd" id="2_line"]
+
+[sub_resource type="Resource" id="L1"]
+script = ExtResource("2_line")
+line_id = "luisa_battle_start_01"
+speaker_id = "luisa"
+line_type = "joke"
+text = "Немного льда будет вам к лицу!"
+chance = 0.1
+once_per_battle = true
+
+[sub_resource type="Resource" id="L2"]
+script = ExtResource("2_line")
+line_id = "luisa_battle_start_02"
+speaker_id = "luisa"
+line_type = "taunt"
+text = "Сейчас сделаем из тебя мороженое"
+chance = 0.1
+once_per_battle = true
+
+[sub_resource type="Resource" id="L3"]
+script = ExtResource("2_line")
+line_id = "luisa_ability_cast_01"
+speaker_id = "luisa"
+trigger = "ability_cast"
+text = "Замёрзни!"
+chance = 0.2
+cooldown_sec = 2.0
+
+[sub_resource type="Resource" id="L4"]
+script = ExtResource("2_line")
+line_id = "luisa_ability_cast_02"
+speaker_id = "luisa"
+trigger = "ability_cast"
+line_type = "taunt"
+text = "Кажется, у тебя реснички в инее~"
+chance = 0.22
+cooldown_sec = 2.0
+
+[sub_resource type="Resource" id="L5"]
+script = ExtResource("2_line")
+line_id = "luisa_basic_attack_01"
+speaker_id = "luisa"
+trigger = "basic_attack"
+text = "Застынь"
+chance = 0.28
+cooldown_sec = 1.5
+
+[sub_resource type="Resource" id="L6"]
+script = ExtResource("2_line")
+line_id = "luisa_basic_attack_02"
+speaker_id = "luisa"
+trigger = "basic_attack"
+line_type = "joke"
+text = "Не подскользнись~"
+chance = 0.18
+cooldown_sec = 2.0
+
+[resource]
+script = ExtResource("1_set")
+lines = Array[ExtResource("2_line")]([SubResource("L1"), SubResource("L2"), SubResource("L3"), SubResource("L4"), SubResource("L5"), SubResource("L6")])

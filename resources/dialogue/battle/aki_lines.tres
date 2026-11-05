@@ -1,0 +1,64 @@
+[gd_resource type="Resource" script_class="BattleLineSet" format=3 uid="uid://dpaell4tqwmrb"]
+
+[ext_resource type="Script" uid="uid://cehy2v47l4xqm" path="res://scripts/dialogue/BattleLineSet.gd" id="1_set"]
+[ext_resource type="Script" uid="uid://cndmdopdx70pw" path="res://scripts/dialogue/BattleLine.gd" id="2_line"]
+
+[sub_resource type="Resource" id="L1"]
+script = ExtResource("2_line")
+line_id = "aki_battle_start_01"
+speaker_id = "aki"
+line_type = "support"
+text = "Оо, кажется они настроены дать мне больше работы!"
+chance = 0.1
+once_per_battle = true
+
+[sub_resource type="Resource" id="L2"]
+script = ExtResource("2_line")
+line_id = "aki_battle_start_02"
+speaker_id = "aki"
+line_type = "joke"
+text = "Между лечением и калечением я пока не выбрала"
+chance = 0.1
+once_per_battle = true
+
+[sub_resource type="Resource" id="L3"]
+script = ExtResource("2_line")
+line_id = "aki_ability_cast_01"
+speaker_id = "aki"
+trigger = "ability_cast"
+line_type = "support"
+text = "Восстанавливающая слизь!"
+chance = 0.38
+cooldown_sec = 2.0
+
+[sub_resource type="Resource" id="L4"]
+script = ExtResource("2_line")
+line_id = "aki_ability_cast_02"
+speaker_id = "aki"
+trigger = "ability_cast"
+text = "Да, моя слизь полезна. ЕШЬ!"
+chance = 0.24
+cooldown_sec = 2.0
+
+[sub_resource type="Resource" id="L5"]
+script = ExtResource("2_line")
+line_id = "aki_basic_attack_01"
+speaker_id = "aki"
+trigger = "basic_attack"
+text = "Хи-хи~"
+chance = 0.3
+cooldown_sec = 1.5
+
+[sub_resource type="Resource" id="L6"]
+script = ExtResource("2_line")
+line_id = "aki_basic_attack_02"
+speaker_id = "aki"
+trigger = "basic_attack"
+line_type = "joke"
+text = "Не увязни!"
+chance = 0.18
+cooldown_sec = 2.0
+
+[resource]
+script = ExtResource("1_set")
+lines = Array[ExtResource("2_line")]([SubResource("L1"), SubResource("L2"), SubResource("L3"), SubResource("L4"), SubResource("L5"), SubResource("L6")])

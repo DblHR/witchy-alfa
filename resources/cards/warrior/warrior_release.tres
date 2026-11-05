@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="CardDef" format=3 uid="uid://dhpl6u87b37u4"]
+
+[ext_resource type="Script" path="res://scripts/card/effects/CardEffect.gd" id="1_vmxm0"]
+[ext_resource type="Script" path="res://scripts/card/effects/EffConsumeStatus.gd" id="2_oifux"]
+[ext_resource type="Script" path="res://scripts/card/data/CardDef.gd" id="3_erg4e"]
+
+[sub_resource type="Resource" id="Resource_vmxm0"]
+script = ExtResource("2_oifux")
+status = "nazhim"
+receiver = 1
+atk_ratio = 0.25
+
+[resource]
+script = ExtResource("3_erg4e")
+id = "warrior_release"
+title = "Сброс нажима"
+cost = 3
+tags = PackedStringArray("support")
+description = "Снять весь [e]Нажим[/e] с переднего.
+Лечит воина на [h]{0}[/h] за стак."
+effects = Array[ExtResource("1_vmxm0")]([SubResource("Resource_vmxm0")])

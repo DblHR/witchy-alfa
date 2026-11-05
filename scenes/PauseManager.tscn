@@ -1,0 +1,21 @@
+[gd_scene format=3 uid="uid://dsykvse0e2kcv"]
+
+[ext_resource type="Script" uid="uid://cdw80xyfspvu8" path="res://scenes/PauseManagerLayer.gd" id="1_6ar23"]
+[ext_resource type="PackedScene" uid="uid://bsolb2q6njjg7" path="res://scenes/PauseMenu.tscn" id="2_s6wom"]
+
+[node name="PauseManagerLayer" type="CanvasLayer" unique_id=320986886]
+script = ExtResource("1_6ar23")
+
+[node name="Catcher" type="Control" parent="." unique_id=1674456615]
+unique_name_in_owner = true
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+focus_mode = 2
+mouse_filter = 2
+
+[node name="PauseMenu" parent="." unique_id=1068996815 instance=ExtResource("2_s6wom")]
+unique_name_in_owner = true

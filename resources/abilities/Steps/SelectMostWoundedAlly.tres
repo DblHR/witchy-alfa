@@ -1,0 +1,7 @@
+[gd_resource type="Resource" script_class="SelectMostWoundedAllyStep" format=3 uid="uid://dxw1dug0h7nbh"]
+
+[ext_resource type="Script" uid="uid://cviki04sn4r34" path="res://scripts/abilities/steps/SelectMostWoundedAlly.gd" id="1_g5gcu"]
+
+[resource]
+script = ExtResource("1_g5gcu")
+metadata/_custom_type_script = "uid://cviki04sn4r34"

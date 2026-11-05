@@ -1,0 +1,32 @@
+[gd_resource type="Resource" script_class="CardDef" format=3 uid="uid://ce7atjq0ge47y"]
+
+[ext_resource type="Script" path="res://scripts/card/effects/CardEffect.gd" id="1_py3be"]
+[ext_resource type="Script" path="res://scripts/card/effects/EffDamage.gd" id="2_p66ei"]
+[ext_resource type="Script" path="res://scripts/card/effects/EffApplyStatus.gd" id="3_hp7hm"]
+[ext_resource type="Script" path="res://scripts/card/effects/EffExtendStatus.gd" id="4_xfmy1"]
+[ext_resource type="Script" path="res://scripts/card/data/CardDef.gd" id="5_00im8"]
+
+[sub_resource type="Resource" id="Resource_py3be"]
+script = ExtResource("2_p66ei")
+atk_ratio = 0.875
+
+[sub_resource type="Resource" id="Resource_p66ei"]
+script = ExtResource("3_hp7hm")
+status = "vuln"
+turns = 2
+only_if_status = "burn"
+
+[sub_resource type="Resource" id="Resource_hp7hm"]
+script = ExtResource("4_xfmy1")
+status = "burn"
+
+[resource]
+script = ExtResource("5_00im8")
+id = "witch_wall"
+title = "Огненный вал"
+cost = 3
+target = 1
+tags = PackedStringArray("attack")
+description = "[d]{0}[/d] урона всем.
+Горящие: [e]Уязвимость[/e] и [e]+{2} ход[/e] горения."
+effects = Array[ExtResource("1_py3be")]([SubResource("Resource_py3be"), SubResource("Resource_p66ei"), SubResource("Resource_hp7hm")])

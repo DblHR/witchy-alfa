@@ -1,0 +1,79 @@
+{
+  "dialogues": [
+    {
+      "id": "find_warrior_room_intro",
+      "type": "quest_room",
+      "quest": "find_warrior",
+      "once": true,
+      "priority": 100,
+      "conditions": {
+        "quest_active": "find_warrior",
+        "not_flag": "find_warrior_room_done"
+      },
+      "on_finish": {
+        "set_flags": [
+          "find_warrior_room_done"
+        ],
+        "start_quest_battle": true
+      },
+      "lines": [
+        {
+          "speaker": "fufu",
+          "text": "Оо, смотри-ка, мальчик, тут ещё один человечек пришёл! Кажется, становится всё интереснее и интереснее!",
+          "characters": [
+            {"id": "witch"},
+            {"id": "warrior"},
+            {"id": "fufu"}
+          ]
+        },
+        {
+          "speaker": "warrior",
+          "text": "Беги отсюда! Она очень сильна!",
+          "characters": [
+            {"id": "witch"},
+            {"id": "warrior"},
+            {"id": "fufu"}
+          ]
+        },
+        {
+          "speaker": "witch",
+          "text": "И УПУСТИТЬ ВОЗМОЖНОСТЬ ИССЛЕДОВАТЬ ТАКОЙ ОБРАЗЕЦ? НУ УЖ НЕТ!",
+          "characters": [
+            {"id": "witch"},
+            {"id": "warrior"},
+            {"id": "fufu"}
+          ]
+        }
+      ]
+    },
+    {
+      "id": "find_warrior_after_battle",
+      "type": "vn_scene",
+      "quest": "find_warrior",
+      "once": true,
+      "priority": 100,
+      "on_finish": {
+        "complete_quest": "find_warrior",
+        "unlock_unit": "warrior"
+      },
+      "lines": [
+        {
+          "speaker": "warrior",
+          "text": "Фух, спаслись! Правда, ты, кажется, не спешила убегать...",
+          "characters": [
+            {"id": "witch"},
+            {"id": "warrior"}
+          ]
+        },
+        {
+          "speaker": "witch",
+          "text": "бла-бла. Тестовый текст. НЕ ДУМАЛ ЖЕ ТЫ ВОИН ЧТО ТУТ БУДЕТ ЦЕЛЫЙ ДИАЛОГ, МНЕ ЛЕНЬ ЕГО ПРОПИСЫВАТЬ ВООБЩЕ-ТО",
+          "characters": [
+            {"id": "witch"},
+            {"id": "warrior"}
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+[gd_resource type="Resource" script_class="LoreEntryData" format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/inventory/LoreEntryData.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "witch_note_empty"
+title = "Пустой раздел"
+body = "пока здесь пусто"

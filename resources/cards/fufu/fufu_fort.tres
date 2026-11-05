@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="CardDef" format=3 uid="uid://dn0xdbsj4rj11"]
+
+[ext_resource type="Script" path="res://scripts/card/effects/CardEffect.gd" id="1_s5v3c"]
+[ext_resource type="Script" path="res://scripts/card/effects/EffShield.gd" id="2_g3sjk"]
+[ext_resource type="Script" path="res://scripts/card/data/CardDef.gd" id="4_lsi7t"]
+
+[sub_resource type="Resource" id="Resource_hv08a"]
+script = ExtResource("2_g3sjk")
+mag_ratio = 1.25
+
+[resource]
+script = ExtResource("4_lsi7t")
+id = "fufu_fort"
+title = "Крепость"
+cost = 2
+target = 2
+tags = PackedStringArray("support")
+description = "[s]+{0}[/s] щита себе."
+effects = Array[ExtResource("1_s5v3c")]([SubResource("Resource_hv08a")])

@@ -1,0 +1,38 @@
+[gd_resource type="Resource" script_class="CharacterData" format=3 uid="uid://bcqr84qgru8vg"]
+
+[ext_resource type="Script" path="res://scripts/CharacterData.gd" id="1_d14mp"]
+[ext_resource type="Texture2D" path="res://assets/pics/actorSprite/witch.png" id="1_geb22"]
+[ext_resource type="Script" path="res://scripts/card/data/CardDef.gd" id="2_b3qse"]
+[ext_resource type="Texture2D" path="res://assets/pics/cards/witch_card.png" id="2_x1yvu"]
+[ext_resource type="Resource" path="res://resources/cards/witch/witch_spark.tres" id="3_8sle8"]
+[ext_resource type="Texture2D" path="res://icon.svg" id="3_qa0yl"]
+[ext_resource type="Resource" path="res://resources/cards/witch/witch_rain.tres" id="4_ewd1a"]
+[ext_resource type="Resource" path="res://resources/cards/witch/witch_fan.tres" id="5_omqq3"]
+[ext_resource type="Resource" path="res://resources/abilities/witch_skill.tres" id="5_witch_skill"]
+[ext_resource type="Resource" path="res://resources/cards/witch/witch_wall.tres" id="6_2wjbw"]
+[ext_resource type="Resource" path="res://resources/abilities/witch_ult.tres" id="6_witch_ult"]
+[ext_resource type="Resource" path="res://resources/cards/witch/witch_ult.tres" id="12_n1v2c"]
+
+[resource]
+script = ExtResource("1_d14mp")
+id = "witch"
+display_name = "Ведьмочка"
+rank = "S"
+battle_texture = ExtResource("1_geb22")
+base_hp = 55
+attack = 8
+magic = 10
+max_energy = 6
+hp_per_level = 5
+attack_per_level = 1
+magic_per_level = 1
+card_color = Color(0.58, 0.3, 0.76, 1)
+card_pool = Array[ExtResource("2_b3qse")]([ExtResource("3_8sle8"), ExtResource("4_ewd1a"), ExtResource("5_omqq3"), ExtResource("6_2wjbw")])
+ult_card = ExtResource("12_n1v2c")
+base_damage = 6
+base_aps = 0.7
+card_portrait = ExtResource("2_x1yvu")
+skill_icon = ExtResource("3_qa0yl")
+skill_ability = ExtResource("5_witch_skill")
+ult_ability = ExtResource("6_witch_ult")
+metadata/_custom_type_script = "uid://cp2soljk8es5d"

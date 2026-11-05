@@ -1,0 +1,32 @@
+[gd_resource type="Resource" script_class="StepAbility" format=3 uid="uid://cpdx0wojbccia"]
+
+[ext_resource type="Script" uid="uid://dlah64rwgbdgk" path="res://scripts/abilities/steps/StepAbility.gd" id="1_ld3jr"]
+[ext_resource type="Script" uid="uid://lo4jtwb6hlk5" path="res://scripts/abilities/steps/AbilityStep.gd" id="2_x58u7"]
+[ext_resource type="Script" uid="uid://bsxrg4rs717jk" path="res://scripts/abilities/steps/SelectFrontEnemyStep.gd" id="3_3pqmy"]
+[ext_resource type="Script" uid="uid://c3x2jnilbswvx" path="res://scripts/abilities/steps/DealDamageStep.gd" id="4_c4fy1"]
+[ext_resource type="Script" uid="uid://g1p48forkgt6" path="res://scripts/status/BurnEffect.gd" id="5_3pqmy"]
+[ext_resource type="Script" uid="uid://bdctm2hj2xn1j" path="res://scripts/abilities/steps/ApplyEffectStep.gd" id="6_c4fy1"]
+
+[sub_resource type="Resource" id="Resource_lxiyy"]
+script = ExtResource("3_3pqmy")
+metadata/_custom_type_script = "uid://bsxrg4rs717jk"
+
+[sub_resource type="Resource" id="Resource_6cun3"]
+script = ExtResource("4_c4fy1")
+amount = 18
+metadata/_custom_type_script = "uid://c3x2jnilbswvx"
+
+[sub_resource type="Resource" id="Resource_3pqmy"]
+script = ExtResource("5_3pqmy")
+ticks = 10
+interval = 0.3
+metadata/_custom_type_script = "uid://g1p48forkgt6"
+
+[sub_resource type="Resource" id="Resource_1uo2b"]
+script = ExtResource("6_c4fy1")
+effect = SubResource("Resource_3pqmy")
+metadata/_custom_type_script = "uid://bdctm2hj2xn1j"
+
+[resource]
+script = ExtResource("1_ld3jr")
+steps = Array[ExtResource("2_x58u7")]([SubResource("Resource_lxiyy"), SubResource("Resource_6cun3"), SubResource("Resource_1uo2b")])

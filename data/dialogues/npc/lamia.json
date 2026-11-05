@@ -1,0 +1,137 @@
+{
+  "dialogues": [
+    {
+      "id": "lamia_headphones_finish",
+      "type": "event",
+      "npc": "lamia",
+      "once": true,
+      "priority": 100,
+      "conditions": {
+        "quest_active": "lamia_headphones",
+        "has_item": "warm_headphones"
+      },
+      "on_finish": {
+        "complete_quest": "lamia_headphones",
+        "remove_item": "warm_headphones"
+      },
+      "lines": [
+        {
+          "speaker": "lamia",
+          "text": "Это они... мои наушники. Спасибо тебе."
+        },
+        {
+          "speaker": "lamia",
+          "text": "Я правда думала, что больше их не увижу. Теперь можно закрыть эту маленькую беду."
+        }
+      ]
+    },
+    {
+      "id": "lamia_headphones_start",
+      "type": "event",
+      "npc": "lamia",
+      "once": true,
+      "priority": 90,
+      "chance": 0.45,
+      "conditions": {
+        "quest_not_started": "lamia_headphones",
+        "not_has_item": "warm_headphones"
+      },
+      "on_finish": {
+        "start_quest": "lamia_headphones",
+        "set_flags": [
+          "lamia_asked_for_headphones"
+        ]
+      },
+      "lines": [
+        {
+          "speaker": "lamia",
+          "text": "М-м... ты как раз вовремя. Можно попросить кое-что странное?"
+        },
+        {
+          "speaker": "lamia",
+          "text": "Я где-то в подземелье потеряла свои тёплые наушники. Без них тут ужасно зябко."
+        },
+        {
+          "speaker": "lamia",
+          "text": "Если вдруг найдёшь их в сундуке или среди хлама — принеси мне, хорошо?"
+        }
+      ]
+    },
+    {
+      "id": "lamia_headphones_waiting",
+      "type": "event",
+      "npc": "lamia",
+      "priority": 70,
+      "conditions": {
+        "quest_active": "lamia_headphones",
+        "not_has_item": "warm_headphones"
+      },
+      "lines": [
+        {
+          "speaker": "lamia",
+          "text": "Если увидишь мои наушники — пожалуйста, не проходи мимо. Они мягкие, розовые и очень тёплые."
+        }
+      ]
+    },
+    {
+      "id": "lamia_default_01",
+      "type": "flag",
+      "npc": "lamia",
+      "weight": 10,
+      "lines": [
+        {
+          "speaker": "lamia",
+          "text": "Ну привет, Шляпка. Что ищем сегодня?"
+        }
+      ]
+    },
+    {
+      "id": "lamia_default_02",
+      "type": "flag",
+      "npc": "lamia",
+      "weight": 10,
+      "lines": [
+        {
+          "speaker": "lamia",
+          "text": "Ох, привет~ Ты сегодня особенно… вымотанная."
+        }
+      ]
+    },
+    {
+      "id": "lamia_default_03",
+      "type": "flag",
+      "npc": "lamia",
+      "weight": 10,
+      "lines": [
+        {
+          "speaker": "lamia",
+          "text": "Если устанешь от подземелий — можешь просто посидеть тут. Я не против компании."
+        }
+      ]
+    },
+    {
+      "id": "lamia_default_04",
+      "type": "flag",
+      "npc": "lamia",
+      "weight": 10,
+      "lines": [
+        {
+          "speaker": "lamia",
+          "text": "В моей коллекции прибавилось блестящих игрушек! Как-нибудь я тебе её покажу."
+        }
+      ]
+    },
+    {
+      "id": "lamia_default_05",
+      "type": "flag",
+      "npc": "lamia",
+      "weight": 10,
+      "lines": [
+        {
+          "speaker": "lamia",
+          "text": "Недавно нашла такие милые шортики! Хотела бы я их поносить…"
+        }
+      ]
+    }
+  ]
+}

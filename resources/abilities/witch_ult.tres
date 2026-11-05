@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="StepAbility" format=3 uid="uid://cc6l7ao36l1u0"]
+
+[ext_resource type="Script" uid="uid://dlah64rwgbdgk" path="res://scripts/abilities/steps/StepAbility.gd" id="1_bico6"]
+[ext_resource type="Script" uid="uid://lo4jtwb6hlk5" path="res://scripts/abilities/steps/AbilityStep.gd" id="2_eqewf"]
+[ext_resource type="Script" uid="uid://oscu3ijihq26" path="res://scripts/abilities/steps/SelectAllEnemiesStep.gd" id="3_mqp61"]
+[ext_resource type="Script" uid="uid://c3x2jnilbswvx" path="res://scripts/abilities/steps/DealDamageStep.gd" id="4_geves"]
+
+[sub_resource type="Resource" id="Resource_tc15u"]
+script = ExtResource("3_mqp61")
+metadata/_custom_type_script = "uid://oscu3ijihq26"
+
+[sub_resource type="Resource" id="Resource_obp3l"]
+script = ExtResource("4_geves")
+amount = 30
+metadata/_custom_type_script = "uid://c3x2jnilbswvx"
+
+[resource]
+script = ExtResource("1_bico6")
+steps = Array[ExtResource("2_eqewf")]([SubResource("Resource_tc15u"), SubResource("Resource_obp3l")])

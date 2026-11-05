@@ -1,0 +1,51 @@
+[gd_scene format=3 uid="uid://b4xp00u8jdvjm"]
+
+[ext_resource type="Script" uid="uid://dvkbwwytcg4pa" path="res://scripts/dialogue/BattleSpeechBubble.gd" id="1_script"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_bubble"]
+bg_color = Color(0.49, 0.24, 0.35, 0.95)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.98, 0.88, 0.94, 0.98)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+shadow_color = Color(0, 0, 0, 0.35)
+shadow_size = 4
+
+[node name="BattleSpeechBubble" type="Control" unique_id=1201175518]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 240.0
+offset_bottom = 80.0
+mouse_filter = 2
+script = ExtResource("1_script")
+
+[node name="BubblePanel" type="PanelContainer" parent="." unique_id=1010363728]
+unique_name_in_owner = true
+layout_mode = 0
+offset_right = 240.0
+offset_bottom = 80.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_bubble")
+
+[node name="BubbleMargin" type="MarginContainer" parent="BubblePanel" unique_id=1223863944]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_filter = 2
+
+[node name="BubbleText" type="Label" parent="BubblePanel/BubbleMargin" unique_id=289928704]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(220, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(1, 0.980392, 0.980392, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 5
+theme_override_font_sizes/font_size = 20
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 3

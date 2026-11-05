@@ -1,0 +1,35 @@
+[gd_scene format=3 uid="uid://cu1a3uu65x45s"]
+
+[ext_resource type="Script" uid="uid://dog8p5lukj26a" path="res://scenes/FarmPot.gd" id="1_jq8cv"]
+
+[node name="FarmSlot" type="Control"]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 180.0
+offset_bottom = 220.0
+script = ExtResource("1_jq8cv")
+
+[node name="PotSprite" type="TextureRect" parent="."]
+layout_mode = 0
+mouse_filter = 2
+expand_mode = 1
+
+[node name="PlantAnchor" type="Control" parent="."]
+anchors_preset = 0
+mouse_filter = 2
+
+[node name="PlantSprite" type="TextureRect" parent="PlantAnchor"]
+layout_mode = 0
+mouse_filter = 2
+expand_mode = 1
+
+[node name="SeedBagSprite" type="TextureRect" parent="."]
+layout_mode = 0
+mouse_filter = 2
+expand_mode = 1
+
+[node name="ClickButton" type="Button" parent="."]
+layout_mode = 0
+focus_mode = 0
+mouse_default_cursor_shape = 2
+flat = true

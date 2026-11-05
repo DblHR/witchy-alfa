@@ -1,0 +1,95 @@
+[gd_scene format=3 uid="uid://4e3na5jprilj"]
+
+[ext_resource type="Script" uid="uid://y0lb4ydr6ms6" path="res://scenes/Hub.gd" id="1_6grgh"]
+[ext_resource type="Texture2D" uid="uid://c65oqg3ajp68q" path="res://assets/pics/bigPics/backgrounds/homeBG.png" id="1_hnc56"]
+[ext_resource type="Texture2D" uid="uid://cniy2vvgjr5h7" path="res://assets/pics/icons/buttons/startRunButton.png" id="2_6grgh"]
+[ext_resource type="Texture2D" uid="uid://djbr8wah3ntpc" path="res://assets/pics/icons/buttons/farmButton.png" id="3_48iqm"]
+[ext_resource type="Texture2D" uid="uid://klsl5qwne66a" path="res://assets/pics/icons/buttons/alchemyButton.png" id="4_oj3ng"]
+[ext_resource type="Texture2D" uid="uid://bsueyseydns2j" path="res://assets/pics/icons/buttons/shopButton.png" id="5_o7rky"]
+[ext_resource type="Texture2D" uid="uid://ngcxb0tkqr48" path="res://assets/pics/icons/buttons/inventoryButton.png" id="6_shn0c"]
+[ext_resource type="Texture2D" uid="uid://b62vt3v6vyme5" path="res://assets/pics/actorSprite/witch.png" id="7_p8ka2"]
+
+[node name="Control" type="Control" unique_id=391545454]
+custom_minimum_size = Vector2(1920, 1080)
+layout_mode = 3
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+script = ExtResource("1_6grgh")
+
+[node name="BackGround" type="TextureRect" parent="." unique_id=19846586]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 40.0
+texture = ExtResource("1_hnc56")
+stretch_mode = 5
+
+[node name="StartRunButton" type="TextureButton" parent="." unique_id=841560713]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 1641.0
+offset_top = 801.0
+offset_right = 1917.0
+offset_bottom = 1079.0
+texture_normal = ExtResource("2_6grgh")
+ignore_texture_size = true
+stretch_mode = 5
+
+[node name="FarmButton" type="TextureButton" parent="." unique_id=1209902725]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(150, 150)
+layout_mode = 0
+offset_left = 1594.0
+offset_top = 12.0
+offset_right = 1744.0
+offset_bottom = 162.0
+texture_normal = ExtResource("3_48iqm")
+ignore_texture_size = true
+stretch_mode = 5
+
+[node name="AlchemyButton" type="TextureButton" parent="." unique_id=1762017035]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(150, 150)
+layout_mode = 0
+offset_left = 1756.0
+offset_top = 10.0
+offset_right = 1906.0
+offset_bottom = 160.0
+texture_normal = ExtResource("4_oj3ng")
+ignore_texture_size = true
+stretch_mode = 5
+
+[node name="ShopButton" type="TextureButton" parent="." unique_id=2070449742]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(150, 150)
+layout_mode = 0
+offset_left = 1427.0
+offset_top = 16.0
+offset_right = 1577.0
+offset_bottom = 166.0
+texture_normal = ExtResource("5_o7rky")
+ignore_texture_size = true
+stretch_mode = 5
+
+[node name="InventoryButton" type="TextureButton" parent="." unique_id=1612743931]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(150, 150)
+layout_mode = 0
+offset_left = 9.0
+offset_top = 911.0
+offset_right = 159.0
+offset_bottom = 1061.0
+texture_normal = ExtResource("6_shn0c")
+ignore_texture_size = true
+stretch_mode = 5
+
+[node name="TextureRect" type="TextureRect" parent="." unique_id=2064499719]
+layout_mode = 0
+offset_left = 226.0
+offset_top = 396.0
+offset_right = 782.0
+offset_bottom = 1024.0
+texture = ExtResource("7_p8ka2")
+expand_mode = 1
+stretch_mode = 5
+flip_h = true

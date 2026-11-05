@@ -1,0 +1,38 @@
+[gd_resource type="Resource" script_class="CharacterData" format=3 uid="uid://dddm8lfc50q2l"]
+
+[ext_resource type="Script" path="res://scripts/CharacterData.gd" id="1_4idu1"]
+[ext_resource type="Texture2D" path="res://assets/pics/actorSprite/luisa.png" id="1_yeupl"]
+[ext_resource type="Script" path="res://scripts/card/data/CardDef.gd" id="2_08uh5"]
+[ext_resource type="Texture2D" path="res://assets/pics/cards/luisa_card.png" id="2_rywix"]
+[ext_resource type="Resource" path="res://resources/cards/luisa/luisa_frost.tres" id="3_a5ad2"]
+[ext_resource type="Resource" path="res://resources/cards/luisa/luisa_chill.tres" id="4_17nlf"]
+[ext_resource type="Texture2D" path="res://icon.svg" id="4_y7pc5"]
+[ext_resource type="Resource" path="res://resources/abilities/luisa_skill.tres" id="5_luisa_skill"]
+[ext_resource type="Resource" path="res://resources/cards/luisa/luisa_brittle.tres" id="6_criy3"]
+[ext_resource type="Resource" path="res://resources/abilities/luisa_ult.tres" id="6_luisa_ult"]
+[ext_resource type="Resource" path="res://resources/cards/luisa/luisa_shatter.tres" id="7_b7up5"]
+[ext_resource type="Resource" path="res://resources/cards/luisa/luisa_ult.tres" id="13_ltckh"]
+
+[resource]
+script = ExtResource("1_4idu1")
+id = "luisa"
+display_name = "Luisa"
+battle_texture = ExtResource("1_yeupl")
+base_hp = 55
+attack = 8
+magic = 10
+max_energy = 7
+hp_per_level = 5
+attack_per_level = 1
+magic_per_level = 1
+card_color = Color(0.36, 0.6, 0.88, 1)
+card_pool = Array[ExtResource("2_08uh5")]([ExtResource("3_a5ad2"), ExtResource("4_17nlf"), ExtResource("6_criy3"), ExtResource("7_b7up5")])
+ult_card = ExtResource("13_ltckh")
+base_damage = 6
+base_aps = 0.7
+card_portrait = ExtResource("2_rywix")
+skill_icon = ExtResource("4_y7pc5")
+skill_cost = 2
+skill_ability = ExtResource("5_luisa_skill")
+ult_ability = ExtResource("6_luisa_ult")
+metadata/_custom_type_script = "uid://cp2soljk8es5d"

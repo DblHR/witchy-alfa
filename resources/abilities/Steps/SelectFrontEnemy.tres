@@ -1,0 +1,7 @@
+[gd_resource type="Resource" script_class="SelectFrontEnemyStep" format=3 uid="uid://bsjnn1arjk1ge"]
+
+[ext_resource type="Script" uid="uid://bsxrg4rs717jk" path="res://scripts/abilities/steps/SelectFrontEnemyStep.gd" id="1_cqmbi"]
+
+[resource]
+script = ExtResource("1_cqmbi")
+metadata/_custom_type_script = "uid://bsxrg4rs717jk"

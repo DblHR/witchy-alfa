@@ -1,0 +1,41 @@
+[gd_resource type="Resource" script_class="CharacterData" format=3 uid="uid://cukpsyg0jc5wf"]
+
+[ext_resource type="Texture2D" path="res://assets/pics/actorSprite/fufu.png" id="1_60fp2"]
+[ext_resource type="Script" path="res://scripts/CharacterData.gd" id="1_ja7c3"]
+[ext_resource type="Resource" path="res://resources/cards/fufu/fufu_passive.tres" id="2_5mo4y"]
+[ext_resource type="Texture2D" path="res://assets/pics/cards/fufu_card.png" id="2_70bc2"]
+[ext_resource type="Script" path="res://scripts/card/data/CardDef.gd" id="3_hi7rb"]
+[ext_resource type="Texture2D" path="res://icon.svg" id="3_hihko"]
+[ext_resource type="Resource" path="res://resources/cards/fufu/fufu_ram.tres" id="4_gb01q"]
+[ext_resource type="Resource" path="res://resources/abilities/fufu_skill.tres" id="5_fufu_skill"]
+[ext_resource type="Resource" path="res://resources/cards/fufu/fufu_poke.tres" id="5_pykbl"]
+[ext_resource type="Resource" path="res://resources/abilities/fufu_ult.tres" id="6_fufu_ult"]
+[ext_resource type="Resource" path="res://resources/cards/fufu/fufu_charge.tres" id="7_xxist"]
+[ext_resource type="Resource" path="res://resources/cards/fufu/fufu_fort.tres" id="8_l5jvt"]
+[ext_resource type="Resource" path="res://resources/cards/fufu/fufu_ult.tres" id="15_xpovc"]
+
+[resource]
+script = ExtResource("1_ja7c3")
+id = "fufu"
+display_name = "Fufu"
+unit_class = "танк"
+rank = "S"
+battle_texture = ExtResource("1_60fp2")
+base_hp = 80
+attack = 9
+magic = 8
+hp_per_level = 5
+attack_per_level = 1
+magic_per_level = 1
+card_color = Color(0.2, 0.56, 0.58, 1)
+card_pool = Array[ExtResource("3_hi7rb")]([ExtResource("4_gb01q"), ExtResource("5_pykbl"), ExtResource("8_l5jvt"), ExtResource("7_xxist")])
+ult_card = ExtResource("15_xpovc")
+card_passive = ExtResource("2_5mo4y")
+base_damage = 6
+base_aps = 0.63
+battle_scale = 0.3
+card_portrait = ExtResource("2_70bc2")
+skill_icon = ExtResource("3_hihko")
+skill_ability = ExtResource("5_fufu_skill")
+ult_ability = ExtResource("6_fufu_ult")
+metadata/_custom_type_script = "uid://cp2soljk8es5d"

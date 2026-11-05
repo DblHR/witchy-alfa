@@ -1,0 +1,252 @@
+[gd_scene format=3 uid="uid://bsixsw4on3o1x"]
+
+[ext_resource type="Script" uid="uid://dqp56ofiyeea6" path="res://scripts/Setup.gd" id="1_5j21s"]
+[ext_resource type="PackedScene" uid="uid://c1k2g5xv2d3y0" path="res://ui/TeamSlot.tscn" id="2_8y2xk"]
+[ext_resource type="Texture2D" uid="uid://ci53sg2irig4u" path="res://assets/pics/ui/setup/setupUI.png" id="2_17ay7"]
+[ext_resource type="PackedScene" uid="uid://d2g0v3e7p1p0t" path="res://ui/CharacterPickerPopup.tscn" id="3_7qv0c"]
+
+[node name="Node2D" type="Node2D" unique_id=402716249]
+
+[node name="Control" type="Control" parent="." unique_id=315188982]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_5j21s")
+
+[node name="SetupBackground" type="TextureRect" parent="Control" unique_id=1104762760]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(1920, 1080)
+layout_mode = 1
+offset_right = 1920.0
+offset_bottom = 1080.0
+mouse_filter = 2
+texture = ExtResource("2_17ay7")
+expand_mode = 1
+stretch_mode = 6
+
+[node name="TitleLabel" type="Label" parent="Control" unique_id=225510537]
+layout_mode = 0
+offset_left = 745.0
+offset_top = 84.0
+offset_right = 1175.0
+offset_bottom = 138.0
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 30
+text = "Подготовка команды"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="HomeButton" type="TextureButton" parent="Control" unique_id=255018888]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 16.0
+offset_top = 16.0
+offset_right = 116.0
+offset_bottom = 116.0
+ignore_texture_size = true
+stretch_mode = 0
+
+[node name="StartButton" type="TextureButton" parent="Control" unique_id=1665792570]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 1710.0
+offset_top = 850.0
+offset_right = 1886.0
+offset_bottom = 1026.0
+ignore_texture_size = true
+stretch_mode = 0
+
+[node name="CardBattleToggle" type="CheckButton" parent="Control" unique_id=1928374650]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 1630.0
+offset_top = 800.0
+offset_right = 1900.0
+offset_bottom = 846.0
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 22
+tooltip_text = "Прототип: карточная боёвка вместо текущего забега"
+text = "Карточный бой"
+
+[node name="TeamRow" type="Control" parent="Control" unique_id=2044642848]
+unique_name_in_owner = true
+anchors_preset = 0
+offset_left = 384.0
+offset_top = 150.0
+offset_right = 1488.0
+offset_bottom = 636.0
+
+[node name="TeamSlot0" parent="Control/TeamRow" unique_id=1073336196 instance=ExtResource("2_8y2xk")]
+unique_name_in_owner = true
+layout_mode = 0
+offset_right = 240.0
+offset_bottom = 486.0
+
+[node name="TeamSlot1" parent="Control/TeamRow" unique_id=1953505530 instance=ExtResource("2_8y2xk")]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 272.0
+offset_right = 512.0
+offset_bottom = 486.0
+
+[node name="TeamSlot2" parent="Control/TeamRow" unique_id=301239515 instance=ExtResource("2_8y2xk")]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 544.0
+offset_right = 784.0
+offset_bottom = 486.0
+
+[node name="TeamSlot3" parent="Control/TeamRow" unique_id=214186481 instance=ExtResource("2_8y2xk")]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 816.0
+offset_right = 1056.0
+offset_bottom = 486.0
+
+[node name="LoadoutPanel" type="Panel" parent="Control" unique_id=1333116083]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 1580.0
+offset_top = 305.0
+offset_right = 1758.0
+offset_bottom = 651.0
+
+[node name="LoadoutBox" type="VBoxContainer" parent="Control/LoadoutPanel" unique_id=253540587]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 20.0
+offset_top = 20.0
+offset_right = -20.0
+offset_bottom = -20.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 18
+alignment = 1
+
+[node name="FoodButton" type="Button" parent="Control/LoadoutPanel/LoadoutBox" unique_id=632606607]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(132, 96)
+layout_mode = 2
+
+[node name="ArtifactButton" type="Button" parent="Control/LoadoutPanel/LoadoutBox" unique_id=381558916]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(132, 96)
+layout_mode = 2
+
+[node name="PotionButton" type="Button" parent="Control/LoadoutPanel/LoadoutBox" unique_id=1184549020]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(132, 96)
+layout_mode = 2
+
+[node name="RosterPanel" type="Panel" parent="Control" unique_id=1383950601]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 96.0
+offset_top = 780.0
+offset_right = 1616.0
+offset_bottom = 960.0
+
+[node name="RosterScroll" type="ScrollContainer" parent="Control/RosterPanel" unique_id=1457551781]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 14.0
+offset_top = 14.0
+offset_right = -14.0
+offset_bottom = -14.0
+grow_horizontal = 2
+grow_vertical = 2
+vertical_scroll_mode = 0
+
+[node name="RosterRow" type="HBoxContainer" parent="Control/RosterPanel/RosterScroll" unique_id=581769908]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="AdminPanel" type="Panel" parent="Control" unique_id=102163187]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(324, 270)
+layout_mode = 0
+offset_left = 96.0
+offset_top = 470.0
+offset_right = 420.0
+offset_bottom = 740.0
+
+[node name="AdminRoot" type="VBoxContainer" parent="Control/AdminPanel" unique_id=1278341834]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 14.0
+offset_top = 14.0
+offset_right = -14.0
+offset_bottom = -14.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 12
+
+[node name="AdminToggleButton" type="Button" parent="Control/AdminPanel/AdminRoot" unique_id=432054817]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
+text = "Админ ▸"
+
+[node name="AdminContent" type="VBoxContainer" parent="Control/AdminPanel/AdminRoot" unique_id=1127590765]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="MetaInfo" type="Label" parent="Control/AdminPanel/AdminRoot/AdminContent" unique_id=191991]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+text = "Панель разработчика"
+
+[node name="AddLabel" type="Label" parent="Control/AdminPanel/AdminRoot/AdminContent" unique_id=379959107]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Добавить персонажа"
+
+[node name="AddUnitInRoaster" type="OptionButton" parent="Control/AdminPanel/AdminRoot/AdminContent" unique_id=616185869]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 42)
+layout_mode = 2
+
+[node name="DeleteLabel" type="Label" parent="Control/AdminPanel/AdminRoot/AdminContent" unique_id=823259708]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Удалить персонажа"
+
+[node name="DeleteUnitInRoaster" type="OptionButton" parent="Control/AdminPanel/AdminRoot/AdminContent" unique_id=1844942329]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 42)
+layout_mode = 2
+
+[node name="ApplyButton" type="Button" parent="Control/AdminPanel/AdminRoot/AdminContent" unique_id=249963970]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+text = "Применить"
+
+[node name="PartyLevel" type="SpinBox" parent="Control" unique_id=1621813854]
+unique_name_in_owner = true
+visible = false
+layout_mode = 0
+offset_left = 230.0
+offset_top = 220.0
+offset_right = 340.0
+offset_bottom = 262.0
+
+[node name="CharacterPickerPopup" parent="Control" unique_id=1497434823 instance=ExtResource("3_7qv0c")]
+unique_name_in_owner = true

@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="CharacterData" format=3 uid="uid://cnp8njnyrjddn"]
+
+[ext_resource type="Script" path="res://scripts/CharacterData.gd" id="1_6igbr"]
+[ext_resource type="Texture2D" path="res://assets/pics/actorSprite/slime.png" id="1_bnla2"]
+[ext_resource type="Script" path="res://scripts/card/data/CardDef.gd" id="2_e1pwt"]
+[ext_resource type="Texture2D" path="res://icon.svg" id="3_jnehp"]
+
+[resource]
+script = ExtResource("1_6igbr")
+id = "base_slime"
+display_name = "Slime"
+unit_class = "рядовой враг"
+battle_texture = ExtResource("1_bnla2")
+base_hp = 54
+attack = 3
+magic = 0
+max_energy = 0
+base_damage = 6
+base_aps = 0.7
+battle_scale = 0.6
+battle_offset_y = -100.0
+skill_icon = ExtResource("3_jnehp")
+metadata/_custom_type_script = "uid://cp2soljk8es5d"

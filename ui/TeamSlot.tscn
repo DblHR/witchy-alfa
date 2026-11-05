@@ -1,0 +1,80 @@
+[gd_scene format=3 uid="uid://c1k2g5xv2d3y0"]
+
+[ext_resource type="Script" uid="uid://dp80ixiphi1cv" path="res://ui/TeamSlot.gd" id="1_5k1a0"]
+[ext_resource type="Texture2D" uid="uid://cgcmg1om6pucy" path="res://assets/pics/ui/setup/setupcard.png" id="2_bg"]
+
+[node name="TeamSlot" type="Panel" unique_id=920824868]
+custom_minimum_size = Vector2(240, 486)
+script = ExtResource("1_5k1a0")
+
+[node name="CardBg" type="TextureRect" parent="." unique_id=1692642564]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("2_bg")
+expand_mode = 1
+stretch_mode = 6
+
+[node name="Clipper" type="Control" parent="." unique_id=627591852]
+unique_name_in_owner = true
+clip_contents = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 10.0
+offset_top = 10.0
+offset_right = -10.0
+offset_bottom = -10.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Portrait" type="TextureRect" parent="Clipper" unique_id=758716512]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -20.0
+offset_top = 14.0
+offset_right = 20.0
+offset_bottom = 6.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 6
+
+[node name="Shade" type="ColorRect" parent="." unique_id=183485409]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0, 0, 0, 0.08)
+
+[node name="Name" type="Label" parent="." unique_id=523311150]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 16.0
+offset_top = 420.0
+offset_right = -16.0
+offset_bottom = -20.0
+grow_horizontal = 2
+grow_vertical = 2
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 2

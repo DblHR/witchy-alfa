@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="CardDef" format=3 uid="uid://brc14l476hkx6"]
+
+[ext_resource type="Script" path="res://scripts/card/effects/CardEffect.gd" id="1_8vv75"]
+[ext_resource type="Script" path="res://scripts/card/effects/EffConsumeStatus.gd" id="2_au54y"]
+[ext_resource type="Script" path="res://scripts/card/data/CardDef.gd" id="3_75umw"]
+
+[sub_resource type="Resource" id="Resource_b3qrh"]
+script = ExtResource("2_au54y")
+status = "wrap_slime"
+gain = 2
+mag_ratio = 0.34
+
+[resource]
+script = ExtResource("3_75umw")
+id = "aki_cocoon"
+title = "Слизистый кокон"
+target = 4
+tags = PackedStringArray("support")
+description = "Тратит всю [e]обволакивающую слизь[/e] выбранного: [s]{0}[/s] щита за стак."
+effects = Array[ExtResource("1_8vv75")]([SubResource("Resource_b3qrh")])

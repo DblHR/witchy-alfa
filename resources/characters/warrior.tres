@@ -1,0 +1,42 @@
+[gd_resource type="Resource" script_class="CharacterData" format=3 uid="uid://dai6m7icsbflu"]
+
+[ext_resource type="Script" path="res://scripts/CharacterData.gd" id="1_d14mp"]
+[ext_resource type="Texture2D" path="res://assets/pics/actorSprite/warrior.png" id="1_g5w5n"]
+[ext_resource type="Script" path="res://scripts/card/data/CardDef.gd" id="2_su34w"]
+[ext_resource type="Texture2D" path="res://assets/pics/cards/warrior.png" id="2_ygci8"]
+[ext_resource type="Resource" path="res://resources/cards/warrior/warrior_lunge.tres" id="3_dof06"]
+[ext_resource type="Texture2D" path="res://icon.svg" id="3_qa0yl"]
+[ext_resource type="Resource" path="res://resources/cards/warrior/warrior_press.tres" id="4_pu7u2"]
+[ext_resource type="Resource" path="res://resources/abilities/warrior_skill.tres" id="4_wskill"]
+[ext_resource type="Resource" path="res://resources/cards/warrior/warrior_chop.tres" id="5_c3mhv"]
+[ext_resource type="Resource" path="res://resources/abilities/warrior_ult.tres" id="5_wult"]
+[ext_resource type="Resource" path="res://resources/cards/warrior/warrior_release.tres" id="6_xsuef"]
+[ext_resource type="Resource" path="res://resources/cards/warrior/warrior_ult.tres" id="12_c2sj7"]
+
+[resource]
+script = ExtResource("1_d14mp")
+id = "warrior"
+display_name = "Воин"
+unit_class = "воин"
+rank = "S"
+battle_texture = ExtResource("1_g5w5n")
+base_hp = 75
+attack = 12
+magic = 4
+max_energy = 4
+hp_per_level = 5
+attack_per_level = 1
+magic_per_level = 1
+card_color = Color(0.78, 0.22, 0.25, 1)
+card_pool = Array[ExtResource("2_su34w")]([ExtResource("3_dof06"), ExtResource("4_pu7u2"), ExtResource("5_c3mhv"), ExtResource("6_xsuef")])
+ult_card = ExtResource("12_c2sj7")
+base_damage = 6
+base_aps = 0.84
+card_portrait = ExtResource("2_ygci8")
+skill_icon = ExtResource("3_qa0yl")
+skill_name = "Снятие ослабления"
+codex_description = "Воин усиливает свои автоатаки ослаблением врага, потом сжигает стаки ради лечения и может резко раскрутить давление ультой."
+codex_notes = "Обычная атака: накладывает 1 стак ослабления. Каждый стак даёт Воину +10% к урону его автоатаки по этой цели. Умение: снимает все стаки с переднего врага и лечит Воину 5% от максимального HP за каждый снятый стак. Ульта: накладывает ещё 4 стака на переднего врага и замедляет самого Воина на 30% на 3 сек."
+skill_ability = ExtResource("4_wskill")
+ult_ability = ExtResource("5_wult")
+metadata/_custom_type_script = "uid://cp2soljk8es5d"

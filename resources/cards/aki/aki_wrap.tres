@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="CardDef" format=3 uid="uid://me2sdppyange"]
+
+[ext_resource type="Script" path="res://scripts/card/effects/CardEffect.gd" id="1_yjvld"]
+[ext_resource type="Script" path="res://scripts/card/effects/EffApplyStatus.gd" id="2_00urn"]
+[ext_resource type="Script" path="res://scripts/card/data/CardDef.gd" id="3_knyba"]
+
+[sub_resource type="Resource" id="Resource_gd7lg"]
+script = ExtResource("2_00urn")
+status = "wrap_slime"
+stacks = 3
+
+[resource]
+script = ExtResource("3_knyba")
+id = "aki_wrap"
+title = "Обволакивание"
+target = 4
+tags = PackedStringArray("support")
+description = "[e]Обволакивающая слизь +{0}[/e] выбранному союзнику."
+effects = Array[ExtResource("1_yjvld")]([SubResource("Resource_gd7lg")])

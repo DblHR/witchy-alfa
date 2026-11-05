@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="CardDef" format=3 uid="uid://c2jisuqboglhr"]
+
+[ext_resource type="Script" path="res://scripts/card/effects/CardEffect.gd" id="1_tlbks"]
+[ext_resource type="Script" path="res://scripts/card/effects/EffHeal.gd" id="2_qa7kx"]
+[ext_resource type="Script" path="res://scripts/card/data/CardDef.gd" id="4_2mnr8"]
+
+[sub_resource type="Resource" id="Resource_61b60"]
+script = ExtResource("2_qa7kx")
+mag_ratio = 0.5
+
+[resource]
+script = ExtResource("4_2mnr8")
+id = "aki_care"
+title = "Забота"
+target = 4
+tags = PackedStringArray("support")
+description = "Лечит выбранного на [h]{0}[/h]."
+effects = Array[ExtResource("1_tlbks")]([SubResource("Resource_61b60")])

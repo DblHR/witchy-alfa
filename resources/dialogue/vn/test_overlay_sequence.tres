@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="DialogueSequence" load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/dialogue/DialogueSequence.gd" id="1_seq"]
+[ext_resource type="Script" path="res://scripts/dialogue/DialogueLine.gd" id="2_line"]
+
+[sub_resource type="Resource" id="DialogueLine_1"]
+script = ExtResource("2_line")
+speaker_name = "Ведьмочка"
+text = "Тестовая реплика для проверки VN-оверлея, Господин."
+
+[sub_resource type="Resource" id="DialogueLine_2"]
+script = ExtResource("2_line")
+speaker_name = "Рассказчик"
+text = "Если это видно и по клику листается дальше, база уже работает."
+
+[resource]
+script = ExtResource("1_seq")
+sequence_id = "test_overlay_sequence"
+lines = Array[ExtResource("2_line")]([SubResource("DialogueLine_1"), SubResource("DialogueLine_2")])

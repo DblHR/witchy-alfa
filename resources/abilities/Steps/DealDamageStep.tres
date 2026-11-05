@@ -1,0 +1,8 @@
+[gd_resource type="Resource" script_class="DealDamageStep" format=3 uid="uid://bwxg6pfinbl1f"]
+
+[ext_resource type="Script" uid="uid://c3x2jnilbswvx" path="res://scripts/abilities/steps/DealDamageStep.gd" id="1_1pky2"]
+
+[resource]
+script = ExtResource("1_1pky2")
+amount = 12
+metadata/_custom_type_script = "uid://c3x2jnilbswvx"

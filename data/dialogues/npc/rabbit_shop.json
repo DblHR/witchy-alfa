@@ -1,0 +1,124 @@
+{
+  "dialogues": [
+    {
+      "id": "rabbit_shop_default_01",
+      "type": "flag",
+      "npc": "rabbit_shop",
+      "weight": 10,
+      "lines": [
+        {
+          "speaker": "rabbit_shop",
+          "text": "Добро пожаловать в лавку. Не трогай блестящее без оплаты, ладно?"
+        }
+      ]
+    },
+    {
+      "id": "rabbit_shop_default_02",
+      "type": "flag",
+      "npc": "rabbit_shop",
+      "weight": 10,
+      "lines": [
+        {
+          "speaker": "rabbit_shop",
+          "text": "Если опять собираешься в подземелье — сначала проверь сумку. Потом уже геройствуй."
+        }
+      ]
+    },
+    {
+      "id": "rabbit_shop_default_03",
+      "type": "flag",
+      "npc": "rabbit_shop",
+      "weight": 10,
+      "lines": [
+        {
+          "speaker": "rabbit_shop",
+          "text": "У меня есть товары, слухи и терпение. Последнее заканчивается быстрее всего."
+        }
+      ]
+    },
+    {
+      "id": "rabbit_shop_slimegirl_01",
+      "type": "flag",
+      "npc": "rabbit_shop",
+      "weight": 5,
+      "conditions": {
+        "has_unit": "base_slime"
+      },
+      "lines": [
+        {
+          "speaker": "rabbit_shop",
+          "text": "Ого, ты теперь водишь с собой слизнедевочку? Миленько. Липко, наверное, но миленько."
+        }
+      ]
+    },
+    {
+      "id": "rabbit_shop_warrior_hint",
+      "type": "event",
+      "npc": "rabbit_shop",
+      "once": true,
+      "priority": 100,
+      "conditions": {
+        "party_level_min": 3,
+        "quest_not_started": "find_warrior"
+      },
+      "on_finish": {
+        "start_quest": "find_warrior",
+        "set_flags": [
+          "heard_about_lost_warrior"
+        ]
+      },
+      "lines": [
+        {
+          "speaker": "rabbit_shop",
+          "emotion": "serious",
+          "text": "Слушай, Шляпка... Один воин ушёл в подземелье уже давно.",
+          "characters": [
+            {
+              "id": "rabbit_shop"
+            },
+            {
+              "id": "witch"
+            }
+          ]
+        },
+        {
+          "speaker": "rabbit_shop",
+          "emotion": "worried",
+          "text": "Обычно такие возвращаются быстро. Или не возвращаются вовсе.",
+          "characters": [
+            {
+              "id": "rabbit_shop"
+            },
+            {
+              "id": "witch"
+            }
+          ]
+        },
+        {
+          "speaker": "witch",
+          "text": "Звучит как ловушка. Значит, мы туда полезем, да?",
+          "characters": [
+            {
+              "id": "rabbit_shop"
+            },
+            {
+              "id": "witch"
+            }
+          ]
+        },
+        {
+          "speaker": "rabbit_shop",
+          "text": "Если увидишь комнату со странными знаками — загляни. У меня плохое предчувствие.",
+          "characters": [
+            {
+              "id": "rabbit_shop"
+            },
+            {
+              "id": "witch"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

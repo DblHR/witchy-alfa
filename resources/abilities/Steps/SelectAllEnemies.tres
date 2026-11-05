@@ -1,0 +1,7 @@
+[gd_resource type="Resource" script_class="SelectAllEnemiesStep" format=3 uid="uid://bd5eodvloowil"]
+
+[ext_resource type="Script" uid="uid://oscu3ijihq26" path="res://scripts/abilities/steps/SelectAllEnemiesStep.gd" id="1_w20hc"]
+
+[resource]
+script = ExtResource("1_w20hc")
+metadata/_custom_type_script = "uid://oscu3ijihq26"

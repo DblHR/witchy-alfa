@@ -1,0 +1,25 @@
+[gd_scene format=3 uid="uid://d2g0v3e7p1p0t"]
+
+[ext_resource type="Script" path="res://ui/CharacterPickerPopup.gd" id="1_1e8bq"]
+
+[node name="CharacterPickerPopup" type="PopupPanel"]
+script = ExtResource("1_1e8bq")
+
+[node name="Root" type="VBoxContainer" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 12.0
+offset_top = 12.0
+offset_right = -12.0
+offset_bottom = -12.0
+
+[node name="Title" type="Label" parent="Root" unique_name_in_owner=true]
+text = "Выбор персонажа"
+horizontal_alignment = 1
+
+[node name="Scroll" type="ScrollContainer" parent="Root"]
+size_flags_vertical = 3
+
+[node name="Grid" type="GridContainer" parent="Root/Scroll" unique_name_in_owner=true]
+columns = 2

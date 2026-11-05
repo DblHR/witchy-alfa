@@ -1,0 +1,52 @@
+{
+  "dialogues": [
+    {
+      "id": "nurse_default_01",
+      "type": "flag",
+      "npc": "nurse",
+      "weight": 10,
+      "lines": [
+        {
+          "speaker": "nurse",
+          "text": "Как это вообще вывернулось под ТАКИМ углом?.."
+        }
+      ]
+    },
+    {
+      "id": "nurse_default_02",
+      "type": "flag",
+      "npc": "nurse",
+      "weight": 10,
+      "lines": [
+        {
+          "speaker": "nurse",
+          "text": "Ладно, не дёргайся. Сейчас посмотрим, что можно сделать."
+        }
+      ]
+    },
+    {
+      "id": "nurse_default_03",
+      "type": "flag",
+      "npc": "nurse",
+      "weight": 10,
+      "lines": [
+        {
+          "speaker": "nurse",
+          "text": "В следующий раз попробуй не подставляться под удар. Просто совет."
+        }
+      ]
+    },
+    {
+      "id": "nurse_default_04",
+      "type": "flag",
+      "npc": "nurse",
+      "weight": 10,
+      "lines": [
+        {
+          "speaker": "nurse",
+          "text": "Да, ты ещё жива. Не радуйся раньше времени."
+        }
+      ]
+    }
+  ]
+}

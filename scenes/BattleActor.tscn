@@ -1,0 +1,103 @@
+[gd_scene format=3 uid="uid://cghhlq0g3q1ic"]
+
+[ext_resource type="Script" uid="uid://305y1qsuqxgy" path="res://scripts/BattleActor.gd" id="1_nsd75"]
+[ext_resource type="Texture2D" uid="uid://bpueknxwgpr87" path="res://ui/status_icons/marker.png" id="2_marker"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_nsd75"]
+content_margin_left = 2.0
+content_margin_top = 2.0
+content_margin_right = 2.0
+content_margin_bottom = 2.0
+bg_color = Color(0.84313726, 0, 0.003921569, 0.77254903)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+corner_detail = 6
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ehkf5"]
+content_margin_left = 2.0
+content_margin_top = 2.0
+content_margin_right = 2.0
+content_margin_bottom = 2.0
+bg_color = Color(0.20784314, 0.53333336, 0.95686275, 0.7764706)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+corner_detail = 6
+
+[node name="BattleActor" type="Node2D" unique_id=241204024]
+script = ExtResource("1_nsd75")
+
+
+
+[node name="Sprite" type="Sprite2D" parent="." unique_id=1239353721]
+unique_name_in_owner = true
+offset = Vector2(0, -30)
+
+[node name="HPBar" type="ProgressBar" parent="." unique_id=382992035]
+unique_name_in_owner = true
+offset_left = -45.0
+offset_top = -279.0
+offset_right = 45.0
+offset_bottom = -252.0
+theme_override_styles/fill = SubResource("StyleBoxFlat_nsd75")
+show_percentage = false
+
+[node name="HPLabel" type="Label" parent="." unique_id=44069842]
+unique_name_in_owner = true
+offset_left = -20.0
+offset_top = -279.0
+offset_right = 20.0
+offset_bottom = -256.0
+
+[node name="ENBar" type="ProgressBar" parent="." unique_id=244640497]
+unique_name_in_owner = true
+offset_left = -45.0
+offset_top = -250.0
+offset_right = 45.0
+offset_bottom = -223.0
+theme_override_styles/fill = SubResource("StyleBoxFlat_ehkf5")
+show_percentage = false
+
+[node name="EnergyThresholdMarker" type="TextureRect" parent="ENBar" unique_id=679920807]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -2.0
+offset_right = 2.0
+offset_bottom = 27.0
+grow_horizontal = 2
+texture = ExtResource("2_marker")
+stretch_mode = 1
+
+[node name="ENLabel" type="Label" parent="." unique_id=500924561]
+unique_name_in_owner = true
+offset_left = -20.0
+offset_top = -250.0
+offset_right = 20.0
+offset_bottom = -227.0
+
+[node name="EffectsRow" type="HBoxContainer" parent="." unique_id=1884813289]
+unique_name_in_owner = true
+offset_left = -45.0
+offset_top = -305.0
+offset_right = 45.0
+offset_bottom = -280.0
+
+[node name="APSLabel" type="Label" parent="." unique_id=1242254914]
+unique_name_in_owner = true
+offset_left = -43.0
+offset_top = -343.0
+offset_right = 43.0
+offset_bottom = -309.0
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 16
+horizontal_alignment = 1
+vertical_alignment = 1
+

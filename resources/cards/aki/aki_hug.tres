@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="CardDef" format=3 uid="uid://b147bbl5fjo2t"]
+
+[ext_resource type="Script" path="res://scripts/card/effects/CardEffect.gd" id="1_lhjn6"]
+[ext_resource type="Script" path="res://scripts/card/effects/EffHeal.gd" id="2_lhjn6"]
+[ext_resource type="Script" path="res://scripts/card/data/CardDef.gd" id="3_r38jg"]
+
+[sub_resource type="Resource" id="Resource_o6wjb"]
+script = ExtResource("2_lhjn6")
+mag_ratio = 0.5
+low_hp_bonus_mult = 1.0
+
+[resource]
+script = ExtResource("3_r38jg")
+id = "aki_hug"
+title = "Объятие"
+cost = 2
+target = 4
+tags = PackedStringArray("support")
+description = "Лечит на [h]{0}[/h].
+Если у цели ≤50% HP: ещё [h]+{0b}[/h]."
+effects = Array[ExtResource("1_lhjn6")]([SubResource("Resource_o6wjb")])

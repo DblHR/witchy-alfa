@@ -1,0 +1,214 @@
+[gd_scene format=3 uid="uid://7ts2e40ecexi"]
+
+[ext_resource type="Script" uid="uid://bppce7y23erno" path="res://scenes/MainMenu.gd" id="1_script"]
+[ext_resource type="Texture2D" uid="uid://dpfiv6ntdxwwx" path="res://assets/pics/bigPics/backgrounds/mainmenu.png" id="2_menu_bg"]
+[ext_resource type="Texture2D" uid="uid://cnnrw0xddb22l" path="res://assets/pics/bigPics/backgrounds/pre_mainmenu_BG.png" id="3_pre_bg"]
+[ext_resource type="Texture2D" uid="uid://dogvcsu1d5gvw" path="res://assets/pics/mainmenu_animations/heart.png" id="4_heart"]
+[ext_resource type="Texture2D" uid="uid://18yifof4frno" path="res://assets/pics/icons/buttons/pre_mainmenu_clickbutton.png" id="5_click"]
+[ext_resource type="Texture2D" uid="uid://wtl36dfm0kpk" path="res://assets/pics/icons/buttons/start game.png" id="6_start"]
+[ext_resource type="Texture2D" uid="uid://ugbub80exsfn" path="res://assets/pics/icons/buttons/loadGameButton.png" id="7_load"]
+[ext_resource type="Texture2D" uid="uid://jc8oy8at6b04" path="res://assets/pics/icons/buttons/optionsMainmenuButton.png" id="8_options"]
+[ext_resource type="Texture2D" uid="uid://b20tcsehsqgcj" path="res://assets/pics/icons/buttons/quitGameButton.png" id="9_quit"]
+
+[node name="MainMenu" type="Control" unique_id=1885197433]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_script")
+
+[node name="MenuBackground" type="TextureRect" parent="." unique_id=563603625]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("2_menu_bg")
+expand_mode = 1
+stretch_mode = 6
+
+[node name="MenuLayer" type="Control" parent="." unique_id=2040969433]
+modulate = Color(1, 1, 1, 0)
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="StartGlow" type="TextureRect" parent="MenuLayer" unique_id=1290372533]
+modulate = Color(1, 0.2, 0.62, 0)
+layout_mode = 0
+offset_left = 18.0
+offset_top = 282.0
+offset_right = 502.0
+offset_bottom = 396.0
+pivot_offset = Vector2(242, 57)
+texture = ExtResource("6_start")
+expand_mode = 1
+stretch_mode = 6
+
+[node name="StartButton" type="TextureButton" parent="MenuLayer" unique_id=64230474]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 18.0
+offset_top = 282.0
+offset_right = 502.0
+offset_bottom = 396.0
+pivot_offset = Vector2(242, 57)
+texture_normal = ExtResource("6_start")
+ignore_texture_size = true
+stretch_mode = 0
+
+[node name="LoadGlow" type="TextureRect" parent="MenuLayer" unique_id=1683208803]
+modulate = Color(1, 0.2, 0.62, 0)
+layout_mode = 0
+offset_left = 26.0
+offset_top = 410.0
+offset_right = 510.0
+offset_bottom = 524.0
+pivot_offset = Vector2(242, 57)
+texture = ExtResource("7_load")
+expand_mode = 1
+stretch_mode = 6
+
+[node name="LoadButton" type="TextureButton" parent="MenuLayer" unique_id=1041618316]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 26.0
+offset_top = 410.0
+offset_right = 510.0
+offset_bottom = 524.0
+pivot_offset = Vector2(242, 57)
+texture_normal = ExtResource("7_load")
+ignore_texture_size = true
+stretch_mode = 0
+
+[node name="OptionsGlow" type="TextureRect" parent="MenuLayer" unique_id=1014982867]
+modulate = Color(1, 0.2, 0.62, 0)
+layout_mode = 0
+offset_left = 40.0
+offset_top = 540.0
+offset_right = 508.0
+offset_bottom = 653.0
+pivot_offset = Vector2(234, 56.5)
+texture = ExtResource("8_options")
+expand_mode = 1
+stretch_mode = 6
+
+[node name="OptionsButton" type="TextureButton" parent="MenuLayer" unique_id=229417991]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 40.0
+offset_top = 540.0
+offset_right = 508.0
+offset_bottom = 653.0
+pivot_offset = Vector2(234, 56.5)
+texture_normal = ExtResource("8_options")
+ignore_texture_size = true
+stretch_mode = 0
+
+[node name="QuitGlow" type="TextureRect" parent="MenuLayer" unique_id=578358973]
+modulate = Color(1, 0.2, 0.62, 0)
+layout_mode = 0
+offset_left = 18.0
+offset_top = 672.0
+offset_right = 486.0
+offset_bottom = 785.0
+pivot_offset = Vector2(234, 56.5)
+texture = ExtResource("9_quit")
+expand_mode = 1
+stretch_mode = 6
+
+[node name="QuitButton" type="TextureButton" parent="MenuLayer" unique_id=1327622803]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 18.0
+offset_top = 672.0
+offset_right = 486.0
+offset_bottom = 785.0
+pivot_offset = Vector2(234, 56.5)
+texture_normal = ExtResource("9_quit")
+ignore_texture_size = true
+stretch_mode = 0
+
+[node name="OptionsDialog" type="AcceptDialog" parent="MenuLayer" unique_id=716093944]
+title = "Options"
+initial_position = 1
+size = Vector2i(540, 180)
+dialog_text = "Экран настроек пока не подключён.
+Кнопка уже встроена в новое меню и готова к дальнейшей доработке."
+
+[node name="PreLayer" type="Control" parent="." unique_id=2114240881]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="PreBackground" type="TextureRect" parent="PreLayer" unique_id=1219300958]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("3_pre_bg")
+expand_mode = 1
+stretch_mode = 6
+
+[node name="HeartGlow" type="TextureRect" parent="PreLayer" unique_id=1433267966]
+modulate = Color(1, 0.15, 0.64, 0)
+layout_mode = 0
+offset_left = 675.0
+offset_top = 188.0
+offset_right = 1245.0
+offset_bottom = 758.0
+pivot_offset = Vector2(285, 285)
+texture = ExtResource("4_heart")
+expand_mode = 1
+stretch_mode = 6
+
+[node name="Heart" type="TextureRect" parent="PreLayer" unique_id=1846230572]
+modulate = Color(1, 1, 1, 0)
+layout_mode = 0
+offset_left = 690.0
+offset_top = 203.0
+offset_right = 1230.0
+offset_bottom = 743.0
+pivot_offset = Vector2(270, 270)
+texture = ExtResource("4_heart")
+expand_mode = 1
+stretch_mode = 6
+
+[node name="ClickGlow" type="TextureRect" parent="PreLayer" unique_id=1669813916]
+modulate = Color(1, 0.2, 0.62, 0)
+layout_mode = 0
+offset_left = 775.0
+offset_top = 816.0
+offset_right = 1156.0
+offset_bottom = 912.0
+pivot_offset = Vector2(190.5, 48)
+texture = ExtResource("5_click")
+expand_mode = 1
+stretch_mode = 6
+
+[node name="ClickButton" type="TextureButton" parent="PreLayer" unique_id=400513184]
+unique_name_in_owner = true
+modulate = Color(1, 1, 1, 0)
+layout_mode = 0
+offset_left = 775.0
+offset_top = 816.0
+offset_right = 1156.0
+offset_bottom = 912.0
+pivot_offset = Vector2(190.5, 48)
+texture_normal = ExtResource("5_click")
+ignore_texture_size = true
+stretch_mode = 0
+
+[node name="FxLayer" type="CanvasLayer" parent="." unique_id=719960245]
+layer = 10

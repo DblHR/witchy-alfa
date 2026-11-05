@@ -1,0 +1,38 @@
+{
+  "dialogues": [
+    {
+      "id": "chest_silent",
+      "type": "flag",
+      "npc": "chest",
+      "weight": 1,
+      "conditions": {
+        "not_flag": "never_show_chest_intro"
+      },
+      "lines": []
+    },
+    {
+      "id": "statue_white_default",
+      "type": "flag",
+      "npc": "statue_white",
+      "weight": 1,
+      "lines": [
+        {
+          "speaker": "statue_white",
+          "text": "От белого камня веет спокойствием."
+        }
+      ]
+    },
+    {
+      "id": "statue_black_default",
+      "type": "flag",
+      "npc": "statue_black",
+      "weight": 1,
+      "lines": [
+        {
+          "speaker": "statue_black",
+          "text": "Чёрный камень словно смотрит в ответ."
+        }
+      ]
+    }
+  ]
+}
