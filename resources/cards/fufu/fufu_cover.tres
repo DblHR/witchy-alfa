@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="CardDef" format=3 uid="uid://d4cspeorbwfnl"]
+
+[ext_resource type="Script" path="res://scripts/card/effects/CardEffect.gd" id="1_kpqmg"]
+[ext_resource type="Script" path="res://scripts/card/effects/EffShield.gd" id="2_rlhj4"]
+[ext_resource type="Script" path="res://scripts/card/effects/EffConsumeStatus.gd" id="3_ofn0k"]
+[ext_resource type="Script" path="res://scripts/card/data/CardDef.gd" id="4_fs0pe"]
+
+[sub_resource type="Resource" id="Resource_n27ox"]
+script = ExtResource("2_rlhj4")
+mag_ratio = 0.3
+
+[sub_resource type="Resource" id="Resource_lw3hx"]
+script = ExtResource("3_ofn0k")
+status = "wrap_slime"
+max_stacks = 1
+gain = 2
+mag_ratio = 0.3
+
+[resource]
+script = ExtResource("4_fs0pe")
+id = "fufu_cover"
+title = "Прикрыть грудь"
+target = 2
+tags = PackedStringArray("support")
+description = "[s]+{0}[/s] щита себе.
+Если есть [e]обволакивающая слизь[/e]: снимает 1 стак и даёт ещё [s]{1}[/s]."
+effects = Array[ExtResource("1_kpqmg")]([SubResource("Resource_n27ox"), SubResource("Resource_lw3hx")])

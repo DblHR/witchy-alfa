@@ -10,12 +10,47 @@ const CORE_LOCK := false
 var unlocked_unit_ids: Array[String] = []
 var discovered_boss_ids: Array[String] = []
 
+## --- Отношения (у всех, кроме главных героев — CharacterData.is_protagonist) ---
+const RELATIONSHIP_MAX := 10
+## Тест: пока прокачки отношений нет, у всех героинь они сразу на максимуме.
+const RELATIONSHIP_TEST_MAX := true
+## id героини -> уровень отношений (0..RELATIONSHIP_MAX).
+var relationship: Dictionary = {}
+
+## --- Колоды ---
+## id героини -> id карт, выбранных в колоду (экран Setup). Нет записи — первые карты по лимиту ранга.
+var deck_selection: Dictionary = {}
+
+func get_relationship(unit_id: String) -> int:
+	if relationship.has(unit_id):
+		return int(relationship[unit_id])
+	return RELATIONSHIP_MAX if RELATIONSHIP_TEST_MAX else 0
+
+func set_relationship(unit_id: String, value: int) -> void:
+	relationship[unit_id] = clampi(value, 0, RELATIONSHIP_MAX)
+	changed.emit()
+
+func has_deck_selection(unit_id: String) -> bool:
+	return deck_selection.has(unit_id)
+
+func get_deck_selection(unit_id: String) -> Array[String]:
+	var out: Array[String] = []
+	for v in deck_selection.get(unit_id, []):
+		out.append(String(v))
+	return out
+
+func set_deck_selection(unit_id: String, card_ids: Array[String]) -> void:
+	deck_selection[unit_id] = card_ids.duplicate()
+	changed.emit()
+
 func _ready() -> void:
 	reset_to_defaults()
 
 func reset_to_defaults() -> void:
 	unlocked_unit_ids = STARTING_UNIT_IDS.duplicate()
 	discovered_boss_ids.clear()
+	relationship.clear()
+	deck_selection.clear()
 	changed.emit()
 
 func has_unit(unit_id: String) -> bool:
@@ -57,6 +92,8 @@ func serialize_state() -> Dictionary:
 	return {
 		"unlocked_unit_ids": unlocked_unit_ids.duplicate(),
 		"discovered_boss_ids": discovered_boss_ids.duplicate(),
+		"relationship": relationship.duplicate(),
+		"deck_selection": deck_selection.duplicate(true),
 	}
 
 func apply_state(data: Dictionary) -> void:
@@ -74,5 +111,16 @@ func apply_state(data: Dictionary) -> void:
 		var boss_id := String(v)
 		if boss_id != "" and not discovered_boss_ids.has(boss_id):
 			discovered_boss_ids.append(boss_id)
+	relationship.clear()
+	var rel: Dictionary = data.get("relationship", {})
+	for k in rel.keys():
+		relationship[String(k)] = int(rel[k])
+	deck_selection.clear()
+	var decks: Dictionary = data.get("deck_selection", {})
+	for k in decks.keys():
+		var ids: Array[String] = []
+		for v in decks[k]:
+			ids.append(String(v))
+		deck_selection[String(k)] = ids
 	unlocked_unit_ids.sort()
 	changed.emit()

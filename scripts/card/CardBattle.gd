@@ -32,8 +32,6 @@ const ENEMY_ID := "base_slime"
 
 const ENERGY_PER_TURN := 3
 const HAND_SIZE := 5
-const FILLER_ATTACK_COUNT := 4
-const FILLER_SHIELD_COUNT := 2
 ## Щит держится до начала следующего хода игрока (после удара врагов).
 const SHIELD_EXPIRES_ON_NEW_TURN := true
 
@@ -89,6 +87,9 @@ var _deck := CardDeck.new()
 var _sleeve: CardSleeve
 var _ults: CardUltBar
 var _pile_popup: CardPilePopup
+var _admin: CardBattleAdmin
+## Админ: следующий клик по юниту убивает его.
+var _admin_kill_mode := false
 var _drag_portrait: CardDragPortrait
 
 var _hand_views: Array[CardView] = []
@@ -104,6 +105,10 @@ var _room_index: int = 0
 ## Сколько плавающих надписей уже показано над юнитом в этом действии (чтобы не налезали).
 var _float_stack: Dictionary = {}
 var _busy := false
+## Сколько карт игрок ещё должен сбросить из руки (эффект «сбросьте карту»). Пока > 0 —
+## клик по карте в руке сбрасывает её, остальные действия недоступны.
+var _discard_left := 0
+var _discard_prompt: Label
 var _ended := false
 var _end_victory := false
 
@@ -139,6 +144,7 @@ func _ready() -> void:
 	_combat.floated.connect(_float_for)
 	_combat.hurt.connect(_on_unit_hurt)
 	_combat.died.connect(_on_unit_died)
+	_combat.discard_requested.connect(_on_discard_requested)
 
 	_run = CardRun.new()
 	_ui_layer = hud.get_parent()
@@ -167,6 +173,10 @@ func _ready() -> void:
 	hud.move_child(_drag_portrait, hand_layer.get_index())
 	for u in left_team:
 		CardDragPortrait.warm_up(u.data)
+
+	_admin = CardBattleAdmin.new()
+	hud.add_child(_admin)
+	_admin.setup(self)
 
 	_setup_banter()
 	await _start_room(0)
@@ -359,13 +369,9 @@ func _start_room(index: int) -> void:
 	BattleBanter_.trigger("battle_start")
 	await _begin_player_turn()
 
-## Колода на бой: карты живых героев, добытые карты, филлеры и эстус. Сброс пуст.
+## Колода на бой: карты живых героев (выбранные в Setup), общие карты, эстус и добытые карты.
 func _build_battle_deck() -> Array[CardInstance]:
-	var cards: Array[CardInstance] = []
-	for u in left_team:
-		if u == null or u.is_dead:
-			continue
-		cards.append_array(CardLibrary.hero_deck(u))
+	var cards := CardLibrary.base_deck(left_team, DungRun.estus_stacks)
 	for card_id in _run.bonus_cards:
 		var owner_id := CardLibrary.owner_of(card_id)
 		var owner := _combat.hero_by_id(owner_id)
@@ -374,8 +380,6 @@ func _build_battle_deck() -> Array[CardInstance]:
 		var bonus := CardLibrary.card_by_id(card_id, owner)
 		if bonus != null:
 			cards.append(bonus)
-	cards.append_array(CardLibrary.filler_cards(FILLER_ATTACK_COUNT, FILLER_SHIELD_COUNT))
-	cards.append_array(CardLibrary.estus_cards(DungRun.estus_stacks))
 	return _without_run_burned(cards)
 
 ## Убирает из колоды карты, сгоревшие до конца забега (по копии на каждое сгорание).
@@ -400,6 +404,7 @@ func _begin_player_turn() -> void:
 	await _deal_new_hand()
 
 func _clear_hand_views() -> void:
+	_set_discard_left(0)
 	for v in _hand_views:
 		v.fly_to_and_free(_discard_pos())
 	_hand_views.clear()
@@ -478,9 +483,14 @@ func _open_pile(is_draw_pile: bool) -> void:
 # --- Перетаскивание ----------------------------------------------------------
 
 func _can_act() -> bool:
+	if _discard_left > 0:
+		return false
 	return not _busy and not _ended and _dragging == null
 
 func _on_card_pressed(v: CardView) -> void:
+	if _discard_left > 0 and not _busy and not _ended:
+		_discard_from_hand(v)
+		return
 	if not _can_act():
 		return
 	_dragging = v
@@ -489,7 +499,7 @@ func _on_card_pressed(v: CardView) -> void:
 	hand_layer.move_child(v, -1)
 	var owner := _combat.hero_by_id(v.card.owner_id)
 	if owner != null:
-		_drag_portrait.show_for(owner.data, v.card.target == CardInstance.Target.CHOSEN_ALLY)
+		_drag_portrait.show_for(owner.data)
 	set_process(true)
 	_update_drag_feedback()
 
@@ -501,6 +511,16 @@ func _input(event: InputEvent) -> void:
 	if event is InputEventMouse:
 		_last_mouse = (event as InputEventMouse).position
 		_has_last_mouse = true
+	if _admin_kill_mode and event is InputEventMouseButton and event.pressed:
+		get_viewport().set_input_as_handled()
+		if event.button_index == MOUSE_BUTTON_LEFT:
+			var u := _unit_at(right_actors, _mouse_pos())
+			if u == null:
+				u = _unit_at(left_actors, _mouse_pos())
+			if u != null:
+				admin_kill(u)
+		admin_set_kill_mode(false)
+		return
 	if _dragging == null:
 		return
 	if event is InputEventMouseMotion:
@@ -553,6 +573,7 @@ func _update_drag_feedback() -> void:
 	if _dragging == null:
 		return
 	var point := _mouse_pos()
+	_drag_portrait.update_hover(point)
 	var over_sleeve := CardSleeve.in_zone(point)
 	_sleeve.set_hover(over_sleeve)
 	_show_highlights([] as Array[Unit] if over_sleeve else _drop_targets(_dragging.card, point))
@@ -829,7 +850,89 @@ func _check_end() -> bool:
 	_finish_run(left_alive and not is_draw, is_draw)
 	return true
 
+# --- Админ-панель (CardBattleAdmin) ----------------------------------------
+
+func admin_can_act() -> bool:
+	return not _ended and not _busy
+
+func admin_heal(heroes: bool) -> void:
+	if _ended:
+		return
+	_float_stack.clear()
+	for u in (left_team if heroes else right_team):
+		if CardCombat.is_alive(u):
+			_combat.heal(u, u.max_hp - u.hp)
+	_refresh_all_actors()
+
+func admin_set_kill_mode(on: bool) -> void:
+	_admin_kill_mode = on and admin_can_act()
+	_admin.show_kill_mode(_admin_kill_mode)
+
+## Мгновенно убить юнита (щит не спасает). Добыча и выбывание карт — как при обычной смерти.
+func admin_kill(u: Unit, check_end: bool = true) -> void:
+	if not CardCombat.is_alive(u) or not admin_can_act():
+		return
+	_float_stack.clear()
+	_combat.shields.erase(u)
+	_combat.apply_damage(u, u.hp)
+	_refresh_all_actors()
+	if check_end:
+		_check_end()
+
+func admin_clear_room() -> void:
+	if not admin_can_act():
+		return
+	for e in _combat.alive_enemies():
+		admin_kill(e, false)
+	_check_end()
+
+func admin_lose() -> void:
+	if not admin_can_act():
+		return
+	for h in _combat.alive_heroes():
+		admin_kill(h, false)
+	_check_end()
+
+func admin_charge_ults() -> void:
+	if _ended:
+		return
+	_ults.charge_all()
+	_ults.refresh()
+
+# --- Сброс карты на выбор ----------------------------------------------------
+
+func _on_discard_requested(count: int) -> void:
+	_set_discard_left(_discard_left + count)
+
+func _set_discard_left(n: int) -> void:
+	_discard_left = mini(n, _hand_views.size()) if n > 0 else 0
+	if _discard_prompt == null:
+		_discard_prompt = Label.new()
+		_discard_prompt.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_discard_prompt.position = Vector2(560, 760)
+		_discard_prompt.size = Vector2(800, 40)
+		_discard_prompt.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		_discard_prompt.add_theme_font_size_override("font_size", 28)
+		_discard_prompt.add_theme_color_override("font_color", Color(1.0, 0.85, 0.5))
+		_discard_prompt.add_theme_color_override("font_outline_color", Color(0, 0, 0, 1))
+		_discard_prompt.add_theme_constant_override("outline_size", 8)
+		hud.add_child(_discard_prompt)
+	_discard_prompt.visible = _discard_left > 0
+	if _discard_left > 0:
+		_discard_prompt.text = "Выберите карту для сброса" if _discard_left == 1 else "Выберите карты для сброса: %d" % _discard_left
+
+func _discard_from_hand(v: CardView) -> void:
+	if not _deck.discard_card(v.card):
+		return
+	_hand_views.erase(v)
+	v.fly_to_and_free(_discard_pos())
+	_layout_hand(true)
+	_refresh_pile_buttons()
+	_refresh_energy()
+	_set_discard_left(_discard_left - 1)
+
 func _finish_run(victory: bool, is_draw: bool) -> void:
+	_set_discard_left(0)
 	_ended = true
 	_busy = true
 	_end_victory = victory

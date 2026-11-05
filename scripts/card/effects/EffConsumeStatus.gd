@@ -18,6 +18,8 @@ enum Receiver { SOURCE, CASTER }
 @export var base: int = 0
 @export var atk_ratio: float = 0.0
 @export var mag_ratio: float = 0.0
+## Если у получателя мало HP (≤ 50%) — умножить полученное (2.0 = вдвое). 1.0 — без бонуса.
+@export var low_hp_mult: float = 1.0
 ## Если стаки потрачены — наложить на источник ещё и этот статус (например, Уязвимость).
 @export var then_status: String = ""
 @export var then_stacks: int = 0
@@ -38,6 +40,8 @@ func _apply_one(ctx: CardContext, source: Unit) -> void:
 		return
 	var rcv: Unit = ctx.caster if receiver == Receiver.CASTER else source
 	var amount := value(ctx.caster) * spent
+	if low_hp_mult != 1.0 and CardCombat.is_low_hp(rcv):
+		amount = roundi(float(amount) * low_hp_mult)
 	if rcv != null and amount > 0:
 		match gain:
 			Gain.HEAL:

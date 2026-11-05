@@ -17,6 +17,7 @@
 script = ExtResource("1_d14mp")
 id = "witch"
 display_name = "Ведьмочка"
+is_protagonist = true
 rank = "S"
 battle_texture = ExtResource("1_geb22")
 base_hp = 55

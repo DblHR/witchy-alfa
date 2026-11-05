@@ -18,6 +18,7 @@ script = ExtResource("1_d14mp")
 id = "warrior"
 display_name = "Воин"
 unit_class = "воин"
+is_protagonist = true
 rank = "S"
 battle_texture = ExtResource("1_g5w5n")
 base_hp = 75

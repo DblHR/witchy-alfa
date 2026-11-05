@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="CardDef" format=3 uid="uid://c7dyexrjlk5rm"]
+[gd_resource type="Resource" script_class="CardDef" format=3 uid="uid://88ko8go1qjg0"]
 
 [ext_resource type="Script" path="res://scripts/card/effects/CardEffect.gd" id="1_ipxn2"]
 [ext_resource type="Script" path="res://scripts/card/effects/EffDamage.gd" id="2_4uc3c"]
@@ -8,7 +8,7 @@
 
 [sub_resource type="Resource" id="Resource_ipxn2"]
 script = ExtResource("2_4uc3c")
-atk_ratio = 0.56
+atk_ratio = 0.5
 
 [sub_resource type="Resource" id="Resource_4uc3c"]
 script = ExtResource("3_t3guf")
@@ -16,18 +16,23 @@ status = "weak"
 turns = 1
 
 [sub_resource type="Resource" id="Resource_t3guf"]
+script = ExtResource("3_t3guf")
+status = "sticky_slime"
+stacks = 1
+
+[sub_resource type="Resource" id="Resource_s4bt5"]
 script = ExtResource("4_s4bt5")
-mag_ratio = 0.25
+mag_ratio = 0.2
 per_card_target = true
 target_mode = 1
 
 [resource]
 script = ExtResource("5_2ocxr")
 id = "fufu_ult"
-title = "Большие тити"
+title = "Поработать грудью"
 cost = 0
 target = 1
 tags = PackedStringArray("attack")
-description = "[d]{0}[/d] урона всем врагам, [e]Слабость[/e] всем.
-Лечит Фуфу на [h]{2}[/h] за каждого задетого."
-effects = Array[ExtResource("1_ipxn2")]([SubResource("Resource_ipxn2"), SubResource("Resource_4uc3c"), SubResource("Resource_t3guf")])
+description = "[d]{0}[/d] урона всем врагам, [e]Слабость[/e] и [e]липкая слизь +{2}[/e] всем.
+Лечит Фуфу на [h]{3}[/h] за каждого задетого."
+effects = Array[ExtResource("1_ipxn2")]([SubResource("Resource_ipxn2"), SubResource("Resource_4uc3c"), SubResource("Resource_t3guf"), SubResource("Resource_s4bt5")])

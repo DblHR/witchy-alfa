@@ -1,7 +1,0 @@
-[gd_resource type="Resource" script_class="SlimeOnHitPassive" format=3 uid="uid://dm3lf0tyall1t"]
-
-[ext_resource type="Script" path="res://scripts/card/passives/SlimeOnHitPassive.gd" id="1_vkeg4"]
-
-[resource]
-script = ExtResource("1_vkeg4")
-description = "Каждые 6 урона, нанесённого Фуфу, превращаются в +1 липкую слизь на цели."

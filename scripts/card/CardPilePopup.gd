@@ -75,6 +75,7 @@ func _init() -> void:
 
 ## Показывает стопку. extra — дополнительный раздел ниже (например, «Сгорело до конца боя»).
 func open(title: String, cards: Array[CardInstance], extra_title: String = "", extra: Array[CardInstance] = []) -> void:
+	_fit_screen()
 	_title.text = "%s: %d" % [title, cards.size()]
 	for c in _flow.get_children():
 		_flow.remove_child(c)
@@ -94,6 +95,12 @@ func open(title: String, cards: Array[CardInstance], extra_title: String = "", e
 
 func close() -> void:
 	visible = false
+
+## Растянуться на весь экран, даже если родитель не растянут (корень Setup — Node2D).
+func _fit_screen() -> void:
+	set_anchors_preset(Control.PRESET_TOP_LEFT)
+	global_position = Vector2.ZERO
+	size = get_viewport_rect().size
 
 ## Сортируем по владельцу и названию, чтобы не выдавать порядок добора.
 func _add_cards(cards: Array[CardInstance]) -> void:

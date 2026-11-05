@@ -65,6 +65,13 @@ func gain(owner_id: String) -> void:
 		var ult: CardInstance = _cards[id]
 		_charge[id] = mini(maxi(1, ult.cost), int(_charge.get(id, 0)) + CHARGE_PER_CARD)
 
+## Админ: зарядить ульты всех живых героев.
+func charge_all() -> void:
+	for b in _buttons:
+		if not b.unit.is_dead:
+			var ult: CardInstance = _cards[b.unit.data.id]
+			_charge[b.unit.data.id] = maxi(1, ult.cost)
+
 func spend(hero_id: String) -> void:
 	_charge[hero_id] = 0
 

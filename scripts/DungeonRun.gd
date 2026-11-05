@@ -29,6 +29,7 @@ const ESTUS_BASE_STACKS := 2
 const ESTUS_BASE_POWER := 8
 var estus_stacks: int = ESTUS_BASE_STACKS
 var estus_power: int = ESTUS_BASE_POWER
+
 var custom_potion_charges: int = 0
 var selected_potion_id: String = "heal_potion"
 var selected_artifact_id: String = ""

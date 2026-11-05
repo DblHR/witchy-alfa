@@ -16,6 +16,8 @@ signal died(unit: Unit)
 ## Игровые события для пассивок. source может быть null (Горение и т.п.).
 signal damage_dealt(source: Unit, target: Unit, amount: int)
 signal card_played(card: CardInstance, caster: Unit)
+## Карта просит сбросить N карт из руки на выбор игрока (рукой распоряжается CardBattle).
+signal discard_requested(count: int)
 
 const LOW_HP_RATIO := 0.5          ## «мало HP» = не больше половины
 
@@ -299,6 +301,10 @@ func apply_damage(unit: Unit, amount: int) -> void:
 	if dmg > 0:
 		killed = unit.take_damage(dmg)
 	hurt.emit(unit, dmg)
+	if dmg > 0 and not killed:
+		for pair in _status_list(unit):
+			pair[0].on_hp_lost(self, unit, pair[1], dmg)
+			_cleanup(unit, pair[0].id)
 	if dmg > 0:
 		floated.emit(unit, "-%d" % dmg, COL_DAMAGE, 34)
 	if absorbed > 0:

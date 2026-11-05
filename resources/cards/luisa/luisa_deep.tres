@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="CardDef" format=3 uid="uid://b51mjo80onocq"]
+
+[ext_resource type="Script" path="res://scripts/card/effects/CardEffect.gd" id="1_c07ok"]
+[ext_resource type="Script" path="res://scripts/card/effects/EffApplyStatus.gd" id="2_vtbhg"]
+[ext_resource type="Script" path="res://scripts/card/data/CardDef.gd" id="3_d2gm4"]
+
+[sub_resource type="Resource" id="Resource_6n8gu"]
+script = ExtResource("2_vtbhg")
+status = "sticky_slime"
+stacks = 2
+
+[resource]
+script = ExtResource("3_d2gm4")
+id = "luisa_deep"
+title = "Глубокое проникновение"
+tags = PackedStringArray("support")
+description = "[e]Липкая слизь +{0}[/e] переднему."
+effects = Array[ExtResource("1_c07ok")]([SubResource("Resource_6n8gu")])

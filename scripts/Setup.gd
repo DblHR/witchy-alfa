@@ -55,6 +55,10 @@ var _popup_kind: String = ""
 
 var _admin_open := false
 var _empty_hint: Label = null
+## Клик по героине (в отряде или в списке) — выбор её карт; кнопка «Колода» — вся стартовая колода.
+var _deck_editor: DeckEditorPopup
+var _deck_preview: CardPilePopup
+const DECK_BUTTON_RECT := Rect2(1480, 900, 210, 70)
 
 ## Размер отряда и тестовый переключатель «ядра команды».
 ## CORE_LOCK=true возвращает старую привязку: ведьма/воин — золотой лидер, его нельзя убрать.
@@ -100,6 +104,7 @@ func _ready() -> void:
 	_setup_visual_shell()
 	_setup_scene_widgets()
 	_build_item_popup()
+	_build_deck_ui()
 
 	await get_tree().process_frame
 	_capture_slot_positions()
@@ -403,9 +408,11 @@ func _ensure_default_party() -> void:
 	DungRun.leader_id = first
 
 func _on_slot_pressed(slot_index: int) -> void:
-	if not CORE_LOCK:
-		return
 	if slot_index < 0 or slot_index >= DungRun.party_ids.size():
+		return
+	if not CORE_LOCK:
+		if DungRun.party_ids[slot_index] != "":
+			_open_deck_editor(DungRun.party_ids[slot_index])
 		return
 	if DungRun.party_ids[slot_index] == "" or DungRun.party_ids[slot_index] != DungRun.leader_id:
 		return
@@ -616,10 +623,11 @@ func _refresh_roster_strip() -> void:
 		card.custom_minimum_size = ROSTER_CARD_SIZE
 		card.size = ROSTER_CARD_SIZE
 		card.scale = Vector2.ONE
-		card.can_pick = false
+		card.can_pick = true   # клик — выбор карт; в отряд — только перетаскиванием
 		card.can_drag = true
 		card.ui_index = _roster_cards.size()
 		card.set_meta("unit_id", id)
+		card.pressed.connect(func(_i: int) -> void: _open_deck_editor(id))
 		var data: CharacterData = CharDB.get_by_id(id)
 		var tex: Texture2D = null
 		if data != null:
@@ -672,6 +680,40 @@ func _on_roster_card_drag_released(_slot_index: int, global_mouse: Vector2) -> v
 		_refresh_team_ui()
 		_refresh_roster_strip()
 	_roster_drag_id = ""
+
+# --- Колода ----------------------------------------------------------------
+
+func _build_deck_ui() -> void:
+	var ui_root := team_row.get_parent()
+	var deck_button := Button.new()
+	deck_button.text = "Колода"
+	deck_button.focus_mode = Control.FOCUS_NONE
+	deck_button.position = DECK_BUTTON_RECT.position
+	deck_button.size = DECK_BUTTON_RECT.size
+	deck_button.add_theme_font_size_override("font_size", 28)
+	deck_button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	_style_primary_button(deck_button, Color(0.42, 0.22, 0.46, 0.98), Color(0.18, 0.08, 0.20, 1.0), 20)
+	deck_button.tooltip_text = "Посмотреть, с какой колодой начнётся забег"
+	deck_button.pressed.connect(_open_deck_preview)
+	ui_root.add_child(deck_button)
+	_deck_editor = DeckEditorPopup.new()
+	ui_root.add_child(_deck_editor)
+	_deck_preview = CardPilePopup.new()
+	ui_root.add_child(_deck_preview)
+
+func _open_deck_editor(unit_id: String) -> void:
+	if unit_id == "" or _deck_editor == null:
+		return
+	_deck_editor.open_for(unit_id)
+
+## Стартовая колода отряда: выбранные карты героинь + общие карты + эстус.
+func _open_deck_preview() -> void:
+	var heroes: Array[Unit] = []
+	for id in DungRun.party_ids:
+		var data: CharacterData = CharDB.get_by_id(id) if id != "" else null
+		if data != null:
+			heroes.append(Unit.new(data, maxi(1, int(DungRun.party_level))))
+	_deck_preview.open("Стартовая колода", CardLibrary.base_deck(heroes, DungRun.estus_stacks))
 
 func _refresh_admin_panel() -> void:
 	if add_unit_in_roaster == null or delete_unit_in_roaster == null:

@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="CardDef" format=3 uid="uid://dnskn2whcirxx"]
+
+[ext_resource type="Script" path="res://scripts/card/effects/CardEffect.gd" id="1_h0ini"]
+[ext_resource type="Script" path="res://scripts/card/effects/EffConsumeStatus.gd" id="2_bjfpc"]
+[ext_resource type="Script" path="res://scripts/card/data/CardDef.gd" id="3_s72ri"]
+
+[sub_resource type="Resource" id="Resource_eqv4e"]
+script = ExtResource("2_bjfpc")
+status = "wrap_slime"
+gain = 2
+mag_ratio = 0.4
+
+[resource]
+script = ExtResource("3_s72ri")
+id = "aki_squeeze"
+title = "Упругие объятия"
+target = 4
+tags = PackedStringArray("support")
+description = "Вся [e]обволакивающая слизь[/e] выбранного превращается в щит: [s]{0}[/s] за стак."
+effects = Array[ExtResource("1_h0ini")]([SubResource("Resource_eqv4e")])

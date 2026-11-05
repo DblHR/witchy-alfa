@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="CardDef" format=3 uid="uid://dgc7ja0d81h23"]
+
+[ext_resource type="Script" path="res://scripts/card/effects/CardEffect.gd" id="1_h5f1n"]
+[ext_resource type="Script" path="res://scripts/card/effects/EffHeal.gd" id="2_4yqo8"]
+[ext_resource type="Script" path="res://scripts/card/effects/EffApplyStatus.gd" id="3_4hfrv"]
+[ext_resource type="Script" path="res://scripts/card/data/CardDef.gd" id="4_yqb68"]
+
+[sub_resource type="Resource" id="Resource_h7ffi"]
+script = ExtResource("2_4yqo8")
+mag_ratio = 0.25
+
+[sub_resource type="Resource" id="Resource_u5nbb"]
+script = ExtResource("3_4hfrv")
+status = "wrap_slime"
+stacks = 2
+
+[resource]
+script = ExtResource("4_yqb68")
+id = "aki_lube"
+title = "Смазка"
+target = 4
+tags = PackedStringArray("support")
+description = "Лечит выбранного на [h]{0}[/h].
+[e]Обволакивающая слизь +{1}[/e]."
+effects = Array[ExtResource("1_h5f1n")]([SubResource("Resource_h7ffi"), SubResource("Resource_u5nbb")])

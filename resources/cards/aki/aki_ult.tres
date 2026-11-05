@@ -1,26 +1,34 @@
-[gd_resource type="Resource" script_class="CardDef" format=3 uid="uid://dtv1hnek8ih6a"]
+[gd_resource type="Resource" script_class="CardDef" format=3 uid="uid://c651cbqmg1xrp"]
 
 [ext_resource type="Script" path="res://scripts/card/effects/CardEffect.gd" id="1_q08xx"]
-[ext_resource type="Script" path="res://scripts/card/effects/EffHeal.gd" id="2_jwdn3"]
 [ext_resource type="Script" path="res://scripts/card/effects/EffApplyStatus.gd" id="3_ie4wm"]
+[ext_resource type="Script" path="res://scripts/card/effects/EffConsumeStatus.gd" id="3_q08xx"]
 [ext_resource type="Script" path="res://scripts/card/data/CardDef.gd" id="4_1h7d5"]
-
-[sub_resource type="Resource" id="Resource_q08xx"]
-script = ExtResource("2_jwdn3")
-mag_ratio = 0.84
-target_mode = 2
 
 [sub_resource type="Resource" id="Resource_jwdn3"]
 script = ExtResource("3_ie4wm")
+status = "wrap_slime"
+stacks = 1
+target_mode = 3
+
+[sub_resource type="Resource" id="Resource_ie4wm"]
+script = ExtResource("3_q08xx")
+status = "wrap_slime"
+mag_ratio = 0.5
+target_mode = 3
+
+[sub_resource type="Resource" id="Resource_1h7d5"]
+script = ExtResource("3_ie4wm")
 status = "charm"
 turns = 1
+target_mode = 4
 
 [resource]
 script = ExtResource("4_1h7d5")
 id = "aki_ult"
-title = "Очарование"
+title = "Танец на шесте"
 cost = 0
 tags = PackedStringArray("support")
-description = "Лечит переднего союзника на [h]{0}[/h].
-[e]Очаровывает[/e] переднего врага: он бьёт своих."
-effects = Array[ExtResource("1_q08xx")]([SubResource("Resource_q08xx"), SubResource("Resource_jwdn3")])
+description = "Всем союзникам [e]обволакивающая слизь +{0}[/e], затем вся она — лечение [h]{1}[/h] за стак.
+[e]Очаровывает[/e] переднего врага."
+effects = Array[ExtResource("1_q08xx")]([SubResource("Resource_jwdn3"), SubResource("Resource_ie4wm"), SubResource("Resource_1h7d5")])

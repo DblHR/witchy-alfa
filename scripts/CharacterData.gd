@@ -6,12 +6,15 @@ class_name CharacterData
 @export_enum("воин", "маг", "саппорт", "танк", "рядовой враг", "босс") var unit_class: String = "маг"
 @export var tags: Array[String] = []
 
-## Ранг героя: A — до 5 карт и простая механика, S — до 8 карт и более сложная.
+## Главный герой (Ведьмочка, Воин): у него нет отношений и повторок — игрок играет за него.
+@export var is_protagonist: bool = false
+
+## Ранг героя: A — до 4 карт в бой и простая механика, S — до 8 карт и более сложная.
 @export_enum("A", "S") var rank: String = "A"
-const RANK_CARD_CAP := {"A": 5, "S": 8}
+const RANK_CARD_CAP := {"A": 4, "S": 8}
 
 func card_cap() -> int:
-	return int(RANK_CARD_CAP.get(rank, 5))
+	return int(RANK_CARD_CAP.get(rank, 4))
 
 # Для UI/иконок/спрайтов (пока можно оставить пустым)
 @export var icon: Texture2D
@@ -41,8 +44,11 @@ func card_cap() -> int:
 @export var ult_splash: Texture2D
 ## Цвет карт героя.
 @export var card_color: Color = Color(0.45, 0.45, 0.50, 1.0)
-## Все карты героя. Пока в колоду идут первые card_cap() штук (по рангу).
+## Стартовые карты героя: есть сразу, идут в колоду (не больше card_cap() по рангу).
 @export var card_pool: Array[CardDef] = []
+## Карты, которые открываются позже (за отношения). Пока не открыты — в инвентаре «не получена».
+## Открытые хранятся в DungRun.unlocked_cards.
+@export var unlock_cards: Array[CardDef] = []
 ## Ульта (не карта колоды: копит заряд и жмётся кнопкой).
 @export var ult_card: CardDef
 ## Пассивка в карточном бою (необязательно).

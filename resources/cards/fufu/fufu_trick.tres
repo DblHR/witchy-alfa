@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="CardDef" format=3 uid="uid://c3x53thul4att"]
+
+[ext_resource type="Script" path="res://scripts/card/effects/CardEffect.gd" id="1_0piko"]
+[ext_resource type="Script" path="res://scripts/card/effects/EffDamage.gd" id="2_g86ps"]
+[ext_resource type="Script" path="res://scripts/card/effects/EffApplyStatus.gd" id="3_rvklp"]
+[ext_resource type="Script" path="res://scripts/card/data/CardDef.gd" id="4_dis3q"]
+
+[sub_resource type="Resource" id="Resource_t53di"]
+script = ExtResource("2_g86ps")
+atk_ratio = 0.25
+
+[sub_resource type="Resource" id="Resource_yylpy"]
+script = ExtResource("3_rvklp")
+status = "sticky_slime"
+stacks = 2
+
+[resource]
+script = ExtResource("4_dis3q")
+id = "fufu_trick"
+title = "Развратный фокус"
+tags = PackedStringArray("attack")
+description = "[d]{0}[/d] урона переднему.
+[e]Липкая слизь +{1}[/e]."
+effects = Array[ExtResource("1_0piko")]([SubResource("Resource_t53di"), SubResource("Resource_yylpy")])

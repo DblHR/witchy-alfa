@@ -14,7 +14,22 @@ func _ready() -> void:
 	alchemy.pressed.connect(func(): SceneRouter_.go_to_alchemy())
 	shop.pressed.connect(func(): SceneRouter_.go_to_shop())
 	inv.pressed.connect(func(): SceneRouter_.go_to_inventory())
+	_start_wanderers()
 	call_deferred("_play_pending_story_dialogue")
+
+## Ведьмочка бродит по дому. Границы — левый край её картинки (координаты 1920×1080),
+## чтобы не заходить под кнопки инвентаря и портала.
+const WITCH_MIN_X := 90.0
+const WITCH_MAX_X := 1150.0
+
+func _start_wanderers() -> void:
+	var witch := get_node_or_null("TextureRect") as TextureRect
+	if witch == null:
+		return
+	var w := HubWanderer.new()
+	w.name = "WitchWanderer"
+	w.setup(witch, WITCH_MIN_X, WITCH_MAX_X)
+	add_child(w)
 
 func _on_start_run() -> void:
 	# Тут логично начинать новый забег (seed, сброс золота и т.д.)

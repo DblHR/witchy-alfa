@@ -45,7 +45,13 @@ const COST_COLOR_MID := Color(0.86, 0.68, 0.14, 1.0)    ## цена 2
 const COST_COLOR_HIGH := Color(0.80, 0.24, 0.24, 1.0)   ## цена 3 и выше
 const COST_COLOR_DISABLED := Color(0.40, 0.40, 0.44, 1.0)
 const GRAY_OVERLAY := Color(0.38, 0.38, 0.42, 0.74)
-const HOVER_SCALE := 1.28
+const HOVER_SCALE := 1.9
+## Карты в руке показывают описание только при наведении (и пока их тащат).
+## В окнах колоды/сброса и в инвентаре описание видно всегда.
+const DESC_ON_HOVER_ONLY := true
+## Подложка под описанием: тёмная плашка, чтобы цветной текст читался на любом арте.
+const DESC_PLATE_COLOR := Color(0.03, 0.01, 0.06, 0.82)
+const DESC_PLATE_PAD := Vector2(5, 3)
 const HOVER_TIME := 0.09
 
 const ART_INSET := 3.0
@@ -79,6 +85,8 @@ var home_position: Vector2 = Vector2.ZERO
 
 var _move_tween: Tween
 var _hover: bool = false
+var _desc: RichTextLabel
+var _desc_plate: Panel
 var _affordable: bool = true
 var _cost_label: Label
 var _cost_style: StyleBoxFlat
@@ -129,13 +137,20 @@ func setup(c: CardInstance, is_interactive: bool = true) -> void:
 	_gray_overlay = _make_gray_overlay()
 	add_child(_gray_overlay)
 
-	var title_size := 15 if c.title.length() <= 11 else 13
+	var title_pos := TAG_TITLE_POS if tag_art != null else Vector2(24, 12)
+	var title_w := CARD_SIZE.x - (TAG_TITLE_POS.x * 2.0 if tag_art != null else 30.0)
+	var title := _make_title(c.title, title_pos, title_w)
+	add_child(title)
+	if c.locked:
+		_setup_locked(tag_art != null)
+		return
+	# Название в две строки — описание опускается.
+	var extra := title.size.y - TITLE_LINE_H
 	if tag_art != null:
-		add_child(_make_label(c.title, title_size, TAG_TITLE_POS, Vector2(CARD_SIZE.x - TAG_TITLE_POS.x * 2.0, 24)))
-		add_child(_make_description(c.description, TAG_DESC_POS, Vector2(CARD_SIZE.x - TAG_DESC_POS.x * 2.0, 124)))
+		_add_description(c.description, TAG_DESC_POS + Vector2(0, extra), Vector2(CARD_SIZE.x - TAG_DESC_POS.x * 2.0, 124 - extra))
 	else:
-		add_child(_make_label(c.title, title_size, Vector2(24, 12), Vector2(CARD_SIZE.x - 30, 26)))
-		add_child(_make_description(c.description, Vector2(10, 46), Vector2(CARD_SIZE.x - 20, 130)))
+		_add_description(c.description, Vector2(10, 46 + extra), Vector2(CARD_SIZE.x - 20, 130 - extra))
+	_set_desc_visible(not (interactive and DESC_ON_HOVER_ONLY))
 
 	var owner_label := _make_label(c.owner_name, 14, Vector2(0, 182), Vector2(CARD_SIZE.x, 22))
 	owner_label.add_theme_color_override("font_color", Color(1, 1, 1, 0.8))
@@ -149,6 +164,36 @@ func setup(c: CardInstance, is_interactive: bool = true) -> void:
 	if interactive:
 		mouse_entered.connect(_on_mouse_entered)
 		mouse_exited.connect(_on_mouse_exited)
+
+## Название карты: шрифт уменьшается, пока строка не влезет; не влезла и на минимальном —
+## переносится на две строки.
+const TITLE_SIZES := [15, 14, 13, 12]
+const TITLE_WRAP_SIZE := 12
+const TITLE_LINE_H := 24.0
+
+func _make_title(text: String, pos: Vector2, width: float) -> Label:
+	var probe := Label.new()
+	var font := probe.get_theme_font("font")
+	probe.free()
+	for fs in TITLE_SIZES:
+		if font == null or font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x <= width - 4.0:
+			return _make_label(text, fs, pos, Vector2(width, TITLE_LINE_H))
+	var l := _make_label(text, TITLE_WRAP_SIZE, pos, Vector2(width, TITLE_LINE_H + 14.0), true)
+	l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	return l
+
+## Ещё не полученная карта: только подложка, название и «Не получена».
+func _setup_locked(has_tag_art: bool) -> void:
+	var veil := ColorRect.new()
+	veil.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	veil.position = Vector2(4, TAG_TITLE_POS.y if has_tag_art else 4.0)
+	veil.size = Vector2(CARD_SIZE.x - 8, CARD_SIZE.y - veil.position.y - 4)
+	veil.color = Color(0.02, 0.0, 0.05, 0.62)
+	add_child(veil)
+	move_child(veil, get_child_count() - 2)   # под названием
+	var lock := _make_label("Не получена", 17, Vector2(0, CARD_SIZE.y * 0.5 - 4), Vector2(CARD_SIZE.x, 30))
+	lock.add_theme_color_override("font_color", Color(1, 1, 1, 0.75))
+	add_child(lock)
 
 ## Вид подложки: строго по правилу «есть урон — атака, нет — поддержка». У ульты — своя, если есть.
 static func _frame_kind(c: CardInstance) -> String:
@@ -305,8 +350,29 @@ func _add_art(c: CardInstance) -> bool:
 	add_child(dim)
 	return true
 
+## Описание + тёмная плашка под ним по высоте текста.
+func _add_description(text: String, pos: Vector2, box: Vector2) -> void:
+	var fit := _fit_description(CardInstance.strip_markup(text), box)
+	_desc_plate = Panel.new()
+	_desc_plate.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = DESC_PLATE_COLOR
+	sb.set_corner_radius_all(8)
+	_desc_plate.add_theme_stylebox_override("panel", sb)
+	_desc_plate.position = pos - DESC_PLATE_PAD
+	_desc_plate.size = Vector2(box.x, minf(box.y, fit.y)) + DESC_PLATE_PAD * 2.0
+	add_child(_desc_plate)
+	_desc = _make_description(text, pos, box, int(fit.x))
+	add_child(_desc)
+
+func _set_desc_visible(on: bool) -> void:
+	if _desc != null:
+		_desc.visible = on
+	if _desc_plate != null:
+		_desc_plate.visible = on
+
 ## Описание с цветной разметкой: [d] урон, [s] щит, [h] лечение, [e] эффект.
-func _make_description(text: String, pos: Vector2, box: Vector2) -> RichTextLabel:
+func _make_description(text: String, pos: Vector2, box: Vector2, font_size: int = -1) -> RichTextLabel:
 	var bb := text
 	for tag in MARKUP_COLORS.keys():
 		bb = bb.replace("[%s]" % tag, "[color=%s]" % MARKUP_COLORS[tag]).replace("[/%s]" % tag, "[/color]")
@@ -318,13 +384,49 @@ func _make_description(text: String, pos: Vector2, box: Vector2) -> RichTextLabe
 	r.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	r.position = pos
 	r.size = box
-	r.add_theme_font_size_override("normal_font_size", 14)
-	r.add_theme_font_size_override("bold_font_size", 14)
+	var fs := font_size if font_size > 0 else int(_fit_description(CardInstance.strip_markup(text), box).x)
+	r.add_theme_font_size_override("normal_font_size", fs)
+	r.add_theme_font_size_override("bold_font_size", fs)
 	r.add_theme_color_override("default_color", Color.WHITE)
 	r.add_theme_color_override("font_outline_color", Color(0, 0, 0, 1))
-	r.add_theme_constant_override("outline_size", 4)
+	r.add_theme_constant_override("outline_size", 5)
 	r.text = bb
 	return r
+
+## Размер шрифта описания: самый крупный, при котором текст влезает в рамку
+## и ни одно слово не рвётся посередине.
+const DESC_SIZES := [14, 13, 12, 11, 10]
+static var _desc_font: Font
+
+## Возвращает (размер шрифта, высота текста).
+static func _fit_description(plain: String, box: Vector2) -> Vector2:
+	if _desc_font == null:
+		var probe := RichTextLabel.new()
+		_desc_font = probe.get_theme_font("normal_font")
+		probe.free()
+	if _desc_font == null:
+		return Vector2(DESC_SIZES[0], box.y)
+	var width := box.x - 4.0
+	for fs in DESC_SIZES:
+		var space := _desc_font.get_string_size(" ", HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x
+		var lines := 0
+		var fits := true
+		for para in plain.split("\n"):
+			var line_w := 0.0
+			lines += 1
+			for word in para.split(" ", false):
+				var w := _desc_font.get_string_size(word, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x
+				if w > width:
+					fits = false
+				if line_w > 0.0 and line_w + space + w > width:
+					lines += 1
+					line_w = w
+				else:
+					line_w += (space if line_w > 0.0 else 0.0) + w
+		var line_h := _desc_font.get_height(fs) + 1.0
+		if (fits and lines * line_h <= box.y) or fs == DESC_SIZES[-1]:
+			return Vector2(fs, lines * line_h)
+	return Vector2(DESC_SIZES[-1], box.y)
 
 func _make_gray_overlay() -> Panel:
 	var p := Panel.new()
@@ -402,10 +504,13 @@ func _on_mouse_entered() -> void:
 		return
 	_hover = true
 	_animate_hover(true)
+	_set_desc_visible(true)
 
 func _on_mouse_exited() -> void:
 	_hover = false
 	_animate_hover(false)
+	if not dragging and DESC_ON_HOVER_ONLY:
+		_set_desc_visible(false)
 
 ## Наведение: карта подрастает и поднимается поверх соседних, чтобы текст было удобно читать.
 func _animate_hover(on: bool) -> void:
@@ -474,12 +579,15 @@ func begin_drag() -> void:
 	dragging = true
 	z_index = 100
 	scale = Vector2(1.08, 1.08)
+	_set_desc_visible(true)
 	_update_tint()
 
 func end_drag() -> void:
 	dragging = false
 	z_index = 0
 	scale = Vector2.ONE
+	if DESC_ON_HOVER_ONLY and interactive:
+		_set_desc_visible(false)
 	_update_tint()
 
 ## Карта улетает в точку (обычно к кнопке сброса) и удаляется.

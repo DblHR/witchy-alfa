@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="CardDef" format=3 uid="uid://dlo5n4d8p5hm"]
+
+[ext_resource type="Script" path="res://scripts/card/effects/CardEffect.gd" id="1_syx67"]
+[ext_resource type="Script" path="res://scripts/card/effects/EffDiscard.gd" id="2_q2euh"]
+[ext_resource type="Script" path="res://scripts/card/effects/EffConsumeStatus.gd" id="3_uvux7"]
+[ext_resource type="Script" path="res://scripts/card/data/CardDef.gd" id="4_sm3xl"]
+
+[sub_resource type="Resource" id="Resource_utt8t"]
+script = ExtResource("2_q2euh")
+
+[sub_resource type="Resource" id="Resource_4u6nb"]
+script = ExtResource("3_uvux7")
+status = "wrap_slime"
+mag_ratio = 0.35
+low_hp_mult = 2.0
+
+[resource]
+script = ExtResource("4_sm3xl")
+id = "aki_kiss"
+title = "Влажный поцелуй"
+cost = 2
+target = 4
+tags = PackedStringArray("support")
+description = "Сбросьте карту из руки.
+Вся [e]обволакивающая слизь[/e] выбранного — лечение [h]{1}[/h] за стак; при HP ≤50% вдвое больше."
+effects = Array[ExtResource("1_syx67")]([SubResource("Resource_utt8t"), SubResource("Resource_4u6nb")])

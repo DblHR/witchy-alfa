@@ -4,13 +4,14 @@
 [ext_resource type="Texture2D" path="res://assets/pics/actorSprite/luisa.png" id="1_yeupl"]
 [ext_resource type="Script" path="res://scripts/card/data/CardDef.gd" id="2_08uh5"]
 [ext_resource type="Texture2D" path="res://assets/pics/cards/luisa_card.png" id="2_rywix"]
-[ext_resource type="Resource" path="res://resources/cards/luisa/luisa_frost.tres" id="3_a5ad2"]
-[ext_resource type="Resource" path="res://resources/cards/luisa/luisa_chill.tres" id="4_17nlf"]
+[ext_resource type="Resource" path="res://resources/cards/luisa/luisa_tentacle.tres" id="3_08uh5"]
+[ext_resource type="Resource" path="res://resources/cards/luisa/luisa_deep.tres" id="4_1pcut"]
 [ext_resource type="Texture2D" path="res://icon.svg" id="4_y7pc5"]
+[ext_resource type="Resource" path="res://resources/cards/luisa/luisa_loosen.tres" id="5_17nlf"]
 [ext_resource type="Resource" path="res://resources/abilities/luisa_skill.tres" id="5_luisa_skill"]
-[ext_resource type="Resource" path="res://resources/cards/luisa/luisa_brittle.tres" id="6_criy3"]
+[ext_resource type="Resource" path="res://resources/cards/luisa/luisa_spank.tres" id="6_exnsb"]
 [ext_resource type="Resource" path="res://resources/abilities/luisa_ult.tres" id="6_luisa_ult"]
-[ext_resource type="Resource" path="res://resources/cards/luisa/luisa_shatter.tres" id="7_b7up5"]
+[ext_resource type="Resource" path="res://resources/cards/luisa/luisa_tease.tres" id="13_criy3"]
 [ext_resource type="Resource" path="res://resources/cards/luisa/luisa_ult.tres" id="13_ltckh"]
 
 [resource]
@@ -26,7 +27,8 @@ hp_per_level = 5
 attack_per_level = 1
 magic_per_level = 1
 card_color = Color(0.36, 0.6, 0.88, 1)
-card_pool = Array[ExtResource("2_08uh5")]([ExtResource("3_a5ad2"), ExtResource("4_17nlf"), ExtResource("6_criy3"), ExtResource("7_b7up5")])
+card_pool = Array[ExtResource("2_08uh5")]([ExtResource("3_08uh5"), ExtResource("4_1pcut"), ExtResource("5_17nlf"), ExtResource("6_exnsb")])
+unlock_cards = Array[ExtResource("2_08uh5")]([ExtResource("13_criy3")])
 ult_card = ExtResource("13_ltckh")
 base_damage = 6
 base_aps = 0.7

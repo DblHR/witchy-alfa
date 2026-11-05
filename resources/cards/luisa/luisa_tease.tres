@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="CardDef" format=3 uid="uid://1fiuvs2o4ynw"]
+
+[ext_resource type="Script" path="res://scripts/card/effects/CardEffect.gd" id="1_q5aol"]
+[ext_resource type="Script" path="res://scripts/card/effects/EffApplyStatus.gd" id="2_nha50"]
+[ext_resource type="Script" path="res://scripts/card/effects/EffDamage.gd" id="3_rdpad"]
+[ext_resource type="Script" path="res://scripts/card/data/CardDef.gd" id="4_lqtj2"]
+
+[sub_resource type="Resource" id="Resource_0no03"]
+script = ExtResource("2_nha50")
+status = "sticky_slime"
+stacks = 1
+
+[sub_resource type="Resource" id="Resource_yeh3p"]
+script = ExtResource("3_rdpad")
+atk_ratio = 0.25
+
+[resource]
+script = ExtResource("4_lqtj2")
+id = "luisa_tease"
+title = "Заигрывание с публикой"
+cost = 2
+target = 1
+tags = PackedStringArray("attack")
+description = "Всем врагам [e]липкая слизь +{0}[/e] и [d]{1}[/d] урона."
+effects = Array[ExtResource("1_q5aol")]([SubResource("Resource_0no03"), SubResource("Resource_yeh3p")])

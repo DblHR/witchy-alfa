@@ -29,6 +29,8 @@ var is_ult: bool = false
 ## (exhaust_scope: до конца боя или до конца забега). Несыгранная карта сбрасывается как обычная.
 var exhaust: bool = false
 var exhaust_scope: CardDef.Exhaust = CardDef.Exhaust.NONE
+## Ещё не получена (экран персонажа): показывается только подложка, название и «Не получена».
+var locked: bool = false
 
 static func from_def(d: CardDef, owner: Unit, p_color: Color, p_owner_name: String) -> CardInstance:
 	var c := CardInstance.new()

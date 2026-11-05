@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="CardDef" format=3 uid="uid://41qery5q65aw"]
+
+[ext_resource type="Script" path="res://scripts/card/effects/CardEffect.gd" id="1_s2xtq"]
+[ext_resource type="Script" path="res://scripts/card/effects/EffDamage.gd" id="2_vb5n4"]
+[ext_resource type="Script" path="res://scripts/card/effects/EffApplyStatus.gd" id="3_e7xko"]
+[ext_resource type="Script" path="res://scripts/card/data/CardDef.gd" id="4_ygweb"]
+
+[sub_resource type="Resource" id="Resource_qjbll"]
+script = ExtResource("2_vb5n4")
+atk_ratio = 0.4
+
+[sub_resource type="Resource" id="Resource_xw3gr"]
+script = ExtResource("3_e7xko")
+status = "weak"
+turns = 1
+
+[resource]
+script = ExtResource("4_ygweb")
+id = "fufu_foreplay"
+title = "Предварительные ласки"
+tags = PackedStringArray("attack")
+description = "[d]{0}[/d] урона переднему.
+[e]Слабость[/e] на 1 ход."
+effects = Array[ExtResource("1_s2xtq")]([SubResource("Resource_qjbll"), SubResource("Resource_xw3gr")])

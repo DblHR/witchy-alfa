@@ -45,6 +45,15 @@ func play_card(card: CardInstance) -> bool:
 		discard_pile.append(card)
 	return true
 
+## Сбросить одну карту из руки (эффект «сбросьте карту»).
+func discard_card(card: CardInstance) -> bool:
+	var idx := hand.find(card)
+	if idx == -1:
+		return false
+	hand.remove_at(idx)
+	discard_pile.append(card)
+	return true
+
 func discard_hand() -> void:
 	discard_pile.append_array(hand)
 	hand.clear()

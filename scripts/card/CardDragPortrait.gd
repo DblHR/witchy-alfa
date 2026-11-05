@@ -13,8 +13,12 @@ const SLIDE_IN_TIME := 0.22
 const SLIDE_OUT_TIME := 0.16
 ## Откуда выезжает: столько пикселей левее конечной точки.
 const SLIDE_DISTANCE := 260.0
-## Прозрачность, когда карту бросают на союзника: портрет не должен закрывать цели.
+## Прозрачность, когда курсор над самой картинкой (чтобы видеть, что под ней).
+## В остальное время портрет непрозрачный.
 const DIM_ALPHA := 0.3
+const DIM_FADE_TIME := 0.12
+## Точка считается «на картинке», если пиксель там непрозрачнее этого.
+const HIT_ALPHA := 0.15
 ## Плавное покачивание, пока портрет на экране (как у чиби на поле, только медленнее и мягче).
 const SWAY_X := 9.0          ## влево-вправо, px
 const SWAY_X_PERIOD := 2.6   ## полный цикл, сек
@@ -27,6 +31,10 @@ var _rect: TextureRect   ## внутри _slide, покачивается
 var _tween: Tween
 var _sway: Array[Tween] = []
 var _shown_id := ""
+var _hit_image: Image      ## для проверки, что курсор над непрозрачной частью
+var _hit_region := Rect2() ## область обрезанной картинки внутри _hit_image
+var _dimmed := false
+var _dim_tween: Tween
 static var _cropped: Dictionary = {}   ## Texture2D -> AtlasTexture без прозрачных полей
 
 func _init() -> void:
@@ -61,8 +69,7 @@ static func warm_up(data: CharacterData) -> void:
 	if tex != null:
 		_crop(tex)
 
-## dimmed — полупрозрачный портрет (для карт, которые бросают на союзников).
-func show_for(data: CharacterData, dimmed: bool = false) -> void:
+func show_for(data: CharacterData) -> void:
 	var tex := portrait_for(data)
 	if tex == null:
 		hide_portrait()
@@ -75,6 +82,9 @@ func show_for(data: CharacterData, dimmed: bool = false) -> void:
 	var h := screen.y * HEIGHT_RATIO
 	var w := h * float(cropped.get_width()) / float(maxi(1, cropped.get_height()))
 	_rect.texture = cropped
+	_prepare_hit_test(tex, cropped)
+	_dimmed = false
+	_rect.modulate.a = 1.0
 	_rect.size = Vector2(w, h)
 	_rect.position = Vector2.ZERO
 	_rect.rotation = 0.0
@@ -87,8 +97,46 @@ func show_for(data: CharacterData, dimmed: bool = false) -> void:
 	_kill()
 	_tween = create_tween().set_parallel(true)
 	_tween.tween_property(_slide, "position", target, SLIDE_IN_TIME).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
-	_tween.tween_property(_slide, "modulate:a", DIM_ALPHA if dimmed else 1.0, SLIDE_IN_TIME * 0.7)
+	_tween.tween_property(_slide, "modulate:a", 1.0, SLIDE_IN_TIME * 0.7)
 	_start_sway()
+
+## Вызывается при каждом движении мыши во время перетаскивания.
+func update_hover(point: Vector2) -> void:
+	if not _slide.visible or _shown_id == "":
+		return
+	var over := _is_over_picture(point)
+	if over == _dimmed:
+		return
+	_dimmed = over
+	if _dim_tween != null and _dim_tween.is_valid():
+		_dim_tween.kill()
+	_dim_tween = create_tween()
+	_dim_tween.tween_property(_rect, "modulate:a", DIM_ALPHA if over else 1.0, DIM_FADE_TIME)
+
+static var _images: Dictionary = {}   ## Texture2D -> Image (картинка читается с GPU один раз)
+
+func _prepare_hit_test(tex: Texture2D, cropped: Texture2D) -> void:
+	if not _images.has(tex):
+		var img := tex.get_image()
+		if img != null and img.is_compressed():
+			img.decompress()
+		_images[tex] = img
+	_hit_image = _images[tex]
+	if cropped is AtlasTexture:
+		_hit_region = (cropped as AtlasTexture).region
+	elif _hit_image != null:
+		_hit_region = Rect2(Vector2.ZERO, _hit_image.get_size())
+
+func _is_over_picture(point: Vector2) -> bool:
+	var local := _rect.get_global_transform().affine_inverse() * point
+	if not Rect2(Vector2.ZERO, _rect.size).has_point(local):
+		return false
+	if _hit_image == null or _hit_region.size.x <= 0.0:
+		return true
+	var uv := local / _rect.size
+	var px := Vector2i(_hit_region.position + uv * _hit_region.size)
+	px = px.clamp(Vector2i.ZERO, _hit_image.get_size() - Vector2i.ONE)
+	return _hit_image.get_pixelv(px).a > HIT_ALPHA
 
 func _start_sway() -> void:
 	_stop_sway()
@@ -133,6 +181,9 @@ static func _crop(tex: Texture2D) -> Texture2D:
 		return _cropped[tex]
 	var out: Texture2D = tex
 	var img := tex.get_image()
+	if img != null and img.is_compressed():
+		img.decompress()
+	_images[tex] = img
 	if img != null:
 		var used := img.get_used_rect()
 		if used.size.x > 0 and used.size != img.get_size():

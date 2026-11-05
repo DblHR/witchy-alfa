@@ -61,6 +61,7 @@ func _ready() -> void:
 	_save_button_connections()
 	_subscribe_state()
 	_build_cards_ui()
+	_build_admin_ui()
 	_select_section(Section.ITEMS)
 
 func _exit_tree() -> void:
@@ -330,12 +331,13 @@ func _show_character_detail(unit_id: String) -> void:
 		notes = "Позже здесь можно добавить личное описание персонажа, реплики и интересные факты."
 	_current_char_id = unit_id
 	_rank_label.text = "Ранг %s • карт до %d" % [data.rank, data.card_cap()]
-	var pool_size := data.card_pool.size()
-	_cards_button.text = "Все карты (%d/%d)" % [pool_size, data.card_cap()]
-	_cards_button.disabled = pool_size == 0 and data.ult_card == null
+	var owned := _CardLib.owned_defs(data).size()
+	_cards_button.text = "Все карты (%d/%d)" % [owned, data.card_pool.size() + data.unlock_cards.size()]
+	_cards_button.disabled = owned == 0 and data.unlock_cards.is_empty() and data.ult_card == null
 	var passive_text := ""
 	if data.card_passive != null and data.card_passive.description.strip_edges() != "":
 		passive_text = "\n[b]Пассивка:[/b] %s\n" % data.card_passive.description.strip_edges()
+	passive_text = _relationship_text(data) + passive_text
 	character_stats.text = "[b]Класс:[/b] %s\n[b]HP:[/b] %d\n[b]Атака:[/b] %d\n[b]Магия:[/b] %d\n[b]Энергия ульты:[/b] %d\n%s\n[b]Описание:[/b]\n%s\n\n[b]Заметки:[/b]\n%s" % [
 		data.unit_class,
 		int(stats.get("max_hp", data.base_hp)),
@@ -385,9 +387,27 @@ var _rank_label: Label = null
 var _cards_button: Button = null
 var _cards_overlay: Control = null
 var _cards_grid: GridContainer = null
+var _locked_title: Label = null
+var _locked_grid: GridContainer = null
+
 var _cards_title: Label = null
 var _ult_title: Label = null
 var _ult_row: HBoxContainer = null
+
+## Строка отношений для досье (у главных героев отношений нет).
+func _relationship_text(data: CharacterData) -> String:
+	if data.is_protagonist or UnitRoster_ == null:
+		return ""
+	var rel := UnitRoster_.get_relationship(data.id)
+	var mx := UnitRoster.RELATIONSHIP_MAX
+	var bar := "[color=#ff7fc8]%s[/color][color=#6a5a70]%s[/color]" % ["■".repeat(rel), "■".repeat(mx - rel)]
+	var text := "[b]Отношения:[/b] %s %d/%d" % [bar, rel, mx]
+	if not data.unlock_cards.is_empty():
+		var levels := PackedStringArray()
+		for i in range(data.unlock_cards.size()):
+			levels.append(str(_CardLib.unlock_level(data, i)))
+		text += "\n[b]Карты за отношения:[/b] на уровнях %s" % ", ".join(levels)
+	return text + "\n"
 
 func _build_cards_ui() -> void:
 	_rank_label = Label.new()
@@ -455,6 +475,16 @@ func _build_cards_ui() -> void:
 	_cards_grid.add_theme_constant_override("h_separation", 14)
 	_cards_grid.add_theme_constant_override("v_separation", 14)
 	content.add_child(_cards_grid)
+	_locked_title = Label.new()
+	_locked_title.text = "Можно получить — за отношения"
+	_locked_title.add_theme_font_size_override("font_size", 20)
+	_locked_title.add_theme_color_override("font_color", Color(0.85, 0.75, 1.0))
+	content.add_child(_locked_title)
+	_locked_grid = GridContainer.new()
+	_locked_grid.columns = 5
+	_locked_grid.add_theme_constant_override("h_separation", 14)
+	_locked_grid.add_theme_constant_override("v_separation", 14)
+	content.add_child(_locked_grid)
 	_ult_title = Label.new()
 	_ult_title.text = "Ульта — не карта: копит заряд в бою и жмётся кнопкой"
 	_ult_title.add_theme_font_size_override("font_size", 20)
@@ -472,18 +502,112 @@ func _open_cards_overlay() -> void:
 	var data: CharacterData = CharDB.get_by_id(_current_char_id)
 	if data == null:
 		return
-	for c in _cards_grid.get_children():
-		c.queue_free()
-	for c in _ult_row.get_children():
-		c.queue_free()
+	for grid in [_cards_grid, _locked_grid, _ult_row]:
+		for c in grid.get_children():
+			c.queue_free()
 	# Числа на картах — для текущего уровня отряда.
 	var preview_unit := Unit.new(data, maxi(1, int(DungRun.party_level)))
 	var cards := _CardLib.hero_pool(preview_unit)
+	var owned := 0
 	for card in cards:
-		_cards_grid.add_child(_UiKit.card_preview(card, 1.0))
+		if card.locked:
+			_locked_grid.add_child(_UiKit.card_preview(card, 1.0))
+		else:
+			_cards_grid.add_child(_UiKit.card_preview(card, 1.0))
+			owned += 1
+	_locked_title.visible = owned < cards.size()
+	_locked_grid.visible = _locked_title.visible
 	var ult := _CardLib.ult_for(preview_unit)
 	_ult_title.visible = ult != null
 	if ult != null:
 		_ult_row.add_child(_UiKit.card_preview(ult, 1.0))
-	_cards_title.text = "%s — ранг %s, карт: %d/%d" % [data.display_name, data.rank, cards.size(), data.card_cap()]
+	_cards_title.text = "%s — ранг %s, получено карт: %d из %d, в бой берёт до %d" % [data.display_name, data.rank, owned, cards.size(), data.card_cap()]
 	_cards_overlay.visible = true
+
+
+# --- Админ: выдать любой предмет ---------------------------------------------
+
+var _admin_panel: PanelContainer
+var _admin_item: OptionButton
+var _admin_amount: SpinBox
+var _admin_result: Label
+
+func _build_admin_ui() -> void:
+	var toggle := Button.new()
+	toggle.text = "Админ ▸"
+	toggle.focus_mode = Control.FOCUS_NONE
+	toggle.position = Vector2(30, 990)
+	toggle.size = Vector2(200, 56)
+	toggle.add_theme_font_size_override("font_size", 22)
+	add_child(toggle)
+
+	_admin_panel = PanelContainer.new()
+	_admin_panel.visible = false
+	_admin_panel.position = Vector2(30, 770)
+	_admin_panel.custom_minimum_size = Vector2(460, 0)
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = Color(0.18, 0.10, 0.20, 0.96)
+	sb.set_corner_radius_all(16)
+	sb.set_border_width_all(2)
+	sb.border_color = Color(1, 1, 1, 0.15)
+	sb.content_margin_left = 16
+	sb.content_margin_right = 16
+	sb.content_margin_top = 12
+	sb.content_margin_bottom = 12
+	_admin_panel.add_theme_stylebox_override("panel", sb)
+	add_child(_admin_panel)
+
+	var box := VBoxContainer.new()
+	box.add_theme_constant_override("separation", 8)
+	_admin_panel.add_child(box)
+	var title := Label.new()
+	title.text = "Выдать предмет"
+	title.add_theme_font_size_override("font_size", 22)
+	box.add_child(title)
+	_admin_item = OptionButton.new()
+	_admin_item.custom_minimum_size = Vector2(428, 44)
+	_admin_item.add_theme_font_size_override("font_size", 18)
+	var ids := RunItems.all_item_ids()
+	ids.sort_custom(func(a: String, b: String) -> bool: return RunItems.get_item_name(a) < RunItems.get_item_name(b))
+	for id in ids:
+		_admin_item.add_item("%s  (%s)" % [RunItems.get_item_name(id), id])
+		_admin_item.set_item_metadata(_admin_item.item_count - 1, id)
+		var icon := Inventory_.get_item_icon(id) if Inventory_ != null else null
+		if icon != null:
+			_admin_item.set_item_icon(_admin_item.item_count - 1, icon)
+			_admin_item.get_popup().set_item_icon_max_width(_admin_item.item_count - 1, 32)
+	_admin_item.add_theme_constant_override("icon_max_width", 32)
+	_admin_item.get_popup().max_size = Vector2i(600, 600)
+	box.add_child(_admin_item)
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 10)
+	box.add_child(row)
+	_admin_amount = SpinBox.new()
+	_admin_amount.min_value = 1
+	_admin_amount.max_value = 999
+	_admin_amount.value = 1
+	_admin_amount.custom_minimum_size = Vector2(140, 44)
+	row.add_child(_admin_amount)
+	var give := Button.new()
+	give.text = "Выдать"
+	give.focus_mode = Control.FOCUS_NONE
+	give.custom_minimum_size = Vector2(160, 44)
+	give.add_theme_font_size_override("font_size", 20)
+	give.pressed.connect(_on_admin_give)
+	row.add_child(give)
+	_admin_result = Label.new()
+	_admin_result.add_theme_font_size_override("font_size", 16)
+	box.add_child(_admin_result)
+
+	toggle.pressed.connect(func() -> void:
+		_admin_panel.visible = not _admin_panel.visible
+		toggle.text = "Админ ▾" if _admin_panel.visible else "Админ ▸"
+	)
+
+func _on_admin_give() -> void:
+	if _admin_item.selected < 0:
+		return
+	var id := String(_admin_item.get_item_metadata(_admin_item.selected))
+	var n := int(_admin_amount.value)
+	var ok := Inventory_.add_item(id, n)
+	_admin_result.text = ("Выдано: %s ×%d" % [RunItems.get_item_name(id), n]) if ok else "Не удалось выдать %s" % id

@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="CardDef" format=3 uid="uid://b5euvgjiwxtye"]
+
+[ext_resource type="Script" path="res://scripts/card/effects/CardEffect.gd" id="1_865ak"]
+[ext_resource type="Script" path="res://scripts/card/effects/EffHeal.gd" id="2_oceij"]
+[ext_resource type="Script" path="res://scripts/card/effects/EffConsumeStatus.gd" id="3_ss1nv"]
+[ext_resource type="Script" path="res://scripts/card/data/CardDef.gd" id="4_f210i"]
+
+[sub_resource type="Resource" id="Resource_7vxk6"]
+script = ExtResource("2_oceij")
+mag_ratio = 0.25
+
+[sub_resource type="Resource" id="Resource_4s0oi"]
+script = ExtResource("3_ss1nv")
+status = "wrap_slime"
+gain = 2
+mag_ratio = 0.3
+
+[resource]
+script = ExtResource("4_f210i")
+id = "fufu_break"
+title = "Перерыв на самоудовлетворение"
+cost = 2
+target = 2
+tags = PackedStringArray("support")
+description = "Лечит себя на [h]{0}[/h].
+Вся [e]обволакивающая слизь[/e] — щит [s]{1}[/s] за стак."
+effects = Array[ExtResource("1_865ak")]([SubResource("Resource_7vxk6"), SubResource("Resource_4s0oi")])
