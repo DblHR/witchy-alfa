@@ -33,6 +33,9 @@ func card_cap() -> int:
 @export var magic_per_level: int = 0
 
 # --- Карты ---
+## Портрет, выезжающий слева, пока тащишь карту героини (как в CZN). Пусто — ищется
+## res://assets/pics/ui/battle pics/<id>_card.png. Прозрачные поля обрезаются сами.
+@export var drag_portrait: Texture2D
 ## Цвет карт героя.
 @export var card_color: Color = Color(0.45, 0.45, 0.50, 1.0)
 ## Все карты героя. Пока в колоду идут первые card_cap() штук (по рангу).

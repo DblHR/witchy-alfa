@@ -12,6 +12,7 @@ class_name CardBattle
 ##   CardUltBar     — колонка ульт и заряд
 ##   CardPilePopup  — окно просмотра колоды/сброса
 ##   CardActorFx    — подписи над актёрами, idle, прыжок, всплывающий текст
+##   CardDragPortrait — портрет героини, выезжающий слева при перетаскивании её карты
 ##   CardRun        — генерация и состояние забега; окна забега — *Popup / EventScreen
 ##
 ## Из общего состояния читается отряд из Setup (DungRun.party_ids / party_level /
@@ -87,6 +88,7 @@ var _deck := CardDeck.new()
 var _sleeve: CardSleeve
 var _ults: CardUltBar
 var _pile_popup: CardPilePopup
+var _drag_portrait: CardDragPortrait
 
 var _hand_views: Array[CardView] = []
 var _dragging: CardView = null
@@ -157,6 +159,13 @@ func _ready() -> void:
 	_sleeve = CardSleeve.new()
 	hud.add_child(_sleeve)
 	_sleeve.card_clicked.connect(_on_sleeve_card_clicked)
+
+	# Портрет при перетаскивании: под рукой, но над миром.
+	_drag_portrait = CardDragPortrait.new()
+	hud.add_child(_drag_portrait)
+	hud.move_child(_drag_portrait, hand_layer.get_index())
+	for u in left_team:
+		CardDragPortrait.warm_up(u.data)
 
 	_setup_banter()
 	await _start_room(0)
@@ -477,6 +486,9 @@ func _on_card_pressed(v: CardView) -> void:
 	_drag_grab_offset = _mouse_pos() - v.global_position
 	v.begin_drag()
 	hand_layer.move_child(v, -1)
+	var owner := _combat.hero_by_id(v.card.owner_id)
+	if owner != null:
+		_drag_portrait.show_for(owner.data, v.card.target == CardInstance.Target.CHOSEN_ALLY)
 	set_process(true)
 	_update_drag_feedback()
 
@@ -629,6 +641,7 @@ func _finish_drag() -> void:
 		return
 	_dragging = null
 	set_process(false)
+	_drag_portrait.hide_portrait()
 	_hide_highlights()
 	_sleeve.set_hover(false)
 	v.end_drag()
