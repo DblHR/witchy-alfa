@@ -13,6 +13,7 @@ class_name CardBattle
 ##   CardPilePopup  — окно просмотра колоды/сброса
 ##   CardActorFx    — подписи над актёрами, idle, прыжок, всплывающий текст
 ##   CardDragPortrait — портрет героини, выезжающий слева при перетаскивании её карты
+##   CardUltSplash  — заставка ульты по центру экрана
 ##   CardRun        — генерация и состояние забега; окна забега — *Popup / EventScreen
 ##
 ## Из общего состояния читается отряд из Setup (DungRun.party_ids / party_level /
@@ -873,6 +874,34 @@ func _on_ult_pressed(btn: UltButton) -> void:
 	var ult := _ults.ult_of(hero.data.id)
 	if ult == null:
 		return
+	var targets := _ult_targets(ult, hero)
+	if targets.is_empty():
+		return
+
+	_ults.spend(hero.data.id)
+	_refresh_all_actors()
+	var splash_tex := CardUltSplash.splash_for(hero.data)
+	if splash_tex != null:
+		# Заставка: пока она на экране, ход стоит; эффекты ульты — после неё, чтобы были видны цифры.
+		_busy = true
+		var splash := CardUltSplash.new()
+		add_child(splash)
+		splash.play(splash_tex)
+		await splash.finished
+		_busy = false
+		# Пока шла заставка, цель могла смениться (например, уже некого бить) — пересчитаем.
+		if ult.target != CardInstance.Target.SELF:
+			targets = _ult_targets(ult, hero)
+	else:
+		CardActorFx.show_banner(hud, "%s — %s" % [hero.data.display_name, ult.title], ult.color.lightened(0.45))
+	_float_stack.clear()
+	CardActorFx.hop(_find_actor(hero), ULT_HOP_HEIGHT)
+	BattleBanter_.trigger("ability_cast", {"speaker_id": hero.data.id})
+	_combat.play_card(ult, hero, targets)
+	_refresh_all_actors()
+	_check_end()
+
+func _ult_targets(ult: CardInstance, hero: Unit) -> Array[Unit]:
 	var targets: Array[Unit] = []
 	match ult.target:
 		CardInstance.Target.ALL_ENEMIES:
@@ -883,17 +912,7 @@ func _on_ult_pressed(btn: UltButton) -> void:
 			var front := _combat.front_enemy()
 			if front != null:
 				targets.append(front)
-	if targets.is_empty():
-		return
-
-	_ults.spend(hero.data.id)
-	_float_stack.clear()
-	CardActorFx.show_banner(hud, "%s — %s" % [hero.data.display_name, ult.title], ult.color.lightened(0.45))
-	CardActorFx.hop(_find_actor(hero), ULT_HOP_HEIGHT)
-	BattleBanter_.trigger("ability_cast", {"speaker_id": hero.data.id})
-	_combat.play_card(ult, hero, targets)
-	_refresh_all_actors()
-	_check_end()
+	return targets
 
 # --- Забег: HUD, лагерь между комнатами, награды ----------------------------
 

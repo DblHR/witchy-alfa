@@ -15,8 +15,16 @@ const ART_PATHS := {
 	"aki": "res://assets/pics/cards/art/aki.png",
 	"fufu": "res://assets/pics/cards/art/fufu.png",
 }
-## Подложка карты по виду (CardInstance.get_kind()). Если файла нет — рамка красится в цвет вида.
-## Положи PNG 150x210 (или пропорционально) в эту папку: attack.png, support.png, ult.png.
+## Арт карты по виду: assets/pics/cards/art/<героиня>_atk.png — карта наносит урон,
+## <героиня>_sup.png — не наносит (ульта — по тому же правилу). Это полный рисунок карты
+## с табличкой «Атака»/«Поддержка» сверху: он занимает всю карту, название опускается под табличку.
+## Нет такого арта — старый вариант: <героиня>.png (ART_PATHS) или цветная заливка с рамкой цвета вида.
+const TAG_ART_PATH := "res://assets/pics/cards/art/%s_%s.png"
+const TAG_ART_SUFFIX := {"attack": "atk", "support": "sup"}
+## Раскладка текста на арте с табличкой.
+const TAG_TITLE_POS := Vector2(8, 30)
+const TAG_DESC_POS := Vector2(12, 54)
+## Подложка по виду для карт без арта: assets/pics/cards/frames/<вид>.png (необязательно).
 const FRAME_PATH := "res://assets/pics/cards/frames/%s.png"
 const KIND_BORDER := {
 	"attack": Color(0.92, 0.32, 0.32),
@@ -100,16 +108,34 @@ func setup(c: CardInstance, is_interactive: bool = true) -> void:
 	sb.border_width_bottom = 3
 	sb.border_color = c.color.lightened(0.55)
 	add_theme_stylebox_override("panel", sb)
-	_add_frame(c, sb)
-
-	var has_art := _add_art(c)
+	var kind := _frame_kind(c)
+	var tag_art := _get_tag_art(c.owner_id, kind)
+	var has_art := false
+	if tag_art != null:
+		# Полный рисунок карты: своя рамка и табличка уже на нём.
+		sb.bg_color = Color(0, 0, 0, 0)
+		sb.border_color = Color(0, 0, 0, 0)
+		_add_full_art(tag_art)
+		has_art = true
+	else:
+		var frame_tex := _get_frame(kind)
+		var frame_on_top := frame_tex != null and _is_overlay(frame_tex)
+		if not frame_on_top:
+			_add_frame(kind, frame_tex, sb)
+		has_art = _add_art(c)
+		if frame_on_top:
+			_add_frame(kind, frame_tex, sb)
 	# Серая вуаль лежит под текстом: нехватка энергии не мешает читать описание.
 	_gray_overlay = _make_gray_overlay()
 	add_child(_gray_overlay)
 
-	add_child(_make_label(c.title, 15 if c.title.length() <= 11 else 13, Vector2(24, 12), Vector2(CARD_SIZE.x - 30, 26)))
-
-	add_child(_make_description(c.description, Vector2(10, 46), Vector2(CARD_SIZE.x - 20, 130)))
+	var title_size := 15 if c.title.length() <= 11 else 13
+	if tag_art != null:
+		add_child(_make_label(c.title, title_size, TAG_TITLE_POS, Vector2(CARD_SIZE.x - TAG_TITLE_POS.x * 2.0, 24)))
+		add_child(_make_description(c.description, TAG_DESC_POS, Vector2(CARD_SIZE.x - TAG_DESC_POS.x * 2.0, 124)))
+	else:
+		add_child(_make_label(c.title, title_size, Vector2(24, 12), Vector2(CARD_SIZE.x - 30, 26)))
+		add_child(_make_description(c.description, Vector2(10, 46), Vector2(CARD_SIZE.x - 20, 130)))
 
 	var owner_label := _make_label(c.owner_name, 14, Vector2(0, 182), Vector2(CARD_SIZE.x, 22))
 	owner_label.add_theme_color_override("font_color", Color(1, 1, 1, 0.8))
@@ -124,6 +150,15 @@ func setup(c: CardInstance, is_interactive: bool = true) -> void:
 		mouse_entered.connect(_on_mouse_entered)
 		mouse_exited.connect(_on_mouse_exited)
 
+## Вид подложки: строго по правилу «есть урон — атака, нет — поддержка». У ульты — своя, если есть.
+static func _frame_kind(c: CardInstance) -> String:
+	var kind := c.get_kind()
+	if kind == "ult" and _get_frame("ult") != null:
+		return "ult"
+	if c.def != null:
+		return c.def.expected_tag()
+	return CardDef.TAG_SUPPORT if kind == "ult" else kind
+
 static func _get_frame(kind: String) -> Texture2D:
 	if _frame_cache.has(kind):
 		return _frame_cache[kind]
@@ -134,14 +169,30 @@ static func _get_frame(kind: String) -> Texture2D:
 	_frame_cache[kind] = tex
 	return tex
 
-## Подложка по виду карты: спрайт, если он есть, иначе цветная рамка.
-func _add_frame(c: CardInstance, sb: StyleBoxFlat) -> void:
-	var kind := c.get_kind()
-	var tex := _get_frame(kind)
+static var _overlay_cache: Dictionary = {}
+
+## Рамка (прозрачная середина) или подложка (сплошная).
+static func _is_overlay(tex: Texture2D) -> bool:
+	if _overlay_cache.has(tex):
+		return _overlay_cache[tex]
+	var result := false
+	var img := tex.get_image()
+	if img != null:
+		if img.is_compressed():
+			img.decompress()
+		var center := img.get_pixel(img.get_width() / 2, img.get_height() / 2)
+		result = center.a < 0.5
+	_overlay_cache[tex] = result
+	return result
+
+## Подложка: спрайт, если он есть, иначе цветная рамка.
+func _add_frame(kind: String, tex: Texture2D, sb: StyleBoxFlat) -> void:
 	if tex == null:
 		sb.border_color = KIND_BORDER.get(kind, sb.border_color)
 		return
-	sb.bg_color = Color(0, 0, 0, 0)
+	# Сплошная подложка заменяет фон карты; рамка (прозрачная середина) — только обводку.
+	if not _is_overlay(tex):
+		sb.bg_color = Color(0, 0, 0, 0)
 	sb.border_color = Color(0, 0, 0, 0)
 	var f := TextureRect.new()
 	f.name = "Frame"
@@ -152,6 +203,41 @@ func _add_frame(c: CardInstance, sb: StyleBoxFlat) -> void:
 	f.stretch_mode = TextureRect.STRETCH_SCALE
 	f.texture = tex
 	add_child(f)
+
+static var _tag_art_cache: Dictionary = {}
+
+## Арт карты героини по виду («атака»/«поддержка») или null.
+static func _get_tag_art(owner_id: String, kind: String) -> Texture2D:
+	if owner_id == "" or not TAG_ART_SUFFIX.has(kind):
+		return null
+	var key := owner_id + "/" + kind
+	if _tag_art_cache.has(key):
+		return _tag_art_cache[key]
+	var tex: Texture2D = null
+	var path := TAG_ART_PATH % [owner_id, TAG_ART_SUFFIX[kind]]
+	if ResourceLoader.exists(path):
+		tex = load(path) as Texture2D
+	_tag_art_cache[key] = tex
+	return tex
+
+## Полный рисунок карты на всю карту, с лёгким затемнением под текстом.
+func _add_full_art(tex: Texture2D) -> void:
+	var art := TextureRect.new()
+	art.name = "Art"
+	art.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	art.position = Vector2.ZERO
+	art.size = CARD_SIZE
+	art.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	art.stretch_mode = TextureRect.STRETCH_SCALE   # пропорции почти как у карты; табличка не обрезается
+	art.texture = tex
+	add_child(art)
+	var dim := ColorRect.new()
+	dim.name = "ArtDim"
+	dim.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	dim.position = Vector2(8, TAG_TITLE_POS.y + 2)
+	dim.size = Vector2(CARD_SIZE.x - 16, CARD_SIZE.y - TAG_TITLE_POS.y - 10)
+	dim.color = Color(0.04, 0.02, 0.08, 0.28)
+	add_child(dim)
 
 static func _get_art(owner_id: String) -> Texture2D:
 	if _art_cache.has(owner_id):
