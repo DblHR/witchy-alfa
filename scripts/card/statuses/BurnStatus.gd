@@ -14,7 +14,7 @@ func label(s: Dictionary) -> String:
 	return "%s %d (%d х.): %d урона" % [title, int(s["stacks"]), int(s["turns"]), damage_of(s)]
 
 func on_enemy_turn_start(combat: CardCombat, unit: Unit, s: Dictionary) -> void:
-	combat.deal_damage(null, unit, damage_of(s), false)
+	combat.deal_status_damage(unit, damage_of(s), s)
 	s["turns"] = int(s["turns"]) - 1
 
 ## Длительность тикает при срабатывании, а не в конце раунда.

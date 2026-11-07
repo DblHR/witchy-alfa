@@ -93,6 +93,12 @@ var _api: EnemyApi
 var _relics: CardRelics
 ## Номер хода в текущем бою (1 — первый): бонусы Данго/Желе/статуй.
 var _turn_no := 0
+## Статистика забега для итогового окна (CardRunStats).
+var _stats := CardRunStats.new()
+## Итоговая статистика скрыта (видно картинку победы/поражения).
+var _stats_hidden := false
+var _stats_panel: PanelContainer
+var _stats_toggle: Button
 ## Награда за первую победу над боссом этажа.
 const FIRST_BOSS_ESTUS_BONUS := 1
 ## Пойманные приманкой за этот забег — строки для итога.
@@ -176,6 +182,8 @@ func _ready() -> void:
 	DungRun.begin_card_run()
 	_relics = CardRelics.new(DungRun.relics, _run.rng)
 	_combat.relics = _relics
+	_combat.stats = _stats
+	_stats.gold_start = DungRun.gold
 	_potions.assign(DungRun.selected_potion_ids)
 	_ui_layer = hud.get_parent()
 	_build_run_hud()
@@ -385,6 +393,7 @@ func _on_unit_hurt(unit: Unit, hp_damage: int) -> void:
 
 func _on_unit_died(unit: Unit) -> void:
 	if left_team.has(unit):
+		_stats.on_hero_died(unit.data.id)
 		_purge_cards_of(unit)
 	elif right_team.has(unit):
 		_combat.intents.erase(unit)
@@ -468,6 +477,7 @@ func _without_run_burned(cards: Array[CardInstance]) -> Array[CardInstance]:
 	return out
 
 func _begin_player_turn() -> void:
+	_stats.turns += 1
 	_energy = ENERGY_PER_TURN
 	_turn_no += 1
 	_energy += int(_relics.turn_bonus(_turn_no).get("energy", 0))
@@ -791,6 +801,7 @@ func _put_in_sleeve(v: CardView) -> void:
 		_take_from_sleeve(_sleeve.cards[0])
 	_deck.hand.erase(v.card)
 	_sleeve.put(v.card)
+	_stats.cards_sleeved += 1
 	_hand_views.erase(v)
 	v.queue_free()
 	_layout_hand(true)
@@ -803,6 +814,7 @@ func _consume_card(v: CardView) -> void:
 	_deck.play_card(v.card)
 	if v.card.exhaust_scope == CardDef.Exhaust.RUN:
 		_run.burned_for_run.append(v.card.id)
+		_stats.cards_burned += 1
 		refresh_run_hud()
 	_hand_views.erase(v)
 	_refresh_pile_buttons()
@@ -818,6 +830,7 @@ func _play_card(v: CardView, targets: Array[Unit]) -> void:
 	var caster := _combat.hero_by_id(card.owner_id)
 	_float_stack.clear()
 	_consume_card(v)
+	_stats.on_card_played(card, false)
 	if card.id == "lure":
 		Inventory_.remove_item(DungRun.LURE_ITEM, 1)
 	_relics.before_card(card)
@@ -836,6 +849,7 @@ func _play_card(v: CardView, targets: Array[Unit]) -> void:
 func _on_enemy_killed(enemy: Unit) -> void:
 	var gold_gain := LOOT_GOLD_BASE + _room_index
 	var rank := enemy.enemy_def.rank if enemy.enemy_def != null else "B"
+	_stats.on_enemy_killed(enemy.enemy_def.id if enemy.enemy_def != null else enemy.data.id)
 	var xp_gain := CardBalance.xp_for_kill(rank, _run.floor_no)
 	DungRun.gain_gold(gold_gain)
 	_run.xp_gained += xp_gain
@@ -873,6 +887,7 @@ func _on_end_turn_pressed() -> void:
 	_busy = true
 
 	# 1. Рука уходит в сброс (эстус в том числе — сгорает только сыгранный).
+	_stats.cards_discarded_turn += _hand_views.size()
 	_clear_hand_views()
 	_combat.end_player_turn()
 	_relics.on_turn_end()
@@ -987,7 +1002,7 @@ func admin_kill(u: Unit, check_end: bool = true) -> void:
 	if not CardCombat.is_alive(u) or not admin_can_act():
 		return
 	_float_stack.clear()
-	_combat.shields.erase(u)
+	_combat.remove_shield(u)
 	_combat.apply_damage(u, u.hp)
 	_refresh_all_actors()
 	if check_end:
@@ -1039,6 +1054,7 @@ func _discard_from_hand(v: CardView) -> void:
 	if not _deck.discard_card(v.card):
 		return
 	_hand_views.erase(v)
+	_stats.cards_discarded_effect += 1
 	v.fly_to_and_free(_discard_pos())
 	_layout_hand(true)
 	_refresh_pile_buttons()
@@ -1051,6 +1067,8 @@ func _finish_run(victory: bool, is_draw: bool) -> void:
 	_busy = true
 	_end_victory = victory
 	_refresh_all_actors()
+	if victory:
+		_stats.battles_won += 1
 	var first_boss_win := false
 	if victory and String(_run.room(_room_index).get("kind", "")) == "boss" and UnitRoster_ != null:
 		first_boss_win = not UnitRoster_.boss_defeated(CardRun.BOSS_ID)
@@ -1092,27 +1110,60 @@ func _apply_run_progress() -> PackedStringArray:
 			lines.append(t)
 	return lines
 
+## Итог забега: панель со статистикой (CardRunStats) поверх картинки победы/поражения.
+## Кнопка «Скрыть статистику» убирает панель, чтобы посмотреть на картинку.
+const STATS_RECT := Rect2(60, 190, 1500, 860)
+const STATS_TOGGLE_RECT := Rect2(1593, 760, 288, 70)
+
 func _show_run_summary(lines: PackedStringArray) -> void:
-	var l := end_overlay.get_node_or_null("RunSummary") as Label
-	if l == null:
-		l = Label.new()
-		l.name = "RunSummary"
-		l.position = Vector2(560, 210)
-		l.size = Vector2(800, 0)
-		l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		l.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		l.add_theme_font_size_override("font_size", 26)
-		l.add_theme_color_override("font_color", Color(1.0, 0.92, 0.6))
-		l.add_theme_color_override("font_outline_color", Color(0, 0, 0, 1))
-		l.add_theme_constant_override("outline_size", 6)
+	if _stats_panel == null:
+		_stats_panel = PanelContainer.new()
+		_stats_panel.position = STATS_RECT.position
+		_stats_panel.size = STATS_RECT.size
 		var bg := StyleBoxFlat.new()
-		bg.bg_color = Color(0.08, 0.03, 0.10, 0.72)
-		bg.set_corner_radius_all(16)
-		bg.content_margin_top = 12
-		bg.content_margin_bottom = 12
-		l.add_theme_stylebox_override("normal", bg)
-		end_overlay.add_child(l)
-	l.text = "\n".join(lines)
+		bg.bg_color = Color(0.07, 0.03, 0.10, 0.86)
+		bg.set_corner_radius_all(18)
+		bg.set_border_width_all(2)
+		bg.border_color = Color(1.0, 0.85, 0.55, 0.35)
+		bg.content_margin_left = 24
+		bg.content_margin_right = 24
+		bg.content_margin_top = 16
+		bg.content_margin_bottom = 16
+		_stats_panel.add_theme_stylebox_override("panel", bg)
+		var scroll := ScrollContainer.new()
+		scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+		_stats_panel.add_child(scroll)
+		var text := RichTextLabel.new()
+		text.name = "RunSummary"
+		text.bbcode_enabled = true
+		text.fit_content = true
+		text.scroll_active = false
+		text.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		text.add_theme_font_size_override("normal_font_size", 20)
+		text.add_theme_font_size_override("bold_font_size", 20)
+		text.add_theme_color_override("default_color", Color(0.96, 0.93, 1.0))
+		text.add_theme_constant_override("table_h_separation", 18)
+		scroll.add_child(text)
+		end_overlay.add_child(_stats_panel)
+		_stats_toggle = Button.new()
+		_stats_toggle.position = STATS_TOGGLE_RECT.position
+		_stats_toggle.size = STATS_TOGGLE_RECT.size
+		_stats_toggle.focus_mode = Control.FOCUS_NONE
+		_stats_toggle.add_theme_font_size_override("font_size", 22)
+		_stats_toggle.pressed.connect(func() -> void: _set_stats_hidden(not _stats_hidden))
+		end_overlay.add_child(_stats_toggle)
+	var label := _stats_panel.find_child("RunSummary", true, false) as RichTextLabel
+	var rooms := "Комнат пройдено: %d / %d" % [_room_index + (1 if _end_victory else 0), _run.total_rooms()]
+	label.text = _stats.to_bbcode(_relics, lines, DungRun.gold, rooms)
+	_set_stats_hidden(false)
+
+func _set_stats_hidden(hidden: bool) -> void:
+	_stats_hidden = hidden
+	if _stats_panel != null:
+		_stats_panel.visible = not hidden
+	if _stats_toggle != null:
+		_stats_toggle.text = "Показать статистику" if hidden else "Скрыть статистику"
+	end_text.visible = not hidden
 
 func _show_end_overlay(victory: bool, is_draw: bool) -> void:
 	end_overlay.visible = true
@@ -1180,6 +1231,7 @@ func _auto_play_charmed() -> void:
 			_refresh_pile_buttons()
 			CardActorFx.hop(_find_actor(hero))
 			if not targets.is_empty():
+				_stats.on_card_played(v.card, false)
 				_combat.play_card(v.card, hero, targets, true)
 			_refresh_all_actors()
 			_refresh_energy()
@@ -1264,7 +1316,7 @@ func enemy_vanish(u: Unit) -> void:
 	u.is_dead = true
 	u.hp = 0
 	_combat.statuses.erase(u)
-	_combat.shields.erase(u)
+	_combat.remove_shield(u)
 	_combat.intents.erase(u)
 	var actor := _find_actor(u)
 	if actor != null:
@@ -1324,6 +1376,7 @@ func _on_ult_pressed(btn: UltButton) -> void:
 	_float_stack.clear()
 	CardActorFx.hop(_find_actor(hero), ULT_HOP_HEIGHT)
 	BattleBanter_.trigger("ability_cast", {"speaker_id": hero.data.id})
+	_stats.on_card_played(ult, true)
 	_relics.before_card(ult)
 	_combat.play_card(ult, hero, targets)
 	_relics.after_card(_combat, ult)
@@ -1450,6 +1503,7 @@ func _on_buff_pressed(key: String) -> void:
 	if not _can_act():
 		return
 	var pid := _potions[slot]
+	_stats.potions.append(pid)
 	if not DungRun.drink_potion(pid):
 		_potions[slot] = ""
 		refresh_run_hud()
@@ -1511,6 +1565,7 @@ func _on_room_cleared() -> void:
 	await _wait(0.8)
 	_clear_hand_views()
 	_float_stack.clear()
+	_stats.battles_won += 1
 	# Статуи: белая лечит после победы; обе тратят одну боевую комнату.
 	_relics.on_battle_won(_combat)
 	if _run.white_charges > 0:

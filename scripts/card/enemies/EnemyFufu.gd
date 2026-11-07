@@ -141,5 +141,5 @@ func digest(api: EnemyApi, me: Unit) -> void:
 	me.ai.erase("swallow_taken")
 	api.combat.remove_stacks(hero, CardStatuses.SWALLOWED, 0, true)
 	api.set_hero_hidden(hero, false)
-	api.combat.shields.erase(hero)
+	api.combat.remove_shield(hero)
 	api.combat.apply_damage(hero, dmg)

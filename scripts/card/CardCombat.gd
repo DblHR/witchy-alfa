@@ -45,6 +45,11 @@ var intents: Dictionary = {}
 var enemy_phase := false
 ## Посох и еда забега (CardRelics): меняют урон карт героинь. null — без предметов.
 var relics: CardRelics = null
+## Статистика забега (CardRunStats) и «кто сейчас действует»: id героини / common / estus / lure.
+## credit ставит play_card; статусы (Горение) запоминают автора и бьют от его имени.
+var stats: CardRunStats = null
+var credit := ""
+var credit_card_title := ""
 ## Надбавки к цене карт владельца: id героя -> +N. Активные и отложенные на след. ход.
 var surcharge: Dictionary = {}
 var pending_surcharge: Dictionary = {}
@@ -165,6 +170,8 @@ func add_status(unit: Unit, id: String, add_stacks: int, add_turns: int, quiet: 
 	statuses[unit] = per_unit
 	if not quiet:
 		floated.emit(unit, def.float_text(add_stacks, add_turns), def.color, 26)
+	if credit != "":
+		s["src"] = credit
 	def.on_added(self, unit, old, s)
 	_cleanup(unit, id)
 	status_added.emit(unit, id)
@@ -290,6 +297,24 @@ func end_round() -> void:
 
 func clear_shields() -> void:
 	shields.clear()
+	if stats != null:
+		stats.on_shields_cleared()
+
+## Снять весь щит с юнита (кислота, исчезновение врага).
+func remove_shield(unit: Unit) -> void:
+	shields.erase(unit)
+	if stats != null:
+		stats.on_shields_cleared(unit)
+
+## Урон статуса от имени того, кто его наложил (Горение тикает в ход врагов).
+func deal_status_damage(unit: Unit, amount: int, s: Dictionary) -> void:
+	var prev := credit
+	var prev_title := credit_card_title
+	credit = String(s.get("src", ""))
+	credit_card_title = ""
+	deal_damage(null, unit, amount, false)
+	credit = prev
+	credit_card_title = prev_title
 
 # --- Карты -------------------------------------------------------------------
 
@@ -298,9 +323,15 @@ func clear_shields() -> void:
 func play_card(card: CardInstance, caster: Unit, targets: Array[Unit], mirrored: bool = false) -> void:
 	var ctx := CardContext.new(self, caster, targets, card)
 	ctx.mirrored = mirrored
+	var prev := credit
+	var prev_title := credit_card_title
+	credit = CardRunStats.credit_for_card(card)
+	credit_card_title = card.title
 	for e in card.effects:
 		if e != null:
 			e.apply(ctx)
+	credit = prev
+	credit_card_title = prev_title
 	card_played.emit(card, caster)
 
 # --- Урон, щит, лечение ------------------------------------------------------
@@ -330,9 +361,18 @@ func deal_damage(source: Unit, target: Unit, amount: int, from_card: bool = true
 		dmg = pair[0].modify_taken(self, target, pair[1], dmg)
 	_damage_events += 1
 	var shield_before := shield_of(target)
+	var was_alive := is_alive(target)
 	apply_damage(target, dmg)
 	damage_dealt.emit(source, target, dmg)
 	var absorbed := mini(shield_before, dmg)
+	if stats != null:
+		if is_enemy(target) and not is_enemy(source):
+			var who := credit
+			if who == "" and source != null and heroes.has(source):
+				who = source.data.id
+			stats.on_damage(who, dmg, from_card, was_alive and not is_alive(target), credit_card_title if from_card else "")
+		elif heroes.has(target):
+			stats.on_taken(target.data.id, dmg - absorbed)
 	if absorbed > 0 and source != null:
 		for pair in _status_list(target):
 			pair[0].on_shield_hit(self, target, pair[1], source, absorbed)
@@ -343,6 +383,8 @@ func apply_damage(unit: Unit, amount: int) -> void:
 	var absorbed := mini(shield, amount)
 	if absorbed > 0:
 		shields[unit] = shield - absorbed
+		if stats != null:
+			stats.on_shield_absorbed(unit, absorbed, heroes.has(unit))
 	var dmg := amount - absorbed
 	var killed := false
 	if dmg > 0:
@@ -368,6 +410,8 @@ func add_shield(unit: Unit, amount: int) -> void:
 		return
 	shields[unit] = shield_of(unit) + amount
 	floated.emit(unit, "+%d щит" % amount, COL_SHIELD, 26)
+	if stats != null and not is_enemy(unit):
+		stats.on_shield(credit, unit, amount)
 
 ## Лечение; возвращает, сколько HP реально восстановлено.
 func heal(unit: Unit, amount: int) -> int:
@@ -376,6 +420,8 @@ func heal(unit: Unit, amount: int) -> int:
 	var before := unit.hp
 	unit.hp = mini(unit.max_hp, unit.hp + amount)
 	floated.emit(unit, "+%d HP" % (unit.hp - before), COL_HEAL, 26)
+	if stats != null and not is_enemy(unit):
+		stats.on_heal(credit, unit.hp - before)
 	return unit.hp - before
 
 func add_surcharge(owner_id: String, amount: int) -> void:

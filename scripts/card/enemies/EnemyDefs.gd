@@ -103,7 +103,7 @@ static func _acid(id: String, title: String, hp_min: int, hp_max: int, size: flo
 	m.custom = func(api: EnemyApi, me: Unit, mv: EnemyMove) -> void:
 		for h in api.heroes():
 			if api.combat.shield_of(h) > 0:
-				api.combat.shields.erase(h)
+				api.combat.remove_shield(h)
 				api.say(h, "Щит разъеден!", CardCombat.COL_SHIELD)
 		var f := api.front_hero()
 		if f != null:
