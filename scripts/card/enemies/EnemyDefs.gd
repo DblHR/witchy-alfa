@@ -218,7 +218,7 @@ static func _fufu_moves(d: EnemyDef) -> void:
 	m.aim = EnemyMove.Aim.ALL_HEROES
 	m.status = CardStatuses.STICKY_SLIME
 	m.status_stacks = 1
-	m = d.add(_mv("lube", "Обильная смазка", EnemyMove.Kind.DEFEND, 30))
+	m = d.add(_mv("bow", "Выход на поклон", EnemyMove.Kind.DEFEND, 30))
 	m.shield = 40
 	m.aim = EnemyMove.Aim.ALL_HEROES
 	m.status = CardStatuses.WEAK

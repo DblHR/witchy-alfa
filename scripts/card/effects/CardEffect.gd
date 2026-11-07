@@ -27,11 +27,16 @@ enum TargetMode {
 ## Срабатывает, только если у цели карты (первой выбранной) мало HP (≤ 50%).
 ## Пример: «Тычок» Фуфу даёт ей щит, если враг уже ранен.
 @export var only_if_card_target_low_hp: bool = false
+## Срабатывает только на целях, у которых HP меньше этой доли (0.3 = меньше 30%). 0 — всегда.
+## Проверяется в момент эффекта: «Закончить» бьёт второй раз, если после первого удара цель ниже 30%.
+@export var only_if_hp_below: float = 0.0
 
 func apply(ctx: CardContext) -> void:
 	if only_if_card_target_low_hp and (ctx.targets.is_empty() or not CardCombat.is_low_hp(ctx.targets[0])):
 		return
 	for u in resolve_targets(ctx):
+		if only_if_hp_below > 0.0 and (not CardCombat.is_alive(u) or float(u.hp) >= float(u.max_hp) * only_if_hp_below):
+			continue
 		_apply_one(ctx, u)
 
 func _apply_one(_ctx: CardContext, _target: Unit) -> void:

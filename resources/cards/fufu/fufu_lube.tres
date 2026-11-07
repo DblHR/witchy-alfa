@@ -4,12 +4,12 @@
 [ext_resource type="Script" path="res://scripts/card/effects/EffApplyStatus.gd" id="2_bmyrq"]
 [ext_resource type="Script" path="res://scripts/card/data/CardDef.gd" id="3_ctsti"]
 
-[sub_resource type="Resource" id="Resource_4e0jk"]
+[sub_resource type="Resource" id="Resource_0on58"]
 script = ExtResource("2_bmyrq")
 status = "weak"
 turns = 1
 
-[sub_resource type="Resource" id="Resource_vy0u5"]
+[sub_resource type="Resource" id="Resource_bmyrq"]
 script = ExtResource("2_bmyrq")
 status = "sticky_slime"
 stacks = 1
@@ -17,9 +17,9 @@ stacks = 1
 [resource]
 script = ExtResource("3_ctsti")
 id = "fufu_lube"
-title = "Обильная смазка"
+title = "Выход на поклон"
 target = 1
 tags = PackedStringArray("support")
 description = "[e]Слабость[/e] всем врагам на 1 ход.
 Всем врагам [e]липкая слизь +{1}[/e]."
-effects = Array[ExtResource("1_0on58")]([SubResource("Resource_4e0jk"), SubResource("Resource_vy0u5")])
+effects = Array[ExtResource("1_0on58")]([SubResource("Resource_0on58"), SubResource("Resource_bmyrq")])

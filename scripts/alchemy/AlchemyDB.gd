@@ -1,5 +1,10 @@
 extends Node
 class_name AlchemyDB
+## Рецепты алхимии. Зелья известны сразу, еду нужно сначала открыть: рецепт выпадает из сундука
+## или покупается у Рикки (предмет «Рецепт: …» изучается при получении). Открытые — DungRun.known_recipes.
+
+## Рецепты, известные с самого начала.
+const STARTER_RECIPES: Array[String] = ["slime_potion_recipe", "energy_tonic_recipe", "rage_phial_recipe"]
 
 const RECIPES := {
 	"slime_potion_recipe": {
@@ -57,6 +62,23 @@ static func get_all_ingredient_ids() -> Array[String]:
 				out.append(String(item_id))
 	return out
 
+static func is_known(recipe_id: String) -> bool:
+	return STARTER_RECIPES.has(recipe_id) or (DungRun != null and DungRun.known_recipes.has(recipe_id))
+
+static func learn(recipe_id: String) -> void:
+	if recipe_id == "" or DungRun == null or is_known(recipe_id) or not RECIPES.has(recipe_id):
+		return
+	DungRun.known_recipes.append(recipe_id)
+	DungRun.emit_changed()
+
+## Предметы-рецепты еды, которые ещё не открыты (для сундука и лавки).
+static func unknown_recipe_items() -> Array[String]:
+	var out: Array[String] = []
+	for item_id in RunItems.all_item_ids():
+		if RunItems.is_recipe_item(item_id) and not is_known(RunItems.get_recipe_id(item_id)):
+			out.append(item_id)
+	return out
+
 static func get_recipe(recipe_id: String) -> Dictionary:
 	return RECIPES.get(String(recipe_id), {})
 
@@ -70,7 +92,7 @@ static func get_ingredients(recipe_id: String) -> Dictionary:
 	return Dictionary(get_recipe(recipe_id).get("ingredients", {})).duplicate(true)
 
 static func can_craft(recipe_id: String) -> bool:
-	if Inventory_ == null:
+	if Inventory_ == null or not is_known(recipe_id):
 		return false
 	for item_id in get_ingredients(recipe_id).keys():
 		var need := int(get_ingredients(recipe_id)[item_id])

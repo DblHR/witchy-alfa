@@ -7,7 +7,7 @@
 
 [sub_resource type="Resource" id="Resource_x2tcu"]
 script = ExtResource("2_nnmvn")
-atk_ratio = 0.375
+atk_ratio = 0.4
 
 [sub_resource type="Resource" id="Resource_nnmvn"]
 script = ExtResource("3_g8v53")
@@ -18,7 +18,7 @@ turns = 3
 [resource]
 script = ExtResource("4_xr0l6")
 id = "witch_rain"
-title = "Дождь искр"
+title = "Горячий танец"
 cost = 2
 target = 1
 tags = PackedStringArray("attack")

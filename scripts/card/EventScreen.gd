@@ -8,10 +8,9 @@ class_name EventScreen
 
 signal finished
 
-const NURSE_HEAL_PRICE := 25
+## Медсестра Ноктрис: одна бесплатная услуга из трёх за заход.
 const NURSE_HEAL_PERCENT := 0.5
-const NURSE_REVIVE_PRICE := 45
-const NURSE_REVIVE_PERCENT := 0.5
+const NURSE_REVIVE_PERCENT := 0.3
 
 const LEFT_X := 120.0
 const TITLE_RECT := Rect2(120, 60, 860, 110)
@@ -32,8 +31,8 @@ const PANEL_TITLE := Color(0.78, 0.22, 0.52)
 const COIN_TEXT_POS := Vector2(1590, 46)
 
 const TITLES := {
-	"shop": "Тихая лавка ламии",
-	"nurse": "Медсестра",
+	"shop": "Тихая лавка Сессилии",
+	"nurse": "Медсестра Ноктрис",
 	"chest": "Сундук",
 }
 
@@ -283,46 +282,75 @@ func _rebuild() -> void:
 		"chest": _build_chest()
 		"statue": _build_statue()
 
-# --- Лавка -------------------------------------------------------------------
+# --- Лавка Сессилии ---------------------------------------------------------
 
 func _build_shop() -> void:
-	# Заглушка: лавку Ламии (семена, еда, лут, артефакты) соберём позже.
-	_desc.text = "Ламия сегодня переставляет товар. Загляни ещё раз попозже."
+	_desc.text = "Сессилия раскладывает товар: дороже, чем у Рикки, зато наборами и с редкими находками."
+	for offer in battle.call("run_lamia_stock", room):
+		_add_offer(offer)
 
-# --- Медсестра ---------------------------------------------------------------
+func _add_offer(offer: Dictionary) -> void:
+	var id := String(offer["id"])
+	var count := int(offer.get("count", 1))
+	var sold := bool(offer.get("sold", false))
+	var label := RunItems.get_item_name(id) + (" ×%d" % count if count > 1 else "")
+	var text := ("%s — продано" % label) if sold else ("%s — %d зол." % [label, int(offer["price"])])
+	var b := _add_option(text, func() -> void: _on_buy(offer), sold or _gold() < int(offer["price"]))
+	b.icon = Inventory_.get_item_icon(id) if Inventory_ != null else null
+	b.expand_icon = true
+	b.add_theme_constant_override("icon_max_width", 64)
+	b.alignment = HORIZONTAL_ALIGNMENT_LEFT
+	b.custom_minimum_size = Vector2(0, 84)
+	b.tooltip_text = "%s [%s]\n%s" % [RunItems.get_item_name(id), RunItems.get_item_kind_label(id), RunItems.get_item_desc(id)]
+
+func _on_buy(offer: Dictionary) -> void:
+	if not bool(battle.call("run_buy_offer", offer)):
+		_say("Не хватает золота.")
+		return
+	_rebuild()
+	_say("Куплено: %s." % RunItems.get_item_name(String(offer["id"])))
+
+# --- Медсестра Ноктрис -------------------------------------------------------
 
 func _build_nurse() -> void:
-	_desc.text = "Медсестра окажет одну услугу за заход."
 	var used := bool(room.get("used", false))
-	_add_option("Подлечить отряд на %d%% макс. HP (%d зол.)" % [int(NURSE_HEAL_PERCENT * 100.0), NURSE_HEAL_PRICE], _on_nurse_heal, used)
-	_add_option("Воскресить героя (%d зол.)" % NURSE_REVIVE_PRICE, _on_nurse_revive, used)
+	if used:
+		_desc.text = "Ноктрис уже помогла отряду. Одна услуга за визит."
+		return
+	_desc.text = "Ноктрис окажет одну услугу на выбор — бесплатно."
+	var burned := int(battle.call("run_estus_burned"))
+	_add_option("Восстановить заряды эстуса (сгорело: %d)" % burned, _on_nurse_estus, burned <= 0)
+	_add_option("Вылечить героиню на %d%% HP" % int(NURSE_HEAL_PERCENT * 100.0), func() -> void: _pick_hero(false), not bool(battle.call("run_has_wounded")))
+	_add_option("Воскресить героиню с %d%% HP" % int(NURSE_REVIVE_PERCENT * 100.0), func() -> void: _pick_hero(true), not bool(battle.call("run_has_dead")))
 
-func _on_nurse_heal() -> void:
-	if not bool(battle.call("run_has_wounded")):
-		_say("Лечить некого.")
-		return
-	if not bool(battle.call("run_spend_gold", NURSE_HEAL_PRICE)):
-		_say("Не хватает золота.")
-		return
-	battle.call("run_heal_all_percent", NURSE_HEAL_PERCENT)
+func _on_nurse_estus() -> void:
+	var n := int(battle.call("run_restore_estus"))
 	room["used"] = true
 	_rebuild()
-	_say("Медсестра привела отряд в порядок.")
-	_show_choice_image("nurse_heal")
+	_say("Ноктрис наполнила фляги: эстус +%d." % n)
 
-func _on_nurse_revive() -> void:
-	if not bool(battle.call("run_has_dead")):
-		_say("Павших героев нет.")
-		return
-	if not bool(battle.call("run_spend_gold", NURSE_REVIVE_PRICE)):
-		_say("Не хватает золота.")
-		return
-	var who := String(battle.call("run_revive_one", NURSE_REVIVE_PERCENT))
+## Выбор героини для лечения или воскрешения.
+func _pick_hero(revive: bool) -> void:
+	_clear(_options)
+	_desc.text = "Кого воскресить?" if revive else "Кого вылечить?"
+	for h in battle.call("run_heroes"):
+		var d: Dictionary = h
+		var ok_target := bool(d["dead"]) if revive else (not bool(d["dead"]) and int(d["hp"]) < int(d["max_hp"]))
+		var label := "%s — %s" % [String(d["name"]), "пала" if bool(d["dead"]) else "%d/%d HP" % [int(d["hp"]), int(d["max_hp"])]]
+		var hero_id := String(d["id"])
+		var hero_name := String(d["name"])
+		_add_option(label, func() -> void: _on_nurse_target(hero_id, hero_name, revive), not ok_target)
+	_add_option("Назад", _rebuild)
+
+func _on_nurse_target(hero_id: String, hero_name: String, revive: bool) -> void:
+	if revive:
+		battle.call("run_revive_hero", hero_id, NURSE_REVIVE_PERCENT)
+	else:
+		battle.call("run_heal_hero", hero_id, NURSE_HEAL_PERCENT)
 	room["used"] = true
 	_rebuild()
-	_say("%s снова на ногах." % who)
-	_show_choice_image("nurse_revive")
-
+	_say(("%s снова на ногах." if revive else "Ноктрис подлатала: %s.") % hero_name)
+	_show_choice_image("nurse_revive" if revive else "nurse_heal")
 ## Полноэкранная картинка услуги (как в старом забеге): клик закрывает.
 func _show_choice_image(key: String) -> void:
 	if AssetCatalog_ == null:
@@ -391,7 +419,10 @@ func _build_statue() -> void:
 	var white := String(room.get("variant", "")) == "white"
 	if AssetCatalog_ != null:
 		_npc.texture = AssetCatalog_.get_event_npc_texture("statue_white" if white else "statue_black")
-	_desc.text = ("Белая статуя: после каждой из ближайших %d побед отряд лечится на 12%% макс. HP." if white else "Чёрная статуя: на ближайшие %d боёв карты бьют сильнее.") % CardRun.STATUE_CHARGES
+	if white:
+		_desc.text = "Белая статуя. На %d боевые комнаты: +1 энергия в первые 2 хода боя, после каждой победы отряд лечится на 10%% макс. HP." % CardRelics.STATUE_ROOMS
+	else:
+		_desc.text = "Чёрная статуя. На %d боевые комнаты: +1 карта в первые 2 хода боя, урон карт +20%%." % CardRelics.STATUE_ROOMS
 	_add_option("Принять дар", _on_statue_take, bool(room.get("used", false)))
 
 func _on_statue_take() -> void:

@@ -8,13 +8,13 @@
 script = ExtResource("2_gd4cx")
 status = "burn"
 turns = 2
+stacks = 1
 
 [resource]
 script = ExtResource("3_2y6cl")
 id = "witch_fan"
-title = "Раздуть пламя"
-cost = 2
+title = "Распаляющее касание"
 target = 1
 tags = PackedStringArray("support")
-description = "[e]+{0} хода[/e] всему горению на врагах."
+description = "Каждому горящему врагу: [e]+{0b} стак[/e] и [e]+{0} хода[/e] горения."
 effects = Array[ExtResource("1_pe5kp")]([SubResource("Resource_pe5kp")])

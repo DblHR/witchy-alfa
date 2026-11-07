@@ -74,6 +74,10 @@ func modify_taken(_combat: CardCombat, _unit: Unit, _s: Dictionary, amount: int)
 func on_hp_lost(_combat: CardCombat, _unit: Unit, _s: Dictionary, _amount: int) -> void:
 	pass
 
+## Удар attacker пришёлся в щит юнита (absorbed — сколько съел щит). «Жар тела» поджигает обидчика.
+func on_shield_hit(_combat: CardCombat, _unit: Unit, _s: Dictionary, _attacker: Unit, _absorbed: int) -> void:
+	pass
+
 ## Начало хода врагов (Горение жжёт здесь).
 func on_enemy_turn_start(_combat: CardCombat, _unit: Unit, _s: Dictionary) -> void:
 	pass

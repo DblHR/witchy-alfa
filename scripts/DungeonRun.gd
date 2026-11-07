@@ -32,6 +32,12 @@ var estus_power: int = ESTUS_BASE_POWER
 
 var custom_potion_charges: int = 0
 var selected_potion_id: String = "heal_potion"
+## Карточный забег: два слота зелий, выбираются перед забегом (id зелий: heal_potion и т.п.).
+## Каждый слот — одно зелье на забег; выпитое списывается из инвентаря.
+const POTION_SLOTS := 2
+var selected_potion_ids: Array[String] = ["", ""]
+## Открытые рецепты еды (зелья известны сразу — AlchemyDB.STARTER_RECIPES).
+var known_recipes: Array[String] = []
 var selected_artifact_id: String = ""
 var selected_food_id: String = ""
 var owned_artifacts: Array[String] = ["mace_staff_common", "dango_staff_common"]
@@ -95,6 +101,8 @@ func reset_to_defaults() -> void:
 	estus_power = ESTUS_BASE_POWER
 	custom_potion_charges = 0
 	selected_potion_id = "heal_potion"
+	selected_potion_ids = ["", ""]
+	known_recipes.clear()
 	selected_artifact_id = ""
 	selected_food_id = ""
 	owned_artifacts = ["mace_staff_common", "dango_staff_common"]
@@ -110,6 +118,13 @@ func reset_to_defaults() -> void:
 	rng.randomize()
 	sync_legacy_owned_artifacts_to_inventory()
 	refresh_ground_shop(true)
+	emit_changed()
+
+## Начало карточного забега: в relics кладётся выбранный посох и съедается одна выбранная еда
+## (её эффект действует весь забег), сбрасывается «Стейк». Зовёт CardBattle при запуске.
+func begin_card_run() -> void:
+	_validate_loadout()
+	_reset_session_meta()
 	emit_changed()
 
 func _reset_session_meta() -> void:
@@ -131,6 +146,7 @@ func _validate_loadout() -> void:
 		selected_potion_id = ""
 	elif not available_potions.has(selected_potion_id):
 		selected_potion_id = available_potions[0]
+	_validate_potion_slots()
 
 	if selected_artifact_id != "" and (Inventory_ == null or not Inventory_.has_item(selected_artifact_id)):
 		selected_artifact_id = ""
@@ -140,6 +156,37 @@ func _validate_loadout() -> void:
 		selected_food_id = ""
 	elif selected_food_id != "" and not available_foods.has(selected_food_id):
 		selected_food_id = available_foods[0]
+
+## Слоты зелий: в слоте только зелье, которое есть в инвентаре (два одинаковых — если их ≥2).
+func _validate_potion_slots() -> void:
+	while selected_potion_ids.size() < POTION_SLOTS:
+		selected_potion_ids.append("")
+	var used: Dictionary = {}
+	for i in range(POTION_SLOTS):
+		var pid := selected_potion_ids[i]
+		if pid == "":
+			continue
+		var item_id := RunItems.get_potion_item_id(pid)
+		var have := Inventory_.get_item_count(item_id) if Inventory_ != null and item_id != "" else 0
+		if int(used.get(pid, 0)) >= have:
+			selected_potion_ids[i] = ""
+			continue
+		used[pid] = int(used.get(pid, 0)) + 1
+
+func set_potion_slot(slot: int, potion_id: String) -> void:
+	if slot < 0 or slot >= POTION_SLOTS:
+		return
+	selected_potion_ids[slot] = potion_id
+	_validate_potion_slots()
+	emit_changed()
+
+## Выпить зелье из слота: списать предмет из инвентаря. Возвращает id зелья («» — не вышло).
+func drink_potion(potion_id: String) -> bool:
+	var item_id := RunItems.get_potion_item_id(potion_id)
+	if item_id == "" or Inventory_ == null or not Inventory_.remove_item(item_id, 1):
+		return false
+	emit_changed()
+	return true
 
 func refresh_selected_potion_charges() -> void:
 	var item_id := RunItems.get_potion_item_id(selected_potion_id)
@@ -171,23 +218,84 @@ func ensure_ground_shop_stock() -> void:
 	if ground_shop_item_ids.is_empty():
 		refresh_ground_shop(true)
 
+## Лавка Рикки (дом): кварц и семена всегда, остальное — случайно из еды, обычных посохов,
+## неоткрытых рецептов и ингредиентов для еды. Обновляется после каждого забега.
+const RIKKA_SEEDS: Array[String] = ["slimeflower_seed", "witchflower_seed", "meatflower_seed", "vegetableflower_seed", "sweetflower_seed", "fruitflower_seed"]
+const RIKKA_FOOD_INGREDIENTS: Array[String] = ["meat_fruit", "vegetable_fruit", "sweet_fruit", "fruit_fruit"]
+
 func refresh_ground_shop(force_emit: bool = false) -> void:
 	sync_legacy_owned_artifacts_to_inventory()
 	ground_shop_item_ids.clear()
-	ground_shop_item_ids.append("slimeflower_seed")
-	ground_shop_item_ids.append("witchflower_seed")
 	ground_shop_item_ids.append("quartz")
-	ground_shop_item_ids.append("slime_potion")
-	var exclude := ground_shop_item_ids.duplicate()
-	for id in get_owned_unique_artifacts():
-		exclude.append(id)
-	var random_ids := RunItems.random_item_ids(rng, GROUND_SHOP_SLOT_COUNT - ground_shop_item_ids.size(), exclude)
-	for id in random_ids:
+	ground_shop_item_ids.append(RIKKA_SEEDS[rng.randi_range(0, RIKKA_SEEDS.size() - 1)])
+	var pools: Array = [RunItems.food_ids(), _common_staffs_not_owned(), AlchemyDB.unknown_recipe_items(), RIKKA_FOOD_INGREDIENTS]
+	var guard := 0
+	while ground_shop_item_ids.size() < GROUND_SHOP_SLOT_COUNT and guard < 50:
+		guard += 1
+		var pool: Array = pools[rng.randi_range(0, pools.size() - 1)]
+		if pool.is_empty():
+			continue
+		var id := String(pool[rng.randi_range(0, pool.size() - 1)])
+		if ground_shop_item_ids.has(id):
+			continue
 		ground_shop_item_ids.append(id)
 	while ground_shop_item_ids.size() < GROUND_SHOP_SLOT_COUNT:
 		ground_shop_item_ids.append("")
 	if force_emit:
 		emit_changed()
+
+func _common_staffs_not_owned() -> Array[String]:
+	var out: Array[String] = []
+	for id in RunItems.artifact_ids():
+		if RunItems.get_item_rarity(id) == 0 and (Inventory_ == null or not Inventory_.has_item(id)):
+			out.append(id)
+	return out
+
+## Лавка Сессилии (ламия, ивент в забеге): 4 слота, дороже Рикки, но наборами или редкостью.
+## Возвращает [{id, count, price}]. Посох — обычный или (LAMIA_RARE_CHANCE) редкий.
+const LAMIA_PRICE_MULT := 1.3
+const LAMIA_RARE_CHANCE := 0.2
+const LAMIA_FLOOR_LOOT: Array[String] = ["slime_goop"]
+
+func roll_lamia_stock(r: RandomNumberGenerator) -> Array:
+	var offers: Array = []
+	var kinds := ["quartz", "food", "seeds", "potion", "loot", "staff"]
+	for i in range(kinds.size() - 1, 0, -1):
+		var j := r.randi_range(0, i)
+		var tmp: String = kinds[i]
+		kinds[i] = kinds[j]
+		kinds[j] = tmp
+	for kind in kinds:
+		if offers.size() >= EVENT_SHOP_SLOT_COUNT:
+			break
+		var id := ""
+		var count := 1
+		match String(kind):
+			"quartz":
+				id = "quartz"; count = r.randi_range(4, 6)
+			"food":
+				var foods := RunItems.food_ids()
+				id = foods[r.randi_range(0, foods.size() - 1)]; count = r.randi_range(1, 2)
+			"seeds":
+				id = RIKKA_SEEDS[r.randi_range(0, RIKKA_SEEDS.size() - 1)]; count = 3
+			"potion":
+				var potions := ["slime_potion", "energy_tonic", "rage_phial"]
+				id = potions[r.randi_range(0, potions.size() - 1)]
+			"loot":
+				id = LAMIA_FLOOR_LOOT[r.randi_range(0, LAMIA_FLOOR_LOOT.size() - 1)]; count = r.randi_range(4, 6)
+			"staff":
+				var rare := r.randf() < LAMIA_RARE_CHANCE
+				var pool: Array[String] = []
+				for sid in RunItems.artifact_ids():
+					if RunItems.get_item_rarity(sid) == (1 if rare else 0) and (Inventory_ == null or not Inventory_.has_item(sid)):
+						pool.append(sid)
+				if pool.is_empty():
+					continue
+				id = pool[r.randi_range(0, pool.size() - 1)]
+		if id == "":
+			continue
+		offers.append({"id": id, "count": count, "price": roundi(float(RunItems.get_item_price(id) * count) * LAMIA_PRICE_MULT)})
+	return offers
 
 func buy_ground_shop_item(slot_idx: int) -> String:
 	if slot_idx < 0 or slot_idx >= ground_shop_item_ids.size():
@@ -411,6 +519,8 @@ func serialize_state() -> Dictionary:
 		"estus_power_pct": estus_power,
 		"custom_potion_charges": custom_potion_charges,
 		"selected_potion_id": selected_potion_id,
+		"selected_potion_ids": selected_potion_ids.duplicate(),
+		"known_recipes": known_recipes.duplicate(),
 		"selected_artifact_id": selected_artifact_id,
 		"selected_food_id": selected_food_id,
 		"owned_artifacts": owned_artifacts.duplicate(),
@@ -449,6 +559,12 @@ func apply_state(data: Dictionary) -> void:
 	estus_power = maxi(0, int(data.get("estus_power_pct", ESTUS_BASE_POWER)))
 	custom_potion_charges = int(data.get("custom_potion_charges", custom_potion_charges))
 	selected_potion_id = String(data.get("selected_potion_id", selected_potion_id))
+	selected_potion_ids.clear()
+	for v in Array(data.get("selected_potion_ids", [selected_potion_id, ""])):
+		selected_potion_ids.append(String(v))
+	known_recipes.clear()
+	for v in Array(data.get("known_recipes", [])):
+		known_recipes.append(String(v))
 	selected_artifact_id = RunItems.normalize_item_id(String(data.get("selected_artifact_id", selected_artifact_id)))
 	selected_food_id = RunItems.normalize_item_id(String(data.get("selected_food_id", selected_food_id)))
 

@@ -49,6 +49,11 @@ func add_item(item_id: String, amount: int = 1) -> bool:
 	item_id = RunItems.normalize_item_id(item_id)
 	if item_id == "" or amount <= 0:
 		return false
+	# Рецепт не лежит в инвентаре — он сразу изучается.
+	if RunItems.is_recipe_item(item_id):
+		AlchemyDB.learn(RunItems.get_recipe_id(item_id))
+		changed.emit()
+		return true
 	if RunItems.is_unique_item(item_id):
 		if has_item(item_id):
 			return false
@@ -114,6 +119,8 @@ func get_item_icon(item_id: String) -> Texture2D:
 	var texture: Texture2D = null
 	if RunItems.is_artifact(item_id):
 		texture = _build_staff_icon(item_id)
+	if RunItems.is_recipe_item(item_id):
+		texture = get_item_icon(AlchemyDB.get_result_item_id(RunItems.get_recipe_id(item_id)))
 	if texture == null:
 		var path := String(ICON_PATHS.get(item_id, ""))
 		if path != "" and ResourceLoader.exists(path):

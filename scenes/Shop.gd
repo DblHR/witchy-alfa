@@ -101,8 +101,8 @@ func _on_stock_pressed(slot_idx: int) -> void:
 
 func _refresh(message: String = "") -> void:
 	gold_label.text = "Золото: %d" % DungRun.gold
-	seed_label.text = "Семена: %d | Ведьмины семена: %d | Кварц: %d | Зелье слаймов: %d" % [Inventory_.get_item_count("slimeflower_seed"), Inventory_.get_item_count("witchflower_seed"), Inventory_.get_item_count("quartz"), Inventory_.get_item_count("slime_potion")]
-	info_label.text = "В лавке всегда можно докупить семена, кварц и часть расходников."
+	seed_label.text = "Кварц: %d | Открыто рецептов еды: %d из %d" % [Inventory_.get_item_count("quartz"), DungRun.known_recipes.size(), DungRun.known_recipes.size() + AlchemyDB.unknown_recipe_items().size()]
+	info_label.text = "Лавка Рикки: кварц и семена всегда, плюс еда, обычные посохи, рецепты и ингредиенты для еды. Товар обновляется после каждого забега."
 	if StoryState_ != null and StoryState_.is_quest_active("find_warrior"):
 		info_label.text += "\n\nКролик просила присмотреться к слухам о пропавшем воине. Комната для этого квеста будет подключена позже."
 	if message != "":

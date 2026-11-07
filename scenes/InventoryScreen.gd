@@ -394,9 +394,9 @@ var _cards_title: Label = null
 var _ult_title: Label = null
 var _ult_row: HBoxContainer = null
 
-## Строка отношений для досье (у главных героев отношений нет).
+## Строка отношений для досье.
 func _relationship_text(data: CharacterData) -> String:
-	if data.is_protagonist or UnitRoster_ == null:
+	if UnitRoster_ == null:
 		return ""
 	var prog := UnitRoster_.trust_progress(data.id)
 	var rel := int(prog["level"])
@@ -618,7 +618,7 @@ func _build_admin_ui() -> void:
 	_admin_hero.add_theme_font_size_override("font_size", 18)
 	for c in CharDB.characters:
 		var cd := c as CharacterData
-		if cd == null or cd.is_protagonist or cd.unit_class == "рядовой враг" or cd.card_pool.is_empty():
+		if cd == null or cd.unit_class == "рядовой враг" or cd.card_pool.is_empty():
 			continue
 		_admin_hero.add_item(cd.display_name)
 		_admin_hero.set_item_metadata(_admin_hero.item_count - 1, cd.id)

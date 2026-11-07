@@ -259,6 +259,12 @@ func _build_top_ui() -> void:
 		b.add_theme_constant_override("icon_max_width", 56)
 		b.custom_minimum_size = Vector2(190, 80)
 		b.tooltip_text = "%s\n%s" % [RunItems.get_item_desc(result_id), AlchemyDB.get_recipe_summary(recipe_id)]
+		if not AlchemyDB.is_known(recipe_id):
+			# Рецепт ещё не открыт: из сундука или у Рикки.
+			b.disabled = true
+			b.text = "??? Не открыт"
+			b.tooltip_text = "Рецепт можно найти в сундуке или купить у Рикки."
+			b.modulate = Color(1, 1, 1, 0.55)
 		b.pressed.connect(_on_recipe_pressed.bind(recipe_id))
 		_recipe_row.add_child(b)
 		_recipe_buttons[recipe_id] = b

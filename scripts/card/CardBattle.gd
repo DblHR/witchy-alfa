@@ -40,8 +40,6 @@ const SHIELD_EXPIRES_ON_NEW_TURN := true
 ## Добыча и дары забега (тестовые).
 const LOOT_GOLD_BASE := 4         ## золото с врага = 4 + номер комнаты (как в автобаттлере)
 const LOOT_QUARTZ_CHANCE := 0.10  ## шанс кварца с каждого врага
-const WHITE_STATUE_HEAL_PERCENT := 0.12   ## белая статуя: +12% макс. HP после победы
-const BLACK_STATUE_BONUS := 2     ## +урон каждой карте, пока действует чёрная статуя
 const CHEST_GOLD_BASE := 12
 const CHEST_GOLD_PER_ROOM := 5
 
@@ -91,6 +89,17 @@ var _right_slot_default: Array[Vector2] = []
 var _combat := CardCombat.new()
 ## Через него враги действуют (EnemyDef/EnemyMove): правила + призыв/исчезновение на сцене.
 var _api: EnemyApi
+## Посох и еда забега (DungRun.relics): хуки боя.
+var _relics: CardRelics
+## Номер хода в текущем бою (1 — первый): бонусы Данго/Желе/статуй.
+var _turn_no := 0
+## Слоты зелий на этот забег (id зелий; «» — пусто или уже выпито). Берутся из DungRun.selected_potion_ids.
+var _potions: Array[String] = []
+## Строка зелий и баффов под золотом.
+var _buff_bar: CardBuffBar
+## Зелья забега: сила (числа — тут, описание — RunItems.POTION_DEFS).
+const POTION_HEAL := 0.40
+const POTION_ENERGY := 2
 var _deck := CardDeck.new()
 var _sleeve: CardSleeve
 var _ults: CardUltBar
@@ -157,6 +166,10 @@ func _ready() -> void:
 
 	_run = CardRun.new()
 	_api = EnemyApi.new(_combat, self, _run.rng)
+	DungRun.begin_card_run()
+	_relics = CardRelics.new(DungRun.relics, _run.rng)
+	_combat.relics = _relics
+	_potions.assign(DungRun.selected_potion_ids)
 	_ui_layer = hud.get_parent()
 	_build_run_hud()
 	_cache_world_slots()
@@ -360,6 +373,8 @@ func _on_unit_hurt(unit: Unit, hp_damage: int) -> void:
 		_refresh_actor(actor)
 	if hp_damage > 0 and unit.enemy_def != null and right_team.has(unit):
 		unit.enemy_def.on_hurt(_api, unit, hp_damage)
+	if hp_damage > 0 and left_team.has(unit):
+		_relics.on_hero_hurt(_combat, unit)
 
 func _on_unit_died(unit: Unit) -> void:
 	if left_team.has(unit):
@@ -392,7 +407,6 @@ func _start_room(index: int) -> void:
 	room_label.text = "Комната %d / %d" % [index + 1, _run.total_rooms()]
 
 	_combat.reset()
-	_combat.damage_bonus = BLACK_STATUE_BONUS if _run.black_charges > 0 else 0
 	_float_stack.clear()
 	refresh_run_hud()
 
@@ -410,6 +424,8 @@ func _start_room(index: int) -> void:
 	_sleeve.clear()
 	_deck.start_battle(_build_battle_deck())
 	_refresh_pile_buttons()
+	_relics.on_battle_start(_combat, _run.white_charges > 0, _run.black_charges > 0)
+	_turn_no = 0
 
 	BattleBanter_.start_battle(self)
 	BattleBanter_.trigger("battle_start")
@@ -443,6 +459,8 @@ func _without_run_burned(cards: Array[CardInstance]) -> Array[CardInstance]:
 
 func _begin_player_turn() -> void:
 	_energy = ENERGY_PER_TURN
+	_turn_no += 1
+	_energy += int(_relics.turn_bonus(_turn_no).get("energy", 0))
 	_combat.enemy_phase = false
 	_combat.begin_player_turn()
 	_combat.roll_intents(_api)
@@ -469,7 +487,9 @@ func _deal_new_hand() -> void:
 	# Карты из рукава возвращаются в руку первыми, добирается на столько же меньше.
 	var from_sleeve := _sleeve.take_all()
 	_deck.hand.append_array(from_sleeve)
-	var drawn := _deck.draw(maxi(0, HAND_SIZE - from_sleeve.size()))
+	var extra := int(_relics.turn_bonus_cache.get("cards", 0))
+	_relics.turn_bonus_cache["cards"] = 0
+	var drawn := _deck.draw(maxi(0, HAND_SIZE + extra - from_sleeve.size()))
 	_refresh_pile_buttons()
 	for c in from_sleeve + drawn:
 		_add_card_view(c)
@@ -788,7 +808,9 @@ func _play_card(v: CardView, targets: Array[Unit]) -> void:
 	var caster := _combat.hero_by_id(card.owner_id)
 	_float_stack.clear()
 	_consume_card(v)
+	_relics.before_card(card)
 	_combat.play_card(card, caster, targets)
+	_relics.after_card(_combat, card)
 	_ults.gain(card.owner_id)
 	CardActorFx.hop(_find_actor(caster))
 	if card.owner_id != "":
@@ -841,7 +863,9 @@ func _on_end_turn_pressed() -> void:
 	# 1. Рука уходит в сброс (эстус в том числе — сгорает только сыгранный).
 	_clear_hand_views()
 	_combat.end_player_turn()
+	_relics.on_turn_end()
 	_refresh_all_actors()
+	refresh_run_hud()
 	await _wait(0.3)
 
 	# 2. Статусы начала хода врагов (Горение жжёт до их ударов).
@@ -1037,7 +1061,7 @@ func _apply_run_progress() -> PackedStringArray:
 	if UnitRoster_ != null:
 		for id in DungRun.party_ids:
 			var data: CharacterData = CharDB.get_by_id(String(id)) if String(id) != "" else null
-			if data == null or data.is_protagonist:
+			if data == null:
 				continue
 			var before := UnitRoster_.get_relationship(data.id)
 			UnitRoster_.add_trust(data.id, CardBalance.TRUST_PER_RUN)
@@ -1280,7 +1304,9 @@ func _on_ult_pressed(btn: UltButton) -> void:
 	_float_stack.clear()
 	CardActorFx.hop(_find_actor(hero), ULT_HOP_HEIGHT)
 	BattleBanter_.trigger("ability_cast", {"speaker_id": hero.data.id})
+	_relics.before_card(ult)
 	_combat.play_card(ult, hero, targets)
+	_relics.after_card(_combat, ult)
 	_refresh_all_actors()
 	_check_end()
 
@@ -1302,13 +1328,18 @@ func _ult_targets(ult: CardInstance, hero: Unit) -> Array[Unit]:
 func _build_run_hud() -> void:
 	_gold_label = Label.new()
 	_gold_label.position = Vector2(24, 22)
-	_gold_label.size = Vector2(520, 36)
+	_gold_label.size = Vector2(900, 36)
 	_gold_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_gold_label.add_theme_font_size_override("font_size", 26)
 	_gold_label.add_theme_color_override("font_color", Color(1.0, 0.88, 0.4))
 	_gold_label.add_theme_color_override("font_outline_color", Color(0, 0, 0, 1))
 	_gold_label.add_theme_constant_override("outline_size", 6)
 	hud.add_child(_gold_label)
+
+	_buff_bar = CardBuffBar.new()
+	_buff_bar.position = Vector2(24, 66)
+	hud.add_child(_buff_bar)
+	_buff_bar.entry_pressed.connect(_on_buff_pressed)
 
 	# Постоянный счётчик прогресса забега сверху по центру.
 	_progress = RunProgress.new()
@@ -1322,11 +1353,73 @@ func refresh_run_hud() -> void:
 	if _progress != null:
 		_progress.setup(_run.total_rooms(), _room_index)
 	var text := "Золото: %d   Эстус: %d/%d" % [DungRun.gold, maxi(0, DungRun.estus_stacks - _run.burned_count("estus")), DungRun.estus_stacks]
-	if _run.white_charges > 0:
-		text += "   Белая статуя: %d" % _run.white_charges
-	if _run.black_charges > 0:
-		text += "   Чёрная статуя: %d" % _run.black_charges
 	_gold_label.text = text
+	if _buff_bar != null and _relics != null:
+		_buff_bar.set_entries(_buff_entries())
+
+# --- Строка зелий и баффов ---------------------------------------------------
+
+func _buff_entries() -> Array:
+	var out: Array = []
+	for i in range(_potions.size()):
+		var pid := _potions[i]
+		if pid == "":
+			out.append({"key": "potion:%d" % i, "potion": true, "empty": true, "title": "Пустой слот зелья",
+				"desc": "Зелья выбираются перед забегом (до двух). Выпитое зелье слот не возвращает."})
+			continue
+		var item_id := RunItems.get_potion_item_id(pid)
+		out.append({"key": "potion:%d" % i, "potion": true, "icon": Inventory_.get_item_icon(item_id),
+			"title": RunItems.get_potion_name(pid), "desc": RunItems.get_potion_desc(pid) + "\nНажмите, чтобы выпить (в свой ход)."})
+	for id in _relics.items:
+		out.append({"key": id, "icon": Inventory_.get_item_icon(id), "title": RunItems.get_item_name(id),
+			"desc": RunItems.get_item_desc(id), "stats": _relics.stats_text(id)})
+	if _run.white_charges > 0 or _relics.white_active:
+		out.append({"key": CardRelics.STATUE_WHITE, "icon": _statue_icon("statue_white"), "badge": str(_run.white_charges),
+			"title": "Дар белой статуи", "desc": "Ещё боёв: %d. +1 энергия в первые 2 хода боя, после победы отряд лечится на 10%% макс. HP." % _run.white_charges,
+			"stats": _relics.stats_text(CardRelics.STATUE_WHITE)})
+	if _run.black_charges > 0 or _relics.black_active:
+		out.append({"key": CardRelics.STATUE_BLACK, "icon": _statue_icon("statue_black"), "badge": str(_run.black_charges),
+			"title": "Дар чёрной статуи", "desc": "Ещё боёв: %d. +1 карта в первые 2 хода боя, урон карт +20%%." % _run.black_charges,
+			"stats": _relics.stats_text(CardRelics.STATUE_BLACK)})
+	if _relics.rage_active or _relics.stat(CardRelics.RAGE, "dmg") > 0:
+		out.append({"key": CardRelics.RAGE, "icon": Inventory_.get_item_icon("rage_phial"), "badge": "!" if _relics.rage_active else "",
+			"title": "Фиал ярости", "desc": "Урон карт +30% до конца хода." if _relics.rage_active else "Выдохся.",
+			"stats": _relics.stats_text(CardRelics.RAGE)})
+	return out
+
+func _statue_icon(key: String) -> Texture2D:
+	return AssetCatalog_.get_event_npc_texture(key) if AssetCatalog_ != null else null
+
+func _on_buff_pressed(key: String) -> void:
+	if not key.begins_with("potion:"):
+		return
+	var slot := int(key.get_slice(":", 1))
+	if slot < 0 or slot >= _potions.size() or _potions[slot] == "":
+		return
+	if not _can_act():
+		return
+	var pid := _potions[slot]
+	if not DungRun.drink_potion(pid):
+		_potions[slot] = ""
+		refresh_run_hud()
+		return
+	_potions[slot] = ""
+	_float_stack.clear()
+	match pid:
+		"heal_potion":
+			var low: Unit = null
+			for u in _combat.alive_heroes():
+				if low == null or float(u.hp) / u.max_hp < float(low.hp) / low.max_hp:
+					low = u
+			if low != null:
+				_relics._count("slime_potion", "heal", _combat.heal(low, ceili(float(low.max_hp) * POTION_HEAL)))
+		"energy_potion":
+			_energy += POTION_ENERGY
+			_refresh_energy()
+		"battle_potion":
+			_relics.rage_active = true
+	_refresh_all_actors()
+	refresh_run_hud()
 
 func _setup_banter() -> void:
 	_banter = CardBanter.new()
@@ -1366,11 +1459,10 @@ func _on_room_cleared() -> void:
 	await _wait(0.8)
 	_clear_hand_views()
 	_float_stack.clear()
+	# Статуи: белая лечит после победы; обе тратят одну боевую комнату.
+	_relics.on_battle_won(_combat)
 	if _run.white_charges > 0:
 		_run.white_charges -= 1
-		for u in left_team:
-			if CardCombat.is_alive(u):
-				_combat.heal(u, ceili(float(u.max_hp) * WHITE_STATUE_HEAL_PERCENT))
 	if _run.black_charges > 0:
 		_run.black_charges -= 1
 	_refresh_all_actors()
@@ -1483,30 +1575,94 @@ func run_add_card(card_id: String) -> void:
 
 func run_take_statue(variant: String) -> void:
 	if variant == "white":
-		_run.white_charges += CardRun.STATUE_CHARGES
+		_run.white_charges += CardRelics.STATUE_ROOMS
 	else:
-		_run.black_charges += CardRun.STATUE_CHARGES
+		_run.black_charges += CardRelics.STATUE_ROOMS
 	refresh_run_hud()
 
-## Награда сундука: золото + случайная добавка. Возвращает текст для окна.
+## Героини для окна медсестры: [{id, name, hp, max_hp, dead}].
+func run_heroes() -> Array:
+	var out: Array = []
+	for u in left_team:
+		if u != null:
+			out.append({"id": u.data.id, "name": u.data.display_name, "hp": maxi(0, u.hp), "max_hp": u.max_hp, "dead": u.is_dead})
+	return out
+
+## Сгоревших за забег зарядов эстуса.
+func run_estus_burned() -> int:
+	return _run.burned_count("estus")
+
+## Вернуть все сгоревшие заряды эстуса. Возвращает, сколько вернулось.
+func run_restore_estus() -> int:
+	var n := _run.burned_count("estus")
+	while _run.burned_for_run.has("estus"):
+		_run.burned_for_run.erase("estus")
+	refresh_run_hud()
+	return n
+
+func run_heal_hero(hero_id: String, percent: float) -> void:
+	var u := _combat.hero_by_id(hero_id)
+	if CardCombat.is_alive(u):
+		_float_stack.clear()
+		_combat.heal(u, ceili(float(u.max_hp) * percent))
+		_refresh_all_actors()
+
+func run_revive_hero(hero_id: String, percent: float) -> void:
+	for u in left_team:
+		if u != null and u.data.id == hero_id and u.is_dead:
+			u.is_dead = false
+			u.hp = maxi(1, int(float(u.max_hp) * percent))
+			_refresh_all_actors()
+			CardActorFx.start_idle(_find_actor(u))
+			return
+
+## Товары Сессилии для этой комнаты (кешируются в room["stock"]).
+func run_lamia_stock(room: Dictionary) -> Array:
+	if not room.has("stock"):
+		room["stock"] = DungRun.roll_lamia_stock(_run.rng)
+	return room["stock"]
+
+## Купить товар Сессилии: золото списывается, предметы — в инвентарь.
+func run_buy_offer(offer: Dictionary) -> bool:
+	if bool(offer.get("sold", false)) or not run_spend_gold(int(offer.get("price", 0))):
+		return false
+	Inventory_.add_item(String(offer["id"]), int(offer.get("count", 1)))
+	offer["sold"] = true
+	return true
+
+## Сундук: золото всегда; кварц, лут с мобов этажа, семена и (редко) неоткрытый рецепт еды —
+## каждое со своим шансом. Возвращает текст для окна.
+const CHEST_QUARTZ_CHANCE := 0.6
+const CHEST_LOOT_CHANCE := 0.5
+const CHEST_SEED_CHANCE := 0.2
+const CHEST_RECIPE_CHANCE := 0.12
+
 func run_roll_chest(_room: Dictionary) -> String:
+	var r := _run.rng
 	var gold_amount := CHEST_GOLD_BASE + _room_index * CHEST_GOLD_PER_ROOM
 	run_gain_gold(gold_amount)
-	var lines: Array[String] = ["В сундуке было %d золота." % gold_amount]
+	var lines: Array[String] = ["Золото ×%d" % gold_amount]
+	if r.randf() < CHEST_QUARTZ_CHANCE:
+		var q := r.randi_range(1, 3)
+		Inventory_.add_item("quartz", q)
+		lines.append("Кварц ×%d" % q)
+	if r.randf() < CHEST_LOOT_CHANCE:
+		var loot_id: String = DungRun.LAMIA_FLOOR_LOOT[r.randi_range(0, DungRun.LAMIA_FLOOR_LOOT.size() - 1)]
+		var n := r.randi_range(2, 4)
+		Inventory_.add_item(loot_id, n)
+		lines.append("%s ×%d" % [RunItems.get_item_name(loot_id), n])
+	if r.randf() < CHEST_SEED_CHANCE:
+		var seed_id: String = DungRun.RIKKA_SEEDS[r.randi_range(0, DungRun.RIKKA_SEEDS.size() - 1)]
+		var sn := r.randi_range(1, 2)
+		Inventory_.add_item(seed_id, sn)
+		lines.append("%s ×%d" % [RunItems.get_item_name(seed_id), sn])
+	var unknown := AlchemyDB.unknown_recipe_items()
+	if not unknown.is_empty() and r.randf() < CHEST_RECIPE_CHANCE:
+		var rec := unknown[r.randi_range(0, unknown.size() - 1)]
+		Inventory_.add_item(rec, 1)
+		lines.append("%s — изучен!" % RunItems.get_item_name(rec))
 	if StoryState_ != null and StoryState_.is_quest_active("lamia_headphones") and not Inventory_.has_item("warm_headphones"):
-		if _run.rng.randf() < 0.18:
+		if r.randf() < 0.18:
 			Inventory_.add_item("warm_headphones", 1)
-			lines.append("Между монетами лежали тёплые наушники.")
-	# Как в старом сундуке: 80% — доп. лут. Семена теперь берутся отсюда (на боссе будут уникальные).
-	# TODO: «случайный предмет/артефакт» (25% доп. лута в старом сундуке) — когда дойдём до артефактов.
-	if _run.rng.randf() < 0.80:
-		if _run.rng.randf() < 0.45:
-			var q := _run.rng.randi_range(1, 3)
-			Inventory_.add_item("quartz", q)
-			lines.append("Доп. лут: кварц ×%d." % q)
-		else:
-			var seed_id := "slimeflower_seed" if _run.rng.randf() < 0.6 else "witchflower_seed"
-			var n := _run.rng.randi_range(1, 3)
-			Inventory_.add_item(seed_id, n)
-			lines.append("Доп. лут: %s ×%d." % [RunItems.get_item_name(seed_id), n])
-	return "\n".join(lines)
+			lines.append("Тёплые наушники (между монетами)")
+	return "В сундуке:\n" + "\n".join(lines)

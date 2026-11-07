@@ -14,6 +14,7 @@ const STICKY_SLIME := "sticky_slime"   ## липкая слизь — на вр�
 const WRAP_SLIME := "wrap_slime"       ## обволакивающая слизь — на союзниках
 const EMPOWER := "empower"
 const EXPOSED := "exposed"             ## «Подставлена»: урон по HP → обволакивающая слизь
+const HEAT_BODY := "heat_body"         ## «Жар тела»: ударивший по щиту получает Горение
 const SWALLOWED := "swallowed"         ## героиня в животе у Фуфу: не действует, враги её не бьют
 
 static var _all: Dictionary = {}
@@ -42,6 +43,7 @@ static func _register_all() -> void:
 	charm.charms = true
 	_add(charm)
 	_add(SwallowedStatus.new())
+	_add(HeatBodyStatus.new())
 	var nazhim := CardStatus.new(NAZHIM, "Нажим", CardStatus.Kind.STACKS)
 	nazhim.max_stacks = 10
 	_add(nazhim)

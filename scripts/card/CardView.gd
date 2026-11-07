@@ -95,9 +95,28 @@ var _gray_overlay: Panel
 var _hover_tween: Tween
 var _hover_z_set := false
 
+## Шрифт карт в режиме MSDF: текст остаётся чётким при любом увеличении (наведение ×1.9,
+## превью в окнах). Обычный растровый шрифт при масштабировании узла размывается.
+static var _card_theme: Theme
+
+static func card_theme() -> Theme:
+	if _card_theme != null:
+		return _card_theme
+	_card_theme = Theme.new()
+	var base := ThemeDB.fallback_font
+	if base is FontFile:
+		var f := (base as FontFile).duplicate() as FontFile
+		f.multichannel_signed_distance_field = true
+		f.msdf_pixel_range = 16   # обводка до 8 px остаётся ровной
+		f.msdf_size = 48
+		f.generate_mipmaps = true
+		_card_theme.default_font = f
+	return _card_theme
+
 func setup(c: CardInstance, is_interactive: bool = true) -> void:
 	card = c
 	interactive = is_interactive
+	theme = card_theme()
 	custom_minimum_size = CARD_SIZE
 	size = CARD_SIZE
 	# Масштабируем от нижнего края: при наведении карта «вырастает» вверх, не уезжая за экран.

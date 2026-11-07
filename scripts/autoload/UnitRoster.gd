@@ -10,7 +10,7 @@ const CORE_LOCK := false
 var unlocked_unit_ids: Array[String] = []
 var discovered_boss_ids: Array[String] = []
 
-## --- Отношения / доверие (у всех, кроме главных героев — CharacterData.is_protagonist) ---
+## --- Отношения / доверие (у всех героинь, включая ведьмочку и воина) ---
 ## Доверие копится очками: +1 за каждый забег с героиней в отряде (CardBalance.TRUST_PER_RUN).
 ## Уровень отношений (0..10) считается из очков: 1-2-2-2-3-3-3-4-4-4 (28 забегов до 10).
 const RELATIONSHIP_MAX := 10

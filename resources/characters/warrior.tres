@@ -12,6 +12,8 @@
 [ext_resource type="Resource" path="res://resources/abilities/warrior_ult.tres" id="5_wult"]
 [ext_resource type="Resource" path="res://resources/cards/warrior/warrior_release.tres" id="6_xsuef"]
 [ext_resource type="Resource" path="res://resources/cards/warrior/warrior_ult.tres" id="12_c2sj7"]
+[ext_resource type="Resource" path="res://resources/cards/warrior/warrior_finish.tres" id="13_pu7u2"]
+[ext_resource type="Resource" path="res://resources/cards/warrior/warrior_thrusts.tres" id="14_c3mhv"]
 
 [resource]
 script = ExtResource("1_d14mp")
@@ -30,6 +32,7 @@ attack_per_level = 1
 magic_per_level = 1
 card_color = Color(0.78, 0.22, 0.25, 1)
 card_pool = Array[ExtResource("2_su34w")]([ExtResource("3_dof06"), ExtResource("4_pu7u2"), ExtResource("5_c3mhv"), ExtResource("6_xsuef")])
+unlock_cards = Array[ExtResource("2_su34w")]([ExtResource("13_pu7u2"), ExtResource("14_c3mhv")])
 ult_card = ExtResource("12_c2sj7")
 base_damage = 6
 base_aps = 0.84

@@ -28,9 +28,9 @@ static func unlock_level(data: CharacterData, index: int) -> int:
 	var n := maxi(1, data.unlock_cards.size())
 	return ceili(float(UnitRoster.RELATIONSHIP_MAX) * float(index + 1) / float(n))
 
-## Открыта ли карта за отношения. У главных героев таких карт пока нет (будут за сюжет).
+## Открыта ли карта за отношения (у всех, включая ведьмочку и воина).
 static func is_unlocked(data: CharacterData, index: int) -> bool:
-	if data.is_protagonist or UnitRoster_ == null:
+	if UnitRoster_ == null:
 		return false
 	return UnitRoster_.get_relationship(data.id) >= unlock_level(data, index)
 

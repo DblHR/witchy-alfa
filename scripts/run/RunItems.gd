@@ -45,7 +45,7 @@ const ITEM_DEFS := {
 	},
 	"stick_staff_common": {
 		"name": "Кривой посох",
-		"desc": "Обычный посох-шутка. Каждая базовая атака с шансом 10% полностью промахивается и не наносит урон.",
+		"desc": "Посох-шутка. Каждый удар картой: 5% — двойной урон, 15% — промах.",
 		"kind": "artifact",
 		"equippable": true,
 		"unique": true,
@@ -58,7 +58,7 @@ const ITEM_DEFS := {
 	},
 	"stick_staff_rare": {
 		"name": "Кривой посох+",
-		"desc": "Редкий посох-шутка. 10% — атака уходит в никуда, 10% — базовая атака наносит двойной урон.",
+		"desc": "Посох-шутка. Каждый удар картой: 10% — двойной урон, 10% — промах.",
 		"kind": "artifact",
 		"equippable": true,
 		"unique": true,
@@ -71,7 +71,7 @@ const ITEM_DEFS := {
 	},
 	"stick_staff_legendary": {
 		"name": "Кривой посох++",
-		"desc": "Легендарная версия мема. 20% — атака ничего не делает, 20% — двойной урон, 5% — тройной урон.",
+		"desc": "Легендарный мем. Каждый удар картой: 20% — двойной урон, 5% — тройной, 5% — промах.",
 		"kind": "artifact",
 		"equippable": true,
 		"unique": true,
@@ -84,7 +84,7 @@ const ITEM_DEFS := {
 	},
 	"mace_staff_common": {
 		"name": "Звёздный посох",
-		"desc": "Увеличивает урон базовой атаки всей команды на 2.",
+		"desc": "Весь урон карт отряда +5%.",
 		"kind": "artifact",
 		"equippable": true,
 		"unique": true,
@@ -97,7 +97,7 @@ const ITEM_DEFS := {
 	},
 	"mace_staff_rare": {
 		"name": "Звёздный посох+",
-		"desc": "Увеличивает урон базовой атаки всей команды на 4.",
+		"desc": "Весь урон карт отряда +10%.",
 		"kind": "artifact",
 		"equippable": true,
 		"unique": true,
@@ -110,7 +110,7 @@ const ITEM_DEFS := {
 	},
 	"mace_staff_legendary": {
 		"name": "Звёздный посох++",
-		"desc": "Увеличивает урон базовой атаки всей команды на 6.",
+		"desc": "Весь урон карт отряда +20%.",
 		"kind": "artifact",
 		"equippable": true,
 		"unique": true,
@@ -123,7 +123,7 @@ const ITEM_DEFS := {
 	},
 	"heart_staff_common": {
 		"name": "Посох сердца",
-		"desc": "После обычной атаки с шансом 12% накладывает на цель замедление на 2 секунды.",
+		"desc": "В начале каждого боя — Слабость всем врагам на 1 ход.",
 		"kind": "artifact",
 		"equippable": true,
 		"unique": true,
@@ -136,7 +136,7 @@ const ITEM_DEFS := {
 	},
 	"heart_staff_rare": {
 		"name": "Посох сердца+",
-		"desc": "После обычной атаки с шансом 18% накладывает на цель случайный контроль: замедление или очарование.",
+		"desc": "В начале каждого боя — Слабость всем врагам на 3 хода.",
 		"kind": "artifact",
 		"equippable": true,
 		"unique": true,
@@ -149,7 +149,7 @@ const ITEM_DEFS := {
 	},
 	"heart_staff_legendary": {
 		"name": "Посох сердца++",
-		"desc": "После обычной атаки с шансом 24% накладывает на цель случайный контроль: усиленное замедление или очарование.",
+		"desc": "В начале каждого боя — Слабость всем врагам на 3 хода и очарование случайного врага на 1 ход.",
 		"kind": "artifact",
 		"equippable": true,
 		"unique": true,
@@ -162,7 +162,7 @@ const ITEM_DEFS := {
 	},
 	"dango_staff_common": {
 		"name": "Данго-посох",
-		"desc": "В начале комнаты даёт команде один случайный бафф: урон, реген или скорость атаки.",
+		"desc": "В начале каждого боя — один случайный бафф из трёх: +1 карта в первый ход, +1 энергия в первый ход, Слабость всем врагам.",
 		"kind": "artifact",
 		"equippable": true,
 		"unique": true,
@@ -175,7 +175,7 @@ const ITEM_DEFS := {
 	},
 	"dango_staff_rare": {
 		"name": "Данго-посох+",
-		"desc": "В начале комнаты даёт команде два разных случайных баффа из трёх: урон, реген, скорость атаки.",
+		"desc": "В начале каждого боя — два случайных баффа из трёх: +1 карта, +1 энергия в первый ход, Слабость всем врагам.",
 		"kind": "artifact",
 		"equippable": true,
 		"unique": true,
@@ -188,7 +188,7 @@ const ITEM_DEFS := {
 	},
 	"dango_staff_legendary": {
 		"name": "Данго-посох++",
-		"desc": "В начале комнаты даёт сразу все три баффа: урон, реген и скорость атаки.",
+		"desc": "В начале каждого боя — все три баффа: +1 карта и +1 энергия в первый ход, Слабость всем врагам.",
 		"kind": "artifact",
 		"equippable": true,
 		"unique": true,
@@ -201,7 +201,7 @@ const ITEM_DEFS := {
 	},
 	"slime_staff_legendary": {
 		"name": "Посох слизней",
-		"desc": "Этажный легендарный посох. После обычной атаки с шансом 35% накладывает на цель замедление на 3 секунды.",
+		"desc": "Этажный легендарный посох. Любая разыгранная карта с шансом 20% накладывает на всех врагов липкую слизь.",
 		"kind": "artifact",
 		"equippable": true,
 		"unique": true,
@@ -212,9 +212,53 @@ const ITEM_DEFS := {
 		"staff_type": "slime",
 		"rarity": 2,
 	},
+	"recipe_kebab": {
+		"name": "Рецепт: Шашлык",
+		"desc": "Открывает рецепт «Шашлык» для алхимии. Изучается сразу при получении.",
+		"kind": "recipe",
+		"equippable": false,
+		"unique": false,
+		"stackable": false,
+		"sellable": false,
+		"price": 30,
+		"recipe_id": "kebab_recipe",
+	},
+	"recipe_steak": {
+		"name": "Рецепт: Стейк",
+		"desc": "Открывает рецепт «Стейк» для алхимии. Изучается сразу при получении.",
+		"kind": "recipe",
+		"equippable": false,
+		"unique": false,
+		"stackable": false,
+		"sellable": false,
+		"price": 30,
+		"recipe_id": "steak_recipe",
+	},
+	"recipe_jelly": {
+		"name": "Рецепт: Желе",
+		"desc": "Открывает рецепт «Желе» для алхимии. Изучается сразу при получении.",
+		"kind": "recipe",
+		"equippable": false,
+		"unique": false,
+		"stackable": false,
+		"sellable": false,
+		"price": 30,
+		"recipe_id": "jelly_recipe",
+	},
+	"recipe_apple_pie": {
+		"name": "Рецепт: Яблоко в карамели",
+		"desc": "Открывает рецепт «Яблоко в карамели» для алхимии. Изучается сразу при получении.",
+		"kind": "recipe",
+		"equippable": false,
+		"unique": false,
+		"stackable": false,
+		"sellable": false,
+		"price": 30,
+		"recipe_id": "apple_pie_recipe",
+	},
 	"slime_potion": {
 		"name": "Зелье слаймов",
-		"desc": "Лечит самого раненного союзника на 40% от максимального HP.",
+		"desc": "Зелье: лечит самую раненую героиню на 40% макс. HP.",
 		"kind": "potion",
 		"equippable": true,
 		"unique": false,
@@ -225,7 +269,7 @@ const ITEM_DEFS := {
 	},
 	"energy_tonic": {
 		"name": "Тоник энергии",
-		"desc": "Моментально даёт всей команде +2 энергии.",
+		"desc": "Зелье: +2 энергии в этот ход.",
 		"kind": "potion",
 		"equippable": true,
 		"unique": false,
@@ -236,7 +280,7 @@ const ITEM_DEFS := {
 	},
 	"rage_phial": {
 		"name": "Фиал ярости",
-		"desc": "На 4 секунды усиливает базовые атаки всей команды.",
+		"desc": "Зелье: до конца хода урон карт +30%.",
 		"kind": "potion",
 		"equippable": true,
 		"unique": false,
@@ -247,7 +291,7 @@ const ITEM_DEFS := {
 	},
 	"kebab": {
 		"name": "Шашлык",
-		"desc": "Еда на забег: в начале каждой комнаты команда получает короткий реген.",
+		"desc": "Еда на забег: в начале каждого боя лечит отряд на 5% макс. HP.",
 		"kind": "food",
 		"equippable": true,
 		"unique": false,
@@ -258,7 +302,7 @@ const ITEM_DEFS := {
 	},
 	"steak": {
 		"name": "Стейк",
-		"desc": "Еда на забег: первый союзник, чьё HP упадёт ниже 25%, мгновенно восстановит здоровье. Один раз за забег.",
+		"desc": "Еда на забег: один раз за забег героиня, упавшая ниже 25% HP, сразу лечится на 25%.",
 		"kind": "food",
 		"equippable": true,
 		"unique": false,
@@ -269,7 +313,7 @@ const ITEM_DEFS := {
 	},
 	"jelly": {
 		"name": "Желе",
-		"desc": "Еда на забег: в начале комнаты команда получает +10% к скорости атаки на 6 секунд.",
+		"desc": "Еда на забег: в первом ходу каждого боя +1 карта в руку.",
 		"kind": "food",
 		"equippable": true,
 		"unique": false,
@@ -280,7 +324,7 @@ const ITEM_DEFS := {
 	},
 	"apple_pie": {
 		"name": "Яблоко в карамели",
-		"desc": "Еда на забег: в начале комнаты команда получает небольшой щадящий бафф урона на 8 секунд.",
+		"desc": "Еда на забег: первая атака в каждом бою наносит +40% урона.",
 		"kind": "food",
 		"equippable": true,
 		"unique": false,
@@ -490,9 +534,9 @@ const ITEM_DEFS := {
 }
 
 const POTION_DEFS := {
-	"heal_potion": {"name": "Зелье слаймов", "desc": "Лечит союзника с самым низким процентом HP на 40%.", "charges": 0},
-	"energy_potion": {"name": "Тоник энергии", "desc": "Даёт всей команде +2 энергии.", "charges": 0},
-	"battle_potion": {"name": "Фиал ярости", "desc": "На 4 секунды усиливает урон всей команды.", "charges": 0},
+	"heal_potion": {"name": "Зелье слаймов", "desc": "Лечит самую раненую героиню на 40% макс. HP.", "charges": 0},
+	"energy_potion": {"name": "Тоник энергии", "desc": "+2 энергии в этот ход.", "charges": 0},
+	"battle_potion": {"name": "Фиал ярости", "desc": "До конца хода урон карт +30%.", "charges": 0},
 }
 
 const POTION_ITEM_IDS := {
@@ -559,8 +603,17 @@ static func get_item_kind_label(id: String) -> String:
 			return "Семена"
 		"quest":
 			return "Квест"
+		"recipe":
+			return "Рецепт"
 		_:
 			return "Предмет"
+
+## Рецепт-предмет («recipe_kebab») -> id рецепта алхимии («kebab_recipe»).
+static func get_recipe_id(id: String) -> String:
+	return String(get_item_def(id).get("recipe_id", ""))
+
+static func is_recipe_item(id: String) -> bool:
+	return get_item_kind(id) == "recipe"
 
 static func get_item_rarity(id: String) -> int:
 	return int(get_item_def(id).get("rarity", -1))

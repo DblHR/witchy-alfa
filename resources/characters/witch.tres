@@ -12,6 +12,8 @@
 [ext_resource type="Resource" path="res://resources/cards/witch/witch_wall.tres" id="6_2wjbw"]
 [ext_resource type="Resource" path="res://resources/abilities/witch_ult.tres" id="6_witch_ult"]
 [ext_resource type="Resource" path="res://resources/cards/witch/witch_ult.tres" id="12_n1v2c"]
+[ext_resource type="Resource" path="res://resources/cards/witch/witch_heat.tres" id="13_ewd1a"]
+[ext_resource type="Resource" path="res://resources/cards/witch/witch_candle.tres" id="14_omqq3"]
 
 [resource]
 script = ExtResource("1_d14mp")
@@ -29,6 +31,7 @@ attack_per_level = 1
 magic_per_level = 1
 card_color = Color(0.58, 0.3, 0.76, 1)
 card_pool = Array[ExtResource("2_b3qse")]([ExtResource("3_8sle8"), ExtResource("4_ewd1a"), ExtResource("5_omqq3"), ExtResource("6_2wjbw")])
+unlock_cards = Array[ExtResource("2_b3qse")]([ExtResource("13_ewd1a"), ExtResource("14_omqq3")])
 ult_card = ExtResource("12_n1v2c")
 base_damage = 6
 base_aps = 0.7

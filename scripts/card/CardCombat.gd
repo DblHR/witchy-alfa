@@ -41,6 +41,8 @@ var intents: Dictionary = {}
 ## Сейчас ход врагов. Длительные статусы, наложенные на героинь в ход врагов, получают +1 ход,
 ## иначе они истекли бы в конце этого же раунда и не повлияли бы на ход игрока.
 var enemy_phase := false
+## Посох и еда забега (CardRelics): меняют урон карт героинь. null — без предметов.
+var relics: CardRelics = null
 ## Надбавки к цене карт владельца: id героя -> +N. Активные и отложенные на след. ход.
 var surcharge: Dictionary = {}
 var pending_surcharge: Dictionary = {}
@@ -318,11 +320,20 @@ func deal_damage(source: Unit, target: Unit, amount: int, from_card: bool = true
 		return
 	var dmg := amount + (damage_bonus if from_card and not is_enemy(source) else 0)
 	dmg = _modify_dealt(source, dmg)
+	if from_card and relics != null and not is_enemy(source):
+		dmg = relics.modify_hero_damage(self, target, dmg)
+		if dmg <= 0:
+			return
 	for pair in _status_list(target):
 		dmg = pair[0].modify_taken(self, target, pair[1], dmg)
 	_damage_events += 1
+	var shield_before := shield_of(target)
 	apply_damage(target, dmg)
 	damage_dealt.emit(source, target, dmg)
+	var absorbed := mini(shield_before, dmg)
+	if absorbed > 0 and source != null:
+		for pair in _status_list(target):
+			pair[0].on_shield_hit(self, target, pair[1], source, absorbed)
 
 ## Урон сначала съедает щит, остаток идёт в HP. Статусы здесь не учитываются.
 func apply_damage(unit: Unit, amount: int) -> void:
@@ -356,12 +367,14 @@ func add_shield(unit: Unit, amount: int) -> void:
 	shields[unit] = shield_of(unit) + amount
 	floated.emit(unit, "+%d щит" % amount, COL_SHIELD, 26)
 
-func heal(unit: Unit, amount: int) -> void:
+## Лечение; возвращает, сколько HP реально восстановлено.
+func heal(unit: Unit, amount: int) -> int:
 	if not is_alive(unit) or amount <= 0:
-		return
+		return 0
 	var before := unit.hp
 	unit.hp = mini(unit.max_hp, unit.hp + amount)
 	floated.emit(unit, "+%d HP" % (unit.hp - before), COL_HEAL, 26)
+	return unit.hp - before
 
 func add_surcharge(owner_id: String, amount: int) -> void:
 	if owner_id != "":

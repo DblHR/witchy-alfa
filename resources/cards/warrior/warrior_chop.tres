@@ -7,19 +7,19 @@
 
 [sub_resource type="Resource" id="Resource_qw6sf"]
 script = ExtResource("2_rb2ee")
-atk_ratio = 0.67
+atk_ratio = 0.7
 
 [sub_resource type="Resource" id="Resource_rb2ee"]
 script = ExtResource("3_b0xgl")
 status = "nazhim"
-stacks = 1
+stacks = 2
 
 [resource]
 script = ExtResource("4_vlyq6")
 id = "warrior_chop"
-title = "Рубящий удар"
+title = "Жёсткий напор"
 cost = 2
 tags = PackedStringArray("attack")
 description = "[d]{0}[/d] урона переднему.
-[e]+{1} Нажим[/e]."
+[e]+{1} Нажима[/e]."
 effects = Array[ExtResource("1_qw6sf")]([SubResource("Resource_qw6sf"), SubResource("Resource_rb2ee")])

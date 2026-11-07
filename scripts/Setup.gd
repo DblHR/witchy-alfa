@@ -25,6 +25,9 @@ const ROSTER_CARD_SIZE := Vector2(112, 152)
 @onready var food_button: Button = %FoodButton
 @onready var artifact_button: Button = %ArtifactButton
 @onready var potion_button: Button = %PotionButton
+## Второй слот зелья: создаётся в коде рядом с первым (два слота на забег).
+var potion_button2: Button
+var _potion_slot := 0
 @onready var admin_panel: Panel = %AdminPanel
 @onready var admin_toggle_button: Button = %AdminToggleButton
 @onready var admin_content: Control = %AdminContent
@@ -157,8 +160,24 @@ func _setup_visual_shell() -> void:
 	_style_panel(roster_panel, Color(0.56, 0.33, 0.60, 0.20), 18, Color(1, 1, 1, 0.08), 2)
 	_style_panel(admin_panel, Color(0.20, 0.11, 0.22, 0.88), 22, Color(1, 1, 1, 0.10), 2)
 
+## Два слота зелий в одну строку вместо одной кнопки.
+func _build_potion_slots() -> void:
+	var box := potion_button.get_parent()
+	var idx := potion_button.get_index()
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 6)
+	box.add_child(row)
+	box.move_child(row, idx)
+	potion_button.reparent(row)
+	potion_button2 = Button.new()
+	row.add_child(potion_button2)
+	for b in [potion_button, potion_button2]:
+		b.custom_minimum_size = Vector2(63, 96)
+		b.expand_icon = true
+
 func _setup_scene_widgets() -> void:
-	for button in [food_button, artifact_button, potion_button]:
+	_build_potion_slots()
+	for button in [food_button, artifact_button, potion_button, potion_button2]:
 		_style_loadout_button(button)
 	food_button.pressed.connect(func() -> void:
 		_open_item_popup("food")
@@ -167,6 +186,11 @@ func _setup_scene_widgets() -> void:
 		_open_item_popup("artifact")
 	)
 	potion_button.pressed.connect(func() -> void:
+		_potion_slot = 0
+		_open_item_popup("potion")
+	)
+	potion_button2.pressed.connect(func() -> void:
+		_potion_slot = 1
 		_open_item_popup("potion")
 	)
 
@@ -941,18 +965,24 @@ func _match_popup_selection(kind: String, id: String) -> void:
 		"food":
 			DungRun.selected_food_id = id
 		_:
-			DungRun.selected_potion_id = id
+			DungRun.set_potion_slot(_potion_slot, id)
 			if id != "":
+				DungRun.selected_potion_id = id
 				DungRun.refresh_selected_potion_charges()
 	_refresh_loadout_ui()
 
 func _refresh_loadout_ui() -> void:
 	if potion_button == null or artifact_button == null or food_button == null:
 		return
-	potion_button.icon = _get_potion_icon(DungRun.selected_potion_id)
+	potion_button.icon = _get_potion_icon(DungRun.selected_potion_ids[0])
+	potion_button2.icon = _get_potion_icon(DungRun.selected_potion_ids[1])
+	for i in range(2):
+		var pid := DungRun.selected_potion_ids[i]
+		(potion_button if i == 0 else potion_button2).tooltip_text = "Зелье %d: %s" % [i + 1, RunItems.get_potion_name(pid) if pid != "" else "пусто"]
 	artifact_button.icon = _get_item_or_placeholder_icon(DungRun.selected_artifact_id, Color(0.88, 0.73, 0.30, 1.0))
 	food_button.icon = _get_item_or_placeholder_icon(DungRun.selected_food_id, Color(0.55, 0.83, 0.44, 1.0))
 	potion_button.disabled = DungRun.get_available_potion_ids().is_empty()
+	potion_button2.disabled = potion_button.disabled
 	artifact_button.disabled = false
 	food_button.disabled = false
 

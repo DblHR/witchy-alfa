@@ -5,22 +5,22 @@
 [ext_resource type="Script" path="res://scripts/card/effects/EffConsumeStatus.gd" id="3_q08xx"]
 [ext_resource type="Script" path="res://scripts/card/data/CardDef.gd" id="4_1h7d5"]
 
-[sub_resource type="Resource" id="Resource_jwdn3"]
+[sub_resource type="Resource" id="Resource_q08xx"]
 script = ExtResource("3_ie4wm")
 status = "wrap_slime"
 stacks = 1
 target_mode = 3
 
-[sub_resource type="Resource" id="Resource_ie4wm"]
+[sub_resource type="Resource" id="Resource_jwdn3"]
 script = ExtResource("3_q08xx")
 status = "wrap_slime"
 mag_ratio = 0.5
 target_mode = 3
 
-[sub_resource type="Resource" id="Resource_1h7d5"]
+[sub_resource type="Resource" id="Resource_ie4wm"]
 script = ExtResource("3_ie4wm")
 status = "charm"
-turns = 1
+turns = 2
 target_mode = 4
 
 [resource]
@@ -30,5 +30,5 @@ title = "Танец на шесте"
 cost = 0
 tags = PackedStringArray("support")
 description = "Всем союзникам [e]обволакивающая слизь +{0}[/e], затем вся она — лечение [h]{1}[/h] за стак.
-[e]Очаровывает[/e] переднего врага."
-effects = Array[ExtResource("1_q08xx")]([SubResource("Resource_jwdn3"), SubResource("Resource_ie4wm"), SubResource("Resource_1h7d5")])
+[e]Очаровывает[/e] переднего врага на {2b} хода."
+effects = Array[ExtResource("1_q08xx")]([SubResource("Resource_q08xx"), SubResource("Resource_jwdn3"), SubResource("Resource_ie4wm")])
