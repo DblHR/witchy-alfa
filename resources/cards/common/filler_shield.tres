@@ -6,7 +6,7 @@
 
 [sub_resource type="Resource" id="Resource_vll48"]
 script = ExtResource("2_djivb")
-base = 3
+base = 12
 
 [resource]
 script = ExtResource("3_h1y7b")

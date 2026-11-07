@@ -30,7 +30,8 @@ func card_cap() -> int:
 ## Энергия ульты: сколько карт героя нужно сыграть, чтобы ульта зарядилась.
 @export var max_energy: int = 5
 
-# Рост за каждый уровень после первого
+# Рост за уровень — общий для всех: +10% от базы (CardBalance.GROWTH_PER_LEVEL).
+# Поля ниже остались от старой линейной прокачки и больше не используются.
 @export var hp_per_level: int = 1
 @export var attack_per_level: int = 0
 @export var magic_per_level: int = 0
@@ -47,7 +48,7 @@ func card_cap() -> int:
 ## Стартовые карты героя: есть сразу, идут в колоду (не больше card_cap() по рангу).
 @export var card_pool: Array[CardDef] = []
 ## Карты, которые открываются позже (за отношения). Пока не открыты — в инвентаре «не получена».
-## Открытые хранятся в DungRun.unlocked_cards.
+## Открываются по уровню доверия (UnitRoster_.get_relationship).
 @export var unlock_cards: Array[CardDef] = []
 ## Ульта (не карта колоды: копит заряд и жмётся кнопкой).
 @export var ult_card: CardDef
@@ -79,9 +80,9 @@ func card_cap() -> int:
 func stats_for_level(level: int) -> Dictionary:
 	var lvl: int = maxi(level, 1)
 	return {
-		"max_hp": int(base_hp + hp_per_level * (lvl - 1)),
-		"attack": int(attack + attack_per_level * (lvl - 1)),
-		"magic": int(magic + magic_per_level * (lvl - 1)),
+		"max_hp": CardBalance.scale_by_level(base_hp, lvl),
+		"attack": CardBalance.scale_by_level(attack, lvl),
+		"magic": CardBalance.scale_by_level(magic, lvl),
 		"damage": int(base_damage + damage_per_level * (lvl - 1)),
 		"aps": float(base_aps + aps_per_level * (lvl - 1)),
 	}

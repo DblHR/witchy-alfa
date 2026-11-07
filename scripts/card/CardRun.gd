@@ -4,28 +4,35 @@ class_name CardRun
 ## ивенты, выбор пути. Здесь только данные, без UI (UI — в CardBattle и *Popup/EventScreen).
 ##
 ## Комната — Dictionary:
-##   kind: "battle" | "boss" | "event"
+##   kind: "battle" | "elite" | "boss" | "event"
 ##   event: "shop" | "nurse" | "chest" | "statue" (для kind == "event")
 ##   variant: "white" | "black" (статуя)
-##   count, hp, atk_min, atk_max, enemy_id, boss — параметры боя
+##   enemies: Array[String] — id врагов из EnemyDefs (в порядке строя, первый — передний)
+##   boss: bool
 ##   used: bool — ивент уже отыгран; stock — ассортимент лавки
 
 const MIN_ROOMS := 8
 const MAX_ROOMS := 10
-const ENEMY_ID := "base_slime"
+## Босс этажа (его же можно получить в отряд после первой победы — UnitRoster_.unlock_boss_once).
 const BOSS_ID := "fufu"
+## Этаж забега. Пока есть только 1-й (слизни); от этажа — сила врагов и потолок уровня.
+const FLOOR := 1
 
 ## Шансы (как в старом забеге): 70% бой, 30% ивент; ивенты поровну.
 const BATTLE_CHANCE := 0.70
 const EVENT_WEIGHTS := {"chest": 25, "statue": 25, "shop": 25, "nurse": 25}
 
-## Тестовые числа боёв (баланс потом).
-const BOSS_HP := 160
-const BOSS_ATK_MIN := 6
-const BOSS_ATK_MAX := 9
+## Элитная комната (слизнедевочка ранга A + слизень): шанс среди боёв, не раньше этой комнаты.
+const ELITE_CHANCE := 0.25
+const ELITE_FROM_ROOM := 3
+const ELITE_MAX := 2
 const STATUE_CHARGES := 3
 
 var rng := RandomNumberGenerator.new()
+var floor_no: int = FLOOR
+## Опыт, набранный за забег. Начисляется отряду только в конце (победа/поражение), не при выходе.
+var xp_gained: int = 0
+var _elites: int = 0
 var rooms: Array[Dictionary] = []
 var index: int = 0
 var pending_choices: Array[Dictionary] = []
@@ -73,14 +80,13 @@ func make_room(i: int) -> Dictionary:
 	if i == 0:
 		return _battle_room(0, n)
 	if i == n - 1:
-		return {
-			"kind": "boss", "event": "", "boss": true, "enemy_id": BOSS_ID,
-			"count": 1, "hp": BOSS_HP, "atk_min": BOSS_ATK_MIN, "atk_max": BOSS_ATK_MAX, "used": false,
-		}
+		return {"kind": "boss", "event": "", "boss": true, "enemies": [EnemyDefs.FLOOR1_BOSS], "used": false}
 	if i == n - 2:
 		# Перед боссом всегда безопасная комната: лавка или медсестра.
 		return _event_room("shop" if rng.randf() < 0.5 else "nurse")
 	if rng.randf() < BATTLE_CHANCE:
+		if i >= ELITE_FROM_ROOM and _elites < ELITE_MAX and rng.randf() < ELITE_CHANCE:
+			return _elite_room()
 		return _battle_room(i, n)
 	return _event_room(_pick_weighted(EVENT_WEIGHTS))
 
@@ -95,16 +101,30 @@ func _pick_weighted(weights: Dictionary) -> String:
 			return String(k)
 	return String(weights.keys()[0])
 
+## Обычный бой: слизни ранга B. «Вес» комнаты растёт с номером: Шлёпыш/Пузырь/Кислотный — 1,
+## Большая блёба — 2 (она делится). Пузырь один не ходит — он прикрывает соседей.
 func _battle_room(i: int, _n: int) -> Dictionary:
-	var count := clampi(1 + int(floor(float(i + 1) * 0.45)), 1, 4)
-	var hp := 24.0 + 2.5 * float(i)
-	if count == 1:
-		hp *= 1.5   # одинокий слизень плотнее, как в первых тестовых комнатах
-	var atk_min := 2 + int(floor(float(i) / 2.5))
-	return {
-		"kind": "battle", "event": "", "boss": false, "enemy_id": ENEMY_ID,
-		"count": count, "hp": int(round(hp)), "atk_min": atk_min, "atk_max": atk_min + 1, "used": false,
-	}
+	var budget := clampi(1 + int(floor(float(i + 1) * 0.5)), 1, 4)
+	var enemies: Array[String] = []
+	var left := budget
+	while left > 0 and enemies.size() < 4:
+		var pick := String(EnemyDefs.FLOOR1_B[rng.randi_range(0, EnemyDefs.FLOOR1_B.size() - 1)])
+		if pick == "blob" and (left < 2 or enemies.has("blob")):
+			pick = "shlep"
+		if pick == "bubble" and (enemies.is_empty() and left == 1):
+			pick = "shlep"
+		enemies.append(pick)
+		left -= 2 if pick == "blob" else 1
+	# Бойцы впереди, Пузырь (поддержка) позади.
+	enemies.sort_custom(func(a: String, b: String) -> bool: return a != "bubble" and b == "bubble")
+	return {"kind": "battle", "event": "", "boss": false, "enemies": enemies, "used": false}
+
+## Элита: Аки или Луиса и слизень перед ней.
+func _elite_room() -> Dictionary:
+	_elites += 1
+	var girl := String(EnemyDefs.FLOOR1_A[rng.randi_range(0, EnemyDefs.FLOOR1_A.size() - 1)])
+	var front := "shlep" if rng.randf() < 0.5 else "acid"
+	return {"kind": "elite", "event": "", "boss": false, "enemies": [front, girl], "used": false}
 
 func _event_room(event_id: String) -> Dictionary:
 	var r := {"kind": "event", "event": event_id, "boss": false, "used": false}
@@ -137,6 +157,21 @@ func choose(choice_index: int) -> Dictionary:
 
 # --- Описания для UI ---------------------------------------------------------
 
+## «Шлёпыш ×2, Пузырь» — состав комнаты.
+static func enemy_list(r: Dictionary) -> String:
+	var counts: Dictionary = {}
+	var order: Array[String] = []
+	for id in r.get("enemies", []):
+		var k := String(id)
+		if not counts.has(k):
+			order.append(k)
+		counts[k] = int(counts.get(k, 0)) + 1
+	var parts := PackedStringArray()
+	for k in order:
+		var n := int(counts[k])
+		parts.append(EnemyDefs.title_of(k) + ("" if n == 1 else " ×%d" % n))
+	return "\n".join(parts)
+
 static func event_name(event_id: String, variant: String = "") -> String:
 	match event_id:
 		"shop": return "Лавка ламии"
@@ -148,17 +183,17 @@ static func event_name(event_id: String, variant: String = "") -> String:
 static func room_title(r: Dictionary) -> String:
 	match String(r.get("kind", "")):
 		"battle": return "Бой"
+		"elite": return "Элита"
 		"boss": return "Босс"
 		"event": return event_name(String(r.get("event", "")), String(r.get("variant", "")))
 	return "?"
 
 static func room_hint(r: Dictionary) -> String:
 	match String(r.get("kind", "")):
-		"battle":
-			var c := int(r.get("count", 1))
-			return "Врагов: %d\nУдар: %d-%d" % [c, int(r.get("atk_min", 0)), int(r.get("atk_max", 0))]
+		"battle", "elite":
+			return enemy_list(r)
 		"boss":
-			return "Финал забега.\nУдар: %d-%d" % [int(r.get("atk_min", 0)), int(r.get("atk_max", 0))]
+			return "Финал забега:\n" + enemy_list(r)
 		"event":
 			match String(r.get("event", "")):
 				"shop": return "Купить карты\nи лечение"

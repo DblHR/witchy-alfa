@@ -15,9 +15,13 @@ class_name CardBattle
 ##   CardDragPortrait — портрет героини, выезжающий слева при перетаскивании её карты
 ##   CardUltSplash  — заставка ульты по центру экрана
 ##   CardRun        — генерация и состояние забега; окна забега — *Popup / EventScreen
+##   enemies/       — враги: EnemyDef (ходы, фазы), EnemyMove, EnemyApi; реестр EnemyDefs
+##   CardBalance    — общие числа: рост от уровня, опыт, доверие, общие карты, эстус
 ##
 ## Из общего состояния читается отряд из Setup (DungRun.party_ids / party_level /
 ## party_slot_count) и эстус (DungRun.estus_stacks / estus_power).
+## Опыт и доверие копятся за забег и начисляются только в конце (победа или поражение);
+## выход из забега кнопкой «Выйти» их не даёт.
 ## Конец забега: FarmState_.advance_day() -> DungRun.on_run_finished_refresh_shops() -> хаб.
 ## BattleActor используется как «тупой» виджет (читает только Unit/CharacterData).
 
@@ -28,8 +32,6 @@ const _TargetRing := preload("res://scripts/card/TargetRing.gd")
 const _TargetMark := preload("res://scripts/card/TargetMark.gd")
 
 # --- Правила прототипа (все числа тестовые) ----------------------------------
-const ENEMY_ID := "base_slime"
-
 const ENERGY_PER_TURN := 3
 const HAND_SIZE := 5
 ## Щит держится до начала следующего хода игрока (после удара врагов).
@@ -37,8 +39,6 @@ const SHIELD_EXPIRES_ON_NEW_TURN := true
 
 ## Добыча и дары забега (тестовые).
 const LOOT_GOLD_BASE := 4         ## золото с врага = 4 + номер комнаты (как в автобаттлере)
-const LOOT_XP_BASE := 6           ## опыт с врага = 6 + 2 × номер комнаты
-const LOOT_XP_PER_ROOM := 2
 const LOOT_QUARTZ_CHANCE := 0.10  ## шанс кварца с каждого врага
 const WHITE_STATUE_HEAL_PERCENT := 0.12   ## белая статуя: +12% макс. HP после победы
 const BLACK_STATUE_BONUS := 2     ## +урон каждой карте, пока действует чёрная статуя
@@ -54,6 +54,11 @@ const HAND_GAP := 16.0
 const RETURN_RECT := Rect2(460, 770, 1130, 310)
 ## Высота прыжка героя при ульте (при обычной карте — CardActorFx.HOP_HEIGHT).
 const ULT_HOP_HEIGHT := 34.0
+## Слотов врагов: 4 в сцене + 5-й для призывов босса.
+const ENEMY_SLOTS := 5
+const EXTRA_ENEMY_SLOT_POS := Vector2(1790, 700)
+## В бою с боссом враги раздвигаются: босс крупный, а к нему приходят призванные.
+const BOSS_SLOT_POS: Array[Vector2] = [Vector2(1060, 715), Vector2(1335, 640), Vector2(1490, 728), Vector2(1650, 632), Vector2(1800, 722)]
 
 
 @onready var room_label: Label = %RoomLabel
@@ -81,8 +86,11 @@ var _actor_of: Dictionary = {}
 
 var _left_world_slots: Array[Node2D] = []
 var _right_world_slots: Array[Node2D] = []
+var _right_slot_default: Array[Vector2] = []
 
 var _combat := CardCombat.new()
+## Через него враги действуют (EnemyDef/EnemyMove): правила + призыв/исчезновение на сцене.
+var _api: EnemyApi
 var _deck := CardDeck.new()
 var _sleeve: CardSleeve
 var _ults: CardUltBar
@@ -145,8 +153,10 @@ func _ready() -> void:
 	_combat.hurt.connect(_on_unit_hurt)
 	_combat.died.connect(_on_unit_died)
 	_combat.discard_requested.connect(_on_discard_requested)
+	_combat.status_added.connect(_on_status_added)
 
 	_run = CardRun.new()
+	_api = EnemyApi.new(_combat, self, _run.rng)
 	_ui_layer = hud.get_parent()
 	_build_run_hud()
 	_cache_world_slots()
@@ -213,14 +223,14 @@ func _spawn_heroes() -> void:
 
 func _spawn_enemies(room: Dictionary) -> void:
 	right_team.clear()
-	for i in range(int(room["count"])):
-		var enemy := _make_unit(String(room.get("enemy_id", ENEMY_ID)), 1)
-		if enemy == null:
+	for id in room.get("enemies", []):
+		var def := EnemyDefs.get_def(String(id))
+		if def == null:
+			push_warning("CardBattle: враг не найден в EnemyDefs: %s" % id)
 			continue
-		enemy.make_enemy(0, 0)
-		enemy.max_hp = int(room["hp"])
-		enemy.hp = enemy.max_hp
-		right_team.append(enemy)
+		right_team.append(def.make_unit(_run.floor_no, _run.rng))
+		if right_team.size() >= ENEMY_SLOTS:
+			break
 
 # --- Расстановка на сцене ----------------------------------------------------
 
@@ -231,6 +241,24 @@ func _cache_world_slots() -> void:
 		_left_world_slots.append(left_world.get_node_or_null("LeftSlot%d" % i) as Node2D)
 	for i in range(4):
 		_right_world_slots.append(right_world.get_node_or_null("RightSlot%d" % i) as Node2D)
+	# 5-й слот — для призывов (Фуфу зовёт слизней, а потом Аки с Луисой).
+	while _right_world_slots.size() < ENEMY_SLOTS:
+		var extra := Node2D.new()
+		extra.name = "RightSlot%d" % _right_world_slots.size()
+		extra.position = EXTRA_ENEMY_SLOT_POS
+		extra.visible = false
+		right_world.add_child(extra)
+		_right_world_slots.append(extra)
+	_right_slot_default.clear()
+	for slot in _right_world_slots:
+		_right_slot_default.append(slot.position if slot != null else Vector2.ZERO)
+
+## Раскладка слотов врагов: обычная или раздвинутая для босса.
+func _layout_enemy_slots(boss: bool) -> void:
+	for i in range(_right_world_slots.size()):
+		var slot := _right_world_slots[i]
+		if slot != null:
+			slot.position = BOSS_SLOT_POS[i] if boss and i < BOSS_SLOT_POS.size() else _right_slot_default[i]
 
 func _clear_slot(slot: Node2D) -> void:
 	for c in slot.get_children():
@@ -243,8 +271,13 @@ func _spawn_actor(slot: Node2D, unit: Unit, is_left: bool) -> BattleActor:
 	slot.visible = true
 	slot.add_child(actor)
 	if not is_left:
-		actor.is_boss = bool(_run.room(_room_index).get("boss", false))
+		actor.is_boss = unit.enemy_def != null and unit.enemy_def.is_boss()
 	actor.bind(unit, is_left)
+	if not is_left:
+		CardActorFx.fit_bars_to_sprite(actor)
+		var name_l := CardActorFx.name_label(actor)
+		name_l.text = unit.data.display_name
+		name_l.visible = true
 	CardActorFx.setup_overlays(actor, not is_left)
 	_actor_of[unit] = actor
 	return actor
@@ -292,15 +325,19 @@ func _refresh_actor(actor: BattleActor) -> void:
 		var has_intent := _combat.intents.has(unit) and not unit.is_dead and not _ended
 		intent_label.visible = has_intent
 		if has_intent:
+			var move: EnemyMove = _combat.intents[unit]
 			if _combat.skips_turn(unit):
 				intent_label.text = "Оглушён"
 				intent_label.add_theme_color_override("font_color", CardCombat.COL_STATUS)
 			elif _combat.is_charmed(unit):
-				intent_label.text = "Бьёт своих: %d" % _combat.effective_intent(unit)
-				intent_label.add_theme_color_override("font_color", CardCombat.COL_HEAL)
+				intent_label.text = ("Бьёт своих: %d" % _api.shown_damage(unit, move)) if move.damage > 0 else "Очарован"
+				intent_label.add_theme_color_override("font_color", Color(1.0, 0.55, 0.85))
 			else:
-				intent_label.text = "Удар: %d" % _combat.effective_intent(unit)
-				intent_label.add_theme_color_override("font_color", CardCombat.COL_SHIELD if _combat.intent_reduced(unit) else CardActorFx.COL_INTENT)
+				intent_label.text = move.intent_text(_api.shown_damage(unit, move))
+				var col := move.intent_color()
+				if move.damage > 0 and _api.shown_damage(unit, move) < EnemyApi.scaled(unit, move.damage):
+					col = CardCombat.COL_SHIELD   # ослаблен — удар меньше обычного
+				intent_label.add_theme_color_override("font_color", col)
 
 	var status_label := actor.get_node_or_null("StatusLabel") as Label
 	if status_label != null:
@@ -317,17 +354,25 @@ func _refresh_all_actors() -> void:
 
 func _on_unit_hurt(unit: Unit, hp_damage: int) -> void:
 	var actor := _find_actor(unit)
-	if actor == null:
-		return
-	if hp_damage > 0:
-		actor.flash_red()
-	_refresh_actor(actor)
+	if actor != null:
+		if hp_damage > 0:
+			actor.flash_red()
+		_refresh_actor(actor)
+	if hp_damage > 0 and unit.enemy_def != null and right_team.has(unit):
+		unit.enemy_def.on_hurt(_api, unit, hp_damage)
 
 func _on_unit_died(unit: Unit) -> void:
 	if left_team.has(unit):
 		_purge_cards_of(unit)
 	elif right_team.has(unit):
+		_combat.intents.erase(unit)
 		_on_enemy_killed(unit)
+		if unit.enemy_def != null:
+			unit.enemy_def.on_death(_api, unit)
+
+func _on_status_added(unit: Unit, id: String) -> void:
+	if unit.enemy_def != null and right_team.has(unit) and CardCombat.is_alive(unit):
+		unit.enemy_def.on_status(_api, unit, id)
 
 func _float_for(unit: Unit, text: String, color: Color, font_size: int = 26) -> void:
 	var actor := _find_actor(unit)
@@ -358,6 +403,7 @@ func _start_room(index: int) -> void:
 	_set_battle_ui(true)
 	_room_loot = {"gold": 0, "xp": 0, "items": {}}
 	_spawn_enemies(room)
+	_layout_enemy_slots(bool(room.get("boss", false)))
 	_populate_world_slots()
 	_ults.refresh()
 
@@ -397,9 +443,9 @@ func _without_run_burned(cards: Array[CardInstance]) -> Array[CardInstance]:
 
 func _begin_player_turn() -> void:
 	_energy = ENERGY_PER_TURN
+	_combat.enemy_phase = false
 	_combat.begin_player_turn()
-	var room := _run.room(_room_index)
-	_combat.roll_intents(int(room["atk_min"]), int(room["atk_max"]))
+	_combat.roll_intents(_api)
 	_refresh_all_actors()
 	await _deal_new_hand()
 
@@ -416,7 +462,7 @@ func _refresh_energy() -> void:
 	for v in _hand_views:
 		var cost := _combat.effective_cost(v.card)
 		v.set_cost_text(cost, cost > v.card.cost)
-		v.set_affordable(cost <= _energy)
+		v.set_affordable(cost <= _energy and not _card_blocked(v.card))
 
 func _deal_new_hand() -> void:
 	_busy = true
@@ -430,6 +476,7 @@ func _deal_new_hand() -> void:
 	_layout_hand(true)
 	_refresh_energy()
 	await _wait(0.3)
+	await _auto_play_charmed()
 	_busy = false
 
 func _add_card_view(c: CardInstance) -> CardView:
@@ -676,6 +723,12 @@ func _finish_drag() -> void:
 	if targets.is_empty():
 		v.move_to(v.home_position)   # не разыграна — обратно в руку
 		return
+	if _card_blocked(v.card):
+		var owner := _combat.hero_by_id(v.card.owner_id)
+		var why := "Проглочена" if _combat.has_status(owner, CardStatuses.SWALLOWED) else "Оглушена"
+		CardActorFx.spawn_float_text(hud, v.global_position + Vector2(-10, -40), "%s — не может действовать" % why, CardCombat.COL_STATUS, 22)
+		v.move_to(v.home_position)
+		return
 	if _combat.effective_cost(v.card) > _energy:
 		CardActorFx.spawn_float_text(hud, v.global_position + Vector2(-10, -40), "Не хватает энергии", CardCombat.COL_DAMAGE, 22)
 		v.move_to(v.home_position)
@@ -743,16 +796,18 @@ func _play_card(v: CardView, targets: Array[Unit]) -> void:
 	_refresh_all_actors()
 	_check_end()
 
-## Добыча с врага — как в автобаттлере: золото и опыт растут с комнатой,
-## слизь со слаймов, 10% на кварц. Выдаётся сразу, окно после боя лишь подводит итог.
+## Добыча с врага: золото растёт с комнатой, опыт — от ранга врага и этажа, слизь со слизней,
+## 10% на кварц. Золото и предметы выдаются сразу; опыт копится в забеге (_run.xp_gained)
+## и начисляется в конце забега.
 func _on_enemy_killed(enemy: Unit) -> void:
 	var gold_gain := LOOT_GOLD_BASE + _room_index
-	var xp_gain := LOOT_XP_BASE + _room_index * LOOT_XP_PER_ROOM
+	var rank := enemy.enemy_def.rank if enemy.enemy_def != null else "B"
+	var xp_gain := CardBalance.xp_for_kill(rank, _run.floor_no)
 	DungRun.gain_gold(gold_gain)
-	DungRun.gain_xp(xp_gain)
+	_run.xp_gained += xp_gain
 	_room_loot["gold"] = int(_room_loot.get("gold", 0)) + gold_gain
 	_room_loot["xp"] = int(_room_loot.get("xp", 0)) + xp_gain
-	if enemy.data != null and String(enemy.data.id) == "base_slime":
+	if enemy.enemy_def != null and enemy.enemy_def.drops_goop:
 		_add_loot_item("slime_goop", 1)
 	if _run.rng.randf() < LOOT_QUARTZ_CHANCE:
 		_add_loot_item("quartz", 1)
@@ -790,6 +845,7 @@ func _on_end_turn_pressed() -> void:
 	await _wait(0.3)
 
 	# 2. Статусы начала хода врагов (Горение жжёт до их ударов).
+	_combat.enemy_phase = true
 	_float_stack.clear()
 	if _combat.enemy_turn_start():
 		_refresh_all_actors()
@@ -797,26 +853,35 @@ func _on_end_turn_pressed() -> void:
 		if _check_end():
 			return
 
-	# 3. Каждый живой враг бьёт переднего героя (если не оглушён).
-	for enemy in _combat.alive_enemies():
+	# 3. Враги выполняют свои намерения (кто с приоритетом — раньше: кислотный снимает щиты
+	#    до ударов остальных). Призванные в этот ход ходят со следующего.
+	for enemy in _enemy_turn_order():
+		if not CardCombat.is_alive(enemy):
+			continue
+		var move: EnemyMove = _combat.intents.get(enemy)
+		if move == null:
+			continue
 		_float_stack.clear()
 		if _combat.skips_turn(enemy):
 			await _wait(0.35)
 			continue
-		var target := _combat.front_hero()
-		if target == null:
-			break
+		var enemy_actor := _find_actor(enemy)
 		if _combat.is_charmed(enemy):
-			# Очарованный враг бьёт ближайшего союзника (следующего живого врага).
-			target = _combat.charm_victim(enemy)
-			if target == null:
+			# Очарованный враг бьёт ближайшего союзника (следующего живого врага), если ход — удар.
+			var victim := _combat.charm_victim(enemy)
+			if victim == null or move.damage <= 0:
 				await _wait(0.35)
 				continue
-		var enemy_actor := _find_actor(enemy)
-		if enemy_actor != null:
-			enemy_actor.play_attack_bounce(-1)
-		_combat.enemy_attack(enemy, target)
-		await _wait(0.45)
+			if enemy_actor != null:
+				enemy_actor.play_attack_bounce(-1)
+			for i in range(maxi(1, move.hits)):
+				_combat.deal_damage(enemy, victim, EnemyApi.scaled(enemy, move.damage), false)
+		else:
+			if enemy_actor != null:
+				enemy_actor.play_attack_bounce(-1)
+			enemy.enemy_def.act(_api, enemy, move)
+		_refresh_all_actors()
+		await _wait(0.5)
 		if _check_end():
 			return
 
@@ -830,12 +895,25 @@ func _on_end_turn_pressed() -> void:
 
 # --- Окончание боя -----------------------------------------------------------
 
+## Порядок хода врагов: сначала ходы с приоритетом, дальше — по строю.
+func _enemy_turn_order() -> Array[Unit]:
+	var rows: Array = []
+	var alive := _combat.alive_enemies()
+	for i in range(alive.size()):
+		var move: EnemyMove = _combat.intents.get(alive[i])
+		rows.append([-(move.priority if move != null else 0), i, alive[i]])
+	rows.sort()
+	var out: Array[Unit] = []
+	for r in rows:
+		out.append(r[2])
+	return out
+
 ## Нет живых слева/справа -> поражение/победа/ничья.
 ## Возвращает true, если дальше ход продолжать нельзя (переход в комнату или конец боя).
 func _check_end() -> bool:
 	if _ended:
 		return true
-	var left_alive := _combat.front_hero() != null
+	var left_alive := not _combat.alive_heroes().is_empty()
 	var right_alive := _combat.front_enemy() != null
 	if left_alive and right_alive:
 		return false
@@ -937,7 +1015,60 @@ func _finish_run(victory: bool, is_draw: bool) -> void:
 	_busy = true
 	_end_victory = victory
 	_refresh_all_actors()
+	if victory and String(_run.room(_room_index).get("kind", "")) == "boss" and UnitRoster_ != null:
+		UnitRoster_.unlock_boss_once(CardRun.BOSS_ID)
+	var summary := _apply_run_progress()
 	_show_end_overlay(victory, is_draw)
+	_show_run_summary(summary)
+
+## Конец забега (победа или поражение): опыт отряду и доверие героиням из отряда.
+## Возвращает строки итога для экрана конца.
+func _apply_run_progress() -> PackedStringArray:
+	var lines := PackedStringArray()
+	var res: Dictionary = DungRun.apply_run_xp(_run.xp_gained, _run.floor_no)
+	var xp_line := "Опыт отряда: +%d" % int(res.get("gained", 0))
+	if int(res.get("levels", 0)) > 0:
+		xp_line += " — уровень %d!" % int(res.get("level", 1))
+	else:
+		xp_line += " (уровень %d, %d/%d)" % [int(res.get("level", 1)), DungRun.xp, DungRun.xp_to_next_level()]
+	if bool(res.get("capped", false)):
+		xp_line += "\nПотолок этажа: уровень %d" % CardBalance.level_cap(_run.floor_no)
+	lines.append(xp_line)
+	if UnitRoster_ != null:
+		for id in DungRun.party_ids:
+			var data: CharacterData = CharDB.get_by_id(String(id)) if String(id) != "" else null
+			if data == null or data.is_protagonist:
+				continue
+			var before := UnitRoster_.get_relationship(data.id)
+			UnitRoster_.add_trust(data.id, CardBalance.TRUST_PER_RUN)
+			var after := UnitRoster_.get_relationship(data.id)
+			var t := "%s: доверие +%d" % [data.display_name, CardBalance.TRUST_PER_RUN]
+			if after > before:
+				t += " — уровень отношений %d!" % after
+			lines.append(t)
+	return lines
+
+func _show_run_summary(lines: PackedStringArray) -> void:
+	var l := end_overlay.get_node_or_null("RunSummary") as Label
+	if l == null:
+		l = Label.new()
+		l.name = "RunSummary"
+		l.position = Vector2(560, 210)
+		l.size = Vector2(800, 0)
+		l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		l.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		l.add_theme_font_size_override("font_size", 26)
+		l.add_theme_color_override("font_color", Color(1.0, 0.92, 0.6))
+		l.add_theme_color_override("font_outline_color", Color(0, 0, 0, 1))
+		l.add_theme_constant_override("outline_size", 6)
+		var bg := StyleBoxFlat.new()
+		bg.bg_color = Color(0.08, 0.03, 0.10, 0.72)
+		bg.set_corner_radius_all(16)
+		bg.content_margin_top = 12
+		bg.content_margin_bottom = 12
+		l.add_theme_stylebox_override("normal", bg)
+		end_overlay.add_child(l)
+	l.text = "\n".join(lines)
 
 func _show_end_overlay(victory: bool, is_draw: bool) -> void:
 	end_overlay.visible = true
@@ -966,6 +1097,152 @@ func _on_exit_pressed() -> void:
 		_banter.stop()
 	SceneRouter_.go_to_setup()
 
+# --- Оглушение и очарование героинь ------------------------------------------
+
+## Карта героини, которая сейчас не может действовать (оглушена или проглочена).
+func _card_blocked(card: CardInstance) -> bool:
+	if card.owner_id == "":
+		return false
+	return _combat.hero_disabled(_combat.hero_by_id(card.owner_id))
+
+## Очарованная героиня: при раздаче её карты в руке сами разыгрываются против своих —
+## урон по союзницам, щиты и лечение врагам. Энергия не тратится, очарование спадает.
+func _auto_play_charmed() -> void:
+	for hero in _combat.alive_heroes():
+		if not _combat.has_status(hero, CardStatuses.CHARM):
+			continue
+		var own: Array[CardView] = []
+		for v in _hand_views:
+			if v.card.owner_id == hero.data.id:
+				own.append(v)
+		if not own.is_empty():
+			_float_stack.clear()
+			_float_for(hero, "Очарована!", Color(1.0, 0.55, 0.85), 30)
+			await _wait(0.45)
+		for v in own:
+			if not CardCombat.is_alive(hero) or _ended:
+				break
+			if not _hand_views.has(v):
+				continue
+			_float_stack.clear()
+			var targets := _mirrored_targets(v.card, hero)
+			_hand_views.erase(v)
+			_deck.play_card(v.card)
+			if v.card.exhaust:
+				v.burn_and_free()
+			else:
+				v.play_and_free()
+			_layout_hand(true)
+			_refresh_pile_buttons()
+			CardActorFx.hop(_find_actor(hero))
+			if not targets.is_empty():
+				_combat.play_card(v.card, hero, targets, true)
+			_refresh_all_actors()
+			_refresh_energy()
+			await _wait(0.55)
+			if _check_end():
+				return
+		_combat.statuses.get(hero, {}).erase(CardStatuses.CHARM)
+		_refresh_all_actors()
+
+## Цели зеркальной карты: «по врагу» -> по союзнице (не по себе, если есть другие),
+## «союзнице/себе» -> переднему врагу.
+func _mirrored_targets(card: CardInstance, caster: Unit) -> Array[Unit]:
+	var out: Array[Unit] = []
+	var allies := _combat.targetable_heroes()
+	match card.target:
+		CardInstance.Target.ALL_ENEMIES:
+			out = allies
+		CardInstance.Target.CHOSEN_ENEMY, CardInstance.Target.FRONT_ENEMY:
+			for i in range(allies.size() - 1, -1, -1):
+				if allies[i] != caster:
+					out.append(allies[i])
+					break
+			if out.is_empty() and CardCombat.is_alive(caster):
+				out.append(caster)
+		_:
+			var e := _combat.front_enemy()
+			if e != null:
+				out.append(e)
+	return out
+
+# --- Враги: призыв, исчезновение, проглатывание (зовёт EnemyApi) -----------
+
+## Свободный слот врага: слот near (если он уже мёртв), иначе первый слот с мёртвым, иначе новый.
+func _free_enemy_slot(near: Unit) -> int:
+	var near_idx := right_team.find(near) if near != null else -1
+	if near_idx >= 0 and not CardCombat.is_alive(near):
+		return near_idx
+	for i in range(right_team.size()):
+		if not CardCombat.is_alive(right_team[i]) and i != near_idx:
+			return i
+	if right_team.size() < mini(ENEMY_SLOTS, _right_world_slots.size()):
+		return right_team.size()
+	return -1
+
+func enemy_summon(ids: Array, hp: int, near: Unit) -> Array[Unit]:
+	var out: Array[Unit] = []
+	for id in ids:
+		var def := EnemyDefs.get_def(String(id))
+		if def == null:
+			continue
+		var idx := _free_enemy_slot(near)
+		if idx < 0:
+			break
+		var u := def.make_unit(_run.floor_no, _run.rng, hp)
+		var slot := _right_world_slots[idx]
+		if idx < right_team.size():
+			var old := right_team[idx]
+			var old_actor := _find_actor(old)
+			if old_actor != null:
+				right_actors.erase(old_actor)
+			_actor_of.erase(old)
+			_combat.intents.erase(old)
+			right_team[idx] = u
+		else:
+			right_team.append(u)
+		_clear_slot(slot)
+		var actor := _spawn_actor(slot, u, false)
+		right_actors.append(actor)
+		CardActorFx.start_idle(actor)
+		actor.scale = Vector2(0.2, 0.2)
+		actor.create_tween().tween_property(actor, "scale", Vector2.ONE * (1.35 if actor.is_boss else 1.0), 0.25).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+		_combat.roll_intent(_api, u)
+		_float_for(u, def.title, CardCombat.COL_STATUS, 22)
+		out.append(u)
+	_refresh_all_actors()
+	return out
+
+## Враг исчезает без смерти и добычи (блёба поделилась, призванные ушли вместе с Фуфу).
+func enemy_vanish(u: Unit) -> void:
+	if u == null or u.is_dead:
+		return
+	u.is_dead = true
+	u.hp = 0
+	_combat.statuses.erase(u)
+	_combat.shields.erase(u)
+	_combat.intents.erase(u)
+	var actor := _find_actor(u)
+	if actor != null:
+		# Актёр больше не обновляется (иначе update_visual снова показал бы его серым).
+		right_actors.erase(actor)
+		_actor_of.erase(u)
+		CardActorFx.stop_idle(actor)
+		var t := actor.create_tween()
+		t.tween_property(actor, "modulate:a", 0.0, 0.3)
+		t.tween_callback(actor.queue_free)
+
+## Проглоченная героиня пропадает со сцены (подписи и HP остаются).
+func enemy_set_hero_hidden(hero: Unit, hidden: bool) -> void:
+	var actor := _find_actor(hero)
+	if actor != null and actor.sprite != null:
+		actor.sprite.visible = not hidden
+	_refresh_all_actors()
+
+func enemy_reroll(u: Unit) -> void:
+	_combat.roll_intent(_api, u)
+	_refresh_actor(_find_actor(u))
+
 # --- Ультимейты --------------------------------------------------------------
 
 func _on_ult_pressed(btn: UltButton) -> void:
@@ -973,6 +1250,9 @@ func _on_ult_pressed(btn: UltButton) -> void:
 		return
 	var hero := btn.unit
 	if hero == null or hero.is_dead or not btn.is_ready():
+		return
+	if _combat.hero_disabled(hero):
+		CardActorFx.spawn_float_text(hud, btn.global_position + Vector2(60, 0), "Не может действовать", CardCombat.COL_STATUS, 22)
 		return
 	var ult := _ults.ult_of(hero.data.id)
 	if ult == null:

@@ -110,7 +110,7 @@ static func filler_cards(attack_count: int, shield_count: int) -> Array[CardInst
 		out.append(CardInstance.from_def(FILLER_SHIELD, null, COLOR_FILLER, "Общая"))
 	return out
 
-## Карты эстуса: по одной на стак, лечат на DungRun.estus_power и сгорают до конца забега.
+## Карты эстуса: по одной на стак, лечат DungRun.estus_power % макс. HP и сгорают до конца забега.
 static func estus_cards(stacks: int) -> Array[CardInstance]:
 	var out: Array[CardInstance] = []
 	for i in range(maxi(0, stacks)):

@@ -16,5 +16,5 @@ title = "Подставить задницу"
 cost = 2
 target = 2
 tags = PackedStringArray("support")
-description = "До конца хода врагов: каждые 3 урона по HP Фуфу дают ей [e]обволакивающую слизь +1[/e]."
+description = "До конца хода врагов: каждые 25 урона по HP Фуфу дают ей [e]обволакивающую слизь +1[/e]."
 effects = Array[ExtResource("1_nc83j")]([SubResource("Resource_ae8qq")])

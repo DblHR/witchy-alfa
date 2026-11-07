@@ -129,7 +129,8 @@ func update_visual() -> void:
 
 	# базовый спрайт
 	sprite.texture = unit.data.battle_texture
-	sprite.scale = Vector2(unit.data.battle_scale, unit.data.battle_scale)
+	var k := unit.data.battle_scale * unit.visual_scale
+	sprite.scale = Vector2(k, k)
 	sprite.offset.y = unit.data.battle_offset_y
 	sprite.flip_h = is_left
 

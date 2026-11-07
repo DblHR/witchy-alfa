@@ -398,10 +398,13 @@ var _ult_row: HBoxContainer = null
 func _relationship_text(data: CharacterData) -> String:
 	if data.is_protagonist or UnitRoster_ == null:
 		return ""
-	var rel := UnitRoster_.get_relationship(data.id)
+	var prog := UnitRoster_.trust_progress(data.id)
+	var rel := int(prog["level"])
 	var mx := UnitRoster.RELATIONSHIP_MAX
 	var bar := "[color=#ff7fc8]%s[/color][color=#6a5a70]%s[/color]" % ["■".repeat(rel), "■".repeat(mx - rel)]
 	var text := "[b]Отношения:[/b] %s %d/%d" % [bar, rel, mx]
+	if rel < mx:
+		text += "\n[b]Доверие:[/b] %d/%d до следующего уровня (+1 за забег в отряде)" % [int(prog["into_level"]), int(prog["need"])]
 	if not data.unlock_cards.is_empty():
 		var levels := PackedStringArray()
 		for i in range(data.unlock_cards.size()):
@@ -531,6 +534,9 @@ var _admin_panel: PanelContainer
 var _admin_item: OptionButton
 var _admin_amount: SpinBox
 var _admin_result: Label
+var _admin_hero: OptionButton
+var _admin_trust: SpinBox
+var _admin_level: SpinBox
 
 func _build_admin_ui() -> void:
 	var toggle := Button.new()
@@ -599,8 +605,77 @@ func _build_admin_ui() -> void:
 	_admin_result.add_theme_font_size_override("font_size", 16)
 	box.add_child(_admin_result)
 
+	# --- Доверие героини и уровень отряда (тесты прокачки) ---
+	var trust_title := Label.new()
+	trust_title.text = "Доверие (уровень отношений 0-10)"
+	trust_title.add_theme_font_size_override("font_size", 20)
+	box.add_child(trust_title)
+	var trow := HBoxContainer.new()
+	trow.add_theme_constant_override("separation", 10)
+	box.add_child(trow)
+	_admin_hero = OptionButton.new()
+	_admin_hero.custom_minimum_size = Vector2(200, 44)
+	_admin_hero.add_theme_font_size_override("font_size", 18)
+	for c in CharDB.characters:
+		var cd := c as CharacterData
+		if cd == null or cd.is_protagonist or cd.unit_class == "рядовой враг" or cd.card_pool.is_empty():
+			continue
+		_admin_hero.add_item(cd.display_name)
+		_admin_hero.set_item_metadata(_admin_hero.item_count - 1, cd.id)
+	_admin_hero.item_selected.connect(func(_i: int) -> void: _sync_admin_trust())
+	trow.add_child(_admin_hero)
+	_admin_trust = SpinBox.new()
+	_admin_trust.min_value = 0
+	_admin_trust.max_value = UnitRoster.RELATIONSHIP_MAX
+	_admin_trust.custom_minimum_size = Vector2(100, 44)
+	trow.add_child(_admin_trust)
+	var set_trust := Button.new()
+	set_trust.text = "Задать"
+	set_trust.focus_mode = Control.FOCUS_NONE
+	set_trust.custom_minimum_size = Vector2(110, 44)
+	set_trust.add_theme_font_size_override("font_size", 20)
+	set_trust.pressed.connect(_on_admin_set_trust)
+	trow.add_child(set_trust)
+	_sync_admin_trust()
+
+	var lrow := HBoxContainer.new()
+	lrow.add_theme_constant_override("separation", 10)
+	box.add_child(lrow)
+	var lvl_title := Label.new()
+	lvl_title.text = "Уровень отряда"
+	lvl_title.custom_minimum_size = Vector2(200, 44)
+	lvl_title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	lvl_title.add_theme_font_size_override("font_size", 18)
+	lrow.add_child(lvl_title)
+	_admin_level = SpinBox.new()
+	_admin_level.min_value = 1
+	_admin_level.max_value = CardBalance.MAX_LEVEL
+	_admin_level.value = maxi(1, int(DungRun.party_level))
+	_admin_level.custom_minimum_size = Vector2(100, 44)
+	lrow.add_child(_admin_level)
+	var set_lvl := Button.new()
+	set_lvl.text = "Задать"
+	set_lvl.focus_mode = Control.FOCUS_NONE
+	set_lvl.custom_minimum_size = Vector2(110, 44)
+	set_lvl.add_theme_font_size_override("font_size", 20)
+	set_lvl.pressed.connect(func() -> void:
+		DungRun.party_level = int(_admin_level.value)
+		DungRun.xp = 0
+		DungRun.emit_changed()
+		_refresh_header()
+		_refresh_current_section()
+		_admin_result.text = "Уровень отряда: %d" % DungRun.party_level
+	)
+	lrow.add_child(set_lvl)
+
 	toggle.pressed.connect(func() -> void:
 		_admin_panel.visible = not _admin_panel.visible
+		if _admin_panel.visible:
+			_sync_admin_trust()
+			_admin_level.value = maxi(1, int(DungRun.party_level))
+			# Панель растёт вверх от кнопки «Админ».
+			_admin_panel.reset_size()
+			_admin_panel.position.y = 980.0 - _admin_panel.get_combined_minimum_size().y
 		toggle.text = "Админ ▾" if _admin_panel.visible else "Админ ▸"
 	)
 
@@ -611,3 +686,15 @@ func _on_admin_give() -> void:
 	var n := int(_admin_amount.value)
 	var ok := Inventory_.add_item(id, n)
 	_admin_result.text = ("Выдано: %s ×%d" % [RunItems.get_item_name(id), n]) if ok else "Не удалось выдать %s" % id
+
+func _sync_admin_trust() -> void:
+	if _admin_hero == null or _admin_hero.selected < 0:
+		return
+	_admin_trust.value = UnitRoster_.get_relationship(String(_admin_hero.get_item_metadata(_admin_hero.selected)))
+
+func _on_admin_set_trust() -> void:
+	if _admin_hero.selected < 0:
+		return
+	var id := String(_admin_hero.get_item_metadata(_admin_hero.selected))
+	UnitRoster_.set_relationship(id, int(_admin_trust.value))
+	_admin_result.text = "%s: отношения %d" % [_admin_hero.get_item_text(_admin_hero.selected), UnitRoster_.get_relationship(id)]

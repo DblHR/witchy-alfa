@@ -14,6 +14,7 @@ const STICKY_SLIME := "sticky_slime"   ## липкая слизь — на вр�
 const WRAP_SLIME := "wrap_slime"       ## обволакивающая слизь — на союзниках
 const EMPOWER := "empower"
 const EXPOSED := "exposed"             ## «Подставлена»: урон по HP → обволакивающая слизь
+const SWALLOWED := "swallowed"         ## героиня в животе у Фуфу: не действует, враги её не бьют
 
 static var _all: Dictionary = {}
 
@@ -37,9 +38,10 @@ static func _register_all() -> void:
 	var stun := CardStatus.new(STUN, "Оглушение", CardStatus.Kind.DURATION)
 	stun.skips_turn = true
 	_add(stun)
-	var charm := CardStatus.new(CHARM, "Очарование", CardStatus.Kind.DURATION, Color(0.45, 1.0, 0.55))
+	var charm := CardStatus.new(CHARM, "Очарование", CardStatus.Kind.DURATION, Color(1.0, 0.55, 0.85))
 	charm.charms = true
 	_add(charm)
+	_add(SwallowedStatus.new())
 	var nazhim := CardStatus.new(NAZHIM, "Нажим", CardStatus.Kind.STACKS)
 	nazhim.max_stacks = 10
 	_add(nazhim)

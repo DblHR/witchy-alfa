@@ -32,7 +32,7 @@ func setup(loot: Dictionary, title_text: String = "Добыча") -> void:
 	panel.add_child(col)
 
 	col.add_child(_row(null, "Золото", "+%d" % int(loot.get("gold", 0)), Color(1.0, 0.88, 0.4)))
-	col.add_child(_row(null, "Опыт", "+%d" % int(loot.get("xp", 0)), Color(0.6, 0.85, 1.0)))
+	col.add_child(_row(null, "Опыт (в конце забега)", "+%d" % int(loot.get("xp", 0)), Color(0.6, 0.85, 1.0)))
 	var items: Dictionary = loot.get("items", {})
 	for id in items.keys():
 		var icon: Texture2D = null

@@ -22,6 +22,11 @@ var magic: int = 0
 var energy: int = 0
 var max_energy: int
 var is_dead: bool = false
+## Карточный бой, враги: описание (ходы, хуки) и память ИИ (последний ход, фазы, сила этажа).
+var enemy_def: EnemyDef = null
+var ai: Dictionary = {}
+## Размер спрайта относительно CharacterData.battle_scale (Большая блёба крупнее, мелочь меньше).
+var visual_scale: float = 1.0
 var can_attack: bool = true  # позже это будет зависеть от статусов (стан и т.д.)
 
 # Накопитель времени до следующей авто-атаки (в секундах).

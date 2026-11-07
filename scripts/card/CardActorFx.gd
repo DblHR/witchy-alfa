@@ -38,7 +38,7 @@ static func shield_label(actor: BattleActor) -> Label:
 static func intent_label(actor: BattleActor) -> Label:
 	var label := actor.get_node_or_null("IntentLabel") as Label
 	if label == null:
-		label = _make_label("IntentLabel", Vector2(-60, -350), Vector2(120, 34), 24, COL_INTENT)
+		label = _make_label("IntentLabel", Vector2(-130, -350), Vector2(260, 34), 22, COL_INTENT)
 		label.add_theme_constant_override("outline_size", 6)
 		actor.add_child(label)
 	return label
@@ -50,6 +50,43 @@ static func status_label(actor: BattleActor) -> Label:
 		label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		actor.add_child(label)
 	return label
+
+## Имя врага под ногами (чтобы различать слизней).
+static func name_label(actor: BattleActor) -> Label:
+	var label := actor.get_node_or_null("NameLabel") as Label
+	if label == null:
+		label = _make_label("NameLabel", Vector2(-110, 14), Vector2(220, 26), 17, Color(1.0, 0.92, 0.95, 0.95))
+		actor.add_child(label)
+	return label
+
+## Верх непрозрачной части картинки (кэш по текстуре), в пикселях текстуры.
+static var _top_cache: Dictionary = {}
+
+static func _opaque_top(tex: Texture2D) -> int:
+	if tex == null:
+		return 0
+	if _top_cache.has(tex):
+		return int(_top_cache[tex])
+	var top := 0
+	var img := tex.get_image()
+	if img != null:
+		top = img.get_used_rect().position.y
+	_top_cache[tex] = top
+	return top
+
+## Низкий спрайт (слизень): полоска HP и подписи опускаются к его макушке, а не висят в воздухе.
+static func fit_bars_to_sprite(actor: BattleActor) -> void:
+	var spr := actor.sprite
+	if spr == null or spr.texture == null or actor.hp_bar == null:
+		return
+	var h := float(spr.texture.get_height())
+	var local_top := spr.offset.y - h * 0.5 + float(_opaque_top(spr.texture))
+	var top_y := spr.position.y + local_top * spr.scale.y
+	var delta := (top_y - 34.0) - actor.hp_bar.position.y
+	if delta <= 0.0:
+		return
+	actor.hp_bar.position.y += delta
+	actor.hp_label.position.y += delta
 
 ## Убираем с актёра то, что относится к старому бою (APS, энергия), и добавляем подписи.
 ## Раскладка — от полоски HP (у разных персонажей она на разной высоте), снизу вверх:
@@ -121,9 +158,12 @@ static func start_idle(actor: BattleActor) -> void:
 	actor.set_meta("idle_token", token)
 	actor.set_meta("idle_base", actor.sprite.position)
 	# Случайный старт, чтобы юниты не качались хором.
+	# Слабая ссылка: актёр может исчезнуть раньше таймера (враг поделился или ушёл с боссом).
+	var ref: WeakRef = weakref(actor)
 	actor.get_tree().create_timer(randf_range(0.0, IDLE_PERIOD_MAX)).timeout.connect(func() -> void:
-		if is_instance_valid(actor) and int(actor.get_meta("idle_token", 0)) == token and actor.is_inside_tree():
-			_run_idle_tweens(actor)
+		var a := ref.get_ref() as BattleActor
+		if a != null and int(a.get_meta("idle_token", 0)) == token and a.is_inside_tree():
+			_run_idle_tweens(a)
 	)
 
 static func _run_idle_tweens(actor: BattleActor) -> void:

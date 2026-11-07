@@ -24,9 +24,9 @@ var pending_next_index: int = -1
 var gold: int = 0
 var xp: int = 0
 ## Эстус (карточный бой): в начале каждого боя в колоду кладётся estus_stacks карт эстуса,
-## каждая лечит на estus_power. Обе величины — прокачка, не сбрасываются между забегами.
+## каждая лечит estus_power процентов макс. HP. Обе величины — прокачка, не сбрасываются.
 const ESTUS_BASE_STACKS := 2
-const ESTUS_BASE_POWER := 8
+const ESTUS_BASE_POWER := CardBalance.ESTUS_BASE_PERCENT
 var estus_stacks: int = ESTUS_BASE_STACKS
 var estus_power: int = ESTUS_BASE_POWER
 
@@ -211,15 +211,29 @@ func buy_ground_shop_item(slot_idx: int) -> String:
 func on_run_finished_refresh_shops() -> void:
 	refresh_ground_shop(true)
 
+## Опыт до следующего уровня (CardBalance: ~28 забегов на 10 уровней, как доверие).
 func xp_to_next_level(level: int = party_level) -> int:
-	return 18 + int(round(pow(float(max(level, 1)), 1.45) * 12.0))
+	return CardBalance.xp_to_next_level(level)
 
-func gain_xp(amount: int) -> void:
+## Добавить опыт. floor_no — этаж, на котором он получен: выше 10 × этаж уровень не растёт,
+## лишний опыт сгорает. Возвращает {gained, levels, level, capped}.
+func gain_xp(amount: int, floor_no: int = CardBalance.FLOOR_COUNT) -> Dictionary:
+	var cap := CardBalance.level_cap(floor_no)
+	var levels := 0
 	xp += max(amount, 0)
-	while xp >= xp_to_next_level():
+	while party_level < cap and xp >= xp_to_next_level():
 		xp -= xp_to_next_level()
 		party_level += 1
+		levels += 1
+	var capped := party_level >= cap
+	if capped:
+		xp = 0
 	emit_changed()
+	return {"gained": max(amount, 0), "levels": levels, "level": party_level, "capped": capped}
+
+## Итог забега: опыт, набранный в нём (начисляется только при победе или поражении).
+func apply_run_xp(amount: int, floor_no: int) -> Dictionary:
+	return gain_xp(amount, floor_no)
 
 func gain_gold(amount: int) -> void:
 	gold += max(amount, 0)
@@ -394,7 +408,7 @@ func serialize_state() -> Dictionary:
 		"gold": gold,
 		"xp": xp,
 		"estus_stacks": estus_stacks,
-		"estus_power": estus_power,
+		"estus_power_pct": estus_power,
 		"custom_potion_charges": custom_potion_charges,
 		"selected_potion_id": selected_potion_id,
 		"selected_artifact_id": selected_artifact_id,
@@ -431,7 +445,8 @@ func apply_state(data: Dictionary) -> void:
 	xp = int(data.get("xp", xp))
 	# Старые сохранения хранили заряды эстуса автобаттлера (estus_charges) — они больше не значат ничего.
 	estus_stacks = maxi(0, int(data.get("estus_stacks", estus_stacks)))
-	estus_power = maxi(0, int(data.get("estus_power", estus_power)))
+	# Старое сохранение хранило лечение числом («estus_power») — теперь это процент, берём новое поле.
+	estus_power = maxi(0, int(data.get("estus_power_pct", ESTUS_BASE_POWER)))
 	custom_potion_charges = int(data.get("custom_potion_charges", custom_potion_charges))
 	selected_potion_id = String(data.get("selected_potion_id", selected_potion_id))
 	selected_artifact_id = RunItems.normalize_item_id(String(data.get("selected_artifact_id", selected_artifact_id)))

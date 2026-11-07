@@ -1,6 +1,6 @@
 extends CardStatus
 class_name StickySlimeStatus
-## Липкая слизь (на врагах). Оглушение — за каждые STUN_EVERY НОВЫХ стаков: считаются только
+## Липкая слизь (на врагах; враги-слизнедевочки вешают её и на героев). Оглушение — за каждые STUN_EVERY НОВЫХ стаков: считаются только
 ## наложенные стаки, снятие счётчик не уменьшает (снял один, наложил один — это 1 новый, а не стан).
 ## Счётчик «до стана» живёт в данных статуса (ключ "gained") и переживает снятие всех стаков.
 
@@ -19,11 +19,10 @@ func label(s: Dictionary) -> String:
 
 func on_added(combat: CardCombat, unit: Unit, old_stacks: int, s: Dictionary) -> void:
 	var added := int(s["stacks"]) - old_stacks
-	if added <= 0 or STUN_EVERY <= 0 or not combat.is_enemy(unit):
+	if added <= 0 or STUN_EVERY <= 0:
 		return
 	var gained := int(s.get("gained", 0)) + added
 	var stuns := gained / STUN_EVERY
 	s["gained"] = gained % STUN_EVERY
 	if stuns > 0:
-		combat.add_status(unit, CardStatuses.STUN, 0, 1, true)
-		combat.floated.emit(unit, "Оглушён!", CardCombat.COL_STATUS, 26)
+		combat.stun(unit)

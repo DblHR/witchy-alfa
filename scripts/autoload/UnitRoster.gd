@@ -10,25 +10,43 @@ const CORE_LOCK := false
 var unlocked_unit_ids: Array[String] = []
 var discovered_boss_ids: Array[String] = []
 
-## --- Отношения (у всех, кроме главных героев — CharacterData.is_protagonist) ---
+## --- Отношения / доверие (у всех, кроме главных героев — CharacterData.is_protagonist) ---
+## Доверие копится очками: +1 за каждый забег с героиней в отряде (CardBalance.TRUST_PER_RUN).
+## Уровень отношений (0..10) считается из очков: 1-2-2-2-3-3-3-4-4-4 (28 забегов до 10).
 const RELATIONSHIP_MAX := 10
-## Тест: пока прокачки отношений нет, у всех героинь они сразу на максимуме.
-const RELATIONSHIP_TEST_MAX := true
-## id героини -> уровень отношений (0..RELATIONSHIP_MAX).
-var relationship: Dictionary = {}
+## id героини -> очки доверия.
+var trust_points: Dictionary = {}
 
 ## --- Колоды ---
 ## id героини -> id карт, выбранных в колоду (экран Setup). Нет записи — первые карты по лимиту ранга.
 var deck_selection: Dictionary = {}
 
+## Уровень отношений 0..RELATIONSHIP_MAX.
 func get_relationship(unit_id: String) -> int:
-	if relationship.has(unit_id):
-		return int(relationship[unit_id])
-	return RELATIONSHIP_MAX if RELATIONSHIP_TEST_MAX else 0
+	return mini(RELATIONSHIP_MAX, CardBalance.trust_level(get_trust(unit_id)))
 
+## Задать уровень отношений (админка): очки ставятся ровно на начало уровня.
 func set_relationship(unit_id: String, value: int) -> void:
-	relationship[unit_id] = clampi(value, 0, RELATIONSHIP_MAX)
+	trust_points[unit_id] = CardBalance.trust_points_for_level(clampi(value, 0, RELATIONSHIP_MAX))
 	changed.emit()
+
+func get_trust(unit_id: String) -> int:
+	return int(trust_points.get(unit_id, 0))
+
+func add_trust(unit_id: String, amount: int) -> void:
+	if unit_id == "" or amount <= 0:
+		return
+	var cap := CardBalance.trust_points_for_level(RELATIONSHIP_MAX)
+	trust_points[unit_id] = mini(cap, get_trust(unit_id) + amount)
+	changed.emit()
+
+## Для досье: {level, points, into_level, need} — сколько очков набрано на текущем уровне и сколько нужно.
+func trust_progress(unit_id: String) -> Dictionary:
+	var pts := get_trust(unit_id)
+	var lvl := get_relationship(unit_id)
+	var base := CardBalance.trust_points_for_level(lvl)
+	var need := 0 if lvl >= RELATIONSHIP_MAX else CardBalance.TRUST_STEPS[lvl]
+	return {"level": lvl, "points": pts, "into_level": pts - base, "need": need}
 
 func has_deck_selection(unit_id: String) -> bool:
 	return deck_selection.has(unit_id)
@@ -49,7 +67,7 @@ func _ready() -> void:
 func reset_to_defaults() -> void:
 	unlocked_unit_ids = STARTING_UNIT_IDS.duplicate()
 	discovered_boss_ids.clear()
-	relationship.clear()
+	trust_points.clear()
 	deck_selection.clear()
 	changed.emit()
 
@@ -92,7 +110,7 @@ func serialize_state() -> Dictionary:
 	return {
 		"unlocked_unit_ids": unlocked_unit_ids.duplicate(),
 		"discovered_boss_ids": discovered_boss_ids.duplicate(),
-		"relationship": relationship.duplicate(),
+		"trust_points": trust_points.duplicate(),
 		"deck_selection": deck_selection.duplicate(true),
 	}
 
@@ -111,10 +129,15 @@ func apply_state(data: Dictionary) -> void:
 		var boss_id := String(v)
 		if boss_id != "" and not discovered_boss_ids.has(boss_id):
 			discovered_boss_ids.append(boss_id)
-	relationship.clear()
-	var rel: Dictionary = data.get("relationship", {})
-	for k in rel.keys():
-		relationship[String(k)] = int(rel[k])
+	trust_points.clear()
+	var pts: Dictionary = data.get("trust_points", {})
+	for k in pts.keys():
+		trust_points[String(k)] = maxi(0, int(pts[k]))
+	# Старое сохранение: был только уровень отношений — переводим в очки.
+	if not data.has("trust_points"):
+		var rel: Dictionary = data.get("relationship", {})
+		for k in rel.keys():
+			trust_points[String(k)] = CardBalance.trust_points_for_level(int(rel[k]))
 	deck_selection.clear()
 	var decks: Dictionary = data.get("deck_selection", {})
 	for k in decks.keys():

@@ -6,7 +6,11 @@ class_name CardEffect
 ##
 ## Числа скейлятся от характеристик владельца карты:
 ##   значение = base + atk_ratio × Атака + mag_ratio × Магия (округление).
+## У общих карт (без владельца: Удар, Щит) base растёт с уровнем отряда (+10% за уровень).
 ## Стаки статусов и длительность не скейлятся — они постоянны для карты.
+##
+## Очарованная героиня разыгрывает карты «зеркально» (ctx.mirrored): стороны меняются местами —
+## урон летит в своих, щиты и лечение достаются врагам.
 
 enum TargetMode {
 	CARD_TARGETS,   ## цели, выбранные картой (передний враг, все враги, выбранный союзник…)
@@ -51,7 +55,10 @@ func deals_damage() -> bool:
 
 func resolve_targets(ctx: CardContext) -> Array[Unit]:
 	var raw: Array[Unit] = []
-	match target_mode:
+	var mode := target_mode
+	if ctx.mirrored:
+		mode = _mirror_mode(mode)
+	match mode:
 		TargetMode.CARD_TARGETS:
 			raw = ctx.targets
 		TargetMode.CASTER:
@@ -78,9 +85,22 @@ func resolve_targets(ctx: CardContext) -> Array[Unit]:
 		out.append(u)
 	return out
 
+## Зеркало для очарованной героини: «свои» ↔ «чужие», «себе» — переднему врагу.
+static func _mirror_mode(mode: TargetMode) -> TargetMode:
+	match mode:
+		TargetMode.CASTER, TargetMode.FRONT_ALLY:
+			return TargetMode.FRONT_ENEMY
+		TargetMode.ALL_ALLIES:
+			return TargetMode.ALL_ENEMIES
+		TargetMode.FRONT_ENEMY:
+			return TargetMode.FRONT_ALLY
+		TargetMode.ALL_ENEMIES:
+			return TargetMode.ALL_ALLIES
+	return mode
+
 static func scaled(base: int, atk_ratio: float, mag_ratio: float, caster: Unit) -> int:
 	if caster == null:
-		return base
+		return CardBalance.scale_by_level(base, CardBalance.party_level())
 	return base + roundi(atk_ratio * float(caster.attack) + mag_ratio * float(caster.magic))
 
 ## «кому» для автотекста.
