@@ -26,6 +26,7 @@ const ICON_PATHS := {
 	"slime_goop": "res://assets/pics/icons/items/loot/slime_goop.png",
 	"quartz": "res://assets/pics/icons/items/alchemy_ingridients/quartz.png",
 	"meat_fruit": "res://assets/pics/icons/items/alchemy_ingridients/meat.png",
+	"gift": "res://assets/pics/icons/items/items/gift.png",
 	"vegetable_fruit": "res://assets/pics/icons/items/alchemy_ingridients/vegetable.png",
 	"sweet_fruit": "res://assets/pics/icons/items/alchemy_ingridients/sweet.png",
 	"fruit_fruit": "res://assets/pics/icons/items/alchemy_ingridients/fruit.png",

@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="CardDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/card/effects/CardEffect.gd" id="1_eff"]
+[ext_resource type="Script" path="res://scripts/card/effects/EffLure.gd" id="2_lure"]
+[ext_resource type="Script" path="res://scripts/card/data/CardDef.gd" id="3_def"]
+
+[sub_resource type="Resource" id="Resource_lure"]
+script = ExtResource("2_lure")
+base = 15
+
+[resource]
+script = ExtResource("3_def")
+id = "lure"
+title = "Приманка"
+cost = 1
+target = 3
+tags = PackedStringArray("attack")
+exhaust = 2
+description = "[d]{0}[/d] урона выбранному врагу.
+Добьёт героиню — она в отряде (или её копия).
+[e]Тратится[/e] из инвентаря."
+effects = Array[ExtResource("1_eff")]([SubResource("Resource_lure")])

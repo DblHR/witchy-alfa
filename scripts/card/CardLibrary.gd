@@ -11,6 +11,8 @@ class_name CardLibrary
 const FILLER_STRIKE: CardDef = preload("res://resources/cards/common/filler_strike.tres")
 const FILLER_SHIELD: CardDef = preload("res://resources/cards/common/filler_shield.tres")
 const ESTUS: CardDef = preload("res://resources/cards/common/estus.tres")
+const LURE: CardDef = preload("res://resources/cards/common/lure.tres")
+const COLOR_LURE := Color(0.88, 0.36, 0.62, 1.0)
 
 const COLOR_FILLER := Color(0.45, 0.45, 0.50, 1.0)
 const COLOR_ESTUS := Color(0.86, 0.55, 0.16, 1.0)
@@ -116,6 +118,10 @@ static func estus_cards(stacks: int) -> Array[CardInstance]:
 	for i in range(maxi(0, stacks)):
 		out.append(CardInstance.from_def(ESTUS, null, COLOR_ESTUS, "Эстус"))
 	return out
+
+## Карта приманки (одна на забег, если её взяли в Setup и она есть в инвентаре).
+static func lure_card() -> CardInstance:
+	return CardInstance.from_def(LURE, null, COLOR_LURE, "Приманка")
 
 ## id карты -> [CardDef, id героя]. Строится один раз по пулам всех персонажей.
 static var _index: Dictionary = {}

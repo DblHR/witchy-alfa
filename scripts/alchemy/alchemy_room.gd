@@ -32,7 +32,8 @@ enum Stage { PICK, ADD, STIR, PENDULUM, DONE }
 
 var _stage: int = Stage.PICK
 var _recipe_id := ""
-var _accepted: Dictionary = {}      # item_id -> сколько уже брошено
+var _accepted: Dictionary = {}      # ключ ингредиента (id или группа «staff_rN») -> сколько уже брошено
+var _accepted_items: Dictionary = {} # конкретный item_id -> сколько штук в котле (их и спишем)
 var _attempts := 0
 var _stir_score := 0.0
 var _rng := RandomNumberGenerator.new()
@@ -258,7 +259,7 @@ func _build_top_ui() -> void:
 		b.expand_icon = true
 		b.add_theme_constant_override("icon_max_width", 56)
 		b.custom_minimum_size = Vector2(190, 80)
-		b.tooltip_text = "%s\n%s" % [RunItems.get_item_desc(result_id), AlchemyDB.get_recipe_summary(recipe_id)]
+		b.tooltip_text = "%s\n%s" % [AlchemyDB.get_recipe_desc(recipe_id), AlchemyDB.get_recipe_summary(recipe_id)]
 		if not AlchemyDB.is_known(recipe_id):
 			# Рецепт ещё не открыт: из сундука или у Рикки.
 			b.disabled = true
@@ -401,6 +402,7 @@ func _on_recipe_pressed(recipe_id: String) -> void:
 		return
 	_recipe_id = recipe_id
 	_accepted.clear()
+	_accepted_items.clear()
 	_attempts = 0
 	_spawn_shelf()
 	_set_stage(Stage.ADD)
@@ -409,15 +411,24 @@ func _on_reset_pressed() -> void:
 	if _stage == Stage.DONE:
 		return
 	_accepted.clear()
+	_accepted_items.clear()
 	_attempts = 0
 	_spawn_shelf()
 	_set_stage(Stage.ADD if _recipe_id != "" else Stage.PICK)
 	_say("Котёл пуст, ингредиенты вернулись на полку", Color(0.9, 0.85, 1.0))
 
+## Ключ ингредиента: для улучшения посохов все посохи нужной редкости — одна группа.
+func _key(item_id: String) -> String:
+	return AlchemyDB.ingredient_key(_recipe_id, item_id)
+
 func _need(item_id: String) -> int:
 	if _recipe_id == "":
 		return 0
-	return int(AlchemyDB.get_ingredients(_recipe_id).get(item_id, 0))
+	return int(AlchemyDB.get_ingredients(_recipe_id).get(_key(item_id), 0))
+
+## Сколько штук этого предмета уже в котле (считается по предметам, не по группам).
+func _in_pot(item_id: String) -> int:
+	return int(_accepted_items.get(item_id, 0))
 
 func _all_added() -> bool:
 	if _recipe_id == "":
@@ -440,11 +451,11 @@ func _refresh_checklist() -> void:
 			var item_id := String(id)
 			var need := int(ing[id])
 			var got := int(_accepted.get(item_id, 0))
-			var have := Inventory_.get_item_count(item_id) if Inventory_ != null else 0
+			var have := AlchemyDB.count_have(item_id)
 			var row := HBoxContainer.new()
 			row.add_theme_constant_override("separation", 8)
 			var icon := TextureRect.new()
-			icon.texture = Inventory_.get_item_icon(item_id) if Inventory_ != null else null
+			icon.texture = AlchemyDB.ingredient_icon(item_id)
 			icon.custom_minimum_size = Vector2(36, 36)
 			icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 			icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
@@ -452,7 +463,7 @@ func _refresh_checklist() -> void:
 			var lbl := Label.new()
 			var done := got >= need
 			var short := have < need
-			lbl.text = "%s %s  %d / %d" % ["✓" if done else "•", RunItems.get_item_name(item_id), got, need]
+			lbl.text = "%s %s  %d / %d" % ["✓" if done else "•", AlchemyDB.ingredient_name(item_id), got, need]
 			if short and not done:
 				lbl.text += "   (в сумке только %d)" % have
 			lbl.add_theme_font_size_override("font_size", 22)
@@ -468,8 +479,8 @@ func _refresh_legend() -> void:
 	if Inventory_ == null:
 		return
 	var any := false
-	for id in AlchemyDB.get_all_ingredient_ids():
-		var n := Inventory_.get_item_count(id) - int(_accepted.get(id, 0))
+	for id in AlchemyDB.get_shelf_ids(_recipe_id):
+		var n := Inventory_.get_item_count(id) - _in_pot(id)
 		if n <= 0:
 			continue
 		any = true
@@ -517,8 +528,8 @@ func _top_up() -> void:
 	var step := 92.0
 	var x0 := shelf.position.x + (shelf.size.x - step * float(cols - 1)) * 0.5
 	var slot_i := _live_total()
-	for id in AlchemyDB.get_all_ingredient_ids():
-		var avail := Inventory_.get_item_count(id) - int(_accepted.get(id, 0))
+	for id in AlchemyDB.get_shelf_ids(_recipe_id):
+		var avail := Inventory_.get_item_count(id) - _in_pot(id)
 		var target := mini(avail, SHELF_CAP_PER_TYPE)
 		var live := _live_count(id)
 		while live < target:
@@ -560,16 +571,18 @@ func _try_accept(ib: _BodyScript) -> void:
 			_say("Сначала выберите рецепт", Color(1.0, 0.8, 0.5))
 		return
 	var need := _need(ib.item_id)
-	var got := int(_accepted.get(ib.item_id, 0))
+	var key := _key(ib.item_id)
+	var got := int(_accepted.get(key, 0))
 	if need <= 0:
 		_bounce_out(ib)
 		_say("Это в рецепт не входит", Color(1.0, 0.6, 0.6))
 		return
 	if got >= need:
 		_bounce_out(ib)
-		_say("%s уже хватает" % RunItems.get_item_name(ib.item_id), Color(1.0, 0.8, 0.5))
+		_say("%s уже хватает" % AlchemyDB.ingredient_name(key), Color(1.0, 0.8, 0.5))
 		return
-	_accepted[ib.item_id] = got + 1
+	_accepted[key] = got + 1
+	_accepted_items[ib.item_id] = _in_pot(ib.item_id) + 1
 	ib.accepted = true
 	ib.remove_from_group("ingredient")
 	# Тело сразу убираем, а «тонущую» иконку показываем отдельным спрайтом
@@ -748,10 +761,10 @@ func _quality_label() -> String:
 func _complete() -> void:
 	if Inventory_ == null or _recipe_id == "":
 		return
-	var ing := AlchemyDB.get_ingredients(_recipe_id)
-	for id in ing.keys():
-		Inventory_.remove_item(String(id), int(ing[id]))
-	var result_id := AlchemyDB.get_result_item_id(_recipe_id)
+	# Списываем ровно то, что положили в котёл (для улучшения — конкретные посохи).
+	for id in _accepted_items.keys():
+		Inventory_.remove_item(String(id), int(_accepted_items[id]))
+	var result_id := AlchemyDB.roll_result(_recipe_id, _rng)
 	Inventory_.add_item(result_id, 1)
 	_set_stage(Stage.DONE)
 	_result_icon.texture = Inventory_.get_item_icon(result_id)
@@ -761,6 +774,7 @@ func _complete() -> void:
 func _on_result_closed() -> void:
 	_result_panel.visible = false
 	_accepted.clear()
+	_accepted_items.clear()
 	_attempts = 0
 	_spawn_shelf()
 	_set_stage(Stage.ADD if _recipe_id != "" else Stage.PICK)

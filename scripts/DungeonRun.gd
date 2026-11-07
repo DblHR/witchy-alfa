@@ -36,6 +36,9 @@ var selected_potion_id: String = "heal_potion"
 ## Каждый слот — одно зелье на забег; выпитое списывается из инвентаря.
 const POTION_SLOTS := 2
 var selected_potion_ids: Array[String] = ["", ""]
+## Брать ли в забег приманку (одна на забег; тратится, когда разыграна).
+const LURE_ITEM := "gift"
+var take_lure := false
 ## Открытые рецепты еды (зелья известны сразу — AlchemyDB.STARTER_RECIPES).
 var known_recipes: Array[String] = []
 var selected_artifact_id: String = ""
@@ -103,6 +106,8 @@ func reset_to_defaults() -> void:
 	selected_potion_id = "heal_potion"
 	selected_potion_ids = ["", ""]
 	known_recipes.clear()
+	take_lure = false
+	_artifacts_migrated = false
 	selected_artifact_id = ""
 	selected_food_id = ""
 	owned_artifacts = ["mace_staff_common", "dango_staff_common"]
@@ -147,6 +152,8 @@ func _validate_loadout() -> void:
 	elif not available_potions.has(selected_potion_id):
 		selected_potion_id = available_potions[0]
 	_validate_potion_slots()
+	if take_lure and (Inventory_ == null or not Inventory_.has_item(LURE_ITEM)):
+		take_lure = false
 
 	if selected_artifact_id != "" and (Inventory_ == null or not Inventory_.has_item(selected_artifact_id)):
 		selected_artifact_id = ""
@@ -228,6 +235,7 @@ func refresh_ground_shop(force_emit: bool = false) -> void:
 	ground_shop_item_ids.clear()
 	ground_shop_item_ids.append("quartz")
 	ground_shop_item_ids.append(RIKKA_SEEDS[rng.randi_range(0, RIKKA_SEEDS.size() - 1)])
+	ground_shop_item_ids.append(LURE_ITEM)
 	var pools: Array = [RunItems.food_ids(), _common_staffs_not_owned(), AlchemyDB.unknown_recipe_items(), RIKKA_FOOD_INGREDIENTS]
 	var guard := 0
 	while ground_shop_item_ids.size() < GROUND_SHOP_SLOT_COUNT and guard < 50:
@@ -244,10 +252,11 @@ func refresh_ground_shop(force_emit: bool = false) -> void:
 	if force_emit:
 		emit_changed()
 
+## Обычные посохи (посохи складываются в стопки, поэтому уже имеющиеся тоже продаются).
 func _common_staffs_not_owned() -> Array[String]:
 	var out: Array[String] = []
 	for id in RunItems.artifact_ids():
-		if RunItems.get_item_rarity(id) == 0 and (Inventory_ == null or not Inventory_.has_item(id)):
+		if RunItems.get_item_rarity(id) == 0:
 			out.append(id)
 	return out
 
@@ -259,7 +268,7 @@ const LAMIA_FLOOR_LOOT: Array[String] = ["slime_goop"]
 
 func roll_lamia_stock(r: RandomNumberGenerator) -> Array:
 	var offers: Array = []
-	var kinds := ["quartz", "food", "seeds", "potion", "loot", "staff"]
+	var kinds := ["quartz", "food", "seeds", "potion", "loot", "staff", "lure"]
 	for i in range(kinds.size() - 1, 0, -1):
 		var j := r.randi_range(0, i)
 		var tmp: String = kinds[i]
@@ -283,11 +292,13 @@ func roll_lamia_stock(r: RandomNumberGenerator) -> Array:
 				id = potions[r.randi_range(0, potions.size() - 1)]
 			"loot":
 				id = LAMIA_FLOOR_LOOT[r.randi_range(0, LAMIA_FLOOR_LOOT.size() - 1)]; count = r.randi_range(4, 6)
+			"lure":
+				id = LURE_ITEM
 			"staff":
 				var rare := r.randf() < LAMIA_RARE_CHANCE
 				var pool: Array[String] = []
 				for sid in RunItems.artifact_ids():
-					if RunItems.get_item_rarity(sid) == (1 if rare else 0) and (Inventory_ == null or not Inventory_.has_item(sid)):
+					if RunItems.get_item_rarity(sid) == (1 if rare else 0):
 						pool.append(sid)
 				if pool.is_empty():
 					continue
@@ -367,20 +378,25 @@ func add_item(item_id: String) -> bool:
 
 func add_owned_artifact(item_id: String) -> void:
 	item_id = RunItems.normalize_item_id(item_id)
-	if item_id == "" or not RunItems.is_unique_item(item_id) or Inventory_ == null:
+	if item_id == "" or not RunItems.is_artifact(item_id) or Inventory_ == null:
 		return
-	if not Inventory_.has_item(item_id):
-		Inventory_.add_item(item_id, 1)
+	Inventory_.add_item(item_id, 1)
 	sync_legacy_owned_artifacts_to_inventory()
 	emit_changed()
+
+## Посохи теперь складываются в стопки и тратятся в алхимии, поэтому старый список owned_artifacts
+## переносится в инвентарь только один раз (новая игра / загрузка), дальше он лишь зеркалит инвентарь.
+var _artifacts_migrated := false
 
 func sync_legacy_owned_artifacts_to_inventory() -> void:
 	if Inventory_ == null:
 		return
-	for item_id in owned_artifacts:
-		item_id = RunItems.normalize_item_id(item_id)
-		if item_id != "" and RunItems.is_unique_item(item_id) and not Inventory_.has_item(item_id):
-			Inventory_.add_item(item_id, 1)
+	if not _artifacts_migrated:
+		_artifacts_migrated = true
+		for item_id in owned_artifacts:
+			item_id = RunItems.normalize_item_id(item_id)
+			if item_id != "" and RunItems.is_artifact(item_id) and not Inventory_.has_item(item_id):
+				Inventory_.add_item(item_id, 1)
 	owned_artifacts = _get_inventory_artifact_ids()
 
 func _get_inventory_artifact_ids() -> Array[String]:
@@ -389,7 +405,7 @@ func _get_inventory_artifact_ids() -> Array[String]:
 		return out
 	for item_id in Inventory_.get_items().keys():
 		var id := String(item_id)
-		if RunItems.is_unique_item(id) and Inventory_.get_item_count(id) > 0:
+		if RunItems.is_artifact(id) and Inventory_.get_item_count(id) > 0:
 			out.append(id)
 	out.sort()
 	return out
@@ -521,6 +537,7 @@ func serialize_state() -> Dictionary:
 		"selected_potion_id": selected_potion_id,
 		"selected_potion_ids": selected_potion_ids.duplicate(),
 		"known_recipes": known_recipes.duplicate(),
+		"take_lure": take_lure,
 		"selected_artifact_id": selected_artifact_id,
 		"selected_food_id": selected_food_id,
 		"owned_artifacts": owned_artifacts.duplicate(),
@@ -562,12 +579,14 @@ func apply_state(data: Dictionary) -> void:
 	selected_potion_ids.clear()
 	for v in Array(data.get("selected_potion_ids", [selected_potion_id, ""])):
 		selected_potion_ids.append(String(v))
+	take_lure = bool(data.get("take_lure", false))
 	known_recipes.clear()
 	for v in Array(data.get("known_recipes", [])):
 		known_recipes.append(String(v))
 	selected_artifact_id = RunItems.normalize_item_id(String(data.get("selected_artifact_id", selected_artifact_id)))
 	selected_food_id = RunItems.normalize_item_id(String(data.get("selected_food_id", selected_food_id)))
 
+	_artifacts_migrated = false
 	var loaded_owned_artifacts: Array = data.get("owned_artifacts", owned_artifacts)
 	owned_artifacts = RunItems.normalize_item_array(loaded_owned_artifacts)
 

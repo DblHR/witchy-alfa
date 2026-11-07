@@ -20,6 +20,8 @@ signal card_played(card: CardInstance, caster: Unit)
 signal discard_requested(count: int)
 ## На юнита наложен статус (враги-боссы реагируют: Фуфу выплёвывает героиню от оглушения).
 signal status_added(unit: Unit, id: String)
+## Приманка добила врага (EffLure) — CardBattle решает, поймана ли героиня.
+signal lure_kill(unit: Unit)
 
 const LOW_HP_RATIO := 0.5          ## «мало HP» = не больше половины
 

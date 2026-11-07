@@ -116,7 +116,7 @@ layout_mode = 0
 offset_left = 1580.0
 offset_top = 305.0
 offset_right = 1758.0
-offset_bottom = 651.0
+offset_bottom = 760.0
 
 [node name="LoadoutBox" type="VBoxContainer" parent="Control/LoadoutPanel" unique_id=253540587]
 layout_mode = 1

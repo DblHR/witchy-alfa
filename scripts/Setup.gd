@@ -28,6 +28,8 @@ const ROSTER_CARD_SIZE := Vector2(112, 152)
 ## Второй слот зелья: создаётся в коде рядом с первым (два слота на забег).
 var potion_button2: Button
 var _potion_slot := 0
+## Приманка: взять/не брать в забег (одна на забег).
+var lure_button: Button
 @onready var admin_panel: Panel = %AdminPanel
 @onready var admin_toggle_button: Button = %AdminToggleButton
 @onready var admin_content: Control = %AdminContent
@@ -174,10 +176,19 @@ func _build_potion_slots() -> void:
 	for b in [potion_button, potion_button2]:
 		b.custom_minimum_size = Vector2(63, 96)
 		b.expand_icon = true
+	lure_button = Button.new()
+	lure_button.custom_minimum_size = Vector2(132, 96)
+	lure_button.expand_icon = true
+	lure_button.toggle_mode = true
+	box.add_child(lure_button)
+	lure_button.toggled.connect(func(on: bool) -> void:
+		DungRun.take_lure = on
+		_refresh_loadout_ui()
+	)
 
 func _setup_scene_widgets() -> void:
 	_build_potion_slots()
-	for button in [food_button, artifact_button, potion_button, potion_button2]:
+	for button in [food_button, artifact_button, potion_button, potion_button2, lure_button]:
 		_style_loadout_button(button)
 	food_button.pressed.connect(func() -> void:
 		_open_item_popup("food")
@@ -983,6 +994,12 @@ func _refresh_loadout_ui() -> void:
 	food_button.icon = _get_item_or_placeholder_icon(DungRun.selected_food_id, Color(0.55, 0.83, 0.44, 1.0))
 	potion_button.disabled = DungRun.get_available_potion_ids().is_empty()
 	potion_button2.disabled = potion_button.disabled
+	var lures := Inventory_.get_item_count(DungRun.LURE_ITEM) if Inventory_ != null else 0
+	lure_button.icon = Inventory_.get_item_icon(DungRun.LURE_ITEM) if Inventory_ != null else null
+	lure_button.disabled = lures <= 0
+	lure_button.set_pressed_no_signal(DungRun.take_lure and lures > 0)
+	lure_button.modulate = Color(1, 1, 1, 1.0 if lure_button.button_pressed else 0.45)
+	lure_button.tooltip_text = ("Приманка: берём в забег (в сумке %d)" % lures) if lure_button.button_pressed else ("Приманка: не берём (в сумке %d). Нажмите, чтобы взять." % lures if lures > 0 else "Приманок нет — купите у Рикки или Сессилии")
 	artifact_button.disabled = false
 	food_button.disabled = false
 

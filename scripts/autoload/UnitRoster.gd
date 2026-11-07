@@ -9,6 +9,19 @@ const CORE_LOCK := false
 
 var unlocked_unit_ids: Array[String] = []
 var discovered_boss_ids: Array[String] = []
+## Копии пойманных героинь (повторная поимка приманкой). Пока без эффекта — потом дубли карт.
+var copies: Dictionary = {}
+
+func get_copies(unit_id: String) -> int:
+	return int(copies.get(unit_id, 0))
+
+func add_copy(unit_id: String) -> void:
+	copies[unit_id] = get_copies(unit_id) + 1
+	changed.emit()
+
+## Побеждён ли босс хотя бы раз (тогда же он выдаётся в отряд).
+func boss_defeated(unit_id: String) -> bool:
+	return discovered_boss_ids.has(unit_id)
 
 ## --- Отношения / доверие (у всех героинь, включая ведьмочку и воина) ---
 ## Доверие копится очками: +1 за каждый забег с героиней в отряде (CardBalance.TRUST_PER_RUN).
@@ -68,6 +81,7 @@ func reset_to_defaults() -> void:
 	unlocked_unit_ids = STARTING_UNIT_IDS.duplicate()
 	discovered_boss_ids.clear()
 	trust_points.clear()
+	copies.clear()
 	deck_selection.clear()
 	changed.emit()
 
@@ -110,6 +124,7 @@ func serialize_state() -> Dictionary:
 	return {
 		"unlocked_unit_ids": unlocked_unit_ids.duplicate(),
 		"discovered_boss_ids": discovered_boss_ids.duplicate(),
+		"copies": copies.duplicate(),
 		"trust_points": trust_points.duplicate(),
 		"deck_selection": deck_selection.duplicate(true),
 	}
@@ -129,6 +144,10 @@ func apply_state(data: Dictionary) -> void:
 		var boss_id := String(v)
 		if boss_id != "" and not discovered_boss_ids.has(boss_id):
 			discovered_boss_ids.append(boss_id)
+	copies.clear()
+	var cp: Dictionary = data.get("copies", {})
+	for k in cp.keys():
+		copies[String(k)] = int(cp[k])
 	trust_points.clear()
 	var pts: Dictionary = data.get("trust_points", {})
 	for k in pts.keys():

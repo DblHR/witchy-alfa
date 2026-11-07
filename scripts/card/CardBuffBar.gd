@@ -14,6 +14,8 @@ const POTION_BG := Color(0.22, 0.12, 0.30, 0.85)
 const BUFF_BG := Color(0.10, 0.05, 0.14, 0.78)
 const BORDER := Color(1.0, 0.85, 0.55, 0.55)
 const TIP_WIDTH := 420.0
+## Всплывашка над иконками (для строки внизу экрана), а не под ними.
+var tip_above := false
 
 var _row: HBoxContainer
 var _tip: PanelContainer
@@ -135,5 +137,6 @@ func _show_tip(slot: Control, d: Dictionary) -> void:
 	_tip_stats.text = stats
 	_tip_stats.visible = stats != ""
 	_tip.reset_size()
-	_tip.position = Vector2(slot.position.x, ICON.y + 10)
+	var tip_h := _tip.get_combined_minimum_size().y
+	_tip.position = Vector2(slot.position.x, -tip_h - 10.0 if tip_above else ICON.y + 10.0)
 	_tip.visible = true
