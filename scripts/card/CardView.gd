@@ -30,8 +30,12 @@ static var _card_art_cache: Dictionary = {}
 const HEADER_FRACTION := 0.15
 const TAG_ART_SUFFIX := {"attack": "atk", "support": "sup"}
 ## Раскладка текста на арте с табличкой.
-const TAG_TITLE_POS := Vector2(8, 30)
-const TAG_DESC_POS := Vector2(12, 54)
+## Название — в верхней полосе (где на арте была табличка), справа от цены.
+const TAG_TITLE_POS := Vector2(22, 3)
+const TAG_TITLE_RIGHT := 6.0
+const TAG_DESC_POS := Vector2(12, 38)
+## Цвет фона верхней полосы рисунков (под название).
+const HEADER_BG := Color(13.0 / 255.0, 11.0 / 255.0, 14.0 / 255.0)
 ## Подложка по виду для карт без арта: assets/pics/cards/frames/<вид>.png (необязательно).
 const FRAME_PATH := "res://assets/pics/cards/frames/%s.png"
 const KIND_BORDER := {
@@ -168,16 +172,16 @@ func setup(c: CardInstance, is_interactive: bool = true) -> void:
 
 	var full_art := tag_art != null or card_art != null
 	var title_pos := TAG_TITLE_POS if full_art else Vector2(24, 12)
-	var title_w := CARD_SIZE.x - (TAG_TITLE_POS.x * 2.0 if full_art else 30.0)
+	var title_w := (CARD_SIZE.x - TAG_TITLE_POS.x - TAG_TITLE_RIGHT) if full_art else CARD_SIZE.x - 30.0
 	var title := _make_title(c.title, title_pos, title_w)
 	add_child(title)
 	if c.locked:
 		_setup_locked(full_art)
 		return
 	# Название в две строки — описание опускается.
-	var extra := title.size.y - TITLE_LINE_H
+	var extra := 0.0 if full_art else title.size.y - TITLE_LINE_H
 	if full_art:
-		_add_description(c.description, TAG_DESC_POS + Vector2(0, extra), Vector2(CARD_SIZE.x - TAG_DESC_POS.x * 2.0, 124 - extra))
+		_add_description(c.description, TAG_DESC_POS + Vector2(0, extra), Vector2(CARD_SIZE.x - TAG_DESC_POS.x * 2.0, 140 - extra))
 	else:
 		_add_description(c.description, Vector2(10, 46 + extra), Vector2(CARD_SIZE.x - 20, 130 - extra))
 	_set_desc_visible(not (interactive and DESC_ON_HOVER_ONLY))
@@ -201,14 +205,21 @@ const TITLE_SIZES := [15, 14, 13, 12]
 const TITLE_WRAP_SIZE := 12
 const TITLE_LINE_H := 24.0
 
+## Название в верхней полосе рисунка: мельче и в пределах полосы (не залезает на картинку).
+const BAND_TITLE_SIZES := [15, 14, 13, 12, 11]
+const BAND_TITLE_WRAP_SIZE := 10
+
 func _make_title(text: String, pos: Vector2, width: float) -> Label:
 	var probe := Label.new()
 	var font := probe.get_theme_font("font")
 	probe.free()
-	for fs in TITLE_SIZES:
-		if font == null or font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x <= width - 4.0:
-			return _make_label(text, fs, pos, Vector2(width, TITLE_LINE_H))
-	var l := _make_label(text, TITLE_WRAP_SIZE, pos, Vector2(width, TITLE_LINE_H + 14.0), true)
+	var in_band := pos == TAG_TITLE_POS
+	var band_h := CARD_SIZE.y * HEADER_FRACTION - pos.y
+	for fs in (BAND_TITLE_SIZES if in_band else TITLE_SIZES):
+		# запас на обводку текста
+		if font == null or font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x <= width - 10.0:
+			return _make_label(text, fs, pos, Vector2(width, band_h if in_band else TITLE_LINE_H))
+	var l := _make_label(text, BAND_TITLE_WRAP_SIZE if in_band else TITLE_WRAP_SIZE, pos, Vector2(width, band_h if in_band else TITLE_LINE_H + 14.0), true)
 	l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	return l
 
@@ -216,7 +227,7 @@ func _make_title(text: String, pos: Vector2, width: float) -> Label:
 func _setup_locked(has_tag_art: bool) -> void:
 	var veil := ColorRect.new()
 	veil.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	veil.position = Vector2(4, TAG_TITLE_POS.y if has_tag_art else 4.0)
+	veil.position = Vector2(4, CARD_SIZE.y * HEADER_FRACTION if has_tag_art else 4.0)
 	veil.size = Vector2(CARD_SIZE.x - 8, CARD_SIZE.y - veil.position.y - 4)
 	veil.color = Color(0.02, 0.0, 0.05, 0.62)
 	add_child(veil)
@@ -309,41 +320,26 @@ static func _get_tag_art(owner_id: String, kind: String) -> Texture2D:
 	return tex
 
 ## Полный рисунок карты на всю карту, с лёгким затемнением под текстом.
+## Полный рисунок карты без затемнения: уникальный (если есть) или общий арт героини по виду.
+## Табличку «Атака»/«Поддержка» на общем арте закрывает полоса фона — там пишется название карты.
 func _add_full_art(tex: Texture2D, card_tex: Texture2D = null) -> void:
-	for t in [tex, card_tex]:
-		if t == null:
-			continue
-		var art := TextureRect.new()
-		art.name = "Art" if t == tex else "CardArt"
-		art.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		art.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		art.stretch_mode = TextureRect.STRETCH_SCALE   # пропорции почти как у карты; табличка не обрезается
-		art.position = Vector2.ZERO
-		art.size = CARD_SIZE
-		art.texture = t
-		add_child(art)
-	# Уникальный рисунок непрозрачный сверху: возвращаем табличку «Атака»/«Поддержка» поверх него
-	# (верхняя полоса арта по виду; на уникальных рисунках там пустой фон).
-	if tex != null and card_tex != null:
-		var band := AtlasTexture.new()
-		band.atlas = tex
-		band.region = Rect2(0, 0, tex.get_width(), tex.get_height() * HEADER_FRACTION)
-		var head := TextureRect.new()
-		head.name = "TagHeader"
-		head.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		head.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		head.stretch_mode = TextureRect.STRETCH_SCALE
-		head.position = Vector2.ZERO
-		head.size = Vector2(CARD_SIZE.x, CARD_SIZE.y * HEADER_FRACTION)
-		head.texture = band
-		add_child(head)
-	var dim := ColorRect.new()
-	dim.name = "ArtDim"
-	dim.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	dim.position = Vector2(8, TAG_TITLE_POS.y + 2)
-	dim.size = Vector2(CARD_SIZE.x - 16, CARD_SIZE.y - TAG_TITLE_POS.y - 10)
-	dim.color = Color(0.04, 0.02, 0.08, 0.28)
-	add_child(dim)
+	var art := TextureRect.new()
+	art.name = "Art"
+	art.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	art.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	art.stretch_mode = TextureRect.STRETCH_SCALE
+	art.position = Vector2.ZERO
+	art.size = CARD_SIZE
+	art.texture = card_tex if card_tex != null else tex
+	add_child(art)
+	if card_tex == null:
+		var band := ColorRect.new()
+		band.name = "TitleBand"
+		band.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		band.position = Vector2.ZERO
+		band.size = Vector2(CARD_SIZE.x, CARD_SIZE.y * HEADER_FRACTION)
+		band.color = HEADER_BG
+		add_child(band)
 
 static func _get_art(owner_id: String) -> Texture2D:
 	if _art_cache.has(owner_id):
