@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dbwikej7jaxrq"
-path="res://.godot/imported/luisa_sup.png-0045b6a9abd457fbb8f6f55029031866.ctex"
+path="res://.godot/imported/luisa_sup.png-4477315a72a6ba7b2b68092dda9f1c54.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/pics/cards/art/luisa_sup.png"
-dest_files=["res://.godot/imported/luisa_sup.png-0045b6a9abd457fbb8f6f55029031866.ctex"]
+source_file="res://assets/pics/cards/art/luisa/luisa_sup.png"
+dest_files=["res://.godot/imported/luisa_sup.png-4477315a72a6ba7b2b68092dda9f1c54.ctex"]
 
 [params]
 

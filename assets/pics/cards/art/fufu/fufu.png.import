@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://b6s7ajrllv80a"
-path="res://.godot/imported/fufu.png-2073b400e5380bd8de84cc4ed7fda168.ctex"
+path="res://.godot/imported/fufu.png-cab7bf4af29537fc7f17071f1f7daad8.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/pics/cards/art/fufu.png"
-dest_files=["res://.godot/imported/fufu.png-2073b400e5380bd8de84cc4ed7fda168.ctex"]
+source_file="res://assets/pics/cards/art/fufu/fufu.png"
+dest_files=["res://.godot/imported/fufu.png-cab7bf4af29537fc7f17071f1f7daad8.ctex"]
 
 [params]
 

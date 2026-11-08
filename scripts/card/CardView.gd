@@ -10,16 +10,24 @@ const CARD_SIZE := Vector2(150, 210)
 ## Арт на фоне карт героя (из assets/pics/ready but not used, уменьшен до 336x501).
 ## У героев без арта (воин, общие карты) остаётся цветной заливка.
 const ART_PATHS := {
-	"witch": "res://assets/pics/cards/art/witch.png",
-	"luisa": "res://assets/pics/cards/art/luisa.png",
-	"aki": "res://assets/pics/cards/art/aki.png",
-	"fufu": "res://assets/pics/cards/art/fufu.png",
+	"witch": "res://assets/pics/cards/art/witch/witch.png",
+	"luisa": "res://assets/pics/cards/art/luisa/luisa.png",
+	"aki": "res://assets/pics/cards/art/aki/aki.png",
+	"fufu": "res://assets/pics/cards/art/fufu/fufu.png",
 }
-## Арт карты по виду: assets/pics/cards/art/<героиня>_atk.png — карта наносит урон,
+## Арты лежат по папкам героинь: assets/pics/cards/art/<героиня>/…
+## Арт карты по виду: <героиня>/<героиня>_atk.png — карта наносит урон,
 ## <героиня>_sup.png — не наносит (ульта — по тому же правилу). Это полный рисунок карты
 ## с табличкой «Атака»/«Поддержка» сверху: он занимает всю карту, название опускается под табличку.
 ## Нет такого арта — старый вариант: <героиня>.png (ART_PATHS) или цветная заливка с рамкой цвета вида.
-const TAG_ART_PATH := "res://assets/pics/cards/art/%s_%s.png"
+const TAG_ART_PATH := "res://assets/pics/cards/art/%s/%s_%s.png"
+## Уникальный рисунок карты: <героиня>/<id карты>.png (общие карты — common/<id>.png), 840×1253,
+## без таблички сверху — табличка берётся с арта по виду и остаётся видна над рисунком.
+## Нет файла — карта показывает общий арт героини по виду.
+const CARD_ART_PATH := "res://assets/pics/cards/art/%s/%s.png"
+static var _card_art_cache: Dictionary = {}
+## Доля высоты арта по виду, занятая табличкой сверху (до рамки рисунка).
+const HEADER_FRACTION := 0.15
 const TAG_ART_SUFFIX := {"attack": "atk", "support": "sup"}
 ## Раскладка текста на арте с табличкой.
 const TAG_TITLE_POS := Vector2(8, 30)
@@ -137,12 +145,14 @@ func setup(c: CardInstance, is_interactive: bool = true) -> void:
 	add_theme_stylebox_override("panel", sb)
 	var kind := _frame_kind(c)
 	var tag_art := _get_tag_art(c.owner_id, kind)
+	var card_art := _get_card_art(c.owner_id, c.id)
 	var has_art := false
-	if tag_art != null:
-		# Полный рисунок карты: своя рамка и табличка уже на нём.
+	if tag_art != null or card_art != null:
+		# Полный рисунок карты: своя рамка и табличка уже на нём. Уникальный рисунок карты
+		# ложится поверх общего арта по виду — табличка «Атака»/«Поддержка» остаётся сверху.
 		sb.bg_color = Color(0, 0, 0, 0)
 		sb.border_color = Color(0, 0, 0, 0)
-		_add_full_art(tag_art)
+		_add_full_art(tag_art, card_art)
 		has_art = true
 	else:
 		var frame_tex := _get_frame(kind)
@@ -156,16 +166,17 @@ func setup(c: CardInstance, is_interactive: bool = true) -> void:
 	_gray_overlay = _make_gray_overlay()
 	add_child(_gray_overlay)
 
-	var title_pos := TAG_TITLE_POS if tag_art != null else Vector2(24, 12)
-	var title_w := CARD_SIZE.x - (TAG_TITLE_POS.x * 2.0 if tag_art != null else 30.0)
+	var full_art := tag_art != null or card_art != null
+	var title_pos := TAG_TITLE_POS if full_art else Vector2(24, 12)
+	var title_w := CARD_SIZE.x - (TAG_TITLE_POS.x * 2.0 if full_art else 30.0)
 	var title := _make_title(c.title, title_pos, title_w)
 	add_child(title)
 	if c.locked:
-		_setup_locked(tag_art != null)
+		_setup_locked(full_art)
 		return
 	# Название в две строки — описание опускается.
 	var extra := title.size.y - TITLE_LINE_H
-	if tag_art != null:
+	if full_art:
 		_add_description(c.description, TAG_DESC_POS + Vector2(0, extra), Vector2(CARD_SIZE.x - TAG_DESC_POS.x * 2.0, 124 - extra))
 	else:
 		_add_description(c.description, Vector2(10, 46 + extra), Vector2(CARD_SIZE.x - 20, 130 - extra))
@@ -271,6 +282,19 @@ func _add_frame(kind: String, tex: Texture2D, sb: StyleBoxFlat) -> void:
 static var _tag_art_cache: Dictionary = {}
 
 ## Арт карты героини по виду («атака»/«поддержка») или null.
+## Уникальный рисунок карты (или null).
+static func _get_card_art(owner_id: String, card_id: String) -> Texture2D:
+	var folder := owner_id if owner_id != "" else "common"
+	var key := folder + "/" + card_id
+	if _card_art_cache.has(key):
+		return _card_art_cache[key]
+	var tex: Texture2D = null
+	var path := CARD_ART_PATH % [folder, card_id]
+	if ResourceLoader.exists(path):
+		tex = load(path) as Texture2D
+	_card_art_cache[key] = tex
+	return tex
+
 static func _get_tag_art(owner_id: String, kind: String) -> Texture2D:
 	if owner_id == "" or not TAG_ART_SUFFIX.has(kind):
 		return null
@@ -278,23 +302,41 @@ static func _get_tag_art(owner_id: String, kind: String) -> Texture2D:
 	if _tag_art_cache.has(key):
 		return _tag_art_cache[key]
 	var tex: Texture2D = null
-	var path := TAG_ART_PATH % [owner_id, TAG_ART_SUFFIX[kind]]
+	var path := TAG_ART_PATH % [owner_id, owner_id, TAG_ART_SUFFIX[kind]]
 	if ResourceLoader.exists(path):
 		tex = load(path) as Texture2D
 	_tag_art_cache[key] = tex
 	return tex
 
 ## Полный рисунок карты на всю карту, с лёгким затемнением под текстом.
-func _add_full_art(tex: Texture2D) -> void:
-	var art := TextureRect.new()
-	art.name = "Art"
-	art.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	art.position = Vector2.ZERO
-	art.size = CARD_SIZE
-	art.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	art.stretch_mode = TextureRect.STRETCH_SCALE   # пропорции почти как у карты; табличка не обрезается
-	art.texture = tex
-	add_child(art)
+func _add_full_art(tex: Texture2D, card_tex: Texture2D = null) -> void:
+	for t in [tex, card_tex]:
+		if t == null:
+			continue
+		var art := TextureRect.new()
+		art.name = "Art" if t == tex else "CardArt"
+		art.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		art.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		art.stretch_mode = TextureRect.STRETCH_SCALE   # пропорции почти как у карты; табличка не обрезается
+		art.position = Vector2.ZERO
+		art.size = CARD_SIZE
+		art.texture = t
+		add_child(art)
+	# Уникальный рисунок непрозрачный сверху: возвращаем табличку «Атака»/«Поддержка» поверх него
+	# (верхняя полоса арта по виду; на уникальных рисунках там пустой фон).
+	if tex != null and card_tex != null:
+		var band := AtlasTexture.new()
+		band.atlas = tex
+		band.region = Rect2(0, 0, tex.get_width(), tex.get_height() * HEADER_FRACTION)
+		var head := TextureRect.new()
+		head.name = "TagHeader"
+		head.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		head.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		head.stretch_mode = TextureRect.STRETCH_SCALE
+		head.position = Vector2.ZERO
+		head.size = Vector2(CARD_SIZE.x, CARD_SIZE.y * HEADER_FRACTION)
+		head.texture = band
+		add_child(head)
 	var dim := ColorRect.new()
 	dim.name = "ArtDim"
 	dim.mouse_filter = Control.MOUSE_FILTER_IGNORE

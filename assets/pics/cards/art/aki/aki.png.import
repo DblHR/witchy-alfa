@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bu5it8l1o4mm"
-path="res://.godot/imported/aki.png-85ffffa7487f9078e0798f37b4671ebe.ctex"
+path="res://.godot/imported/aki.png-72288357be2571002ce2b915ebcdfdcf.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/pics/cards/art/aki.png"
-dest_files=["res://.godot/imported/aki.png-85ffffa7487f9078e0798f37b4671ebe.ctex"]
+source_file="res://assets/pics/cards/art/aki/aki.png"
+dest_files=["res://.godot/imported/aki.png-72288357be2571002ce2b915ebcdfdcf.ctex"]
 
 [params]
 

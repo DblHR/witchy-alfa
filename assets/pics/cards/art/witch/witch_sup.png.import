@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://powuexjyqugo"
-path="res://.godot/imported/witch_sup.png-614a76ecb4499d60a76dc58e8eee63bc.ctex"
+path="res://.godot/imported/witch_sup.png-9fffcf4088638a6c96500f712d67026a.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/pics/cards/art/witch_sup.png"
-dest_files=["res://.godot/imported/witch_sup.png-614a76ecb4499d60a76dc58e8eee63bc.ctex"]
+source_file="res://assets/pics/cards/art/witch/witch_sup.png"
+dest_files=["res://.godot/imported/witch_sup.png-9fffcf4088638a6c96500f712d67026a.ctex"]
 
 [params]
 
