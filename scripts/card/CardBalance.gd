@@ -1,6 +1,6 @@
 extends RefCounted
 class_name CardBalance
-## Общие числа баланса в одном месте: рост от уровня, опыт, доверие, общие карты, эстус.
+## Общие числа баланса в одном месте: рост от уровня, опыт, доверие, общие карты.
 ## Всё тестовое — крутить здесь, а не по скриптам.
 
 # --- Уровни ------------------------------------------------------------------
@@ -90,5 +90,3 @@ const BURN_PER_STACK := 5
 static func burn_per_stack() -> int:
 	return scale_by_level(BURN_PER_STACK, party_level())
 
-## Эстус лечит процент от макс. HP цели (прокачка — DungRun.estus_power).
-const ESTUS_BASE_PERCENT := 25

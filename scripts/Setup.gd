@@ -709,12 +709,26 @@ func _on_roster_card_drag_released(_slot_index: int, global_mouse: Vector2) -> v
 	if _roster_drag_id == "":
 		return
 	var target_index := _find_slot_index_at_global(global_mouse)
-	if target_index != -1 and DungRun.party_ids[target_index] == "" and not _is_id_taken_elsewhere(_roster_drag_id, -1):
-		DungRun.party_ids[target_index] = _roster_drag_id
-		_ensure_default_leader()
-		_refresh_team_ui()
-		_refresh_roster_strip()
+	if target_index != -1:
+		_drop_roster_into_slot(_roster_drag_id, target_index)
 	_roster_drag_id = ""
+
+## Героиня из ростера брошена на слот отряда. Пустой слот — встаёт туда. Занятый — меняется:
+## если она уже в отряде, две героини меняются слотами; если нет — занимавшая слот уходит
+## обратно в ростер (и если та была лидером, лидером становится новая).
+func _drop_roster_into_slot(unit_id: String, target_index: int) -> void:
+	var occupant := DungRun.party_ids[target_index]
+	if occupant == unit_id:
+		return
+	var from_index := _find_party_slot_by_id(unit_id)
+	if from_index != -1:
+		DungRun.party_ids[from_index] = occupant
+	elif occupant != "" and occupant == DungRun.leader_id:
+		DungRun.leader_id = unit_id
+	DungRun.party_ids[target_index] = unit_id
+	_ensure_default_leader()
+	_refresh_team_ui()
+	_refresh_roster_strip()
 
 # --- Колода ----------------------------------------------------------------
 
@@ -741,14 +755,14 @@ func _open_deck_editor(unit_id: String) -> void:
 		return
 	_deck_editor.open_for(unit_id)
 
-## Стартовая колода отряда: выбранные карты героинь + общие карты + эстус.
+## Стартовая колода отряда: выбранные карты героинь + общие карты.
 func _open_deck_preview() -> void:
 	var heroes: Array[Unit] = []
 	for id in DungRun.party_ids:
 		var data: CharacterData = CharDB.get_by_id(id) if id != "" else null
 		if data != null:
 			heroes.append(Unit.new(data, maxi(1, int(DungRun.party_level))))
-	_deck_preview.open("Стартовая колода", CardLibrary.base_deck(heroes, DungRun.estus_stacks))
+	_deck_preview.open("Стартовая колода", CardLibrary.base_deck(heroes))
 
 func _refresh_admin_panel() -> void:
 	if add_unit_in_roaster == null or delete_unit_in_roaster == null:

@@ -59,7 +59,6 @@ const EVENT_NPC_TEXTURES := {
 const EVENT_CHOICE_TEXTURES := {
 	"nurse_heal": "res://assets/pics/NPCs/nurse/choises/heal.png",
 	"nurse_revive": "res://assets/pics/NPCs/nurse/choises/revival.png",
-	"nurse_estus": "res://assets/pics/NPCs/nurse/choises/potion.png",
 }
 
 var _texture_cache: Dictionary = {}

@@ -11,7 +11,6 @@ signal finished
 ## Медсестра Ноктрис: одна платная услуга из трёх за заход.
 const NURSE_HEAL_PERCENT := 0.5
 const NURSE_REVIVE_PERCENT := 0.3
-const NURSE_ESTUS_PRICE := 30
 const NURSE_HEAL_PRICE := 25
 const NURSE_REVIVE_PRICE := 45
 
@@ -321,20 +320,9 @@ func _build_nurse() -> void:
 		_desc.text = "Ноктрис уже помогла отряду. Одна услуга за визит."
 		return
 	_desc.text = "Ноктрис окажет одну услугу на выбор."
-	var burned := int(battle.call("run_estus_burned"))
 	var gold := _gold()
-	_add_option("Восстановить заряды эстуса (сгорело: %d) — %d зол." % [burned, NURSE_ESTUS_PRICE], _on_nurse_estus, burned <= 0 or gold < NURSE_ESTUS_PRICE)
 	_add_option("Вылечить героиню на %d%% HP — %d зол." % [int(NURSE_HEAL_PERCENT * 100.0), NURSE_HEAL_PRICE], func() -> void: _pick_hero(false), not bool(battle.call("run_has_wounded")) or gold < NURSE_HEAL_PRICE)
 	_add_option("Воскресить героиню с %d%% HP — %d зол." % [int(NURSE_REVIVE_PERCENT * 100.0), NURSE_REVIVE_PRICE], func() -> void: _pick_hero(true), not bool(battle.call("run_has_dead")) or gold < NURSE_REVIVE_PRICE)
-
-func _on_nurse_estus() -> void:
-	if not bool(battle.call("run_spend_gold", NURSE_ESTUS_PRICE)):
-		_say("Не хватает золота.")
-		return
-	var n := int(battle.call("run_restore_estus"))
-	room["used"] = true
-	_rebuild()
-	_say("Ноктрис наполнила фляги: эстус +%d." % n)
 
 ## Выбор героини для лечения или воскрешения.
 func _pick_hero(revive: bool) -> void:

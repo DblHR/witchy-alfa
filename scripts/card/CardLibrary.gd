@@ -2,7 +2,7 @@ extends RefCounted
 class_name CardLibrary
 ## Доступ к картам. Сами карты — ресурсы CardDef в resources/cards/:
 ##   resources/cards/<герой>/*.tres — карты героя (подключены в CharacterData.card_pool / ult_card)
-##   resources/cards/common/*.tres  — общие карты (филлеры, эстус)
+##   resources/cards/common/*.tres  — общие карты (филлеры, приманка)
 ## Здесь только сборка экземпляров для боя и поиск по id. Каждый вызов создаёт НОВЫЕ экземпляры.
 ##
 ## Разметка в описаниях: [d]урон[/d] красным, [s]щит[/s] голубым, [h]лечение[/h] зелёным,
@@ -10,12 +10,10 @@ class_name CardLibrary
 
 const FILLER_STRIKE: CardDef = preload("res://resources/cards/common/filler_strike.tres")
 const FILLER_SHIELD: CardDef = preload("res://resources/cards/common/filler_shield.tres")
-const ESTUS: CardDef = preload("res://resources/cards/common/estus.tres")
 const LURE: CardDef = preload("res://resources/cards/common/lure.tres")
 const COLOR_LURE := Color(0.88, 0.36, 0.62, 1.0)
 
 const COLOR_FILLER := Color(0.45, 0.45, 0.50, 1.0)
-const COLOR_ESTUS := Color(0.86, 0.55, 0.16, 1.0)
 
 ## Экземпляр карты героя. owner — юнит (его характеристики идут в числа карты).
 static func hero_card(d: CardDef, owner: Unit) -> CardInstance:
@@ -84,14 +82,13 @@ static func hero_pool(owner: Unit) -> Array[CardInstance]:
 			out.append(c)
 	return out
 
-## Колода в начале боя без учёта забега: карты героев + общие карты + эстус.
-static func base_deck(heroes: Array[Unit], estus_stacks: int) -> Array[CardInstance]:
+## Колода в начале боя без учёта забега: карты героев + общие карты.
+static func base_deck(heroes: Array[Unit]) -> Array[CardInstance]:
 	var cards: Array[CardInstance] = []
 	for u in heroes:
 		if u != null and not u.is_dead:
 			cards.append_array(hero_deck(u))
 	cards.append_array(filler_cards(FILLER_ATTACK_COUNT, FILLER_SHIELD_COUNT))
-	cards.append_array(estus_cards(estus_stacks))
 	return cards
 
 ## Ульта героя. cost = энергия ульты героя (CharacterData.max_energy). null, если ульты нет.
@@ -110,13 +107,6 @@ static func filler_cards(attack_count: int, shield_count: int) -> Array[CardInst
 		out.append(CardInstance.from_def(FILLER_STRIKE, null, COLOR_FILLER, "Общая"))
 	for i in range(shield_count):
 		out.append(CardInstance.from_def(FILLER_SHIELD, null, COLOR_FILLER, "Общая"))
-	return out
-
-## Карты эстуса: по одной на стак, лечат DungRun.estus_power % макс. HP и сгорают до конца забега.
-static func estus_cards(stacks: int) -> Array[CardInstance]:
-	var out: Array[CardInstance] = []
-	for i in range(maxi(0, stacks)):
-		out.append(CardInstance.from_def(ESTUS, null, COLOR_ESTUS, "Эстус"))
 	return out
 
 ## Карта приманки (одна на забег, если её взяли в Setup и она есть в инвентаре).

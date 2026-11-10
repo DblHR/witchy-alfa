@@ -23,12 +23,6 @@ var pending_next_index: int = -1
 # session meta
 var gold: int = 0
 var xp: int = 0
-## Эстус (карточный бой): в начале каждого боя в колоду кладётся estus_stacks карт эстуса,
-## каждая лечит estus_power процентов макс. HP. Обе величины — прокачка, не сбрасываются.
-const ESTUS_BASE_STACKS := 2
-const ESTUS_BASE_POWER := CardBalance.ESTUS_BASE_PERCENT
-var estus_stacks: int = ESTUS_BASE_STACKS
-var estus_power: int = ESTUS_BASE_POWER
 
 var custom_potion_charges: int = 0
 var selected_potion_id: String = "heal_potion"
@@ -100,8 +94,6 @@ func reset_to_defaults() -> void:
 
 	gold = 0
 	xp = 0
-	estus_stacks = ESTUS_BASE_STACKS
-	estus_power = ESTUS_BASE_POWER
 	custom_potion_charges = 0
 	selected_potion_id = "heal_potion"
 	selected_potion_ids = ["", ""]
@@ -531,8 +523,6 @@ func serialize_state() -> Dictionary:
 		"party_state": party_state.duplicate(true),
 		"gold": gold,
 		"xp": xp,
-		"estus_stacks": estus_stacks,
-		"estus_power_pct": estus_power,
 		"custom_potion_charges": custom_potion_charges,
 		"selected_potion_id": selected_potion_id,
 		"selected_potion_ids": selected_potion_ids.duplicate(),
@@ -570,10 +560,6 @@ func apply_state(data: Dictionary) -> void:
 	party_state = Array(data.get("party_state", [])).duplicate(true)
 	gold = int(data.get("gold", gold))
 	xp = int(data.get("xp", xp))
-	# Старые сохранения хранили заряды эстуса автобаттлера (estus_charges) — они больше не значат ничего.
-	estus_stacks = maxi(0, int(data.get("estus_stacks", estus_stacks)))
-	# Старое сохранение хранило лечение числом («estus_power») — теперь это процент, берём новое поле.
-	estus_power = maxi(0, int(data.get("estus_power_pct", ESTUS_BASE_POWER)))
 	custom_potion_charges = int(data.get("custom_potion_charges", custom_potion_charges))
 	selected_potion_id = String(data.get("selected_potion_id", selected_potion_id))
 	selected_potion_ids.clear()

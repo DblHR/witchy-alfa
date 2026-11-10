@@ -5,13 +5,12 @@ class_name CardRunStats
 ## и сброшено, кого победили. Копится весь забег (все бои).
 ##
 ## Кто действует, CardCombat знает по combat.credit: id героини, «common» (общие карты),
-## «estus», «lure». Горение и прочие статусы запоминают, кто их наложил (s["src"]).
+## «lure». Горение и прочие статусы запоминают, кто их наложил (s["src"]).
 
 ## Особые «авторы» действий (не героини).
 const COMMON := "common"
-const ESTUS := "estus"
 const LURE := "lure"
-const NAMES := {COMMON: "Общие карты", ESTUS: "Эстус", LURE: "Приманка"}
+const NAMES := {COMMON: "Общие карты", LURE: "Приманка"}
 
 ## автор -> {dmg_card, dmg_effect, kills, heal, shield, shield_eff, played, ults}
 var actors: Dictionary = {}
@@ -28,7 +27,7 @@ var cards_played := 0
 var cards_discarded_turn := 0   ## не сыграны и ушли в сброс в конце хода
 var cards_discarded_effect := 0 ## сброшены картами («Влажный поцелуй»)
 var cards_sleeved := 0
-var cards_burned := 0           ## сгорели до конца забега (эстус, приманка)
+var cards_burned := 0           ## сгорели до конца забега (приманка)
 var potions: Array[String] = []
 var turns := 0
 var battles_won := 0
@@ -58,8 +57,6 @@ func _h(id: String) -> Dictionary:
 static func credit_for_card(card: CardInstance) -> String:
 	if card.owner_id != "":
 		return card.owner_id
-	if card.id == "estus":
-		return ESTUS
 	if card.id == "lure":
 		return LURE
 	return COMMON

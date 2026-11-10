@@ -125,6 +125,13 @@ static func card_theme() -> Theme:
 		_card_theme.default_font = f
 	return _card_theme
 
+func _ready() -> void:
+	for ch in get_children():
+		if ch is Label and ch.has_meta("want_rect"):
+			var r: Rect2 = ch.get_meta("want_rect")
+			(ch as Label).position = r.position
+			(ch as Label).size = r.size
+
 func setup(c: CardInstance, is_interactive: bool = true) -> void:
 	card = c
 	interactive = is_interactive
@@ -205,22 +212,58 @@ const TITLE_SIZES := [15, 14, 13, 12]
 const TITLE_WRAP_SIZE := 12
 const TITLE_LINE_H := 24.0
 
-## Название в верхней полосе рисунка: мельче и в пределах полосы (не залезает на картинку).
-const BAND_TITLE_SIZES := [15, 14, 13, 12, 11]
-const BAND_TITLE_WRAP_SIZE := 10
+## Название в верхней полосе рисунка: в одну строку, если влезает крупно (15–14), иначе —
+## в две строки читаемым шрифтом (13–11). Две строки чуть выходят за полосу вниз (до описания).
+const BAND_TITLE_SIZES := [15, 14]
+const BAND_TITLE_WRAP_SIZES := [13, 12, 11]
+const BAND_TITLE_WRAP_H := 37.0
+const BAND_TITLE_LINE_SPACING := -3
 
 func _make_title(text: String, pos: Vector2, width: float) -> Label:
-	var probe := Label.new()
-	var font := probe.get_theme_font("font")
-	probe.free()
+	var font: Font = card_theme().default_font
+	if font == null:
+		font = ThemeDB.fallback_font
 	var in_band := pos == TAG_TITLE_POS
-	var band_h := CARD_SIZE.y * HEADER_FRACTION - pos.y
-	for fs in (BAND_TITLE_SIZES if in_band else TITLE_SIZES):
+	if in_band:
+		return _make_band_title(text, font, pos, width)
+	for fs in TITLE_SIZES:
 		# запас на обводку текста
-		if font == null or font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x <= width - 10.0:
-			return _make_label(text, fs, pos, Vector2(width, band_h if in_band else TITLE_LINE_H))
-	var l := _make_label(text, BAND_TITLE_WRAP_SIZE if in_band else TITLE_WRAP_SIZE, pos, Vector2(width, band_h if in_band else TITLE_LINE_H + 14.0), true)
+		if font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x <= width - 10.0:
+			return _make_label(text, fs, pos, Vector2(width, TITLE_LINE_H))
+	var l := _make_label(text, TITLE_WRAP_SIZE, pos, Vector2(width, TITLE_LINE_H + 14.0), true)
 	l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	return l
+
+func _make_band_title(text: String, font: Font, pos: Vector2, width: float) -> Label:
+	var band_h := CARD_SIZE.y * HEADER_FRACTION - pos.y
+	for fs in BAND_TITLE_SIZES:
+		if font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x <= width - 12.0:
+			return _make_label(text, fs, pos, Vector2(width, band_h))
+	# Две строки: делим по пробелу так, чтобы строки были как можно ровнее, и берём самый
+	# крупный шрифт, при котором обе влезают. Одно длинное слово — мельче в одну строку.
+	var words := text.split(" ", false)
+	if words.size() < 2:
+		for fs in BAND_TITLE_WRAP_SIZES:
+			if font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x <= width - 8.0:
+				return _make_label(text, fs, pos, Vector2(width, band_h))
+		return _make_label(text, BAND_TITLE_WRAP_SIZES[-1], pos, Vector2(width, band_h))
+	var best := ""
+	var best_w := INF
+	for i in range(1, words.size()):
+		var top := " ".join(words.slice(0, i))
+		var bottom := " ".join(words.slice(i))
+		var w := maxf(font.get_string_size(top, HORIZONTAL_ALIGNMENT_LEFT, -1, 13).x, font.get_string_size(bottom, HORIZONTAL_ALIGNMENT_LEFT, -1, 13).x)
+		if w < best_w:
+			best_w = w
+			best = top + "\n" + bottom
+	var wrap_fs: int = BAND_TITLE_WRAP_SIZES[-1]
+	for fs in BAND_TITLE_WRAP_SIZES:
+		if best_w * float(fs) / 13.0 <= width - 8.0:
+			wrap_fs = fs
+			break
+	var l := _make_label(best, wrap_fs, Vector2(pos.x, 0.0), Vector2(width, BAND_TITLE_WRAP_H))
+	l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	l.add_theme_constant_override("line_spacing", BAND_TITLE_LINE_SPACING)
 	return l
 
 ## Ещё не полученная карта: только подложка, название и «Не получена».
@@ -538,12 +581,15 @@ func _make_label(text: String, font_size: int, pos: Vector2, label_size: Vector2
 	# Перенос включаем ДО текста и размера, иначе Label растягивается под всю строку.
 	if wrap:
 		l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	l.add_theme_font_size_override("font_size", font_size)
 	l.text = text
 	l.position = pos
 	l.size = label_size
+	# Карта собирается до входа в дерево: тогда Label меряет текст шрифтом по умолчанию (16)
+	# и раздувается — длинное название уезжало вбок. В дереве размер возвращаем (_ready).
+	l.set_meta("want_rect", Rect2(pos, label_size))
 	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	l.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	l.add_theme_font_size_override("font_size", font_size)
 	l.add_theme_color_override("font_color", Color.WHITE)
 	l.add_theme_color_override("font_outline_color", Color(0, 0, 0, 1))
 	l.add_theme_constant_override("outline_size", 4)

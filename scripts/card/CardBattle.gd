@@ -16,10 +16,10 @@ class_name CardBattle
 ##   CardUltSplash  — заставка ульты по центру экрана
 ##   CardRun        — генерация и состояние забега; окна забега — *Popup / EventScreen
 ##   enemies/       — враги: EnemyDef (ходы, фазы), EnemyMove, EnemyApi; реестр EnemyDefs
-##   CardBalance    — общие числа: рост от уровня, опыт, доверие, общие карты, эстус
+##   CardBalance    — общие числа: рост от уровня, опыт, доверие, общие карты
 ##
 ## Из общего состояния читается отряд из Setup (DungRun.party_ids / party_level /
-## party_slot_count) и эстус (DungRun.estus_stacks / estus_power).
+## party_slot_count).
 ## Опыт и доверие копятся за забег и начисляются только в конце (победа или поражение);
 ## выход из забега кнопкой «Выйти» их не даёт.
 ## Конец забега: FarmState_.advance_day() -> DungRun.on_run_finished_refresh_shops() -> хаб.
@@ -96,11 +96,9 @@ var _turn_no := 0
 ## Статистика забега для итогового окна (CardRunStats).
 var _stats := CardRunStats.new()
 ## Итоговая статистика скрыта (видно картинку победы/поражения).
-var _stats_hidden := false
+var _stats_hidden := true
 var _stats_panel: PanelContainer
 var _stats_toggle: Button
-## Награда за первую победу над боссом этажа.
-const FIRST_BOSS_ESTUS_BONUS := 1
 ## Пойманные приманкой за этот забег — строки для итога.
 var _captured_lines: PackedStringArray = []
 ## Слоты зелий на этот забег (id зелий; «» — пусто или уже выпито). Берутся из DungRun.selected_potion_ids.
@@ -447,9 +445,9 @@ func _start_room(index: int) -> void:
 	BattleBanter_.trigger("battle_start")
 	await _begin_player_turn()
 
-## Колода на бой: карты живых героев (выбранные в Setup), общие карты, эстус и добытые карты.
+## Колода на бой: карты живых героев (выбранные в Setup), общие карты и добытые карты.
 func _build_battle_deck() -> Array[CardInstance]:
-	var cards := CardLibrary.base_deck(left_team, DungRun.estus_stacks)
+	var cards := CardLibrary.base_deck(left_team)
 	for card_id in _run.bonus_cards:
 		var owner_id := CardLibrary.owner_of(card_id)
 		var owner := _combat.hero_by_id(owner_id)
@@ -886,7 +884,7 @@ func _on_end_turn_pressed() -> void:
 		return
 	_busy = true
 
-	# 1. Рука уходит в сброс (эстус в том числе — сгорает только сыгранный).
+	# 1. Рука уходит в сброс.
 	_stats.cards_discarded_turn += _hand_views.size()
 	_clear_hand_views()
 	_combat.end_player_turn()
@@ -895,9 +893,13 @@ func _on_end_turn_pressed() -> void:
 	refresh_run_hud()
 	await _wait(0.3)
 
-	# 2. Статусы начала хода врагов (Горение жжёт до их ударов).
+	# 2. Щиты врагов сгорают (держались весь ход игрока); статусы начала хода врагов
+	#    (Горение жжёт до их ударов).
 	_combat.enemy_phase = true
 	_float_stack.clear()
+	if SHIELD_EXPIRES_ON_NEW_TURN:
+		_combat.clear_side_shields(true)
+		_refresh_all_actors()
 	if _combat.enemy_turn_start():
 		_refresh_all_actors()
 		await _wait(0.5)
@@ -939,9 +941,9 @@ func _on_end_turn_pressed() -> void:
 	# 4. Конец раунда: длительные статусы теряют ход.
 	_combat.end_round()
 
-	# 5. Щиты сгорают, новый ход: энергия, новые намерения, новая рука.
+	# 5. Щиты героинь сгорают, новый ход: энергия, новые намерения, новая рука.
 	if SHIELD_EXPIRES_ON_NEW_TURN:
-		_combat.clear_shields()
+		_combat.clear_side_shields(false)
 	await _begin_player_turn()
 
 # --- Окончание боя -----------------------------------------------------------
@@ -1069,15 +1071,9 @@ func _finish_run(victory: bool, is_draw: bool) -> void:
 	_refresh_all_actors()
 	if victory:
 		_stats.battles_won += 1
-	var first_boss_win := false
 	if victory and String(_run.room(_room_index).get("kind", "")) == "boss" and UnitRoster_ != null:
-		first_boss_win = not UnitRoster_.boss_defeated(CardRun.BOSS_ID)
 		UnitRoster_.unlock_boss_once(CardRun.BOSS_ID)
 	var summary := _apply_run_progress()
-	# Первая победа над боссом этажа: +1 карта эстуса навсегда.
-	if first_boss_win:
-		DungRun.estus_stacks += FIRST_BOSS_ESTUS_BONUS
-		summary.append("Первая победа над Фуфу: эстус +%d карта (теперь %d)!" % [FIRST_BOSS_ESTUS_BONUS, DungRun.estus_stacks])
 	for line in _captured_lines:
 		summary.append(line)
 	_show_end_overlay(victory, is_draw)
@@ -1111,9 +1107,9 @@ func _apply_run_progress() -> PackedStringArray:
 	return lines
 
 ## Итог забега: панель со статистикой (CardRunStats) поверх картинки победы/поражения.
-## Кнопка «Скрыть статистику» убирает панель, чтобы посмотреть на картинку.
+## Сначала панель скрыта; кнопка под «КОНЧИТЬ» показывает/прячет её.
 const STATS_RECT := Rect2(60, 190, 1500, 860)
-const STATS_TOGGLE_RECT := Rect2(1593, 760, 288, 70)
+const STATS_TOGGLE_RECT := Rect2(1593, 760, 288, 91)
 
 func _show_run_summary(lines: PackedStringArray) -> void:
 	if _stats_panel == null:
@@ -1155,7 +1151,8 @@ func _show_run_summary(lines: PackedStringArray) -> void:
 	var label := _stats_panel.find_child("RunSummary", true, false) as RichTextLabel
 	var rooms := "Комнат пройдено: %d / %d" % [_room_index + (1 if _end_victory else 0), _run.total_rooms()]
 	label.text = _stats.to_bbcode(_relics, lines, DungRun.gold, rooms)
-	_set_stats_hidden(false)
+	# Сначала — только картинка победы/поражения; статистика по кнопке рядом с «КОНЧИТЬ».
+	_set_stats_hidden(true)
 
 func _set_stats_hidden(hidden: bool) -> void:
 	_stats_hidden = hidden
@@ -1431,7 +1428,7 @@ func refresh_run_hud() -> void:
 		return
 	if _progress != null:
 		_progress.setup(_run.total_rooms(), _room_index)
-	var text := "Золото: %d   Эстус: %d/%d" % [DungRun.gold, maxi(0, DungRun.estus_stacks - _run.burned_count("estus")), DungRun.estus_stacks]
+	var text := "Золото: %d" % DungRun.gold
 	_gold_label.text = text
 	if _buff_bar != null and _relics != null:
 		var all := _buff_entries()
@@ -1694,18 +1691,6 @@ func run_heroes() -> Array:
 		if u != null:
 			out.append({"id": u.data.id, "name": u.data.display_name, "hp": maxi(0, u.hp), "max_hp": u.max_hp, "dead": u.is_dead})
 	return out
-
-## Сгоревших за забег зарядов эстуса.
-func run_estus_burned() -> int:
-	return _run.burned_count("estus")
-
-## Вернуть все сгоревшие заряды эстуса. Возвращает, сколько вернулось.
-func run_restore_estus() -> int:
-	var n := _run.burned_count("estus")
-	while _run.burned_for_run.has("estus"):
-		_run.burned_for_run.erase("estus")
-	refresh_run_hud()
-	return n
 
 func run_heal_hero(hero_id: String, percent: float) -> void:
 	var u := _combat.hero_by_id(hero_id)

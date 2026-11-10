@@ -45,7 +45,7 @@ var intents: Dictionary = {}
 var enemy_phase := false
 ## Посох и еда забега (CardRelics): меняют урон карт героинь. null — без предметов.
 var relics: CardRelics = null
-## Статистика забега (CardRunStats) и «кто сейчас действует»: id героини / common / estus / lure.
+## Статистика забега (CardRunStats) и «кто сейчас действует»: id героини / common / lure.
 ## credit ставит play_card; статусы (Горение) запоминают автора и бьют от его имени.
 var stats: CardRunStats = null
 var credit := ""
@@ -299,6 +299,13 @@ func clear_shields() -> void:
 	shields.clear()
 	if stats != null:
 		stats.on_shields_cleared()
+
+## Щиты одной стороны сгорают: героинь — в начале хода игрока, врагов — в начале хода врагов
+## (так щит, поставленный врагом в свой ход, защищает его весь следующий ход игрока).
+func clear_side_shields(enemy_side: bool) -> void:
+	for u in (enemies if enemy_side else heroes):
+		if shields.has(u):
+			remove_shield(u)
 
 ## Снять весь щит с юнита (кислота, исчезновение врага).
 func remove_shield(unit: Unit) -> void:

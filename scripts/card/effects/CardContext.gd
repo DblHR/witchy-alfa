@@ -3,7 +3,7 @@ class_name CardContext
 ## Всё, что нужно эффекту при розыгрыше: бой, кто играет, по кому и какой картой.
 
 var combat: CardCombat
-var caster: Unit          ## владелец карты; null для общих карт и эстуса
+var caster: Unit          ## владелец карты; null для общих карт
 var targets: Array[Unit]  ## цели, выбранные при розыгрыше
 var card: CardInstance
 ## Карту разыгрывает очарованная героиня: стороны меняются (см. CardEffect._mirror_mode).
