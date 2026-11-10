@@ -14,12 +14,15 @@ signal sequence_finished
 
 # --- Раскладка (экран 1920×1080; на широком экране кадр по центру) -----------
 const FRAME := Vector2(1920, 1080)
-const BOX_RECT := Rect2(110, 792, 1700, 250)
-const TEXT_RECT := Rect2(170, 846, 1580, 170)
-const NAME_POS := Vector2(150, 752)
-const BUTTONS_RIGHT := 1800.0
-const BUTTONS_Y := 738.0
-const BUTTON_SIZE := Vector2(168, 46)
+## Тёмная полоса снизу во всю ширину (как в Helltaker): имя и текст по центру.
+const BAND_TOP := 730.0
+const BAND_FADE := 90.0           ## мягкий переход от картинки к полосе
+const NAME_RECT := Rect2(160, 742, 1600, 50)
+const TEXT_RECT := Rect2(260, 800, 1400, 170)
+const ARROW_POS := Vector2(960, 990)
+const BUTTONS_RIGHT := 1890.0
+const BUTTONS_Y := 1022.0
+const BUTTON_SIZE := Vector2(140, 40)
 ## Центры мест для 1, 2 и 3 персонажей.
 const SLOT_X := {1: [960.0], 2: [480.0, 1440.0], 3: [340.0, 960.0, 1580.0]}
 const SLOT_NAMES := {"left": 0, "center": 1, "right": 2}
@@ -28,7 +31,7 @@ const SHRINK_FOR_THREE := 0.84
 
 # --- Текст и поведение ---------------------------------------------------------
 const TEXT_SIZE := 34
-const NAME_SIZE := 30
+const NAME_SIZE := 34
 const CHARS_PER_SEC := 70.0
 const AUTO_BASE_DELAY := 1.1       ## пауза после допечатки в режиме «Авто»
 const AUTO_PER_CHAR := 0.035
@@ -36,9 +39,9 @@ const DIM_INACTIVE := Color(0.58, 0.55, 0.64)
 const INACTIVE_SCALE := 0.965
 const FADE_TIME := 0.28
 
-const BOX_BG := Color(0.11, 0.05, 0.15, 0.92)
+const BAND_COLOR := Color(0.025, 0.012, 0.05, 1.0)
 const BOX_BORDER := Color(1.0, 0.80, 0.90, 0.55)
-const BTN_BG := Color(0.24, 0.12, 0.30, 0.95)
+const BTN_BG := Color(0.14, 0.07, 0.19, 0.9)
 const BTN_HOVER := Color(0.42, 0.20, 0.46, 1.0)
 const BTN_ON := Color(0.80, 0.30, 0.56, 1.0)
 
@@ -47,8 +50,7 @@ const BTN_ON := Color(0.80, 0.30, 0.56, 1.0)
 var _frame: Control          ## кадр 1920×1080
 var _stage: Control          ## портреты
 var _ui: Control             ## окно текста, имя, кнопки
-var _box: Panel
-var _name_plate: PanelContainer
+var _band: Control
 var _name_label: Label
 var _text: Label
 var _arrow: Label
@@ -100,47 +102,42 @@ func _build() -> void:
 	_stage.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_frame.add_child(_stage)
 
-	# Мягкое затемнение снизу: портреты уходят в тень за окном текста.
+	# Полоса: сверху мягкий переход в тёмное, дальше сплошной цвет до низа экрана.
 	var grad := Gradient.new()
-	grad.set_color(0, Color(0.06, 0.02, 0.10, 0.0))
-	grad.set_color(1, Color(0.06, 0.02, 0.10, 0.97))
-	grad.add_point(0.55, Color(0.06, 0.02, 0.10, 0.93))   # низ портретов тонет в тени до края картинки
+	grad.set_color(0, Color(BAND_COLOR.r, BAND_COLOR.g, BAND_COLOR.b, 0.0))
+	grad.set_color(1, BAND_COLOR)
 	var gt := GradientTexture2D.new()
 	gt.gradient = grad
 	gt.fill_from = Vector2(0, 0)
 	gt.fill_to = Vector2(0, 1)
-	var shade := TextureRect.new()
-	shade.texture = gt
-	shade.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	shade.stretch_mode = TextureRect.STRETCH_SCALE
-	shade.position = Vector2(-2000, 640)
-	shade.size = Vector2(FRAME.x + 4000, 440)
-	shade.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_frame.add_child(shade)
+	_band = Control.new()
+	_band.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_frame.add_child(_band)
+	var fade := TextureRect.new()
+	fade.texture = gt
+	fade.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	fade.stretch_mode = TextureRect.STRETCH_SCALE
+	fade.position = Vector2(-2000, BAND_TOP - BAND_FADE)
+	fade.size = Vector2(FRAME.x + 4000, BAND_FADE)
+	fade.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_band.add_child(fade)
+	var solid := ColorRect.new()
+	solid.color = BAND_COLOR
+	solid.position = Vector2(-2000, BAND_TOP)
+	solid.size = Vector2(FRAME.x + 4000, FRAME.y - BAND_TOP + 600)
+	solid.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_band.add_child(solid)
 
 	_ui = Control.new()
 	_ui.size = FRAME
 	_ui.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_frame.add_child(_ui)
 
-	_box = Panel.new()
-	_box.position = BOX_RECT.position
-	_box.size = BOX_RECT.size
-	_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var sb := StyleBoxFlat.new()
-	sb.bg_color = BOX_BG
-	sb.set_corner_radius_all(28)
-	sb.set_border_width_all(2)
-	sb.border_color = BOX_BORDER
-	sb.shadow_color = Color(0, 0, 0, 0.45)
-	sb.shadow_size = 14
-	_box.add_theme_stylebox_override("panel", sb)
-	_ui.add_child(_box)
-
 	_text = Label.new()
 	_text.position = TEXT_RECT.position
 	_text.size = TEXT_RECT.size
 	_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_text.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_text.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_text.add_theme_font_size_override("font_size", TEXT_SIZE)
 	_text.add_theme_constant_override("line_spacing", 8)
@@ -151,24 +148,23 @@ func _build() -> void:
 	_text.add_theme_constant_override("outline_size", 0)
 	_ui.add_child(_text)
 
-	_name_plate = PanelContainer.new()
-	_name_plate.position = NAME_POS
-	_name_plate.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_ui.add_child(_name_plate)
 	_name_label = Label.new()
+	_name_label.position = NAME_RECT.position
+	_name_label.size = NAME_RECT.size
+	_name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_name_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_name_label.add_theme_font_size_override("font_size", NAME_SIZE)
-	_name_label.add_theme_color_override("font_color", Color.WHITE)
-	_name_label.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.55))
-	_name_label.add_theme_constant_override("outline_size", 4)
-	_name_plate.add_child(_name_label)
+	_name_label.add_theme_constant_override("outline_size", 0)
+	_ui.add_child(_name_label)
 
 	_arrow = Label.new()
-	_arrow.text = "▼"
+	_arrow.text = "◆"
 	_arrow.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_arrow.add_theme_font_size_override("font_size", 26)
 	_arrow.add_theme_color_override("font_color", Color(1.0, 0.82, 0.92))
-	_arrow.position = Vector2(BOX_RECT.end.x - 62, BOX_RECT.end.y - 56)
+	_arrow.size = Vector2(60, 36)
+	_arrow.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_arrow.position = ARROW_POS - Vector2(30, 0)
 	_ui.add_child(_arrow)
 
 	var defs := [["skip", "Пропустить"], ["auto", "Авто"], ["log", "История"], ["hide", "Скрыть"]]
@@ -217,8 +213,8 @@ func _make_button(text: String) -> Button:
 	b.pivot_offset = BUTTON_SIZE * 0.5
 	b.focus_mode = Control.FOCUS_NONE
 	b.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-	b.add_theme_font_size_override("font_size", 20)
-	b.add_theme_color_override("font_color", Color(1, 0.95, 0.98))
+	b.add_theme_font_size_override("font_size", 18)
+	b.add_theme_color_override("font_color", Color(1, 0.95, 0.98, 0.85))
 	b.add_theme_color_override("font_hover_color", Color.WHITE)
 	b.add_theme_color_override("font_pressed_color", Color.WHITE)
 	b.add_theme_stylebox_override("normal", _button_style(BTN_BG))
@@ -374,19 +370,10 @@ func _apply_line(line) -> void:
 	_show_characters(_unique_characters(characters), active)
 
 	var color := VnPortraits.name_color(active)
-	_name_label.text = speaker
-	_name_plate.visible = speaker != ""
-	var ns := StyleBoxFlat.new()
-	ns.bg_color = Color(color.r * 0.85, color.g * 0.85, color.b * 0.85, 0.97)
-	ns.set_corner_radius_all(18)
-	ns.set_border_width_all(2)
-	ns.border_color = Color(1, 1, 1, 0.55)
-	ns.content_margin_left = 26
-	ns.content_margin_right = 26
-	ns.content_margin_top = 6
-	ns.content_margin_bottom = 8
-	_name_plate.add_theme_stylebox_override("panel", ns)
-	_name_plate.reset_size()
+	var name_col := color.lightened(0.35)
+	_name_label.text = ("•  %s  •" % speaker) if speaker != "" else ""
+	_name_label.add_theme_color_override("font_color", name_col)
+	_arrow.add_theme_color_override("font_color", name_col)
 
 	_text.text = body
 	_text.visible_characters = 0
@@ -417,7 +404,7 @@ func _process(delta: float) -> void:
 		if int(_shown) >= _text.get_total_character_count():
 			_finish_typing()
 	if _arrow.visible:
-		_arrow.position.y = BOX_RECT.end.y - 56 + sin(_time * 5.0) * 4.0
+		_arrow.modulate.a = 0.55 + 0.45 * sin(_time * 4.0)
 
 # --- Портреты -----------------------------------------------------------------
 
@@ -600,4 +587,5 @@ func _set_ui_hidden(hidden: bool) -> void:
 	_ui_hidden = hidden
 	if _ui != null:
 		_ui.visible = not hidden
+		_band.visible = not hidden
 		_hidden_hint.visible = hidden
