@@ -4,7 +4,6 @@
 [ext_resource type="Script" path="res://scripts/card/effects/EffApplyStatus.gd" id="2_6ihy1"]
 [ext_resource type="Script" path="res://scripts/card/effects/EffDamage.gd" id="3_6ihy1"]
 [ext_resource type="Script" path="res://scripts/card/data/CardDef.gd" id="4_fe5ij"]
-[ext_resource type="Script" path="res://scripts/card/effects/EffHalveStatus.gd" id="4_h8g2h"]
 
 [sub_resource type="Resource" id="Resource_fe5ij"]
 script = ExtResource("2_6ihy1")
@@ -16,10 +15,7 @@ script = ExtResource("3_6ihy1")
 atk_ratio = 0.3
 stack_status = "nazhim"
 stack_mode = 1
-
-[sub_resource type="Resource" id="Resource_pyyu2"]
-script = ExtResource("4_h8g2h")
-status = "nazhim"
+consume_stacks = true
 
 [resource]
 script = ExtResource("4_fe5ij")
@@ -28,5 +24,5 @@ title = "Повалить"
 cost = 0
 tags = PackedStringArray("attack")
 description = "[e]+{0} Нажима[/e] переднему, затем [d]{1}[/d] урона за каждый Нажим.
-Снимает половину Нажима."
-effects = Array[ExtResource("1_ni43a")]([SubResource("Resource_fe5ij"), SubResource("Resource_cq1nb"), SubResource("Resource_pyyu2")])
+Снимает весь Нажим."
+effects = Array[ExtResource("1_ni43a")]([SubResource("Resource_fe5ij"), SubResource("Resource_cq1nb")])

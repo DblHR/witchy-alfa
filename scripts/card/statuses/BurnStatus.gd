@@ -2,10 +2,13 @@ extends CardStatus
 class_name BurnStatus
 ## Горение: в начале хода врагов наносит урон = стаки × урон за стак и теряет ход длительности.
 ## Урон за стак не зависит от характеристик — только от уровня отряда (CardBalance.burn_per_stack).
-## Сила копится, длительность берётся максимальная.
+## Сила копится (не больше MAX_STACKS), длительность берётся максимальная.
+
+const MAX_STACKS := 5
 
 func _init() -> void:
 	super("burn", "Горение", Kind.STACKS_DURATION, Color(1.0, 0.6, 0.3))
+	max_stacks = MAX_STACKS
 
 static func damage_of(s: Dictionary) -> int:
 	return int(s["stacks"]) * CardBalance.burn_per_stack()

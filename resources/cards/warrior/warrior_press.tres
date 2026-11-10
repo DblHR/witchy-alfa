@@ -12,7 +12,7 @@ stacks = 2
 [sub_resource type="Resource" id="Resource_j2o1l"]
 script = ExtResource("2_vmpmn")
 status = "vuln"
-turns = 2
+turns = 1
 
 [resource]
 script = ExtResource("4_48s1c")
@@ -20,5 +20,5 @@ id = "warrior_press"
 title = "Прижать к стене"
 tags = PackedStringArray("support")
 description = "[e]+{0} Нажима[/e] переднему.
-[e]Уязвимость[/e] на {1b} хода."
+[e]Уязвимость[/e] на {1b} ход."
 effects = Array[ExtResource("1_j2o1l")]([SubResource("Resource_brb86"), SubResource("Resource_j2o1l")])

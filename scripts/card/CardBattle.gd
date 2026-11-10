@@ -429,6 +429,7 @@ func _start_room(index: int) -> void:
 		return
 	if String(room.get("kind", "")) == "quest":
 		await _play_quest_intro(room)
+		_quest_add_hero("warrior")
 
 	_set_battle_ui(true)
 	_room_loot = {"gold": 0, "xp": 0, "items": {}}
@@ -1587,6 +1588,23 @@ func _play_quest_intro(room: Dictionary) -> void:
 			break
 	if StoryState_ != null:
 		StoryState_.mark_dialogue_seen("find_warrior_room_intro")
+
+## Героиня квеста встаёт в отряд (впереди) с этого боя и до конца забега: её карты в колоде, ульта в колонке.
+func _quest_add_hero(hero_id: String) -> void:
+	if _combat.hero_by_id(hero_id) != null or left_team.size() >= _left_world_slots.size():
+		return
+	var unit := _make_unit(hero_id, maxi(1, DungRun.party_level))
+	if unit == null:
+		return
+	left_team.append(unit)
+	if unit.data.card_passive != null:
+		unit.data.card_passive.attach(_combat, unit)
+	var charges: Dictionary = _ults._charge.duplicate()
+	_ults.build(left_team)
+	for k in charges:
+		_ults._charge[k] = charges[k]
+	_ults.refresh()
+	CardDragPortrait.warm_up(unit.data)
 
 ## Бой квестовой комнаты закончился (победа или поражение): воин найден — сценка в хабе после забега.
 func _finish_quest_room(room: Dictionary) -> void:

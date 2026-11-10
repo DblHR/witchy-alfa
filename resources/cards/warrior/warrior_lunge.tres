@@ -10,7 +10,7 @@ script = ExtResource("2_7thfn")
 atk_ratio = 0.35
 stack_status = "nazhim"
 stack_mode = 2
-bonus_atk_ratio = 0.3
+bonus_atk_ratio = 0.075
 
 [sub_resource type="Resource" id="Resource_7thfn"]
 script = ExtResource("3_uundi")

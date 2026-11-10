@@ -14,6 +14,6 @@ title = "Кульминация"
 cost = 0
 target = 1
 tags = PackedStringArray("attack")
-description = "Горящие враги сразу получают урон горения × оставшиеся ходы.
+description = "Горящие враги сразу получают урон горения × оставшиеся ходы и теряют половину стаков.
 Негорящим — [e]Горение {0}[/e] ({0b} хода)."
 effects = Array[ExtResource("1_lyh05")]([SubResource("Resource_lyh05")])

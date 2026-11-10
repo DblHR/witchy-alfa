@@ -7,7 +7,7 @@
 
 [sub_resource type="Resource" id="Resource_t53di"]
 script = ExtResource("2_g86ps")
-atk_ratio = 0.25
+atk_ratio = 0.4
 
 [sub_resource type="Resource" id="Resource_yylpy"]
 script = ExtResource("3_rvklp")

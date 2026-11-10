@@ -1,7 +1,8 @@
 extends CardEffect
 class_name EffBurnClimax
 ## «Кульминация» (ульта ведьмочки): горящий враг сразу получает весь урон, который горение
-## ещё нанесло бы — урон за ход × оставшиеся ходы (горение не снимается).
+## ещё нанесло бы — урон за ход × оставшиеся ходы, и теряет половину стаков горения
+## (округление вниз: 1 стак остаётся).
 ## На негорящего врага накладывается Горение stacks на turns ходов.
 
 @export var stacks: int = 3
@@ -21,8 +22,11 @@ func _apply_one(ctx: CardContext, target: Unit) -> void:
 		var s: Dictionary = ctx.combat.statuses[target][CardStatuses.BURN]
 		var dmg := BurnStatus.damage_of(s) * maxi(1, int(s["turns"]))
 		ctx.combat.deal_damage(ctx.caster, target, dmg, true)
+		var n := ctx.combat.stacks(target, CardStatuses.BURN)
+		if n >= 2 and CardCombat.is_alive(target):
+			ctx.combat.remove_stacks(target, CardStatuses.BURN, n / 2)
 	else:
 		ctx.combat.add_status(target, CardStatuses.BURN, stacks, turns)
 
 func describe(_caster: Unit, card_target: CardInstance.Target) -> String:
-	return "Горящие %s получают урон горения × оставшиеся ходы; остальным [e]Горение %d[/e] (%d х.)." % [target_phrase(card_target), stacks, turns]
+	return "Горящие %s получают урон горения × оставшиеся ходы и теряют половину стаков; остальным [e]Горение %d[/e] (%d х.)." % [target_phrase(card_target), stacks, turns]
