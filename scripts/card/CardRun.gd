@@ -22,6 +22,8 @@ const FLOOR := 1
 ## Шансы (как в старом забеге): 70% бой, 30% ивент; ивенты поровну.
 const BATTLE_CHANCE := 0.70
 const EVENT_WEIGHTS := {"chest": 25, "statue": 25, "shop": 25, "nurse": 25}
+## С какого уровня отряда встречается ивент-комната (до этого на её месте — бой).
+const EVENT_MIN_LEVEL := {"chest": 2, "shop": 4, "nurse": 6, "statue": 6}
 
 ## Элитная комната (слизнедевочка ранга A + слизень): шанс среди боёв, не раньше этой комнаты.
 const ELITE_CHANCE := 0.25
@@ -89,14 +91,32 @@ func make_room(i: int) -> Dictionary:
 		return _battle_room(0, n)
 	if i == n - 1:
 		return {"kind": "boss", "event": "", "boss": true, "enemies": [EnemyDefs.FLOOR1_BOSS], "used": false}
+	var events := unlocked_events()
 	if i == n - 2:
-		# Перед боссом всегда безопасная комната: лавка или медсестра.
-		return _event_room("shop" if rng.randf() < 0.5 else "nurse")
-	if rng.randf() < BATTLE_CHANCE:
+		# Перед боссом безопасная комната: лавка или медсестра (что открыто); иначе любая открытая, иначе бой.
+		var safe: Array[String] = []
+		for id in ["shop", "nurse"]:
+			if events.has(id):
+				safe.append(id)
+		if not safe.is_empty():
+			return _event_room(safe[rng.randi_range(0, safe.size() - 1)])
+		if not events.is_empty():
+			return _event_room(_pick_weighted(events))
+		return _battle_room(i, n)
+	if rng.randf() < BATTLE_CHANCE or events.is_empty():
 		if i >= ELITE_FROM_ROOM and _elites < ELITE_MAX and rng.randf() < ELITE_CHANCE:
 			return _elite_room()
 		return _battle_room(i, n)
-	return _event_room(_pick_weighted(EVENT_WEIGHTS))
+	return _event_room(_pick_weighted(events))
+
+## Ивенты, открытые на текущем уровне отряда: {id: вес}.
+static func unlocked_events() -> Dictionary:
+	var lvl := maxi(1, int(DungRun.party_level)) if DungRun != null else 99
+	var out := {}
+	for id in EVENT_WEIGHTS:
+		if lvl >= int(EVENT_MIN_LEVEL.get(id, 1)):
+			out[id] = EVENT_WEIGHTS[id]
+	return out
 
 func _pick_weighted(weights: Dictionary) -> String:
 	var total := 0

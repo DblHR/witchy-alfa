@@ -13,14 +13,14 @@ class_name FarmLayout
 ## Горшки нарисованы снизу вверх, поэтому растение рисуется ПОЗАДИ горшка и растёт из-за ободка.
 
 const SLOTS := [
-	{"anchor": Vector2(250, 78),   "scale": 0.88,  "plant_mult": 0.30, "shadow": false, "bag_t": 0.40},
-	{"anchor": Vector2(440, 152),  "scale": 0.978, "plant_mult": 0.50, "shadow": false, "bag_t": 0.15},
-	{"anchor": Vector2(104, 832),  "scale": 0.666, "plant_mult": 1.00, "shadow": true,  "bag_t": 0.55},
-	{"anchor": Vector2(479, 805),  "scale": 0.834, "plant_mult": 1.00, "shadow": true,  "bag_t": 0.55},
-	{"anchor": Vector2(712, 909),  "scale": 0.660, "plant_mult": 1.00, "shadow": true,  "bag_t": 0.55},
-	{"anchor": Vector2(1777, 835), "scale": 0.901, "plant_mult": 1.00, "shadow": false, "bag_t": 0.55},
-	{"anchor": Vector2(1818, 361), "scale": 0.564, "plant_mult": 0.75, "shadow": false, "bag_t": 0.22},
-	{"anchor": Vector2(1538, 374), "scale": 0.688, "plant_mult": 0.85, "shadow": false, "bag_t": 0.55},
+	{"anchor": Vector2(255, 97),   "scale": 1.00,  "plant_mult": 0.30, "shadow": false, "bag_t": 0.22},
+	{"anchor": Vector2(475, 178),  "scale": 0.85,  "plant_mult": 0.50, "shadow": false, "bag_t": 0.15},
+	{"anchor": Vector2(112, 827),  "scale": 0.78,  "plant_mult": 1.00, "shadow": false, "bag_t": 0.45},
+	{"anchor": Vector2(454, 866),  "scale": 0.984, "plant_mult": 1.00, "shadow": false, "bag_t": 0.35},
+	{"anchor": Vector2(714, 933),  "scale": 0.88,  "plant_mult": 1.00, "shadow": false, "bag_t": 0.45},
+	{"anchor": Vector2(1764, 928), "scale": 1.05,  "plant_mult": 1.00, "shadow": false, "bag_t": 0.30},
+	{"anchor": Vector2(1830, 303), "scale": 0.70,  "plant_mult": 0.75, "shadow": false, "bag_t": 0.30},
+	{"anchor": Vector2(1556, 347), "scale": 0.94,  "plant_mult": 0.85, "shadow": false, "bag_t": 0.55},
 ]
 
 ## Точка роста в пикселях текстуры горшка (где стебель выходит из-за ободка).

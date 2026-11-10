@@ -321,6 +321,9 @@ func buy_ground_shop_item(slot_idx: int) -> String:
 
 func on_run_finished_refresh_shops() -> void:
 	refresh_ground_shop(true)
+	# Новый день: Рикка снова поздоровается.
+	if StoryState_ != null:
+		StoryState_.set_flag("rikka_greeted_today", false)
 
 ## Опыт до следующего уровня (CardBalance: ~28 забегов на 10 уровней, как доверие).
 func xp_to_next_level(level: int = party_level) -> int:

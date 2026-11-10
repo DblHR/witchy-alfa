@@ -1080,11 +1080,18 @@ func _finish_run(victory: bool, is_draw: bool) -> void:
 		_stats.battles_won += 1
 	if victory and String(_run.room(_room_index).get("kind", "")) == "boss" and UnitRoster_ != null:
 		UnitRoster_.unlock_boss_once(CardRun.BOSS_ID)
+	var level_before := maxi(1, DungRun.party_level)
+	var xp_before := int(DungRun.xp)
 	var summary := _apply_run_progress()
 	for line in _captured_lines:
 		summary.append(line)
 	_show_end_overlay(victory, is_draw)
 	_show_run_summary(summary)
+	# Полоска опыта поверх картинки: проявляется, заполняется и гаснет.
+	var xp_bar := CardXpBar.new()
+	xp_bar.position = Vector2((1920.0 - CardXpBar.PANEL_SIZE.x) * 0.5, 36)
+	end_overlay.add_child(xp_bar)
+	xp_bar.play(level_before, xp_before, _run.xp_gained, _run.floor_no)
 
 ## Конец забега (победа или поражение): опыт отряду и доверие героиням из отряда.
 ## Возвращает строки итога для экрана конца.

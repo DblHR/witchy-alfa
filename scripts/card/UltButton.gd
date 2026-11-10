@@ -275,7 +275,8 @@ func _on_hover(inside: bool) -> void:
 
 func _process(delta: float) -> void:
 	_time += delta
-	var target := clampf(float(charge) / float(max_charge), 0.0, 1.0)
+	# Павшая героиня: кольцо пустое и не двигается.
+	var target := clampf(float(charge) / float(max_charge), 0.0, 1.0) if alive else 0.0
 	_shown_ratio = move_toward(_shown_ratio, target, FILL_SPEED * delta)
 	if _burst_pending and _shown_ratio >= target:
 		_burst_pending = false

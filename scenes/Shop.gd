@@ -1,6 +1,8 @@
 extends Control
 
 const GRID_SLOT_COUNT := 6
+## Рикка уже поздоровалась сегодня (сбрасывается после забега — DungRun.on_run_finished_refresh_shops).
+const GREETED_FLAG := "rikka_greeted_today"
 
 @onready var gold_label: Label = %GoldLabel
 @onready var seed_label: Label = %SeedLabel
@@ -32,11 +34,16 @@ func _show_rabbit_shop_greeting() -> void:
 	_pending_shop_dialogue = {}
 	if StoryDialogueDB_ == null or DialogueManager_ == null:
 		return
+	# Сюжетные диалоги (квесты) — всегда; обычное приветствие — раз в день (день = забег).
 	_pending_shop_dialogue = StoryDialogueDB_.pick_npc_dialogue("rabbit_shop", "event")
 	if _pending_shop_dialogue.is_empty():
+		if StoryState_ != null and StoryState_.has_flag(GREETED_FLAG):
+			return
 		_pending_shop_dialogue = StoryDialogueDB_.pick_npc_dialogue("rabbit_shop", "flag")
 	if _pending_shop_dialogue.is_empty():
 		return
+	if StoryState_ != null:
+		StoryState_.set_flag(GREETED_FLAG, true)
 	var lines := StoryDialogueDB_.resolve_lines(_pending_shop_dialogue)
 	if lines.is_empty():
 		return
@@ -51,46 +58,26 @@ func _on_rabbit_shop_dialogue_finished() -> void:
 	_pending_shop_dialogue = {}
 	_refresh()
 
+## Лавка в том же виде, что и у Сессилии (ShopUi): заголовок, описание, карточки товара.
 func _build_stock_grid() -> void:
-	for child in stock_grid.get_children():
-		child.queue_free()
-	for i in range(GRID_SLOT_COUNT):
-		var button := Button.new()
-		button.custom_minimum_size = Vector2(220, 250)
-		button.clip_contents = true
-		button.pressed.connect(_on_stock_pressed.bind(i))
-		stock_grid.add_child(button)
-		var box := VBoxContainer.new()
-		box.name = "Content"
-		box.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		box.anchors_preset = Control.PRESET_FULL_RECT
-		box.offset_left = 12
-		box.offset_top = 12
-		box.offset_right = -12
-		box.offset_bottom = -12
-		box.alignment = BoxContainer.ALIGNMENT_CENTER
-		box.add_theme_constant_override("separation", 8)
-		button.add_child(box)
-		var icon := TextureRect.new()
-		icon.name = "Icon"
-		icon.custom_minimum_size = Vector2(100, 100)
-		icon.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
-		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		box.add_child(icon)
-		var title := Label.new()
-		title.name = "Title"
-		title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		title.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		title.add_theme_font_size_override("font_size", 20)
-		box.add_child(title)
-		var price := Label.new()
-		price.name = "Price"
-		price.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		price.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		price.add_theme_font_size_override("font_size", 22)
-		box.add_child(price)
+	var title := $Panel/Title as Label
+	title.text = "Лавка Рикки"
+	title.global_position = ShopUi.TITLE_RECT.position
+	title.size = ShopUi.TITLE_RECT.size
+	ShopUi.style_title(title)
+	info_label.global_position = ShopUi.DESC_RECT.position
+	info_label.size = ShopUi.DESC_RECT.size
+	ShopUi.style_text(info_label, 28)
+	seed_label.global_position = ShopUi.NOTE_RECT.position
+	seed_label.size = ShopUi.NOTE_RECT.size
+	ShopUi.style_text(seed_label, 22)
+	seed_label.vertical_alignment = VERTICAL_ALIGNMENT_BOTTOM
+	gold_label.global_position = ShopUi.COIN_TEXT_POS
+	ShopUi.style_gold(gold_label)
+	stock_grid.global_position = ShopUi.GRID_POS
+	stock_grid.columns = 3
+	stock_grid.add_theme_constant_override("h_separation", ShopUi.CARD_GAP)
+	stock_grid.add_theme_constant_override("v_separation", ShopUi.CARD_GAP)
 
 func _on_stock_pressed(slot_idx: int) -> void:
 	var item_id := DungRun.buy_ground_shop_item(slot_idx)
@@ -100,32 +87,26 @@ func _on_stock_pressed(slot_idx: int) -> void:
 	_refresh("Куплено: %s" % RunItems.get_item_name(item_id))
 
 func _refresh(message: String = "") -> void:
-	gold_label.text = "Золото: %d" % DungRun.gold
-	seed_label.text = "Кварц: %d | Открыто рецептов еды: %d из %d" % [Inventory_.get_item_count("quartz"), DungRun.known_recipes.size(), DungRun.known_recipes.size() + AlchemyDB.unknown_recipe_items().size()]
-	info_label.text = "Лавка Рикки: кварц и семена всегда, плюс еда, обычные посохи, рецепты и ингредиенты для еды. Товар обновляется после каждого забега."
+	gold_label.text = "%d" % DungRun.gold
+	info_label.text = "Кварц и семена есть всегда; ещё еда, обычные посохи, рецепты и ингредиенты. Товар обновляется после каждого забега."
 	if StoryState_ != null and StoryState_.is_quest_active("find_warrior"):
-		info_label.text += "\n\nКвест «Пропавший воин»: в одной из первых комнат подземелья его можно найти."
-	if message != "":
-		info_label.text += "\n\n" + message
-	for i in range(min(stock_grid.get_child_count(), DungRun.ground_shop_item_ids.size())):
-		var button := stock_grid.get_child(i) as Button
+		info_label.text += "\nКвест «Пропавший воин»: ищите его в первых комнатах подземелья."
+	var note := "Кварц: %d · рецептов еды открыто: %d из %d" % [Inventory_.get_item_count("quartz"), DungRun.known_recipes.size(), DungRun.known_recipes.size() + AlchemyDB.unknown_recipe_items().size()]
+	seed_label.text = message if message != "" else note
+	for child in stock_grid.get_children():
+		stock_grid.remove_child(child)
+		child.queue_free()
+	for i in range(mini(GRID_SLOT_COUNT, DungRun.ground_shop_item_ids.size())):
 		var item_id := DungRun.ground_shop_item_ids[i]
+		var card: Button
 		if item_id == "":
-			_populate_shop_card(button, "", null, 0, "", true)
-			continue
-		var price := RunItems.get_item_price(item_id)
-		var disabled := DungRun.gold < price
-		if RunItems.is_unique_item(item_id) and Inventory_ != null and Inventory_.has_item(item_id):
-			disabled = true
-		_populate_shop_card(button, RunItems.get_item_name(item_id), Inventory_.get_item_icon(item_id), price, "%s\n[%s]\n%s" % [RunItems.get_item_name(item_id), RunItems.get_item_kind_label(item_id), RunItems.get_item_desc(item_id)], disabled)
-
-func _populate_shop_card(button: Button, title_text: String, icon_tex: Texture2D, price: int, tooltip: String, disabled: bool) -> void:
-	var box := button.get_node("Content") as VBoxContainer
-	var icon := box.get_node("Icon") as TextureRect
-	var title := box.get_node("Title") as Label
-	var price_label := box.get_node("Price") as Label
-	button.tooltip_text = tooltip
-	button.disabled = disabled
-	icon.texture = icon_tex
-	title.text = "Пусто" if title_text == "" else title_text
-	price_label.text = "" if title_text == "" else "%dg" % price
+			card = ShopUi.make_item_card(null, "", 1, 0, "", "sold")
+		else:
+			var price := RunItems.get_item_price(item_id)
+			var state := "poor" if DungRun.gold < price else ""
+			if RunItems.is_unique_item(item_id) and Inventory_ != null and Inventory_.has_item(item_id):
+				state = "sold"
+			card = ShopUi.make_item_card(Inventory_.get_item_icon(item_id), RunItems.get_item_name(item_id), 1, price,
+				"%s [%s]\n%s" % [RunItems.get_item_name(item_id), RunItems.get_item_kind_label(item_id), RunItems.get_item_desc(item_id)], state)
+			card.pressed.connect(_on_stock_pressed.bind(i))
+		stock_grid.add_child(card)

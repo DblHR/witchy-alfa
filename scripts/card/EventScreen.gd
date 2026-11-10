@@ -23,14 +23,14 @@ const STATUE_RECT := Rect2(1097, 306, 660, 800)
 const SHOP_CARD_ZOOM := 1.4
 
 ## Фоны лавки и медсестры уже содержат нарисованную панель и монету: текст кладём на неё тёмным.
-const PANEL_TITLE_RECT := Rect2(110, 112, 980, 90)
+const PANEL_TITLE_RECT := ShopUi.TITLE_RECT
 const PANEL_DESC_RECT := Rect2(110, 206, 980, 190)
 const PANEL_OPTIONS_RECT := Rect2(110, 430, 980, 440)
-const PANEL_CARDS_POS := Vector2(110, 420)
+const PANEL_CARDS_POS := ShopUi.GRID_POS
 const PANEL_CONTINUE_POS := Vector2(110, 900)
-const PANEL_TEXT := Color(0.27, 0.12, 0.30)
-const PANEL_TITLE := Color(0.78, 0.22, 0.52)
-const COIN_TEXT_POS := Vector2(1590, 46)
+const PANEL_TEXT := ShopUi.TEXT_COLOR
+const PANEL_TITLE := ShopUi.TITLE_COLOR
+const COIN_TEXT_POS := ShopUi.COIN_TEXT_POS
 
 const TITLES := {
 	"shop": "Тихая лавка Сессилии",
@@ -55,6 +55,8 @@ var _chest_waiting := false
 var _image_open := false
 var _intro: Dictionary = {}
 var _intro_waiting := false
+## Лавка / медсестра: текст и кнопки на светлой панели фона (вид ShopUi).
+var _panel_layout := false
 
 func setup(p_battle: Node, p_room: Dictionary) -> void:
 	battle = p_battle
@@ -231,6 +233,8 @@ func _gold() -> int:
 
 func _add_option(text: String, callback: Callable, disabled: bool = false) -> Button:
 	var b := RunUiKit.make_button(text, Vector2(0, 80), 30)
+	if _panel_layout:
+		ShopUi.style_button(b, 28)
 	b.disabled = disabled
 	b.pressed.connect(callback)
 	_options.add_child(b)
@@ -238,6 +242,9 @@ func _add_option(text: String, callback: Callable, disabled: bool = false) -> Bu
 
 ## panel=true: лавка/медсестра (текст на нарисованной панели фона), иначе — текст на затемнении слева.
 func _apply_layout(panel: bool) -> void:
+	_panel_layout = panel
+	if panel:
+		ShopUi.style_button(_continue, 28)
 	_shade.visible = not panel
 	_title.position = PANEL_TITLE_RECT.position if panel else TITLE_RECT.position
 	_title.size = PANEL_TITLE_RECT.size if panel else TITLE_RECT.size
@@ -293,17 +300,12 @@ func _build_shop() -> void:
 
 func _add_offer(offer: Dictionary) -> void:
 	var id := String(offer["id"])
-	var count := int(offer.get("count", 1))
-	var sold := bool(offer.get("sold", false))
-	var label := RunItems.get_item_name(id) + (" ×%d" % count if count > 1 else "")
-	var text := ("%s — продано" % label) if sold else ("%s — %d зол." % [label, int(offer["price"])])
-	var b := _add_option(text, func() -> void: _on_buy(offer), sold or _gold() < int(offer["price"]))
-	b.icon = Inventory_.get_item_icon(id) if Inventory_ != null else null
-	b.expand_icon = true
-	b.add_theme_constant_override("icon_max_width", 64)
-	b.alignment = HORIZONTAL_ALIGNMENT_LEFT
-	b.custom_minimum_size = Vector2(0, 84)
-	b.tooltip_text = "%s [%s]\n%s" % [RunItems.get_item_name(id), RunItems.get_item_kind_label(id), RunItems.get_item_desc(id)]
+	var price := int(offer["price"])
+	var state := "sold" if bool(offer.get("sold", false)) else ("poor" if _gold() < price else "")
+	var b := ShopUi.make_item_card(Inventory_.get_item_icon(id) if Inventory_ != null else null, RunItems.get_item_name(id),
+		int(offer.get("count", 1)), price, "%s [%s]\n%s" % [RunItems.get_item_name(id), RunItems.get_item_kind_label(id), RunItems.get_item_desc(id)], state)
+	b.pressed.connect(func() -> void: _on_buy(offer))
+	_cards.add_child(b)
 
 func _on_buy(offer: Dictionary) -> void:
 	if not bool(battle.call("run_buy_offer", offer)):
