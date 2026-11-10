@@ -80,7 +80,7 @@ func card_cap() -> int:
 func stats_for_level(level: int) -> Dictionary:
 	var lvl: int = maxi(level, 1)
 	return {
-		"max_hp": CardBalance.scale_by_level(base_hp, lvl),
+		"max_hp": roundi(float(CardBalance.scale_by_level(base_hp, lvl)) * CardBalance.hero_hp_mult),
 		"attack": CardBalance.scale_by_level(attack, lvl),
 		"magic": CardBalance.scale_by_level(magic, lvl),
 		"damage": int(base_damage + damage_per_level * (lvl - 1)),

@@ -17,7 +17,7 @@ func _init(p_combat: CardCombat, p_battle: Object, p_rng: RandomNumberGenerator)
 
 ## Число хода с силой этажа врага.
 static func scaled(me: Unit, base: int) -> int:
-	return roundi(float(base) * float(me.ai.get("mult", 1.0)) * CardBalance.enemy_power_mult)
+	return roundi(float(base) * float(me.ai.get("mult", 1.0)) * float(me.ai.get("pow", 1.0)) * CardBalance.enemy_power_mult)
 
 ## Урон за удар, который увидит игрок (Слабость и т.п. уже учтены).
 func shown_damage(me: Unit, move: EnemyMove) -> int:

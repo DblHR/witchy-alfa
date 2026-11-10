@@ -2,18 +2,16 @@
 
 [ext_resource type="Script" path="res://scripts/card/effects/CardEffect.gd" id="1_uhysv"]
 [ext_resource type="Script" path="res://scripts/card/effects/EffDamage.gd" id="2_e5a1u"]
-[ext_resource type="Script" path="res://scripts/card/effects/EffApplyStatus.gd" id="3_y1v4b"]
 [ext_resource type="Script" path="res://scripts/card/data/CardDef.gd" id="4_xsqv5"]
 
 [sub_resource type="Resource" id="Resource_kc1or"]
 script = ExtResource("2_e5a1u")
-atk_ratio = 0.2
+atk_ratio = 0.15
+stack_status = "nazhim"
+stack_mode = 2
+bonus_atk_ratio = 0.1
 hits = 3
-
-[sub_resource type="Resource" id="Resource_23dd5"]
-script = ExtResource("3_y1v4b")
-status = "nazhim"
-stacks = 2
+stacks_per_hit = 1
 
 [resource]
 script = ExtResource("4_xsqv5")
@@ -21,6 +19,6 @@ id = "warrior_thrusts"
 title = "Серия толчков"
 cost = 2
 tags = PackedStringArray("attack")
-description = "3 удара по [d]{0}[/d] урона переднему.
-[e]+{1} Нажима[/e]."
-effects = Array[ExtResource("1_uhysv")]([SubResource("Resource_kc1or"), SubResource("Resource_23dd5")])
+description = "3 толчка по [d]{0}[/d] урона, [d]+{0b}[/d] за каждый [e]Нажим[/e].
+После каждого толчка [e]+1 Нажим[/e]."
+effects = Array[ExtResource("1_uhysv")]([SubResource("Resource_kc1or")])

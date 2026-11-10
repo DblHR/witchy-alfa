@@ -23,6 +23,9 @@ enum StackMode {
 @export var hits: int = 1
 ## Снять все стаки после удара.
 @export var consume_stacks: bool = false
+## После каждого удара добавить цели столько стаков stack_status (урон следующего удара растёт):
+## «Серия толчков» — каждый толчок +1 Нажим.
+@export var stacks_per_hit: int = 0
 
 func value(caster: Unit) -> int:
 	return scaled(base, atk_ratio, mag_ratio, caster)
@@ -59,7 +62,11 @@ func _apply_one(ctx: CardContext, target: Unit) -> void:
 	for i in range(maxi(1, hits)):
 		if not CardCombat.is_alive(target):
 			break
+		if i > 0 and stacks_per_hit > 0 and stack_mode == StackMode.PLUS_PER_STACK:
+			amount = value(ctx.caster) + bonus_value(ctx.caster) * ctx.combat.stacks(target, stack_status)
 		ctx.combat.deal_damage(ctx.caster, target, amount, true)
+		if stacks_per_hit > 0 and stack_status != "" and CardCombat.is_alive(target):
+			ctx.combat.add_status(target, stack_status, stacks_per_hit, 0)
 
 func describe(caster: Unit, card_target: CardInstance.Target) -> String:
 	var who := target_phrase(card_target)

@@ -60,7 +60,7 @@ func make_unit(floor_no: int, rng: RandomNumberGenerator, hp_override: int = 0) 
 	u.enemy_def = self
 	u.visual_scale = visual_scale
 	var mult := CardBalance.floor_mult(floor_no)
-	u.ai = {"mult": mult, "floor": floor_no, "row": 0, "last": "", "cd": {}}
+	u.ai = {"mult": mult, "pow": CardBalance.boss_power_mult if rank == "S" else 1.0, "floor": floor_no, "row": 0, "last": "", "cd": {}}
 	u.max_hp = hp_override if hp_override > 0 else roundi(float(rng.randi_range(hp_min, hp_max)) * mult * CardBalance.enemy_hp_mult)
 	u.hp = u.max_hp
 	return u

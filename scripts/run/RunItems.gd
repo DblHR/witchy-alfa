@@ -45,7 +45,7 @@ const ITEM_DEFS := {
 	},
 	"stick_staff_common": {
 		"name": "Кривой посох",
-		"desc": "Посох-шутка. Каждый удар картой: 5% — двойной урон, 15% — промах.",
+		"desc": "Посох-шутка. Каждый удар картой: 15% — двойной урон, 10% — промах.",
 		"kind": "artifact",
 		"equippable": true,
 		"unique": false,
@@ -58,7 +58,7 @@ const ITEM_DEFS := {
 	},
 	"stick_staff_rare": {
 		"name": "Кривой посох+",
-		"desc": "Посох-шутка. Каждый удар картой: 10% — двойной урон, 10% — промах.",
+		"desc": "Посох-шутка. Каждый удар картой: 20% — двойной урон, 3% — тройной, 8% — промах.",
 		"kind": "artifact",
 		"equippable": true,
 		"unique": false,
@@ -71,7 +71,7 @@ const ITEM_DEFS := {
 	},
 	"stick_staff_legendary": {
 		"name": "Кривой посох++",
-		"desc": "Легендарный мем. Каждый удар картой: 20% — двойной урон, 5% — тройной, 5% — промах.",
+		"desc": "Легендарный мем. Каждый удар картой: 25% — двойной урон, 8% — тройной, 5% — промах.",
 		"kind": "artifact",
 		"equippable": true,
 		"unique": false,
@@ -84,7 +84,7 @@ const ITEM_DEFS := {
 	},
 	"mace_staff_common": {
 		"name": "Звёздный посох",
-		"desc": "Весь урон карт отряда +5%.",
+		"desc": "Весь урон карт отряда +8%.",
 		"kind": "artifact",
 		"equippable": true,
 		"unique": false,
@@ -97,7 +97,7 @@ const ITEM_DEFS := {
 	},
 	"mace_staff_rare": {
 		"name": "Звёздный посох+",
-		"desc": "Весь урон карт отряда +10%.",
+		"desc": "Весь урон карт отряда +15%.",
 		"kind": "artifact",
 		"equippable": true,
 		"unique": false,
@@ -110,7 +110,7 @@ const ITEM_DEFS := {
 	},
 	"mace_staff_legendary": {
 		"name": "Звёздный посох++",
-		"desc": "Весь урон карт отряда +20%.",
+		"desc": "Весь урон карт отряда +25%.",
 		"kind": "artifact",
 		"equippable": true,
 		"unique": false,
@@ -136,7 +136,7 @@ const ITEM_DEFS := {
 	},
 	"heart_staff_rare": {
 		"name": "Посох сердца+",
-		"desc": "В начале каждого боя — Слабость всем врагам на 3 хода.",
+		"desc": "В начале каждого боя — Слабость всем врагам на 2 хода.",
 		"kind": "artifact",
 		"equippable": true,
 		"unique": false,
@@ -301,7 +301,7 @@ const ITEM_DEFS := {
 	},
 	"kebab": {
 		"name": "Шашлык",
-		"desc": "Еда на забег: в начале каждого боя лечит отряд на 5% макс. HP.",
+		"desc": "Еда на забег: в начале каждого боя лечит отряд на 8% макс. HP.",
 		"kind": "food",
 		"equippable": true,
 		"unique": false,
@@ -312,7 +312,7 @@ const ITEM_DEFS := {
 	},
 	"steak": {
 		"name": "Стейк",
-		"desc": "Еда на забег: один раз за забег героиня, упавшая ниже 25% HP, сразу лечится на 25%.",
+		"desc": "Еда на забег: один раз за забег героиня, упавшая ниже 30% HP, сразу лечится на 40%.",
 		"kind": "food",
 		"equippable": true,
 		"unique": false,
@@ -334,7 +334,7 @@ const ITEM_DEFS := {
 	},
 	"apple_pie": {
 		"name": "Яблоко в карамели",
-		"desc": "Еда на забег: первая атака в каждом бою наносит +40% урона.",
+		"desc": "Еда на забег: первая атака в каждом бою наносит +60% урона.",
 		"kind": "food",
 		"equippable": true,
 		"unique": false,
@@ -356,7 +356,7 @@ const ITEM_DEFS := {
 	},
 	"witchflower_seed": {
 		"name": "Семена ведьминого цветка",
-		"desc": "Новый сорт для алхимии. Росток использует тот же спрайт, что и слайм-цветок.",
+		"desc": "Мешочек семян для выращивания ведьминого цветка.",
 		"kind": "seed",
 		"equippable": false,
 		"unique": false,
