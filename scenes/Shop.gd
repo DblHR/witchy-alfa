@@ -104,7 +104,7 @@ func _refresh(message: String = "") -> void:
 	seed_label.text = "Кварц: %d | Открыто рецептов еды: %d из %d" % [Inventory_.get_item_count("quartz"), DungRun.known_recipes.size(), DungRun.known_recipes.size() + AlchemyDB.unknown_recipe_items().size()]
 	info_label.text = "Лавка Рикки: кварц и семена всегда, плюс еда, обычные посохи, рецепты и ингредиенты для еды. Товар обновляется после каждого забега."
 	if StoryState_ != null and StoryState_.is_quest_active("find_warrior"):
-		info_label.text += "\n\nКролик просила присмотреться к слухам о пропавшем воине. Комната для этого квеста будет подключена позже."
+		info_label.text += "\n\nКвест «Пропавший воин»: в одной из первых комнат подземелья его можно найти."
 	if message != "":
 		info_label.text += "\n\n" + message
 	for i in range(min(stock_grid.get_child_count(), DungRun.ground_shop_item_ids.size())):

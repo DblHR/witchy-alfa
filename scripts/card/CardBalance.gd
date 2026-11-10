@@ -52,8 +52,14 @@ const XP_PER_RUN := 200
 ## Опыт за врага по рангу (на 1-м этаже; дальше × floor_mult).
 const XP_BY_RANK := {"B": 10, "A": 25, "S": 60}
 
+## Первые уровни дешевле таблицы: соло-ведьма проходит 1–2 комнаты (~20–40 опыта за забег),
+## а на 2-м уровне Рикка даёт квест на воина. Уровень -> сколько опыта до следующего.
+const EARLY_LEVEL_XP := {1: 100, 2: 200}
+
 static func xp_to_next_level(level: int) -> int:
 	var lvl := maxi(level, 1)
+	if EARLY_LEVEL_XP.has(lvl):
+		return int(EARLY_LEVEL_XP[lvl])
 	var floor_no := (lvl - 1) / LEVELS_PER_FLOOR + 1
 	var runs: int = RUNS_PER_LEVEL[(lvl - 1) % LEVELS_PER_FLOOR]
 	return roundi(float(XP_PER_RUN * runs) * floor_mult(floor_no))

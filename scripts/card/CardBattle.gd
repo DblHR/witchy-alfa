@@ -427,6 +427,8 @@ func _start_room(index: int) -> void:
 	if String(room.get("kind", "")) == "event":
 		await _start_event_room(room)
 		return
+	if String(room.get("kind", "")) == "quest":
+		await _play_quest_intro(room)
 
 	_set_battle_ui(true)
 	_room_loot = {"gold": 0, "xp": 0, "items": {}}
@@ -970,6 +972,10 @@ func _check_end() -> bool:
 	var right_alive := _combat.front_enemy() != null
 	if left_alive and right_alive:
 		return false
+
+	# Квестовый бой (Фуфу и воин): квест засчитан при любом исходе.
+	if String(_run.room(_room_index).get("kind", "")) == "quest":
+		_finish_quest_room(_run.room(_room_index))
 
 	# Комната зачищена, но это не босс — награда, выбор пути, дальше.
 	if left_alive and String(_run.room(_room_index).get("kind", "")) != "boss":
@@ -1557,6 +1563,41 @@ func _enter_camp() -> void:
 
 func _ui_add(node: Control) -> void:
 	_ui_layer.add_child(node)
+
+# --- Квестовая комната ------------------------------------------------------
+
+## Сценка перед квестовым боем (data/dialogues/quests/warrior_quest.json).
+func _play_quest_intro(room: Dictionary) -> void:
+	if bool(room.get("intro_seen", false)) or StoryDialogueDB_ == null or DialogueManager_ == null:
+		return
+	room["intro_seen"] = true
+	var d := StoryDialogueDB_.get_dialogue("find_warrior_room_intro")
+	var lines := StoryDialogueDB_.resolve_lines(d) if not d.is_empty() else []
+	if lines.is_empty():
+		return
+	_set_battle_ui(false)
+	var done := [false]
+	DialogueManager_.show_sequence(lines, func() -> void: done[0] = true)
+	var waited := 0.0
+	while not done[0] and is_inside_tree():
+		await get_tree().process_frame
+		waited += get_process_delta_time()
+		# Страховка: окно диалога не появилось — не держим игрока.
+		if waited > 0.7 and (DialogueManager_._overlay == null or not is_instance_valid(DialogueManager_._overlay) or not DialogueManager_._overlay.visible):
+			break
+	if StoryState_ != null:
+		StoryState_.mark_dialogue_seen("find_warrior_room_intro")
+
+## Бой квестовой комнаты закончился (победа или поражение): воин найден — сценка в хабе после забега.
+func _finish_quest_room(room: Dictionary) -> void:
+	if bool(room.get("used", false)):
+		return
+	room["used"] = true
+	if StoryState_ == null:
+		return
+	StoryState_.set_flag("find_warrior_room_done", true)
+	StoryState_.set_flag("pending_find_warrior_after_battle", true)
+	_captured_lines.append("Воин найден! Он присоединится к отряду дома.")
 
 func _on_room_cleared() -> void:
 	await _wait(0.8)

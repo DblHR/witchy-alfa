@@ -20,6 +20,7 @@ func _ready() -> void:
 	_collect_pots()
 	_build_seed_popup()
 	_refresh_all()
+	NotifyBadge.attach(shop_button, StoryDialogueDB_ != null and StoryDialogueDB_.npc_has_quest_offer("rabbit_shop"))
 	if FarmState_.state_changed.is_connected(_refresh_all) == false:
 		FarmState_.state_changed.connect(_refresh_all)
 	if Inventory_ != null and not Inventory_.changed.is_connected(_refresh_all):

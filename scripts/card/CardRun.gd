@@ -4,7 +4,8 @@ class_name CardRun
 ## ивенты, выбор пути. Здесь только данные, без UI (UI — в CardBattle и *Popup/EventScreen).
 ##
 ## Комната — Dictionary:
-##   kind: "battle" | "elite" | "boss" | "event"
+##   kind: "battle" | "elite" | "boss" | "event" | "quest"
+##   quest: id квеста (для kind == "quest"; «find_warrior» — бой с Фуфу, после него воин в ростере)
 ##   event: "shop" | "nurse" | "chest" | "statue" (для kind == "event")
 ##   variant: "white" | "black" (статуя)
 ##   enemies: Array[String] — id врагов из EnemyDefs (в порядке строя, первый — передний)
@@ -27,6 +28,13 @@ const ELITE_CHANCE := 0.25
 const ELITE_FROM_ROOM := 3
 const ELITE_MAX := 2
 const STATUE_CHARGES := 3
+
+## Квест «Пропавший воин» (выдаёт Рикка на 2-м уровне): пока он активен, с этим шансом
+## следующая дверь — квестовая комната (единственная). Не позже комнаты QUEST_FORCE_ROOM.
+const QUEST_ID := "find_warrior"
+const QUEST_ROOM_CHANCE := 0.35
+const QUEST_FORCE_ROOM := 3
+var quest_placed := false
 
 var rng := RandomNumberGenerator.new()
 var floor_no: int = FLOOR
@@ -126,6 +134,14 @@ func _elite_room() -> Dictionary:
 	var front := "shlep" if rng.randf() < 0.5 else "acid"
 	return {"kind": "elite", "event": "", "boss": false, "enemies": [front, girl], "used": false}
 
+## Квест на воина активен, а его комнату ещё не проходили.
+static func quest_due() -> bool:
+	return StoryState_ != null and StoryState_.is_quest_active(QUEST_ID) and not StoryState_.has_flag("find_warrior_room_done")
+
+## Квестовая комната: сценка, потом бой с Фуфу (как с боссом; проиграть — нормально).
+static func quest_room() -> Dictionary:
+	return {"kind": "quest", "quest": QUEST_ID, "event": "", "boss": true, "enemies": [EnemyDefs.FLOOR1_BOSS], "used": false}
+
 func _event_room(event_id: String) -> Dictionary:
 	var r := {"kind": "event", "event": event_id, "boss": false, "used": false}
 	if event_id == "statue":
@@ -141,6 +157,10 @@ func prepare_choices() -> void:
 	var n := rooms.size()
 	if next_i >= n - 2:
 		pending_choices.append(make_room(next_i))
+		return
+	if not quest_placed and quest_due() and (next_i >= QUEST_FORCE_ROOM or rng.randf() < QUEST_ROOM_CHANCE):
+		quest_placed = true
+		pending_choices.append(quest_room())
 		return
 	var options := rng.randi_range(2, 3)
 	for _k in range(options):
@@ -185,6 +205,7 @@ static func room_title(r: Dictionary) -> String:
 		"battle": return "Бой"
 		"elite": return "Элита"
 		"boss": return "Босс"
+		"quest": return "???"
 		"event": return event_name(String(r.get("event", "")), String(r.get("variant", "")))
 	return "?"
 
@@ -194,6 +215,8 @@ static func room_hint(r: Dictionary) -> String:
 			return enemy_list(r)
 		"boss":
 			return "Финал забега:\n" + enemy_list(r)
+		"quest":
+			return "Кто-то зовёт\nна помощь…"
 		"event":
 			match String(r.get("event", "")):
 				"shop": return "Купить карты\nи лечение"

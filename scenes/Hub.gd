@@ -15,7 +15,16 @@ func _ready() -> void:
 	shop.pressed.connect(func(): SceneRouter_.go_to_shop())
 	inv.pressed.connect(func(): SceneRouter_.go_to_inventory())
 	_start_wanderers()
+	_refresh_badges()
+	if StoryState_ != null and StoryState_.has_signal("changed") and not StoryState_.changed.is_connected(_refresh_badges):
+		StoryState_.changed.connect(_refresh_badges)
 	call_deferred("_play_pending_story_dialogue")
+
+## «!» на кнопке лавки, когда Рикка может выдать квест.
+func _refresh_badges() -> void:
+	if not is_inside_tree():
+		return
+	NotifyBadge.attach(shop, StoryDialogueDB_ != null and StoryDialogueDB_.npc_has_quest_offer("rabbit_shop"))
 
 ## Ведьмочка бродит по дому. Границы — левый край её картинки (координаты 1920×1080),
 ## чтобы не заходить под кнопки инвентаря и портала.

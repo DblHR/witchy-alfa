@@ -103,6 +103,19 @@ func pick_npc_dialogue(npc_id: String, wanted_type: String = "") -> Dictionary:
 			return d
 	return top[0]
 
+## Есть ли у NPC непрочитанный диалог, который выдаёт квест (для значка «!» на кнопке).
+func npc_has_quest_offer(npc_id: String) -> bool:
+	for d in dialogues_by_npc.get(npc_id, []):
+		var fin = d.get("on_finish", {})
+		if not (fin is Dictionary) or not (fin as Dictionary).has("start_quest"):
+			continue
+		var id := String(d.get("id", ""))
+		if bool(d.get("once", false)) and StoryState_ != null and StoryState_.has_seen_dialogue(id):
+			continue
+		if check_conditions(d.get("conditions", {})):
+			return true
+	return false
+
 func pick_intro_for_event(event_type: int, statue_variant: int = 0, npc_override: String = "") -> Dictionary:
 	var npc_id := npc_override if npc_override != "" else event_type_to_npc_id(event_type, statue_variant)
 	var event_d := pick_npc_dialogue(npc_id, "event")

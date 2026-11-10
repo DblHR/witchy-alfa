@@ -58,8 +58,9 @@
       "once": true,
       "priority": 100,
       "conditions": {
-        "party_level_min": 3,
-        "quest_not_started": "find_warrior"
+        "party_level_min": 2,
+        "quest_not_started": "find_warrior",
+        "not_has_unit": "warrior"
       },
       "on_finish": {
         "start_quest": "find_warrior",

@@ -44,6 +44,8 @@ func _make_door(room: Dictionary, i: int) -> Button:
 		color = Color(0.6, 0.95, 0.75)
 	elif kind == "boss":
 		color = Color(1.0, 0.35, 0.35)
+	elif kind == "quest":
+		color = Color(0.85, 0.6, 1.0)
 	elif kind == "elite":
 		color = Color(1.0, 0.72, 0.35)
 	var title := RunUiKit.make_label(CardRun.room_title(room), 38, color)
