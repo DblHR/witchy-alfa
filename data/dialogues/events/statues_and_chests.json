@@ -18,6 +18,8 @@
       "lines": [
         {
           "speaker": "statue_white",
+          "speaker_name": "",
+          "emotion": "",
           "text": "От белого камня веет спокойствием."
         }
       ]
@@ -30,6 +32,8 @@
       "lines": [
         {
           "speaker": "statue_black",
+          "speaker_name": "",
+          "emotion": "",
           "text": "Чёрный камень словно смотрит в ответ."
         }
       ]

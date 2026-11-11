@@ -14,6 +14,7 @@ func reload() -> void:
 	dialogues_by_id.clear()
 	dialogues_by_npc.clear()
 	dialogues_by_quest.clear()
+	_load_names()
 	_load_folder(DIALOGUE_ROOT)
 
 func _load_folder(path: String) -> void:
@@ -152,6 +153,12 @@ func pick_quest_room_dialogue(quest_id: String) -> Dictionary:
 	)
 	return candidates[0]
 
+## Поля реплики (пустая строка или нет поля — стандартное значение):
+##   speaker      — id говорящего (witch, rabbit_shop, ...)
+##   speaker_name — имя на плашке только в этой реплике; пусто — имя из data/characters/names.json
+##                  (например «Девушка-кролик», пока Рикка не представилась)
+##   emotion      — эмоция говорящего: картинка res://assets/pics/emotions/<id>/<emotion>.png (нет файла — обычный портрет)
+## У каждого персонажа в characters тоже можно указать name и emotion.
 func resolve_lines(dialogue: Dictionary) -> Array:
 	var out: Array = []
 	for raw_line in dialogue.get("lines", []):
@@ -164,7 +171,8 @@ func resolve_lines(dialogue: Dictionary) -> Array:
 func _resolve_line(raw: Dictionary) -> Dictionary:
 	var line := raw.duplicate(true)
 	var speaker_id := String(line.get("speaker", line.get("speaker_id", "")))
-	if not line.has("speaker_name"):
+	var emotion := String(line.get("emotion", ""))
+	if String(line.get("speaker_name", "")) == "":
 		line["speaker_name"] = get_character_name(speaker_id)
 	if line.has("characters"):
 		var resolved_chars: Array = []
@@ -173,36 +181,51 @@ func _resolve_line(raw: Dictionary) -> Dictionary:
 				continue
 			var rc: Dictionary = c.duplicate(true)
 			var cid := String(rc.get("id", ""))
-			if not rc.has("name"):
+			if String(rc.get("name", "")) == "":
 				rc["name"] = get_character_name(cid)
-			if not rc.has("portrait"):
-				rc["portrait"] = get_character_portrait(cid, String(rc.get("emotion", "")))
+			var c_emotion := String(rc.get("emotion", ""))
+			if c_emotion == "" and cid == speaker_id:
+				c_emotion = emotion
+			if not (rc.get("portrait") is Texture2D):
+				rc["portrait"] = get_character_portrait(cid, c_emotion)
 			resolved_chars.append(rc)
 		line["characters"] = resolved_chars
 	elif speaker_id != "":
-		line["characters"] = [{"id": speaker_id, "portrait": get_character_portrait(speaker_id, String(line.get("emotion", "")))}]
+		line["characters"] = [{"id": speaker_id, "portrait": get_character_portrait(speaker_id, emotion)}]
 	if not line.has("active_character") and speaker_id != "":
 		line["active_character"] = speaker_id
 	return line
 
+## Имена персонажей в диалогах: data/characters/names.json — {"rabbit_shop": "Рикка", ...}.
+## Нет в таблице — имя из CharDB, иначе id. Разово другое имя — поле speaker_name в реплике.
+const NAMES_FILE := "res://data/characters/names.json"
+var _names: Dictionary = {}
+
+func _load_names() -> void:
+	_names.clear()
+	if not FileAccess.file_exists(NAMES_FILE):
+		return
+	var parsed = JSON.parse_string(FileAccess.get_file_as_string(NAMES_FILE))
+	if parsed is Dictionary:
+		_names = parsed
+
 func get_character_name(character_id: String) -> String:
-	match character_id:
-		"rabbit_shop": return "Кролик-торговка"
-		"nurse": return "Медсестра"
-		"chest": return "Сундук"
-		"statue_white": return "Белая статуя"
-		"statue_black": return "Чёрная статуя"
-		"fufu": return "Фуфу"
-		"player": return "Шляпка"
-		"lamia": return "Ламия"
-		_:
-			if CharDB != null:
-				var cd := CharDB.get_by_id(character_id)
-				if cd != null and cd.display_name != "":
-					return cd.display_name
-			return character_id
+	var n := String(_names.get(character_id, ""))
+	if n != "":
+		return n
+	if CharDB != null:
+		var cd := CharDB.get_by_id(character_id)
+		if cd != null and cd.display_name != "":
+			return cd.display_name
+	return character_id
+
+const EMOTIONS_DIR := "res://assets/pics/emotions"
 
 func get_character_portrait(character_id: String, emotion: String = "") -> Texture2D:
+	if emotion != "" and character_id != "":
+		var path := "%s/%s/%s.png" % [EMOTIONS_DIR, character_id, emotion]
+		if ResourceLoader.exists(path):
+			return load(path) as Texture2D
 	if AssetCatalog_ != null:
 		var event_tex := AssetCatalog_.get_event_npc_texture(character_id)
 		if event_tex != null:

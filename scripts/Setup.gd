@@ -1004,8 +1004,9 @@ func _refresh_loadout_ui() -> void:
 	for i in range(2):
 		var pid := DungRun.selected_potion_ids[i]
 		(potion_button if i == 0 else potion_button2).tooltip_text = "Зелье %d: %s" % [i + 1, RunItems.get_potion_name(pid) if pid != "" else "пусто"]
-	artifact_button.icon = _get_item_or_placeholder_icon(DungRun.selected_artifact_id, Color(0.88, 0.73, 0.30, 1.0))
-	food_button.icon = _get_item_or_placeholder_icon(DungRun.selected_food_id, Color(0.55, 0.83, 0.44, 1.0))
+	# Пустой слот посоха/еды — без иконки (раньше там был цветной квадрат-заглушка).
+	artifact_button.icon = _get_item_icon_or_null(DungRun.selected_artifact_id)
+	food_button.icon = _get_item_icon_or_null(DungRun.selected_food_id)
 	potion_button.disabled = DungRun.get_available_potion_ids().is_empty()
 	potion_button2.disabled = potion_button.disabled
 	var lures := Inventory_.get_item_count(DungRun.LURE_ITEM) if Inventory_ != null else 0
@@ -1017,10 +1018,10 @@ func _refresh_loadout_ui() -> void:
 	artifact_button.disabled = false
 	food_button.disabled = false
 
-func _get_item_or_placeholder_icon(item_id: String, color: Color) -> Texture2D:
+func _get_item_icon_or_null(item_id: String) -> Texture2D:
 	if item_id != "" and Inventory_ != null:
 		return Inventory_.get_item_icon(item_id)
-	return _make_placeholder_icon(color)
+	return null
 
 func _get_potion_icon(potion_id: String) -> Texture2D:
 	if potion_id == "":

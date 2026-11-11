@@ -8,6 +8,8 @@
       "lines": [
         {
           "speaker": "rabbit_shop",
+          "speaker_name": "",
+          "emotion": "",
           "text": "Добро пожаловать в лавку. Не трогай блестящее без оплаты, ладно?"
         }
       ]
@@ -20,6 +22,8 @@
       "lines": [
         {
           "speaker": "rabbit_shop",
+          "speaker_name": "",
+          "emotion": "",
           "text": "Если опять собираешься в подземелье — сначала проверь сумку. Потом уже геройствуй."
         }
       ]
@@ -32,6 +36,8 @@
       "lines": [
         {
           "speaker": "rabbit_shop",
+          "speaker_name": "",
+          "emotion": "",
           "text": "У меня есть товары, слухи и терпение. Последнее заканчивается быстрее всего."
         }
       ]
@@ -47,6 +53,8 @@
       "lines": [
         {
           "speaker": "rabbit_shop",
+          "speaker_name": "",
+          "emotion": "",
           "text": "Ого, ты теперь водишь с собой слизнедевочку? Миленько. Липко, наверное, но миленько."
         }
       ]
@@ -64,60 +72,36 @@
       },
       "on_finish": {
         "start_quest": "find_warrior",
-        "set_flags": [
-          "heard_about_lost_warrior"
-        ]
+        "set_flags": ["heard_about_lost_warrior"]
       },
       "lines": [
         {
           "speaker": "rabbit_shop",
+          "speaker_name": "",
           "emotion": "serious",
           "text": "Слушай, Шляпка... Один воин ушёл в подземелье уже давно.",
-          "characters": [
-            {
-              "id": "rabbit_shop"
-            },
-            {
-              "id": "witch"
-            }
-          ]
+          "characters": [{"id": "rabbit_shop"}, {"id": "witch"}]
         },
         {
           "speaker": "rabbit_shop",
+          "speaker_name": "",
           "emotion": "worried",
           "text": "Обычно такие возвращаются быстро. Или не возвращаются вовсе.",
-          "characters": [
-            {
-              "id": "rabbit_shop"
-            },
-            {
-              "id": "witch"
-            }
-          ]
+          "characters": [{"id": "rabbit_shop"}, {"id": "witch"}]
         },
         {
           "speaker": "witch",
+          "speaker_name": "",
+          "emotion": "",
           "text": "Звучит как ловушка. Значит, мы туда полезем, да?",
-          "characters": [
-            {
-              "id": "rabbit_shop"
-            },
-            {
-              "id": "witch"
-            }
-          ]
+          "characters": [{"id": "rabbit_shop"}, {"id": "witch"}]
         },
         {
           "speaker": "rabbit_shop",
+          "speaker_name": "",
+          "emotion": "",
           "text": "Если увидишь комнату со странными знаками — загляни. У меня плохое предчувствие.",
-          "characters": [
-            {
-              "id": "rabbit_shop"
-            },
-            {
-              "id": "witch"
-            }
-          ]
+          "characters": [{"id": "rabbit_shop"}, {"id": "witch"}]
         }
       ]
     }

@@ -11,38 +11,30 @@
         "not_flag": "find_warrior_room_done"
       },
       "on_finish": {
-        "set_flags": [
-          "find_warrior_room_done"
-        ],
+        "set_flags": ["find_warrior_room_done"],
         "start_quest_battle": true
       },
       "lines": [
         {
           "speaker": "fufu",
+          "speaker_name": "",
+          "emotion": "",
           "text": "Оо, смотри-ка, мальчик, тут ещё один человечек пришёл! Кажется, становится всё интереснее и интереснее!",
-          "characters": [
-            {"id": "witch"},
-            {"id": "warrior"},
-            {"id": "fufu"}
-          ]
+          "characters": [{"id": "witch"}, {"id": "warrior"}, {"id": "fufu"}]
         },
         {
           "speaker": "warrior",
+          "speaker_name": "",
+          "emotion": "",
           "text": "Беги отсюда! Она очень сильна!",
-          "characters": [
-            {"id": "witch"},
-            {"id": "warrior"},
-            {"id": "fufu"}
-          ]
+          "characters": [{"id": "witch"}, {"id": "warrior"}, {"id": "fufu"}]
         },
         {
           "speaker": "witch",
+          "speaker_name": "",
+          "emotion": "",
           "text": "И УПУСТИТЬ ВОЗМОЖНОСТЬ ИССЛЕДОВАТЬ ТАКОЙ ОБРАЗЕЦ? НУ УЖ НЕТ!",
-          "characters": [
-            {"id": "witch"},
-            {"id": "warrior"},
-            {"id": "fufu"}
-          ]
+          "characters": [{"id": "witch"}, {"id": "warrior"}, {"id": "fufu"}]
         }
       ]
     },
@@ -59,19 +51,17 @@
       "lines": [
         {
           "speaker": "warrior",
+          "speaker_name": "",
+          "emotion": "",
           "text": "Фух, спаслись! Правда, ты, кажется, не спешила убегать...",
-          "characters": [
-            {"id": "witch"},
-            {"id": "warrior"}
-          ]
+          "characters": [{"id": "witch"}, {"id": "warrior"}]
         },
         {
           "speaker": "witch",
+          "speaker_name": "",
+          "emotion": "",
           "text": "бла-бла. Тестовый текст. НЕ ДУМАЛ ЖЕ ТЫ ВОИН ЧТО ТУТ БУДЕТ ЦЕЛЫЙ ДИАЛОГ, МНЕ ЛЕНЬ ЕГО ПРОПИСЫВАТЬ ВООБЩЕ-ТО",
-          "characters": [
-            {"id": "witch"},
-            {"id": "warrior"}
-          ]
+          "characters": [{"id": "witch"}, {"id": "warrior"}]
         }
       ]
     }
