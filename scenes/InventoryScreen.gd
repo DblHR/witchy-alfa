@@ -61,6 +61,7 @@ func _ready() -> void:
 	_save_button_connections()
 	_subscribe_state()
 	_build_cards_ui()
+	_build_gallery_ui()
 	_build_admin_ui()
 	_select_section(Section.ITEMS)
 
@@ -86,8 +87,7 @@ func _save_button_connections() -> void:
 	lore_button.pressed.connect(func() -> void: _select_section(Section.LORE))
 	characters_button.pressed.connect(func() -> void: _select_section(Section.CHARACTERS))
 	gallery_button.pressed.connect(func() -> void: _select_section(Section.GALLERY))
-	gallery_button.disabled = true
-	gallery_button.tooltip_text = "Галерея будет добавлена позже."
+	gallery_button.tooltip_text = "Галерея"
 	general_button.tooltip_text = "Все предметы на одной вкладке"
 	alchemy_button.tooltip_text = "Список рецептов для алхимии"
 	lore_button.tooltip_text = "Лорные записи"
@@ -123,6 +123,9 @@ func _select_section(section: int, reset_status: bool = true) -> void:
 	lore_button.button_pressed = section == Section.LORE
 	characters_button.button_pressed = section == Section.CHARACTERS
 	gallery_button.button_pressed = section == Section.GALLERY
+	_gallery_group_box.visible = section == Section.GALLERY
+	if section != Section.GALLERY:
+		_gallery_panel.visible = false
 	if reset_status:
 		footer_label.text = ""
 	_rebuild_entry_grid()
@@ -169,7 +172,7 @@ func _build_entries_for_section(section: int) -> Array[Dictionary]:
 		Section.CHARACTERS:
 			return _build_character_entries()
 		Section.GALLERY:
-			return []
+			return _build_gallery_entries()
 	return []
 
 func _build_item_entries() -> Array[Dictionary]:
@@ -242,6 +245,8 @@ func _get_columns_for_section(section: int) -> int:
 			return 1
 		Section.CHARACTERS:
 			return 4
+		Section.GALLERY:
+			return 2
 		_:
 			return 4
 
@@ -257,7 +262,7 @@ func _show_entry_detail(entry_id: String) -> void:
 		Section.CHARACTERS:
 			_show_character_detail(entry_id)
 		Section.GALLERY:
-			_show_gallery_placeholder()
+			_show_gallery_category(entry_id)
 
 func _show_empty_detail_for_section() -> void:
 	_match_detail_visibility(false, false, false, true)
@@ -265,7 +270,7 @@ func _show_empty_detail_for_section() -> void:
 	detail_hint_label.text = ""
 	var placeholder_text := "Пока здесь пусто."
 	if current_section == Section.GALLERY:
-		placeholder_text = "Галерея пока не подключена."
+		placeholder_text = "Здесь пока нет картинок."
 	elif current_section == Section.CHARACTERS:
 		placeholder_text = "Персонажи ещё не открыты."
 	placeholder_text_label.text = placeholder_text
@@ -349,14 +354,13 @@ func _show_character_detail(unit_id: String) -> void:
 		notes,
 	]
 
-func _show_gallery_placeholder() -> void:
-	_show_empty_detail_for_section()
-
 func _match_detail_visibility(show_item: bool, show_character: bool, show_lore: bool, show_placeholder: bool) -> void:
 	item_detail.visible = show_item
 	character_detail.visible = show_character
 	lore_detail.visible = show_lore
 	placeholder_detail.visible = show_placeholder
+	if _gallery_panel != null:
+		_gallery_panel.visible = false
 
 func _excerpt(text: String, max_len: int = 80) -> String:
 	var clean := text.replace("\n", " ").strip_edges()
@@ -698,3 +702,256 @@ func _on_admin_set_trust() -> void:
 	var id := String(_admin_hero.get_item_metadata(_admin_hero.selected))
 	UnitRoster_.set_relationship(id, int(_admin_trust.value))
 	_admin_result.text = "%s: отношения %d" % [_admin_hero.get_item_text(_admin_hero.selected), UnitRoster_.get_relationship(id)]
+
+
+# --- Галерея ------------------------------------------------------------------
+## Слева — персонажи / события (переключатель над списком), справа — картинки выбранного,
+## по клику картинка открывается на весь экран. Данные: data/gallery/gallery.json (GalleryData).
+
+const GALLERY_PANEL_RECT := Rect2(972, 170, 735, 690)
+const GALLERY_THUMB := Vector2(226, 226)
+const GALLERY_GROUPS := ["characters", "events"]
+
+var _gallery_group := "characters"
+var _gallery_group_box: HBoxContainer
+var _gallery_group_buttons: Dictionary = {}
+var _gallery_panel: ScrollContainer
+var _gallery_grid: GridContainer
+var _gallery_categories: Dictionary = {}     ## id -> категория из GalleryData
+var _gallery_images: Array[String] = []      ## картинки открытой категории
+var _gallery_pending: Dictionary = {}        ## путь -> [TextureRect] (ждут фоновой загрузки)
+var _viewer: Control
+var _viewer_image: TextureRect
+var _viewer_counter: Label
+var _viewer_index := 0
+
+func _build_gallery_ui() -> void:
+	_gallery_group_box = HBoxContainer.new()
+	_gallery_group_box.position = Vector2(560, 64)
+	_gallery_group_box.add_theme_constant_override("separation", 8)
+	_gallery_group_box.visible = false
+	add_child(_gallery_group_box)
+	var group := ButtonGroup.new()
+	for g in GALLERY_GROUPS:
+		var b := Button.new()
+		b.text = "Персонажи" if g == "characters" else "События"
+		b.toggle_mode = true
+		b.button_group = group
+		b.button_pressed = g == _gallery_group
+		b.focus_mode = Control.FOCUS_NONE
+		b.custom_minimum_size = Vector2(150, 44)
+		b.add_theme_font_size_override("font_size", 20)
+		b.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+		var group_id := String(g)
+		b.pressed.connect(func() -> void:
+			if _gallery_group == group_id:
+				return
+			_gallery_group = group_id
+			selected_entry_by_section[Section.GALLERY] = ""
+			_rebuild_entry_grid()
+		)
+		_gallery_group_box.add_child(b)
+		_gallery_group_buttons[group_id] = b
+
+	_gallery_panel = ScrollContainer.new()
+	_gallery_panel.position = GALLERY_PANEL_RECT.position
+	_gallery_panel.size = GALLERY_PANEL_RECT.size
+	_gallery_panel.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	_gallery_panel.visible = false
+	add_child(_gallery_panel)
+	_gallery_grid = GridContainer.new()
+	_gallery_grid.columns = 3
+	_gallery_grid.add_theme_constant_override("h_separation", 14)
+	_gallery_grid.add_theme_constant_override("v_separation", 14)
+	_gallery_panel.add_child(_gallery_grid)
+
+	# Просмотр картинки на весь экран.
+	_viewer = Control.new()
+	_viewer.name = "GalleryViewer"
+	_viewer.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_viewer.mouse_filter = Control.MOUSE_FILTER_STOP
+	_viewer.z_index = 60
+	_viewer.visible = false
+	add_child(_viewer)
+	var dim := ColorRect.new()
+	dim.color = Color(0.02, 0.0, 0.04, 0.9)
+	dim.set_anchors_preset(Control.PRESET_FULL_RECT)
+	dim.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_viewer.add_child(dim)
+	_viewer_image = TextureRect.new()
+	_viewer_image.position = Vector2(120, 50)
+	_viewer_image.size = Vector2(1680, 950)
+	_viewer_image.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_viewer_image.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	_viewer_image.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
+	_viewer_image.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_viewer.add_child(_viewer_image)
+	_viewer_counter = Label.new()
+	_viewer_counter.position = Vector2(760, 1012)
+	_viewer_counter.size = Vector2(400, 50)
+	_viewer_counter.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_viewer_counter.add_theme_font_size_override("font_size", 26)
+	_viewer_counter.add_theme_color_override("font_color", Color(1, 1, 1, 0.85))
+	_viewer.add_child(_viewer_counter)
+	for side in [-1, 1]:
+		var arrow := Button.new()
+		arrow.text = "‹" if side < 0 else "›"
+		arrow.flat = true
+		arrow.focus_mode = Control.FOCUS_NONE
+		arrow.add_theme_font_size_override("font_size", 96)
+		arrow.add_theme_color_override("font_color", Color(1, 1, 1, 0.75))
+		arrow.add_theme_color_override("font_hover_color", Color(1, 0.86, 0.45))
+		arrow.position = Vector2(14 if side < 0 else 1806, 470)
+		arrow.size = Vector2(100, 140)
+		arrow.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+		var step := int(side)
+		arrow.pressed.connect(func() -> void: _viewer_step(step))
+		_viewer.add_child(arrow)
+	var close := Button.new()
+	close.text = "✕"
+	close.flat = true
+	close.focus_mode = Control.FOCUS_NONE
+	close.add_theme_font_size_override("font_size", 44)
+	close.add_theme_color_override("font_color", Color(1, 1, 1, 0.8))
+	close.add_theme_color_override("font_hover_color", Color(1, 0.86, 0.45))
+	close.position = Vector2(1830, 14)
+	close.size = Vector2(76, 70)
+	close.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	close.pressed.connect(_close_viewer)
+	_viewer.add_child(close)
+	_viewer.gui_input.connect(func(event: InputEvent) -> void:
+		if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+			_close_viewer()
+			_viewer.accept_event()
+	)
+
+func _build_gallery_entries() -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	_gallery_categories.clear()
+	for cat in GalleryData.categories(_gallery_group):
+		var id := String(cat["id"])
+		_gallery_categories[id] = cat
+		var n: int = cat["images"].size()
+		out.append({
+			"id": id,
+			"title": String(cat["title"]),
+			"title_font_size": 20 if String(cat["title"]).length() <= 13 else 16,
+			"subtitle": "%d %s" % [n, _pictures_word(n)],
+			"icon": load(String(cat["icon_path"])) as Texture2D,
+			"count": -1,
+			"compact": false,
+		})
+	return out
+
+static func _pictures_word(n: int) -> String:
+	var m10 := n % 10
+	var m100 := n % 100
+	if m10 == 1 and m100 != 11:
+		return "картинка"
+	if m10 >= 2 and m10 <= 4 and (m100 < 12 or m100 > 14):
+		return "картинки"
+	return "картинок"
+
+func _show_gallery_category(cat_id: String) -> void:
+	var cat: Dictionary = _gallery_categories.get(cat_id, {})
+	if cat.is_empty():
+		_show_empty_detail_for_section()
+		return
+	_match_detail_visibility(false, false, false, false)
+	detail_title_label.text = String(cat["title"])
+	detail_hint_label.text = "Нажмите на картинку, чтобы рассмотреть её."
+	for c in _gallery_grid.get_children():
+		c.queue_free()
+	_gallery_pending.clear()
+	_gallery_images.assign(cat["images"])
+	for i in range(_gallery_images.size()):
+		_gallery_grid.add_child(_make_gallery_thumb(i))
+	_gallery_panel.scroll_vertical = 0
+	_gallery_panel.visible = true
+	set_process(not _gallery_pending.is_empty())
+
+func _make_gallery_thumb(index: int) -> Button:
+	var b := Button.new()
+	b.custom_minimum_size = GALLERY_THUMB
+	b.focus_mode = Control.FOCUS_NONE
+	b.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	for state in ["normal", "hover", "pressed"]:
+		var sb := StyleBoxFlat.new()
+		sb.bg_color = Color(0.93, 0.87, 0.78) if state == "normal" else Color(0.98, 0.92, 0.82)
+		sb.set_corner_radius_all(14)
+		sb.set_border_width_all(2 if state == "normal" else 4)
+		sb.border_color = Color(0.62, 0.45, 0.52) if state == "normal" else Color(0.85, 0.35, 0.6)
+		b.add_theme_stylebox_override(state, sb)
+	var pic := TextureRect.new()
+	pic.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	pic.offset_left = 8
+	pic.offset_top = 8
+	pic.offset_right = -8
+	pic.offset_bottom = -8
+	pic.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	pic.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	pic.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
+	pic.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	b.add_child(pic)
+	_request_texture(_gallery_images[index], pic)
+	b.pressed.connect(func() -> void: _open_viewer(index))
+	return b
+
+## Картинки грузятся в фоне, чтобы большие кадры (пролог) не подвешивали книжку.
+func _request_texture(path: String, target: TextureRect) -> void:
+	if ResourceLoader.has_cached(path):
+		target.texture = load(path) as Texture2D
+		return
+	if not _gallery_pending.has(path):
+		_gallery_pending[path] = []
+		if ResourceLoader.load_threaded_request(path) != OK:
+			_gallery_pending.erase(path)
+			target.texture = load(path) as Texture2D
+			return
+	_gallery_pending[path].append(target)
+
+func _process(_delta: float) -> void:
+	if _gallery_pending.is_empty():
+		set_process(false)
+		return
+	for path in _gallery_pending.keys():
+		var st := ResourceLoader.load_threaded_get_status(path)
+		if st == ResourceLoader.THREAD_LOAD_IN_PROGRESS:
+			continue
+		var tex: Texture2D = null
+		if st == ResourceLoader.THREAD_LOAD_LOADED:
+			tex = ResourceLoader.load_threaded_get(path) as Texture2D
+		for t in _gallery_pending[path]:
+			if is_instance_valid(t):
+				t.texture = tex
+		_gallery_pending.erase(path)
+
+func _open_viewer(index: int) -> void:
+	if _gallery_images.is_empty():
+		return
+	_viewer_index = posmod(index, _gallery_images.size())
+	_viewer_image.texture = load(_gallery_images[_viewer_index]) as Texture2D
+	_viewer_counter.text = "%d / %d" % [_viewer_index + 1, _gallery_images.size()]
+	_viewer.visible = true
+	_viewer.modulate.a = 0.0
+	create_tween().tween_property(_viewer, "modulate:a", 1.0, 0.15)
+
+func _viewer_step(step: int) -> void:
+	_open_viewer(_viewer_index + step)
+
+func _close_viewer() -> void:
+	_viewer.visible = false
+	_viewer_image.texture = null
+
+func _unhandled_input(event: InputEvent) -> void:
+	if _viewer == null or not _viewer.visible:
+		return
+	if event.is_action_pressed("ui_cancel"):
+		_close_viewer()
+	elif event.is_action_pressed("ui_left"):
+		_viewer_step(-1)
+	elif event.is_action_pressed("ui_right"):
+		_viewer_step(1)
+	else:
+		return
+	get_viewport().set_input_as_handled()

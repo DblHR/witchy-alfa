@@ -1,0 +1,100 @@
+{
+  "_help": "Галерея (Инвентарь → карточка справа внизу). characters — персонажи, events — события. У категории: id, title (название), icon (картинка-значок, необязательно), character (id персонажа: добавит его портрет, боевой спрайт и все картинки из assets/pics/cards/art/<id>/), images (список путей к картинкам, в любом порядке добавляются после автоматических).",
+  "characters": [
+    {
+      "id": "witch",
+      "title": "Ведьмочка",
+      "character": "witch",
+      "images": []
+    },
+    {
+      "id": "warrior",
+      "title": "Воин",
+      "character": "warrior",
+      "images": []
+    },
+    {
+      "id": "aki",
+      "title": "Аки",
+      "character": "aki",
+      "images": []
+    },
+    {
+      "id": "luisa",
+      "title": "Луиса",
+      "character": "luisa",
+      "images": []
+    },
+    {
+      "id": "fufu",
+      "title": "Фуфу",
+      "character": "fufu",
+      "images": []
+    },
+    {
+      "id": "rikka",
+      "title": "Рикка",
+      "images": [
+        "res://assets/pics/NPCs/bunny.png"
+      ]
+    },
+    {
+      "id": "sessilia",
+      "title": "Сессилия",
+      "images": [
+        "res://assets/pics/NPCs/shopkeeper.png"
+      ]
+    },
+    {
+      "id": "noctris",
+      "title": "Ноктрис",
+      "images": [
+        "res://assets/pics/NPCs/nurse/nurse.png"
+      ]
+    },
+  ],
+  "events": [
+    {
+      "id": "endscreens",
+      "title": "Экраны после боя",
+      "images": [
+        "res://assets/pics/bigPics/endscreen/victory.png",
+        "res://assets/pics/bigPics/endscreen/defeat.png"
+      ]
+    },
+    {
+      "id": "prologue",
+      "title": "Пролог",
+      "images": [
+        "res://assets/pics/bigPics/prologue/scene1.png",
+        "res://assets/pics/bigPics/prologue/scene2.png",
+        "res://assets/pics/bigPics/prologue/scene3.png",
+        "res://assets/pics/bigPics/prologue/scene4.png",
+        "res://assets/pics/bigPics/prologue/scene5.png",
+        "res://assets/pics/bigPics/prologue/scene6.png",
+        "res://assets/pics/bigPics/prologue/scene7.png",
+        "res://assets/pics/bigPics/prologue/scene8.png",
+        "res://assets/pics/bigPics/prologue/scene9.png",
+        "res://assets/pics/bigPics/prologue/scene10.png",
+        "res://assets/pics/bigPics/prologue/scene11.png",
+        "res://assets/pics/bigPics/prologue/scene12.png"
+      ]
+    },
+    {
+      "id": "statues",
+      "title": "Статуи",
+      "images": [
+        "res://assets/pics/NPCs/statue/statue_white.png",
+        "res://assets/pics/NPCs/statue/statue_black.png"
+      ]
+    },
+    {
+      "id": "chest",
+      "title": "Сундук",
+      "images": [
+        "res://assets/pics/NPCs/chest/chest.png",
+        "res://assets/pics/NPCs/chest/chest_open.png"
+      ]
+    }
+  ]
+}

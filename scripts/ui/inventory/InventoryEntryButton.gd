@@ -63,7 +63,7 @@ func setup(data: Dictionary) -> void:
 		title_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		title_label.position = Vector2(108, 20)
 		title_label.size = Vector2(170, 28)
-		title_label.add_theme_font_size_override("font_size", 20)
+		title_label.add_theme_font_size_override("font_size", int(data.get("title_font_size", 20)))
 
 		subtitle_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 		subtitle_label.visible = String(data.get("subtitle", "")) != ""
