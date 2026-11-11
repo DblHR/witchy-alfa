@@ -83,11 +83,11 @@ void fragment() {
 ## Где лицо на портретах из Setup (card_portrait): x, y — центр лица, z — размер окна
 ## (доля высоты картинки; меньше значение = крупнее лицо). Для нового героя добавьте строку.
 const FACE_FOCUS := {
-	"witch": Vector3(0.46, 0.27, 0.30),
+	"witch": Vector3(0.535, 0.225, 0.25),
 	"warrior": Vector3(0.51, 0.16, 0.32),
-	"aki": Vector3(0.60, 0.27, 0.32),
+	"aki": Vector3(0.545, 0.28, 0.27),
 	"fufu": Vector3(0.445, 0.19, 0.30),
-	"luisa": Vector3(0.51, 0.24, 0.30),
+	"luisa": Vector3(0.548, 0.25, 0.28),
 }
 const FACE_DEFAULT := Vector3(0.5, 0.25, 0.40)
 

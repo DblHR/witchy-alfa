@@ -114,6 +114,12 @@ func _build() -> void:
 	_stage.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_frame.add_child(_stage)
 
+	# Снимок экрана сразу после портретов (до нижней полосы): окно текста размывает именно его,
+	# поэтому фигуры под окном не обрезаются полосой и не пропадают.
+	var bbc := BackBufferCopy.new()
+	bbc.copy_mode = BackBufferCopy.COPY_MODE_VIEWPORT
+	_frame.add_child(bbc)
+
 	# Нижняя полоса — поверх портретов, с мягким переходом.
 	var grad := Gradient.new()
 	grad.set_color(0, Color(BAND_COLOR.r, BAND_COLOR.g, BAND_COLOR.b, 0.0))

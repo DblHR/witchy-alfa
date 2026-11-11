@@ -45,20 +45,29 @@ func _on_start_run() -> void:
 	# Но если Вы хотите сохранить "старт run" строго в Setup — можно перенести туда.
 	SceneRouter_.go_to_setup()
 
+## Отложенные сюжетные диалоги: флаг StoryState -> id диалога (первый поднятый флаг играется при входе в хаб).
+const PENDING_DIALOGUES := [
+	["pending_tutorial_rikka", "tutorial_rikka_after"],
+	["pending_find_warrior_after_battle", "find_warrior_after_battle"],
+]
+
 func _play_pending_story_dialogue() -> void:
-	if StoryState_ == null or not StoryState_.has_flag("pending_find_warrior_after_battle"):
+	if StoryState_ == null or StoryDialogueDB_ == null:
 		return
-	StoryState_.set_flag("pending_find_warrior_after_battle", false)
-	if StoryDialogueDB_ == null:
+	for pair in PENDING_DIALOGUES:
+		var flag := String(pair[0])
+		if not StoryState_.has_flag(flag):
+			continue
+		StoryState_.set_flag(flag, false)
+		var d := StoryDialogueDB_.get_dialogue(String(pair[1]))
+		if d.is_empty():
+			continue
+		var lines := StoryDialogueDB_.resolve_lines(d)
+		if lines.is_empty():
+			StoryDialogueDB_.apply_effects(d.get("on_finish", {}))
+			continue
+		DialogueManager_.show_sequence(lines, Callable(self, "_on_pending_story_dialogue_finished").bind(d))
 		return
-	var d := StoryDialogueDB_.get_dialogue("find_warrior_after_battle")
-	if d.is_empty():
-		return
-	var lines := StoryDialogueDB_.resolve_lines(d)
-	if lines.is_empty():
-		StoryDialogueDB_.apply_effects(d.get("on_finish", {}))
-		return
-	DialogueManager_.show_sequence(lines, Callable(self, "_on_pending_story_dialogue_finished").bind(d))
 
 func _on_pending_story_dialogue_finished(dialogue: Dictionary) -> void:
 	if StoryState_ != null:

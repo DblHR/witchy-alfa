@@ -145,6 +145,8 @@ var _gold_label: Label
 var _progress: RunProgress
 var _room_loot: Dictionary = {}   ## что выпало в этой комнате: gold, xp, items
 var _ui_layer: Node               ## сюда добавляются окна забега (над остальным UI)
+## Обучение (после пролога «Новой игры»): один бой ведьмочки со слизнем, см. CardTutorial.
+var _tutorial: CardTutorial
 
 func _ready() -> void:
 	set_process(false)   # _process нужен только во время перетаскивания
@@ -176,6 +178,12 @@ func _ready() -> void:
 	_combat.lure_kill.connect(_on_lure_kill)
 
 	_run = CardRun.new()
+	if CardTutorial.requested:
+		CardTutorial.requested = false
+		_tutorial = CardTutorial.new()
+		_run.rooms.assign([{"kind": "tutorial", "event": "", "boss": false, "enemies": [CardTutorial.ENEMY_ID], "used": false}])
+		exit_button.text = "Пропустить обучение"
+		exit_button.add_theme_font_size_override("font_size", 24)
 	_api = EnemyApi.new(_combat, self, _run.rng)
 	DungRun.begin_card_run()
 	_relics = CardRelics.new(DungRun.relics, _run.rng)
@@ -215,7 +223,12 @@ func _ready() -> void:
 	_admin.setup(self)
 
 	_setup_banter()
+	if _tutorial != null:
+		_tutorial.setup(self)
+		_ui_add(_tutorial)
 	await _start_room(0)
+	if _tutorial != null:
+		_tutorial.begin()
 
 func _exit_tree() -> void:
 	if BattleBanter_ != null:
@@ -232,6 +245,11 @@ func _make_unit(id: String, level: int) -> Unit:
 
 func _spawn_heroes() -> void:
 	left_team.clear()
+	if _tutorial != null:
+		var w := _make_unit("witch", 1)   ## в обучении — только ведьмочка 1-го уровня
+		if w != null:
+			left_team.append(w)
+		return
 	var level := maxi(1, DungRun.party_level)
 	var slot_count := mini(DungRun.party_slot_count, DungRun.party_ids.size())
 	for i in range(slot_count):
@@ -254,7 +272,7 @@ func _spawn_enemies(room: Dictionary) -> void:
 		if def == null:
 			push_warning("CardBattle: враг не найден в EnemyDefs: %s" % id)
 			continue
-		right_team.append(def.make_unit(_run.floor_no, _run.rng))
+		right_team.append(def.make_unit(_run.floor_no, _run.rng, CardTutorial.ENEMY_HP if _tutorial != null else 0))
 		if right_team.size() >= ENEMY_SLOTS:
 			break
 
@@ -444,8 +462,9 @@ func _start_room(index: int) -> void:
 	_relics.on_battle_start(_combat, _run.white_charges > 0, _run.black_charges > 0)
 	_turn_no = 0
 
-	BattleBanter_.start_battle(self)
-	BattleBanter_.trigger("battle_start")
+	if _tutorial == null:   ## в обучении реплики отряда не мешают подсказкам
+		BattleBanter_.start_battle(self)
+		BattleBanter_.trigger("battle_start")
 	await _begin_player_turn()
 
 ## Колода на бой: карты живых героев (выбранные в Setup), общие карты и добытые карты.
@@ -898,6 +917,10 @@ func _on_end_turn_pressed() -> void:
 
 	# 2. Щиты врагов сгорают (держались весь ход игрока); статусы начала хода врагов
 	#    (Горение жжёт до их ударов).
+	if _tutorial != null:
+		await _tutorial_enemy_turn()
+		return
+
 	_combat.enemy_phase = true
 	_float_stack.clear()
 	if SHIELD_EXPIRES_ON_NEW_TURN:
@@ -1199,6 +1222,11 @@ func _on_end_button_pressed() -> void:
 	SceneRouter_.go_to_hub()
 
 func _on_exit_pressed() -> void:
+	if _tutorial != null:
+		_busy = true
+		_ended = true
+		_tutorial.finish(false)
+		return
 	if _banter != null:
 		_banter.stop()
 	SceneRouter_.go_to_setup()
@@ -1844,3 +1872,38 @@ func run_roll_chest(_room: Dictionary) -> String:
 			Inventory_.add_item("warm_headphones", 1)
 			lines.append("Тёплые наушники (между монетами)")
 	return "В сундуке:\n" + "\n".join(lines)
+
+# --- Обучение (CardTutorial) -------------------------------------------------
+
+## Ход слизня в обучении: один удар, который ведьмочка не переживает. Потом — в хаб к Рикке.
+func _tutorial_enemy_turn() -> void:
+	_tutorial.on_turn_ended()
+	await _wait(0.4)
+	var slime := _combat.front_enemy()
+	var witch: Unit = null
+	for u in _combat.alive_heroes():
+		witch = u
+		break
+	if slime != null and witch != null:
+		var a := _find_actor(slime)
+		if a != null:
+			a.play_attack_bounce(-1)
+		_combat.deal_damage(slime, witch, witch.hp + _combat.shield_of(witch) + 999, false)
+		_refresh_all_actors()
+	await _wait(0.9)
+	_ended = true
+	_tutorial.finish()
+
+func tutorial_hand_views() -> Array[CardView]:
+	return _hand_views
+
+func tutorial_actor_rect(actor: BattleActor) -> Rect2:
+	return _actor_hit_rect(actor).grow(-20.0)
+
+func tutorial_ult_rects() -> Array[Rect2]:
+	var out: Array[Rect2] = []
+	if _ults != null:
+		for c in _ults.get_children():
+			if c is Control and (c as Control).visible:
+				out.append((c as Control).get_global_rect())
+	return out

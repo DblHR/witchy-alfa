@@ -18,7 +18,7 @@ const BASE_HEIGHT := 1060.0
 const TOP_Y := 36.0
 
 const TUNING := {
-	"witch": {"zoom": 1.04, "focus_x": 0.54, "top": -64.0},
+	"witch": {"zoom": 1.04, "focus_x": 0.54, "top": -20.0},
 	"warrior": {"zoom": 1.0, "focus_x": 0.50},
 	"aki": {"zoom": 1.06, "focus_x": 0.525},
 	"luisa": {"zoom": 0.96, "focus_x": 0.49, "top": -50.0},
@@ -29,6 +29,7 @@ const TUNING := {
 	"statue_white": {"zoom": 0.92, "color": Color(0.62, 0.62, 0.70)},
 	"statue_black": {"zoom": 0.92, "color": Color(0.30, 0.26, 0.36)},
 	"chest": {"color": Color(0.72, 0.50, 0.16)},
+	"slime": {"zoom": 0.42, "top": 430.0, "color": Color(0.42, 0.72, 0.28)},   ## обучение: маленький спрайт, стоит «на полу»
 }
 const DEFAULT_COLOR := Color(0.55, 0.30, 0.48)
 

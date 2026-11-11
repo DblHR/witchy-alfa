@@ -65,11 +65,16 @@ func _advance() -> void:
 	var max_count = max(_paths.size(), 1)
 	_index += 1
 	if _index >= max_count:
+		var tutorial := true
 		if StoryState_ != null:
 			StoryState_.intro_played = true
-			# Туториала в карточном режиме пока нет: сразу в хаб.
-			StoryState_.tutorial_battle_pending = false
+			tutorial = StoryState_.tutorial_battle_pending and not StoryState_.tutorial_battle_completed
 			StoryState_.changed.emit()
-		SceneRouter_.go_to_hub()
+		if tutorial:
+			# Обучение: бой со слизнем (CardTutorial), после него — хаб и диалог с Риккой.
+			CardTutorial.requested = true
+			SceneRouter_.go_to_card_battle()
+		else:
+			SceneRouter_.go_to_hub()
 		return
 	_show_current()
