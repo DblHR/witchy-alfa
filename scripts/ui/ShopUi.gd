@@ -17,6 +17,35 @@ const NOTE_RECT := Rect2(110, 366, 980, 44)
 const GRID_POS := Vector2(110, 430)
 const COIN_TEXT_POS := Vector2(1590, 46)
 
+## Где стоят продавцы и медсестра (фоны теперь без них): прямоугольник картинки на экране 1920×1080.
+## Картинка вписывается с сохранением пропорций; выходить за край экрана можно.
+const NPC_RECTS := {
+	"rabbit_shop": Rect2(1016, 40, 909, 1178),
+	"lamia": Rect2(988, 44, 1023, 1078),
+	"nurse": Rect2(504, 0, 1920, 1080),
+}
+
+## Спрайт продавца справа от панели. id — ключ AssetCatalog (rabbit_shop / lamia / nurse).
+static func make_npc_sprite(id: String) -> TextureRect:
+	var t := TextureRect.new()
+	t.name = "NpcSprite"
+	t.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	t.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	t.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	t.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
+	set_npc(t, id)
+	return t
+
+static func set_npc(t: TextureRect, id: String) -> void:
+	var r: Rect2 = NPC_RECTS.get(id, Rect2())
+	t.visible = r.size != Vector2.ZERO and AssetCatalog_ != null
+	if not t.visible:
+		t.texture = null
+		return
+	t.texture = AssetCatalog_.get_event_npc_texture(id)
+	t.position = r.position
+	t.size = r.size
+
 const CARD_SIZE := Vector2(232, 250)
 const CARD_GAP := 16
 

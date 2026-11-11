@@ -23,7 +23,8 @@ const FLOOR := 1
 const BATTLE_CHANCE := 0.70
 const EVENT_WEIGHTS := {"chest": 25, "statue": 25, "shop": 25, "nurse": 25}
 ## С какого уровня отряда встречается ивент-комната (до этого на её месте — бой).
-const EVENT_MIN_LEVEL := {"chest": 2, "shop": 4, "nurse": 6, "statue": 6}
+## Пока все с 1-го: открытие по уровням (2 / 4 / 6) не понравилось — поставить числа, чтобы вернуть.
+const EVENT_MIN_LEVEL := {"chest": 1, "shop": 1, "nurse": 1, "statue": 1}
 
 ## Элитная комната (слизнедевочка ранга A + слизень): шанс среди боёв, не раньше этой комнаты.
 const ELITE_CHANCE := 0.25

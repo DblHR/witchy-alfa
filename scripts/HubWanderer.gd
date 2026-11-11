@@ -38,6 +38,18 @@ var _tween: Tween
 var _bob: Tween
 var _breath: Tween
 var _alive := true
+## Дыхание — растяжение в вершинном шейдере: не привязано к целым пикселям (scale у Control
+## округляется до пикселя, отсюда были рывки).
+var _breath_mat: ShaderMaterial
+const BREATH_SHADER := """
+shader_type canvas_item;
+uniform float stretch = 0.0;
+uniform float pivot_y = 0.0;
+void vertex() {
+	VERTEX.y = pivot_y + (VERTEX.y - pivot_y) * (1.0 + stretch);
+}
+"""
+static var _breath_shader: Shader
 
 func setup(body: TextureRect, min_x: float, max_x: float) -> void:
 	_body = body
@@ -46,6 +58,16 @@ func setup(body: TextureRect, min_x: float, max_x: float) -> void:
 	_base_y = body.position.y
 	body.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	body.pivot_offset = Vector2(body.size.x * 0.5, body.size.y)   # качается и тянется от ног
+	# Плавное масштабирование картинки (без «лесенки» при сжатии).
+	body.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
+	if _breath_shader == null:
+		_breath_shader = Shader.new()
+		_breath_shader.code = BREATH_SHADER
+	_breath_mat = ShaderMaterial.new()
+	_breath_mat.shader = _breath_shader
+	_breath_mat.set_shader_parameter("pivot_y", body.size.y)
+	if body.material == null:
+		body.material = _breath_mat
 
 func _ready() -> void:
 	if _body == null:
@@ -135,15 +157,19 @@ func _stop_bob() -> void:
 	_kill(_bob)
 	_body.position.y = _base_y
 
+func _set_stretch(v: float) -> void:
+	if _breath_mat != null:
+		_breath_mat.set_shader_parameter("stretch", v)
+
 func _start_breath() -> void:
 	_kill(_breath)
 	_breath = create_tween().set_loops()
-	_breath.tween_property(_body, "scale:y", 1.0 + BREATH_SCALE, BREATH_PERIOD * 0.5).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-	_breath.tween_property(_body, "scale:y", 1.0, BREATH_PERIOD * 0.5).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	_breath.tween_method(_set_stretch, 0.0, BREATH_SCALE, BREATH_PERIOD * 0.5).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	_breath.tween_method(_set_stretch, BREATH_SCALE, 0.0, BREATH_PERIOD * 0.5).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 
 func _stop_breath() -> void:
 	_kill(_breath)
-	_body.scale.y = 1.0
+	_set_stretch(0.0)
 
 static func _kill(t: Tween) -> void:
 	if t != null and t.is_valid():

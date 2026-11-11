@@ -14,6 +14,12 @@ var _pending_shop_dialogue: Dictionary = {}
 
 func _ready() -> void:
 	UIThemeHelper.apply_pink_theme(self)
+	# Рикка — отдельной картинкой поверх фона (на фоне её больше нет).
+	var bg := get_node_or_null("background")
+	if bg != null:
+		var npc := ShopUi.make_npc_sprite("rabbit_shop")
+		add_child(npc)
+		move_child(npc, bg.get_index() + 1)
 	home_button.pressed.connect(func(): SceneRouter_.go_to_hub())
 	if DungRun != null and not DungRun.changed.is_connected(_refresh):
 		DungRun.changed.connect(_refresh)

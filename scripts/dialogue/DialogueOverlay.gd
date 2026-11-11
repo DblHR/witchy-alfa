@@ -14,15 +14,16 @@ signal sequence_finished
 
 # --- Раскладка (экран 1920×1080; на широком экране кадр по центру) -----------
 const FRAME := Vector2(1920, 1080)
-## Тёмная полоса снизу во всю ширину (как в Helltaker): имя и текст по центру.
-const BAND_TOP := 730.0
-const BAND_FADE := 90.0           ## мягкий переход от картинки к полосе
-const NAME_RECT := Rect2(160, 742, 1600, 50)
-const TEXT_RECT := Rect2(260, 800, 1400, 170)
-const ARROW_POS := Vector2(960, 990)
-const BUTTONS_RIGHT := 1890.0
-const BUTTONS_Y := 1022.0
-const BUTTON_SIZE := Vector2(140, 40)
+## Кадр как в ZZZ: тёмная полоса сверху (ПОД портретами — шляпа и уши заходят на неё)
+## и полоса снизу (над портретами). Текст — в полупрозрачном окне с размытием, по центру.
+const TOP_BAND_H := 104.0
+const BOTTOM_BAND_TOP := 968.0
+const BUBBLE_RECT := Rect2(330, 812, 1260, 214)
+const NAME_TAB_H := 46.0
+const TEXT_PAD := Vector2(52, 34)
+const BUTTONS_RIGHT := 1880.0
+const BUTTONS_Y := 30.0
+const BUTTON_SIZE := Vector2(140, 44)
 ## Центры мест для 1, 2 и 3 персонажей.
 const SLOT_X := {1: [960.0], 2: [480.0, 1440.0], 3: [340.0, 960.0, 1580.0]}
 const SLOT_NAMES := {"left": 0, "center": 1, "right": 2}
@@ -30,8 +31,8 @@ const SLOT_NAMES := {"left": 0, "center": 1, "right": 2}
 const SHRINK_FOR_THREE := 0.84
 
 # --- Текст и поведение ---------------------------------------------------------
-const TEXT_SIZE := 34
-const NAME_SIZE := 34
+const TEXT_SIZE := 32
+const NAME_SIZE := 26
 const CHARS_PER_SEC := 70.0
 const AUTO_BASE_DELAY := 1.1       ## пауза после допечатки в режиме «Авто»
 const AUTO_PER_CHAR := 0.035
@@ -39,7 +40,7 @@ const DIM_INACTIVE := Color(0.58, 0.55, 0.64)
 const INACTIVE_SCALE := 0.965
 const FADE_TIME := 0.28
 
-const BAND_COLOR := Color(0.025, 0.012, 0.05, 1.0)
+const BAND_COLOR := Color(0.02, 0.01, 0.04, 1.0)
 const BOX_BORDER := Color(1.0, 0.80, 0.90, 0.55)
 const BTN_BG := Color(0.14, 0.07, 0.19, 0.9)
 const BTN_HOVER := Color(0.42, 0.20, 0.46, 1.0)
@@ -50,7 +51,10 @@ const BTN_ON := Color(0.80, 0.30, 0.56, 1.0)
 var _frame: Control          ## кадр 1920×1080
 var _stage: Control          ## портреты
 var _ui: Control             ## окно текста, имя, кнопки
-var _band: Control
+var _band: Control           ## нижняя полоса
+var _top_band: ColorRect     ## верхняя полоса (под портретами)
+var _bubble: ColorRect
+var _name_tab: PanelContainer
 var _name_label: Label
 var _text: Label
 var _arrow: Label
@@ -97,12 +101,20 @@ func _build() -> void:
 	dim.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_frame.add_child(dim)
 
+	# Верхняя полоса — до портретов, поэтому шляпы и уши рисуются поверх неё.
+	_top_band = ColorRect.new()
+	_top_band.color = BAND_COLOR
+	_top_band.position = Vector2(-2000, -1000)
+	_top_band.size = Vector2(FRAME.x + 4000, 1000 + TOP_BAND_H)
+	_top_band.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_frame.add_child(_top_band)
+
 	_stage = Control.new()
 	_stage.size = FRAME
 	_stage.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_frame.add_child(_stage)
 
-	# Полоса: сверху мягкий переход в тёмное, дальше сплошной цвет до низа экрана.
+	# Нижняя полоса — поверх портретов, с мягким переходом.
 	var grad := Gradient.new()
 	grad.set_color(0, Color(BAND_COLOR.r, BAND_COLOR.g, BAND_COLOR.b, 0.0))
 	grad.set_color(1, BAND_COLOR)
@@ -117,14 +129,14 @@ func _build() -> void:
 	fade.texture = gt
 	fade.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	fade.stretch_mode = TextureRect.STRETCH_SCALE
-	fade.position = Vector2(-2000, BAND_TOP - BAND_FADE)
-	fade.size = Vector2(FRAME.x + 4000, BAND_FADE)
+	fade.position = Vector2(-2000, BOTTOM_BAND_TOP - 70.0)
+	fade.size = Vector2(FRAME.x + 4000, 70.0)
 	fade.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_band.add_child(fade)
 	var solid := ColorRect.new()
 	solid.color = BAND_COLOR
-	solid.position = Vector2(-2000, BAND_TOP)
-	solid.size = Vector2(FRAME.x + 4000, FRAME.y - BAND_TOP + 600)
+	solid.position = Vector2(-2000, BOTTOM_BAND_TOP)
+	solid.size = Vector2(FRAME.x + 4000, FRAME.y - BOTTOM_BAND_TOP + 600)
 	solid.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_band.add_child(solid)
 
@@ -133,11 +145,21 @@ func _build() -> void:
 	_ui.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_frame.add_child(_ui)
 
+	# Окно текста: размывает то, что под ним (портреты, полосу), затемняет, скруглено.
+	_bubble = ColorRect.new()
+	_bubble.position = BUBBLE_RECT.position
+	_bubble.size = BUBBLE_RECT.size
+	_bubble.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var mat := ShaderMaterial.new()
+	mat.shader = load("res://ui/vn_bubble.gdshader")
+	mat.set_shader_parameter("rect_size", BUBBLE_RECT.size)
+	_bubble.material = mat
+	_ui.add_child(_bubble)
+
 	_text = Label.new()
-	_text.position = TEXT_RECT.position
-	_text.size = TEXT_RECT.size
+	_text.position = BUBBLE_RECT.position + TEXT_PAD
+	_text.size = BUBBLE_RECT.size - TEXT_PAD * 2.0 - Vector2(40, 0)
 	_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_text.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_text.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_text.add_theme_font_size_override("font_size", TEXT_SIZE)
 	_text.add_theme_constant_override("line_spacing", 8)
@@ -148,25 +170,27 @@ func _build() -> void:
 	_text.add_theme_constant_override("outline_size", 0)
 	_ui.add_child(_text)
 
+	# Имя — язычок по центру верхнего края окна.
+	_name_tab = PanelContainer.new()
+	_name_tab.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_ui.add_child(_name_tab)
 	_name_label = Label.new()
-	_name_label.position = NAME_RECT.position
-	_name_label.size = NAME_RECT.size
-	_name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_name_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_name_label.add_theme_font_size_override("font_size", NAME_SIZE)
 	_name_label.add_theme_constant_override("outline_size", 0)
-	_ui.add_child(_name_label)
+	_name_tab.add_child(_name_label)
 
 	_arrow = Label.new()
 	_arrow.text = "◆"
 	_arrow.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_arrow.add_theme_font_size_override("font_size", 26)
+	_arrow.add_theme_font_size_override("font_size", 22)
 	_arrow.add_theme_color_override("font_color", Color(1.0, 0.82, 0.92))
-	_arrow.size = Vector2(60, 36)
+	_arrow.size = Vector2(40, 30)
 	_arrow.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_arrow.position = ARROW_POS - Vector2(30, 0)
+	_arrow.position = BUBBLE_RECT.end - Vector2(62, 50)
 	_ui.add_child(_arrow)
 
+	# Кнопки — в верхней полосе справа (как Skip в ZZZ).
 	var defs := [["skip", "Пропустить"], ["auto", "Авто"], ["log", "История"], ["hide", "Скрыть"]]
 	var x := BUTTONS_RIGHT
 	for d in defs:
@@ -185,7 +209,7 @@ func _build() -> void:
 	_hidden_hint.text = "Клик — вернуть окно"
 	_hidden_hint.visible = false
 	_hidden_hint.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_hidden_hint.position = Vector2(FRAME.x - 330, FRAME.y - 54)
+	_hidden_hint.position = Vector2(FRAME.x - 330, FRAME.y - 60)
 	_hidden_hint.add_theme_font_size_override("font_size", 22)
 	_hidden_hint.add_theme_color_override("font_color", Color(1, 1, 1, 0.75))
 	_hidden_hint.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.8))
@@ -370,9 +394,25 @@ func _apply_line(line) -> void:
 	_show_characters(_unique_characters(characters), active)
 
 	var color := VnPortraits.name_color(active)
-	var name_col := color.lightened(0.35)
-	_name_label.text = ("•  %s  •" % speaker) if speaker != "" else ""
+	var name_col := color.lightened(0.4)
+	_name_label.text = speaker
 	_name_label.add_theme_color_override("font_color", name_col)
+	_name_tab.visible = speaker != ""
+	var ns := StyleBoxFlat.new()
+	ns.bg_color = Color(0.05, 0.02, 0.08, 0.92)
+	ns.corner_radius_top_left = 16
+	ns.corner_radius_top_right = 16
+	ns.corner_radius_bottom_left = 16
+	ns.corner_radius_bottom_right = 16
+	ns.set_border_width_all(2)
+	ns.border_color = Color(color.r, color.g, color.b, 0.9)
+	ns.content_margin_left = 30
+	ns.content_margin_right = 30
+	ns.content_margin_top = 4
+	ns.content_margin_bottom = 6
+	_name_tab.add_theme_stylebox_override("panel", ns)
+	_name_tab.reset_size()
+	_name_tab.position = Vector2(BUBBLE_RECT.position.x + (BUBBLE_RECT.size.x - _name_tab.size.x) * 0.5, BUBBLE_RECT.position.y - NAME_TAB_H * 0.5)
 	_arrow.add_theme_color_override("font_color", name_col)
 
 	_text.text = body
@@ -588,4 +628,5 @@ func _set_ui_hidden(hidden: bool) -> void:
 	if _ui != null:
 		_ui.visible = not hidden
 		_band.visible = not hidden
+		_top_band.visible = not hidden
 		_hidden_hint.visible = hidden

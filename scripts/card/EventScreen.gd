@@ -40,11 +40,23 @@ const TITLES := {
 
 var battle: Node
 var room: Dictionary
+## Комната со статуей: без своего фона — отряд и статуя стоят в мире боя, окно дара поверх.
+var world_mode := false
+var _world_panel: ColorRect
+
+## Окно дара статуи: полупрозрачная плашка с блюром внизу экрана (как у диалогов), чтобы не закрывать отряд.
+const WORLD_PANEL_RECT := Rect2(380, 764, 1160, 276)
+const WORLD_TITLE_RECT := Rect2(424, 780, 1072, 56)
+const WORLD_DESC_RECT := Rect2(424, 840, 1072, 110)
+const WORLD_OPTIONS_RECT := Rect2(424, 958, 560, 62)
+const WORLD_CONTINUE_RECT := Rect2(1176, 958, 320, 62)
 
 var _bg: TextureRect
 var _shade: TextureRect
 var _chest_pic: TextureRect
 var _npc: TextureRect
+## Лавка и медсестра: Сессилия / Ноктрис справа (фоны теперь без них).
+var _npc_sprite: TextureRect
 var _title: Label
 var _desc: Label
 var _options: VBoxContainer
@@ -67,8 +79,11 @@ func setup(p_battle: Node, p_room: Dictionary) -> void:
 	mouse_filter = Control.MOUSE_FILTER_STOP
 
 	_bg = _make_full_texture()
-	_bg.texture = AssetCatalog_.get_event_background(_event_enum(), _variant_enum()) if AssetCatalog_ != null else null
+	if not world_mode:
+		_bg.texture = AssetCatalog_.get_event_background(_event_enum(), _variant_enum()) if AssetCatalog_ != null else null
 	add_child(_bg)
+	_npc_sprite = ShopUi.make_npc_sprite("")
+	add_child(_npc_sprite)
 
 	_chest_pic = _make_full_texture()
 	_chest_pic.visible = false
@@ -98,6 +113,17 @@ func setup(p_battle: Node, p_room: Dictionary) -> void:
 	_shade.stretch_mode = TextureRect.STRETCH_SCALE
 	_shade.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_shade)
+
+	if world_mode:
+		_world_panel = ColorRect.new()
+		_world_panel.position = WORLD_PANEL_RECT.position
+		_world_panel.size = WORLD_PANEL_RECT.size
+		_world_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		var pmat := ShaderMaterial.new()
+		pmat.shader = load("res://ui/vn_bubble.gdshader")
+		pmat.set_shader_parameter("rect_size", WORLD_PANEL_RECT.size)
+		_world_panel.material = pmat
+		add_child(_world_panel)
 
 	_title = RunUiKit.make_label("", 64, RunUiKit.GOLD, false)
 	_title.position = TITLE_RECT.position
@@ -195,6 +221,8 @@ func _on_intro_finished() -> void:
 func _set_controls_visible(on: bool) -> void:
 	for c in [_title, _desc, _options, _cards, _continue, _shade]:
 		c.visible = on
+	if _world_panel != null:
+		_world_panel.visible = on
 
 # --- Общее -------------------------------------------------------------------
 
@@ -235,6 +263,9 @@ func _add_option(text: String, callback: Callable, disabled: bool = false) -> Bu
 	var b := RunUiKit.make_button(text, Vector2(0, 80), 30)
 	if _panel_layout:
 		ShopUi.style_button(b, 28)
+	if world_mode:
+		b.custom_minimum_size = Vector2(0, WORLD_OPTIONS_RECT.size.y)
+		b.add_theme_font_size_override("font_size", 28)
 	b.disabled = disabled
 	b.pressed.connect(callback)
 	_options.add_child(b)
@@ -265,6 +296,25 @@ func _apply_layout(panel: bool) -> void:
 	else:
 		_gold_label.position = Vector2(24, 22)
 		_gold_label.text = "Золото: %d" % _gold()
+	if world_mode:
+		_apply_world_layout()
+
+func _apply_world_layout() -> void:
+	_shade.visible = false
+	_title.position = WORLD_TITLE_RECT.position
+	_title.size = WORLD_TITLE_RECT.size
+	_title.add_theme_font_size_override("font_size", 40)
+	_title.add_theme_constant_override("outline_size", 0)
+	_desc.position = WORLD_DESC_RECT.position
+	_desc.size = WORLD_DESC_RECT.size
+	_desc.add_theme_font_size_override("font_size", 27)
+	_desc.add_theme_constant_override("outline_size", 0)
+	_options.position = WORLD_OPTIONS_RECT.position
+	_options.size = WORLD_OPTIONS_RECT.size
+	_continue.position = WORLD_CONTINUE_RECT.position
+	_continue.size = WORLD_CONTINUE_RECT.size
+	_continue.custom_minimum_size = WORLD_CONTINUE_RECT.size
+	_continue.add_theme_font_size_override("font_size", 28)
 
 func _rebuild() -> void:
 	_chest_waiting = false
@@ -282,6 +332,7 @@ func _rebuild() -> void:
 	_title.visible = true
 	_chest_pic.visible = false
 	_npc.texture = null
+	ShopUi.set_npc(_npc_sprite, "lamia" if event_id == "shop" else ("nurse" if event_id == "nurse" else ""))
 	_continue.text = "ИДТИ ДАЛЬШЕ"
 	_continue.visible = true
 	_continue.disabled = _image_open
@@ -417,7 +468,7 @@ func _on_chest_open() -> void:
 
 func _build_statue() -> void:
 	var white := String(room.get("variant", "")) == "white"
-	if AssetCatalog_ != null:
+	if AssetCatalog_ != null and not world_mode:
 		_npc.texture = AssetCatalog_.get_event_npc_texture("statue_white" if white else "statue_black")
 	if white:
 		_desc.text = "Белая статуя. На %d боевые комнаты: +1 энергия в первые 2 хода боя, после каждой победы отряд лечится на 10%% макс. HP." % CardRelics.STATUE_ROOMS

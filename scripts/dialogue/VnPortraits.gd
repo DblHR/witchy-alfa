@@ -13,17 +13,17 @@ class_name VnPortraits
 ##   color   — цвет плашки с именем (героини берут цвет своих карт сами).
 
 ## Высота видимой части портрета на экране 1920×1080 при zoom = 1.
-const BASE_HEIGHT := 900.0
+const BASE_HEIGHT := 1060.0
 ## Отступ макушки от верха экрана.
-const TOP_Y := 64.0
+const TOP_Y := 36.0
 
 const TUNING := {
-	"witch": {"zoom": 1.14, "focus_x": 0.475, "top": -24.0},
+	"witch": {"zoom": 1.04, "focus_x": 0.54, "top": -64.0},
 	"warrior": {"zoom": 1.0, "focus_x": 0.50},
 	"aki": {"zoom": 1.06, "focus_x": 0.525},
-	"luisa": {"zoom": 1.02, "focus_x": 0.50},
+	"luisa": {"zoom": 0.96, "focus_x": 0.49, "top": -50.0},
 	"fufu": {"zoom": 1.16, "focus_x": 0.475, "top": -30.0},
-	"rabbit_shop": {"zoom": 1.26, "focus_x": 0.50, "color": Color(0.86, 0.26, 0.30)},
+	"rabbit_shop": {"zoom": 1.15, "focus_x": 0.50, "color": Color(0.86, 0.26, 0.30)},
 	"nurse": {"zoom": 1.08, "focus_x": 0.475, "color": Color(0.90, 0.45, 0.70)},
 	"lamia": {"zoom": 1.18, "focus_x": 0.47, "color": Color(0.80, 0.62, 0.20)},
 	"statue_white": {"zoom": 0.92, "color": Color(0.62, 0.62, 0.70)},

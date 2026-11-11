@@ -1671,13 +1671,33 @@ func _start_event_room(room: Dictionary) -> void:
 	right_team.clear()
 	_populate_world_slots()
 	_enter_camp()
+	var is_statue := String(room.get("event", "")) == "statue"
+	var shrine: StatueShrine = null
+	if is_statue:
+		## Статуя стоит справа на месте врагов; окно дара открывается по клику на неё.
+		shrine = _spawn_statue_shrine(room)
+		await shrine.clicked
 	var screen := EventScreen.new()
+	screen.world_mode = is_statue
 	_ui_add(screen)
 	screen.setup(self, room)   ## полноэкранная комната с диалогом NPC — реплики отряда тут не нужны
 	await screen.finished
 	screen.queue_free()
+	if shrine != null and is_instance_valid(shrine):
+		shrine.vanish()
 	_banter.stop()
 	await _choose_path_and_go()
+
+const STATUE_POS := Vector2(1390, 716)
+
+func _spawn_statue_shrine(room: Dictionary) -> StatueShrine:
+	var shrine := StatueShrine.new()
+	shrine.name = "StatueShrine"
+	shrine.position = STATUE_POS
+	right_world.add_child(shrine)
+	var key := "statue_white" if String(room.get("variant", "")) == "white" else "statue_black"
+	shrine.setup(AssetCatalog_.get_event_npc_texture(key) if AssetCatalog_ != null else null)
+	return shrine
 
 # --- API для окон забега (EventScreen вызывает по имени) ---------------------
 
