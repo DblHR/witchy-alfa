@@ -1,13 +1,12 @@
 [gd_resource type="Resource" script_class="CardDef" format=3 uid="uid://bj5rvist8lffn"]
 
-[ext_resource type="Script" path="res://scripts/card/effects/CardEffect.gd" id="1_pe5kp"]
-[ext_resource type="Script" path="res://scripts/card/effects/EffExtendStatus.gd" id="2_gd4cx"]
-[ext_resource type="Script" path="res://scripts/card/data/CardDef.gd" id="3_2y6cl"]
+[ext_resource type="Script" uid="uid://bi6teh0nyhjdj" path="res://scripts/card/effects/CardEffect.gd" id="1_pe5kp"]
+[ext_resource type="Script" uid="uid://d3jwrele1lpup" path="res://scripts/card/effects/EffExtendStatus.gd" id="2_gd4cx"]
+[ext_resource type="Script" uid="uid://djlle6v3rtq8q" path="res://scripts/card/data/CardDef.gd" id="3_2y6cl"]
 
 [sub_resource type="Resource" id="Resource_pe5kp"]
 script = ExtResource("2_gd4cx")
 status = "burn"
-turns = 1
 stacks = 1
 
 [resource]

@@ -7,7 +7,7 @@
 [ext_resource type="Texture2D" uid="uid://klsl5qwne66a" path="res://assets/pics/icons/buttons/alchemyButton.png" id="4_oj3ng"]
 [ext_resource type="Texture2D" uid="uid://bsueyseydns2j" path="res://assets/pics/icons/buttons/shopButton.png" id="5_o7rky"]
 [ext_resource type="Texture2D" uid="uid://ngcxb0tkqr48" path="res://assets/pics/icons/buttons/inventoryButton.png" id="6_shn0c"]
-[ext_resource type="Texture2D" uid="uid://b62vt3v6vyme5" path="res://assets/pics/actorSprite/witch.png" id="7_p8ka2"]
+[ext_resource type="Texture2D" uid="uid://bocfuam6rgell" path="res://assets/pics/actorSprite/witch.png" id="7_p8ka2"]
 
 [node name="Control" type="Control" unique_id=391545454]
 custom_minimum_size = Vector2(1920, 1080)

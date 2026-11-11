@@ -1,8 +1,8 @@
 [gd_resource type="Resource" script_class="CardDef" format=3 uid="uid://dky3acfmd5l1e"]
 
-[ext_resource type="Script" path="res://scripts/card/effects/CardEffect.gd" id="1_fudlw"]
-[ext_resource type="Script" path="res://scripts/card/effects/EffDamage.gd" id="2_fh6y5"]
-[ext_resource type="Script" path="res://scripts/card/data/CardDef.gd" id="3_jwj7o"]
+[ext_resource type="Script" uid="uid://bi6teh0nyhjdj" path="res://scripts/card/effects/CardEffect.gd" id="1_fudlw"]
+[ext_resource type="Script" uid="uid://8o4obfia0na8" path="res://scripts/card/effects/EffDamage.gd" id="2_fh6y5"]
+[ext_resource type="Script" uid="uid://djlle6v3rtq8q" path="res://scripts/card/data/CardDef.gd" id="3_jwj7o"]
 
 [sub_resource type="Resource" id="Resource_p5sjw"]
 script = ExtResource("2_fh6y5")
