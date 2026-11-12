@@ -218,8 +218,13 @@ func _ready() -> void:
 	for u in left_team:
 		CardDragPortrait.warm_up(u.data)
 
+	# Админ-панель — отдельным слоем поверх всех окон забега (ивенты, лут, выбор комнаты).
 	_admin = CardBattleAdmin.new()
-	hud.add_child(_admin)
+	var admin_layer := CanvasLayer.new()
+	admin_layer.name = "AdminLayer"
+	admin_layer.layer = (_ui_layer as CanvasLayer).layer + 1 if _ui_layer is CanvasLayer else 10
+	add_child(admin_layer)
+	admin_layer.add_child(_admin)
 	_admin.setup(self)
 
 	_setup_banter()
@@ -601,9 +606,12 @@ func _on_card_pressed(v: CardView) -> void:
 	if not _can_act():
 		return
 	_dragging = v
-	_drag_grab_offset = _mouse_pos() - v.global_position
+	# Точка карты под курсором (в координатах самой карты, с учётом увеличения при наведении):
+	# после смены размера карта встаёт так, чтобы под курсором осталась та же точка.
+	_drag_grab_offset = (v.get_global_transform().affine_inverse() * _mouse_pos()).clamp(Vector2.ZERO, CardView.CARD_SIZE)
 	v.begin_drag()
 	hand_layer.move_child(v, -1)
+	_place_dragged()
 	var owner := _combat.hero_by_id(v.card.owner_id)
 	if owner != null:
 		_drag_portrait.show_for(owner.data)
@@ -631,12 +639,22 @@ func _input(event: InputEvent) -> void:
 	if _dragging == null:
 		return
 	if event is InputEventMouseMotion:
-		_dragging.global_position = _mouse_pos() - _drag_grab_offset
+		_place_dragged()
 		_update_drag_feedback()
 		get_viewport().set_input_as_handled()
 	elif event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and not event.pressed:
 		get_viewport().set_input_as_handled()
 		_finish_drag()
+
+## Ставит перетаскиваемую карту так, чтобы точка захвата была под курсором
+## (карта масштабируется от нижней середины, поэтому считаем через pivot и scale).
+func _place_dragged() -> void:
+	if _dragging == null:
+		return
+	var parent := _dragging.get_parent() as CanvasItem
+	var m := parent.get_global_transform().affine_inverse() * _mouse_pos() if parent != null else _mouse_pos()
+	var pivot := _dragging.pivot_offset
+	_dragging.position = m - pivot - (_drag_grab_offset - pivot) * _dragging.scale
 
 func _process(_delta: float) -> void:
 	# Страховка: если отпускание кнопки «потерялось» (например, пауза), не застреваем.
@@ -1685,9 +1703,10 @@ func _choose_path_and_go() -> void:
 			UnitRoster_.unlock_boss_once(CardRun.BOSS_ID)
 		_finish_run(true, false)
 		return
-	var popup := PathPopup.new()
+	# Выбор комнаты — картами в руке (колода комнат: CardRun.ROOM_DECK).
+	var popup := RoomCardHand.new()
 	_ui_add(popup)
-	popup.setup(_run)
+	popup.setup(_run.pending_choices, _run.room_deck_summary())
 	_banter.play_camp()
 	var choice: int = await popup.chosen
 	popup.queue_free()

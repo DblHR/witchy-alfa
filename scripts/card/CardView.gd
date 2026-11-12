@@ -25,6 +25,8 @@ const TAG_ART_PATH := "res://assets/pics/cards/art/%s/%s_%s.png"
 ## без таблички сверху — табличка берётся с арта по виду и остаётся видна над рисунком.
 ## Нет файла — карта показывает общий арт героини по виду.
 const CARD_ART_PATH := "res://assets/pics/cards/art/%s/%s.png"
+## Рисунки, которые лежат не по общему правилу (id карты -> путь).
+const CARD_ART_OVERRIDES := {"lure": "res://assets/pics/cards/art/general/gift_card.png"}
 static var _card_art_cache: Dictionary = {}
 ## Доля высоты арта по виду, занятая табличкой сверху (до рамки рисунка).
 const HEADER_FRACTION := 0.15
@@ -343,7 +345,7 @@ static func _get_card_art(owner_id: String, card_id: String) -> Texture2D:
 	if _card_art_cache.has(key):
 		return _card_art_cache[key]
 	var tex: Texture2D = null
-	var path := CARD_ART_PATH % [folder, card_id]
+	var path := String(CARD_ART_OVERRIDES.get(card_id, CARD_ART_PATH % [folder, card_id]))
 	if ResourceLoader.exists(path):
 		tex = load(path) as Texture2D
 	_card_art_cache[key] = tex

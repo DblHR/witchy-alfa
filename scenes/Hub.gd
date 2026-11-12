@@ -31,6 +31,12 @@ func _refresh_badges() -> void:
 const WITCH_MIN_X := 90.0
 const WITCH_MAX_X := 1150.0
 
+## Кто ещё гуляет по дому, когда есть в ростере: id героини -> её спрайт. Чтобы добавить
+## новую — строка сюда (картинка того же формата, что witch.png: 1000×1240, смотрит влево).
+const HUB_GUESTS := {
+	"fufu": "res://assets/pics/actorSprite/fufu.png",
+}
+
 func _start_wanderers() -> void:
 	var witch := get_node_or_null("TextureRect") as TextureRect
 	if witch == null:
@@ -39,6 +45,29 @@ func _start_wanderers() -> void:
 	w.name = "WitchWanderer"
 	w.setup(witch, WITCH_MIN_X, WITCH_MAX_X)
 	add_child(w)
+	# Гости: такая же картинка, как у ведьмочки (размер, слой), со своим маршрутом.
+	var k := 0
+	for id in HUB_GUESTS:
+		if UnitRoster_ == null or not UnitRoster_.has_unit(String(id)):
+			continue
+		var tex := load(String(HUB_GUESTS[id])) as Texture2D
+		if tex == null:
+			continue
+		var guest := TextureRect.new()
+		guest.name = "Guest_" + String(id)
+		guest.texture = tex
+		guest.expand_mode = witch.expand_mode
+		guest.stretch_mode = witch.stretch_mode
+		guest.flip_h = k % 2 == 0
+		guest.size = witch.size
+		guest.position = Vector2(lerpf(WITCH_MAX_X, WITCH_MIN_X, 0.25 + 0.3 * float(k)), witch.position.y)
+		add_child(guest)
+		move_child(guest, witch.get_index())   ## за ведьмочкой, перед фоном
+		var gw := HubWanderer.new()
+		gw.name = "Wanderer_" + String(id)
+		gw.setup(guest, WITCH_MIN_X, WITCH_MAX_X)
+		add_child(gw)
+		k += 1
 
 func _on_start_run() -> void:
 	# Тут логично начинать новый забег (seed, сброс золота и т.д.)

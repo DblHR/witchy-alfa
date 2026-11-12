@@ -1024,12 +1024,13 @@ func _get_item_icon_or_null(item_id: String) -> Texture2D:
 	return null
 
 func _get_potion_icon(potion_id: String) -> Texture2D:
+	# Пустой слот зелья — без иконки (раньше там был цветной квадрат-заглушка).
 	if potion_id == "":
-		return _make_placeholder_icon(Color(0.70, 0.55, 0.92, 1.0))
+		return null
 	var item_id := RunItems.get_potion_item_id(potion_id)
 	if item_id != "" and Inventory_ != null:
 		return Inventory_.get_item_icon(item_id)
-	return _make_placeholder_icon(Color(0.70, 0.55, 0.92, 1.0))
+	return null
 
 func _make_placeholder_icon(color: Color) -> Texture2D:
 	var image := Image.create(96, 96, false, Image.FORMAT_RGBA8)

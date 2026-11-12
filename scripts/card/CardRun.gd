@@ -39,6 +39,16 @@ const QUEST_ROOM_CHANCE := 0.35
 const QUEST_FORCE_ROOM := 3
 var quest_placed := false
 
+## Колода комнат («ограниченный рандом»). После комнаты игроку сдаются 2-3 карты из неё;
+## выбранная уходит из колоды, остальные остаются. Первая комната (бой), комната перед боссом
+## (лавка или медсестра) и босс — вне колоды.
+##   battle / elite — бой и элита; chest, nurse, shop — ивенты; statue_white / statue_black — статуи.
+const ROOM_DECK := {"battle": 9, "elite": 3, "chest": 3, "nurse": 2, "shop": 1, "statue_white": 1, "statue_black": 1}
+## Сколько ивент-комнат можно пройти подряд: после стольких в следующей раздаче только бои.
+const MAX_EVENTS_IN_ROW := 1
+var room_deck: Array[String] = []
+var _events_in_row := 0
+
 var rng := RandomNumberGenerator.new()
 var floor_no: int = FLOOR
 ## Опыт, набранный за забег. Начисляется отряду только в конце (победа/поражение), не при выходе.
@@ -71,6 +81,9 @@ func _init(run_seed: int = -1) -> void:
 		rooms.append({})
 	rooms[0] = make_room(0)
 	index = 0
+	for kind in ROOM_DECK:
+		for _k in range(int(ROOM_DECK[kind])):
+			room_deck.append(String(kind))
 
 func total_rooms() -> int:
 	return rooms.size()
@@ -106,6 +119,7 @@ func make_room(i: int) -> Dictionary:
 		return _battle_room(i, n)
 	if rng.randf() < BATTLE_CHANCE or events.is_empty():
 		if i >= ELITE_FROM_ROOM and _elites < ELITE_MAX and rng.randf() < ELITE_CHANCE:
+			_elites += 1
 			return _elite_room()
 		return _battle_room(i, n)
 	return _event_room(_pick_weighted(events))
@@ -150,7 +164,6 @@ func _battle_room(i: int, _n: int) -> Dictionary:
 
 ## Элита: Аки или Луиса и слизень перед ней.
 func _elite_room() -> Dictionary:
-	_elites += 1
 	var girl := String(EnemyDefs.FLOOR1_A[rng.randi_range(0, EnemyDefs.FLOOR1_A.size() - 1)])
 	var front := "shlep" if rng.randf() < 0.5 else "acid"
 	return {"kind": "elite", "event": "", "boss": false, "enemies": [front, girl], "used": false}
@@ -169,7 +182,8 @@ func _event_room(event_id: String) -> Dictionary:
 		r["variant"] = "white" if rng.randf() < 0.5 else "black"
 	return r
 
-## Варианты следующей комнаты (2-3 двери). Перед боссом и за комнату до него — одна дверь.
+## Варианты следующей комнаты: 2-3 карты из колоды комнат. Перед боссом и за комнату до него —
+## одна карта без выбора (как и квестовая комната).
 func prepare_choices() -> void:
 	pending_choices.clear()
 	var next_i := index + 1
@@ -183,9 +197,47 @@ func prepare_choices() -> void:
 		quest_placed = true
 		pending_choices.append(quest_room())
 		return
-	var options := rng.randi_range(2, 3)
-	for _k in range(options):
-		pending_choices.append(make_room(next_i))
+	var count := rng.randi_range(2, 3)
+	# Тасуем копию колоды и берём сверху подходящие карты (сами карты остаются в колоде до выбора).
+	var order := room_deck.duplicate()
+	for i in range(order.size() - 1, 0, -1):
+		var j := rng.randi_range(0, i)
+		var tmp: String = order[i]
+		order[i] = order[j]
+		order[j] = tmp
+	var events := unlocked_events()
+	var fights_only := _events_in_row >= MAX_EVENTS_IN_ROW
+	var event_cards := 0
+	var seen_events: Dictionary = {}
+	var elite_in_hand := false
+	for card: String in order:
+		if pending_choices.size() >= count:
+			break
+		var room := {}
+		match card:
+			"battle":
+				room = _battle_room(next_i, n)
+			"elite":
+				# Элита — не раньше своей комнаты, не больше ELITE_MAX за забег, одна в раздаче.
+				if next_i < ELITE_FROM_ROOM or _elites >= ELITE_MAX or elite_in_hand:
+					continue
+				elite_in_hand = true
+				room = _elite_room()
+			_:
+				var event_id := "statue" if card.begins_with("statue") else card
+				# Ивентов в раздаче — не больше, чем «все, кроме одной»; одинаковые не повторяются.
+				if fights_only or not events.has(event_id) or seen_events.has(card) or event_cards >= count - 1:
+					continue
+				seen_events[card] = true
+				event_cards += 1
+				room = _event_room(event_id)
+				if event_id == "statue":
+					room["variant"] = "white" if card == "statue_white" else "black"
+		room["deck_card"] = card
+		pending_choices.append(room)
+	# Колода не дала нужного числа карт (кончились бои) — добираем обычными боями.
+	while pending_choices.size() < count:
+		pending_choices.append(_battle_room(next_i, n))
 
 func choose(choice_index: int) -> Dictionary:
 	if pending_choices.is_empty():
@@ -194,7 +246,31 @@ func choose(choice_index: int) -> Dictionary:
 	index += 1
 	rooms[index] = pending_choices[choice_index]
 	pending_choices.clear()
+	# Выбранная карта уходит из колоды; остальные остались в ней.
+	var card := String(rooms[index].get("deck_card", ""))
+	if card != "":
+		room_deck.erase(card)
+		if card == "elite":
+			_elites += 1
+	_events_in_row = _events_in_row + 1 if String(rooms[index].get("kind", "")) == "event" else 0
 	return rooms[index]
+
+## Что осталось в колоде комнат: «Бой ×9, Элита ×3, …» (для подсказки в UI).
+func room_deck_summary() -> String:
+	var parts := PackedStringArray()
+	for kind in ROOM_DECK:
+		var left := room_deck.count(String(kind))
+		if left > 0:
+			parts.append("%s ×%d" % [deck_card_title(String(kind)), left])
+	return ", ".join(parts)
+
+static func deck_card_title(card: String) -> String:
+	match card:
+		"battle": return "Бой"
+		"elite": return "Элита"
+		"statue_white": return "Белая статуя"
+		"statue_black": return "Чёрная статуя"
+	return event_name(card)
 
 # --- Описания для UI ---------------------------------------------------------
 
