@@ -609,6 +609,20 @@ func _build_admin_ui() -> void:
 	_admin_result.add_theme_font_size_override("font_size", 16)
 	box.add_child(_admin_result)
 
+	# --- Галерея: открыть всё (для проверки картинок) ---
+	var gal := CheckButton.new()
+	gal.text = "Галерея: открыть всё"
+	gal.focus_mode = Control.FOCUS_NONE
+	gal.add_theme_font_size_override("font_size", 20)
+	gal.button_pressed = StoryState_ != null and StoryState_.has_flag(GalleryData.UNLOCK_ALL_FLAG)
+	gal.toggled.connect(func(on: bool) -> void:
+		if StoryState_ != null:
+			StoryState_.set_flag(GalleryData.UNLOCK_ALL_FLAG, on)
+		if current_section == Section.GALLERY:
+			_rebuild_entry_grid()
+	)
+	box.add_child(gal)
+
 	# --- Доверие героини и уровень отряда (тесты прокачки) ---
 	var trust_title := Label.new()
 	trust_title.text = "Доверие (уровень отношений 0-10)"
@@ -832,12 +846,14 @@ func _build_gallery_entries() -> Array[Dictionary]:
 		var id := String(cat["id"])
 		_gallery_categories[id] = cat
 		var n: int = cat["images"].size()
+		var open := bool(cat["unlocked"])
+		var title := String(cat["title"]) if open else "???"
 		out.append({
 			"id": id,
-			"title": String(cat["title"]),
-			"title_font_size": 20 if String(cat["title"]).length() <= 13 else 16,
-			"subtitle": "%d %s" % [n, _pictures_word(n)],
-			"icon": load(String(cat["icon_path"])) as Texture2D,
+			"title": title,
+			"title_font_size": 20 if title.length() <= 13 else 16,
+			"subtitle": "%d / %d" % [int(cat["open_count"]), n] if open else "Не открыто",
+			"icon": (load(String(cat["icon_path"])) as Texture2D) if open else null,
 			"count": -1,
 			"compact": false,
 		})
@@ -858,17 +874,40 @@ func _show_gallery_category(cat_id: String) -> void:
 		_show_empty_detail_for_section()
 		return
 	_match_detail_visibility(false, false, false, false)
-	detail_title_label.text = String(cat["title"])
-	detail_hint_label.text = "Нажмите на картинку, чтобы рассмотреть её."
 	for c in _gallery_grid.get_children():
 		c.queue_free()
 	_gallery_pending.clear()
-	_gallery_images.assign(cat["images"])
-	for i in range(_gallery_images.size()):
-		_gallery_grid.add_child(_make_gallery_thumb(i))
+	_gallery_images.clear()
+	if not bool(cat["unlocked"]):
+		# Раздел ещё закрыт: только подсказка (если она задана в gallery.json).
+		detail_title_label.text = "???"
+		detail_hint_label.text = String(cat["hint"]) if String(cat["hint"]) != "" else "Этот раздел ещё не открыт."
+		set_process(false)
+		return
+	detail_title_label.text = String(cat["title"])
+	detail_hint_label.text = "Нажмите на картинку, чтобы рассмотреть её."
+	for im in cat["images"]:
+		if bool(im["unlocked"]):
+			_gallery_images.append(String(im["path"]))
+			_gallery_grid.add_child(_make_gallery_thumb(_gallery_images.size() - 1))
+		else:
+			_gallery_grid.add_child(_make_gallery_locked(String(im["hint"])))
 	_gallery_panel.scroll_vertical = 0
 	_gallery_panel.visible = true
 	set_process(not _gallery_pending.is_empty())
+
+static func _gallery_tile_style(state: String, locked: bool) -> StyleBoxFlat:
+	var sb := StyleBoxFlat.new()
+	sb.set_corner_radius_all(14)
+	if locked:
+		sb.bg_color = Color(0.80, 0.74, 0.68)
+		sb.set_border_width_all(2)
+		sb.border_color = Color(0.62, 0.45, 0.52, 0.6)
+		return sb
+	sb.bg_color = Color(0.93, 0.87, 0.78) if state == "normal" else Color(0.98, 0.92, 0.82)
+	sb.set_border_width_all(2 if state == "normal" else 4)
+	sb.border_color = Color(0.62, 0.45, 0.52) if state == "normal" else Color(0.85, 0.35, 0.6)
+	return sb
 
 func _make_gallery_thumb(index: int) -> Button:
 	var b := Button.new()
@@ -876,12 +915,7 @@ func _make_gallery_thumb(index: int) -> Button:
 	b.focus_mode = Control.FOCUS_NONE
 	b.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	for state in ["normal", "hover", "pressed"]:
-		var sb := StyleBoxFlat.new()
-		sb.bg_color = Color(0.93, 0.87, 0.78) if state == "normal" else Color(0.98, 0.92, 0.82)
-		sb.set_corner_radius_all(14)
-		sb.set_border_width_all(2 if state == "normal" else 4)
-		sb.border_color = Color(0.62, 0.45, 0.52) if state == "normal" else Color(0.85, 0.35, 0.6)
-		b.add_theme_stylebox_override(state, sb)
+		b.add_theme_stylebox_override(state, _gallery_tile_style(state, false))
 	var pic := TextureRect.new()
 	pic.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	pic.offset_left = 8
@@ -895,6 +929,20 @@ func _make_gallery_thumb(index: int) -> Button:
 	b.add_child(pic)
 	_request_texture(_gallery_images[index], pic)
 	b.pressed.connect(func() -> void: _open_viewer(index))
+	return b
+
+## Закрытая картинка: плитка с «?»; подсказка (hint из gallery.json) — при наведении.
+func _make_gallery_locked(hint: String) -> Button:
+	var b := Button.new()
+	b.custom_minimum_size = GALLERY_THUMB
+	b.focus_mode = Control.FOCUS_NONE
+	b.text = "?"
+	b.add_theme_font_size_override("font_size", 72)
+	for key in ["font_color", "font_hover_color", "font_pressed_color"]:
+		b.add_theme_color_override(key, Color(0.45, 0.33, 0.38, 0.75))
+	for state in ["normal", "hover", "pressed"]:
+		b.add_theme_stylebox_override(state, _gallery_tile_style(state, true))
+	b.tooltip_text = hint if hint != "" else "Ещё не открыто"
 	return b
 
 ## Картинки грузятся в фоне, чтобы большие кадры (пролог) не подвешивали книжку.

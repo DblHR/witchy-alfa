@@ -9,6 +9,8 @@ class_name EffHeal
 @export var low_hp_bonus_mult: float = 0.0
 ## Умножить на число живых целей карты (ульта Фуфу: лечится за каждого задетого).
 @export var per_card_target: bool = false
+## Доля максимального HP цели (0.25 = 25%) — прибавляется к лечению (микстура Ноктрис).
+@export var max_hp_ratio: float = 0.0
 
 func value(caster: Unit) -> int:
 	return scaled(base, atk_ratio, mag_ratio, caster)
@@ -26,6 +28,8 @@ func _apply_one(ctx: CardContext, target: Unit) -> void:
 		amount *= hit
 	if low_hp_bonus_mult > 0.0 and CardCombat.is_low_hp(target):
 		amount += bonus_value(ctx.caster)
+	if max_hp_ratio > 0.0 and target != null:
+		amount += ceili(float(target.max_hp) * max_hp_ratio)
 	ctx.combat.heal(target, amount)
 
 func describe(caster: Unit, card_target: CardInstance.Target) -> String:

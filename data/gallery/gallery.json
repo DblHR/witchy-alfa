@@ -1,39 +1,109 @@
 {
-  "_help": "Галерея (Инвентарь → карточка справа внизу). characters — персонажи, events — события. У категории: id, title (название), icon (картинка-значок, необязательно), character (id персонажа: добавит его портрет, боевой спрайт и все картинки из assets/pics/cards/art/<id>/), images (список путей к картинкам, в любом порядке добавляются после автоматических).",
+  "_help": [
+    "Галерея (Инвентарь -> карточка справа внизу). characters - вкладка «Персонажи», events - «События».",
+    "Раздел: id, title (название), images (список картинок), icon (значок, необязательно).",
+    "Картинка в images: просто путь \"res://...png\" ИЛИ {\"path\": \"res://...png\", \"unlock\": {условие}, \"hint\": \"подсказка, пока закрыта\"}.",
+    "unlock у раздела - когда раздел открыт. Нет unlock - раздел открывается вместе с первой открытой картинкой. Закрытый раздел виден как «???» (hint раздела - текст справа).",
+    "image_unlock у раздела - условие для каждой его картинки, у которой нет своего unlock.",
+    "Условия (все сразу): \"seen\": true - картинку уже показывали в игре; \"has_unit\": \"fufu\" - героиня в отряде; \"trust\": {\"fufu\": 3} - уровень доверия не ниже 3;",
+    "а также условия диалогов: \"flag\", \"not_flag\", \"party_level_min\", \"quest_completed\", \"counter_min\" и т.д.",
+    "Пример картинки за доверие: {\"path\": \"res://assets/pics/cards/art/fufu/fufu_ult.png\", \"unlock\": {\"trust\": {\"fufu\": 5}}, \"hint\": \"Доверие Фуфу 5\"}",
+    "Порядок картинок в списке = порядок в галерее. Чтобы убрать картинку из галереи - удалите её строку.",
+    "Осторожно с запятыми: после последнего элемента списка запятой быть не должно."
+  ],
   "characters": [
     {
       "id": "witch",
       "title": "Ведьмочка",
-      "character": "witch",
-      "images": []
+      "images": [
+        "res://assets/pics/cards/witch_card.png",
+        "res://assets/pics/actorSprite/witch.png",
+        "res://assets/pics/cards/art/witch/witch.png",
+        "res://assets/pics/cards/art/witch/witch_atk.png",
+        "res://assets/pics/cards/art/witch/witch_sup.png"
+      ]
     },
     {
       "id": "warrior",
       "title": "Воин",
-      "character": "warrior",
-      "images": []
+      "unlock": {
+        "has_unit": "warrior"
+      },
+      "hint": "Откроется, когда Воин будет в отряде.",
+      "images": [
+        "res://assets/pics/cards/warrior.png",
+        "res://assets/pics/actorSprite/warrior.png",
+        "res://assets/pics/cards/art/warrior/warrior_atk.png",
+        "res://assets/pics/cards/art/warrior/warrior_sup.png"
+      ]
     },
     {
       "id": "aki",
       "title": "Аки",
-      "character": "aki",
-      "images": []
+      "unlock": {
+        "has_unit": "aki"
+      },
+      "hint": "Откроется, когда Аки будет в отряде.",
+      "images": [
+        "res://assets/pics/cards/aki_card.png",
+        "res://assets/pics/actorSprite/aki.png",
+        "res://assets/pics/cards/art/aki/aki.png",
+        "res://assets/pics/cards/art/aki/aki_atk.png",
+        "res://assets/pics/cards/art/aki/aki_bounce.png",
+        "res://assets/pics/cards/art/aki/aki_cheer_slap.png",
+        "res://assets/pics/cards/art/aki/aki_kiss.png",
+        "res://assets/pics/cards/art/aki/aki_lube.png",
+        "res://assets/pics/cards/art/aki/aki_squeeze.png",
+        "res://assets/pics/cards/art/aki/aki_sup.png"
+      ]
     },
     {
       "id": "luisa",
       "title": "Луиса",
-      "character": "luisa",
-      "images": []
+      "unlock": {
+        "has_unit": "luisa"
+      },
+      "hint": "Откроется, когда Луиса будет в отряде.",
+      "images": [
+        "res://assets/pics/cards/luisa_card.png",
+        "res://assets/pics/actorSprite/luisa.png",
+        "res://assets/pics/cards/art/luisa/luisa.png",
+        "res://assets/pics/cards/art/luisa/luisa_atk.png",
+        "res://assets/pics/cards/art/luisa/luisa_deep.png",
+        "res://assets/pics/cards/art/luisa/luisa_loosen.png",
+        "res://assets/pics/cards/art/luisa/luisa_spank.png",
+        "res://assets/pics/cards/art/luisa/luisa_sup.png",
+        "res://assets/pics/cards/art/luisa/luisa_tentacle.png"
+      ]
     },
     {
       "id": "fufu",
       "title": "Фуфу",
-      "character": "fufu",
-      "images": []
+      "unlock": {
+        "has_unit": "fufu"
+      },
+      "hint": "Откроется, когда Фуфу будет в отряде.",
+      "images": [
+        "res://assets/pics/cards/fufu_card.png",
+        "res://assets/pics/actorSprite/fufu.png",
+        "res://assets/pics/cards/art/fufu/fufu.png",
+        "res://assets/pics/cards/art/fufu/fufu_atk.png",
+        "res://assets/pics/cards/art/fufu/fufu_break.png",
+        "res://assets/pics/cards/art/fufu/fufu_cover.png",
+        "res://assets/pics/cards/art/fufu/fufu_foreplay.png",
+        "res://assets/pics/cards/art/fufu/fufu_lube.png",
+        "res://assets/pics/cards/art/fufu/fufu_present.png",
+        "res://assets/pics/cards/art/fufu/fufu_sup.png",
+        "res://assets/pics/cards/art/fufu/fufu_trick.png"
+      ]
     },
     {
       "id": "rikka",
       "title": "Рикка",
+      "image_unlock": {
+        "seen": true
+      },
+      "hint": "Откроется после знакомства.",
       "images": [
         "res://assets/pics/NPCs/bunny.png"
       ]
@@ -41,6 +111,10 @@
     {
       "id": "sessilia",
       "title": "Сессилия",
+      "image_unlock": {
+        "seen": true
+      },
+      "hint": "Откроется после знакомства.",
       "images": [
         "res://assets/pics/NPCs/shopkeeper.png"
       ]
@@ -48,15 +122,25 @@
     {
       "id": "noctris",
       "title": "Ноктрис",
+      "image_unlock": {
+        "seen": true
+      },
+      "hint": "Откроется после знакомства.",
       "images": [
-        "res://assets/pics/NPCs/nurse/nurse.png"
+        "res://assets/pics/NPCs/nurse/nurse.png",
+        "res://assets/pics/NPCs/nurse/choises/heal.png",
+        "res://assets/pics/NPCs/nurse/choises/revival.png",
+        "res://assets/pics/NPCs/nurse/choises/potion.png"
       ]
-    },
+    }
   ],
   "events": [
     {
       "id": "endscreens",
       "title": "Экраны после боя",
+      "image_unlock": {
+        "seen": true
+      },
       "images": [
         "res://assets/pics/bigPics/endscreen/victory.png",
         "res://assets/pics/bigPics/endscreen/defeat.png"
@@ -65,6 +149,9 @@
     {
       "id": "prologue",
       "title": "Пролог",
+      "image_unlock": {
+        "seen": true
+      },
       "images": [
         "res://assets/pics/bigPics/prologue/scene1.png",
         "res://assets/pics/bigPics/prologue/scene2.png",
@@ -83,6 +170,9 @@
     {
       "id": "statues",
       "title": "Статуи",
+      "image_unlock": {
+        "seen": true
+      },
       "images": [
         "res://assets/pics/NPCs/statue/statue_white.png",
         "res://assets/pics/NPCs/statue/statue_black.png"
@@ -91,6 +181,9 @@
     {
       "id": "chest",
       "title": "Сундук",
+      "image_unlock": {
+        "seen": true
+      },
       "images": [
         "res://assets/pics/NPCs/chest/chest.png",
         "res://assets/pics/NPCs/chest/chest_open.png"

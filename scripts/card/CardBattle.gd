@@ -1227,9 +1227,11 @@ func _show_end_overlay(victory: bool, is_draw: bool) -> void:
 	if victory:
 		end_text.text = "УФФ ПОЛЕГЧЕ, КОВБОЙ <3"
 		end_image.texture = VICTORY_TEXTURE
+		GalleryData.mark_seen_texture(VICTORY_TEXTURE)
 	else:
 		end_text.text = "ЧЁ ЗА ТЕНТАКЛИ КАКОЙ ХЕНТАЙ"
 		end_image.texture = DEFEAT_TEXTURE
+		GalleryData.mark_seen_texture(DEFEAT_TEXTURE)
 	end_button.text = "КОНЧИТЬ"
 
 func _on_end_button_pressed() -> void:

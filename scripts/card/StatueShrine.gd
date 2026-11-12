@@ -43,6 +43,7 @@ var _glow_tween: Tween
 func setup(texture: Texture2D) -> void:
 	_sprite = Sprite2D.new()
 	_sprite.texture = texture
+	GalleryData.mark_seen_texture(texture)
 	_sprite.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
 	_sprite.scale = Vector2(SCALE, SCALE)
 	if texture != null:

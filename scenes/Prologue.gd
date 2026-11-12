@@ -53,6 +53,7 @@ func _show_current() -> void:
 	hint_label.text = "Нажмите в любом месте" if (_index < max(_paths.size(), 1) - 1) else "Нажмите в любом месте, чтобы начать обучение"
 	if has_images:
 		image_rect.texture = _texture_at(_index)
+		GalleryData.mark_seen_texture(image_rect.texture)
 		_trim_cache()
 		_texture_at(_index + 1)
 	else:

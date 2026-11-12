@@ -13,6 +13,9 @@ const NURSE_HEAL_PERCENT := 0.5
 const NURSE_REVIVE_PERCENT := 0.3
 const NURSE_HEAL_PRICE := 25
 const NURSE_REVIVE_PRICE := 45
+## Микстура: одноразовая карта в колоду (resources/cards/common/nurse_heal.tres, лечит 25% HP).
+const NURSE_CARD_PRICE := 20
+const NURSE_CARD_ID := "nurse_heal"
 
 const LEFT_X := 120.0
 const TITLE_RECT := Rect2(120, 60, 860, 110)
@@ -376,6 +379,18 @@ func _build_nurse() -> void:
 	var gold := _gold()
 	_add_option("Вылечить героиню на %d%% HP — %d зол." % [int(NURSE_HEAL_PERCENT * 100.0), NURSE_HEAL_PRICE], func() -> void: _pick_hero(false), not bool(battle.call("run_has_wounded")) or gold < NURSE_HEAL_PRICE)
 	_add_option("Воскресить героиню с %d%% HP — %d зол." % [int(NURSE_REVIVE_PERCENT * 100.0), NURSE_REVIVE_PRICE], func() -> void: _pick_hero(true), not bool(battle.call("run_has_dead")) or gold < NURSE_REVIVE_PRICE)
+	_add_option("Микстура в колоду: разовая карта, лечит 25%% HP — %d зол." % NURSE_CARD_PRICE, _on_nurse_card, gold < NURSE_CARD_PRICE)
+
+## Микстура: карта лечения в колоду до конца забега (сгорает, когда её разыграют).
+func _on_nurse_card() -> void:
+	if not bool(battle.call("run_spend_gold", NURSE_CARD_PRICE)):
+		_say("Не хватает золота.")
+		return
+	battle.call("run_add_card", NURSE_CARD_ID)
+	room["used"] = true
+	_rebuild()
+	_say("Микстура Ноктрис теперь в колоде. Хватит на один раз.")
+	_show_choice_image("nurse_potion")
 
 ## Выбор героини для лечения или воскрешения.
 func _pick_hero(revive: bool) -> void:
@@ -409,6 +424,7 @@ func _show_choice_image(key: String) -> void:
 	var tex: Texture2D = AssetCatalog_.get_event_choice_texture(key)
 	if tex == null:
 		return
+	GalleryData.mark_seen_texture(tex)
 	_image_open = true
 	_continue.disabled = true
 	var img := _make_full_texture()
@@ -448,6 +464,7 @@ func _place_chest_text() -> void:
 func _set_chest_picture(opened: bool) -> void:
 	if AssetCatalog_ != null:
 		_chest_pic.texture = AssetCatalog_.get_event_npc_texture("opened_chest" if opened else "chest")
+		GalleryData.mark_seen_texture(_chest_pic.texture)
 	_chest_pic.visible = _chest_pic.texture != null
 
 func _gui_input(event: InputEvent) -> void:

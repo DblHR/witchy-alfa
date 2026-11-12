@@ -43,6 +43,7 @@ static func set_npc(t: TextureRect, id: String) -> void:
 		t.texture = null
 		return
 	t.texture = AssetCatalog_.get_event_npc_texture(id)
+	GalleryData.mark_seen_texture(t.texture)   ## встреча с NPC открывает его картинку в галерее
 	t.position = r.position
 	t.size = r.size
 
