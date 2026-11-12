@@ -66,3 +66,6 @@ func describe(caster: Unit, card_target: CardInstance.Target) -> String:
 	if then_status != "":
 		text += ", затем [e]%s[/e]" % status_title(then_status)
 	return text + "."
+
+func gives_protection() -> bool:
+	return gain == Gain.HEAL or gain == Gain.SHIELD

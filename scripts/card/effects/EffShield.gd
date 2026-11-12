@@ -14,3 +14,6 @@ func _apply_one(ctx: CardContext, target: Unit) -> void:
 
 func describe(caster: Unit, card_target: CardInstance.Target) -> String:
 	return "[s]+%d[/s] щита %s." % [value(caster), target_phrase(card_target)]
+
+func gives_protection() -> bool:
+	return true

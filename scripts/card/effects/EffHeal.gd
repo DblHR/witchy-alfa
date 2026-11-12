@@ -35,3 +35,6 @@ func describe(caster: Unit, card_target: CardInstance.Target) -> String:
 	if low_hp_bonus_mult > 0.0:
 		text += ", при HP ≤50%% ещё [h]+%d[/h]" % bonus_value(caster)
 	return text + "."
+
+func gives_protection() -> bool:
+	return true

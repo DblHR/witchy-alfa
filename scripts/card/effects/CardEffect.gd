@@ -58,6 +58,10 @@ func describe(_caster: Unit, _card_target: CardInstance.Target) -> String:
 func deals_damage() -> bool:
 	return false
 
+## Даёт щит или лечит (для значка-щитка на карте).
+func gives_protection() -> bool:
+	return false
+
 func resolve_targets(ctx: CardContext) -> Array[Unit]:
 	var raw: Array[Unit] = []
 	var mode := target_mode

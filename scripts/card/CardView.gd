@@ -200,6 +200,7 @@ func setup(c: CardInstance, is_interactive: bool = true) -> void:
 	add_child(owner_label)
 
 	add_child(_make_cost_badge(c.cost))
+	_add_kind_icons(c)
 
 	if has_art:
 		owner_label.add_theme_color_override("font_color", Color(1, 1, 1, 0.95))
@@ -553,6 +554,47 @@ static func _cost_color(cost: int) -> Color:
 func _refresh_cost_color() -> void:
 	if _cost_style != null:
 		_cost_style.bg_color = _cost_color(_cost_value) if _affordable else COST_COLOR_DISABLED
+
+## Значки в правом нижнем углу: меч — карта наносит урон, щиток — не наносит
+## (или вдобавок к урону даёт щит/лечение) — тогда оба.
+const KIND_ICON_ATK := "res://ui/status_icons/atk_card.png"
+const KIND_ICON_SUP := "res://ui/status_icons/sup_card.png"
+const KIND_ICON_SIZE := 30.0
+const KIND_ICON_MARGIN := Vector2(-6, -4)   ## насколько значок выходит за край карты
+static var _kind_icons: Dictionary = {}
+
+static func card_kind_icons(c: CardInstance) -> PackedStringArray:
+	var damage := false
+	var protect := false
+	for e in c.effects:
+		if e == null:
+			continue
+		damage = damage or e.deals_damage()
+		protect = protect or e.gives_protection()
+	var out := PackedStringArray()
+	if not damage or protect:
+		out.append(KIND_ICON_SUP)
+	if damage:
+		out.append(KIND_ICON_ATK)
+	return out
+
+func _add_kind_icons(c: CardInstance) -> void:
+	var icons := card_kind_icons(c)
+	var x := CARD_SIZE.x - KIND_ICON_SIZE - KIND_ICON_MARGIN.x
+	for i in range(icons.size() - 1, -1, -1):
+		var path := icons[i]
+		if not _kind_icons.has(path):
+			_kind_icons[path] = load(path) as Texture2D
+		var r := TextureRect.new()
+		r.texture = _kind_icons[path]
+		r.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		r.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		r.size = Vector2(KIND_ICON_SIZE, KIND_ICON_SIZE)
+		r.position = Vector2(x, CARD_SIZE.y - KIND_ICON_SIZE - KIND_ICON_MARGIN.y)
+		r.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		r.tooltip_text = ""
+		add_child(r)
+		x -= KIND_ICON_SIZE - 4.0
 
 func _make_cost_badge(cost: int) -> Panel:
 	_cost_value = cost
