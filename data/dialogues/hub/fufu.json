@@ -1,0 +1,42 @@
+{
+  "dialogues": [
+    {
+      "id": "hub_fufu_talk_01",
+      "type": "hub_talk",
+      "npc": "fufu",
+      "lines": [
+        {
+          "speaker": "fufu",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "О, приветики! Что-то нужно?",
+          "characters": [{"id": "fufu"}],
+          "choices": [
+            {"text": "Обнять", "goto": "hub_fufu_hug"},
+            {"text": "Уйти"}
+          ]
+        }
+      ]
+    },
+    {
+      "id": "hub_fufu_hug",
+      "type": "hub_choice",
+      "lines": [
+        {
+          "speaker": "fufu",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "Обнимашки? Конечно, иди сюда~",
+          "characters": [{"id": "fufu"}]
+        },
+        {
+          "speaker": "fufu",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "Упс, кажется, тебе придётся потратить лишнее время на стирку~",
+          "characters": [{"id": "fufu"}]
+        }
+      ]
+    }
+  ]
+}

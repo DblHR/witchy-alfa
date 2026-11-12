@@ -76,6 +76,12 @@ var _typing := false
 var _shown := 0.0
 var _ui_hidden := false
 var _time := 0.0
+## Выбор вариантов: у реплики поле "choices": [{"text": "Обнять", "goto": "id диалога"}, {"text": "Уйти"}].
+## goto — какой диалог играть дальше (пусто — разговор закончен); on_choose — эффекты, как on_finish.
+var _choice_box: VBoxContainer
+var _choices: Array = []
+const CHOICES_POS := Vector2(70, 470)
+const CHOICE_SIZE := Vector2(440, 66)
 
 func _ready() -> void:
 	visible = false
@@ -316,6 +322,7 @@ func _fit_frame() -> void:
 # --- Запуск -------------------------------------------------------------------
 
 func show_sequence(lines: Array, on_finished: Callable = Callable()) -> void:
+	_clear_choices()
 	_lines = lines.duplicate()
 	_sequence_characters = _collect_sequence_characters(_lines)
 	_index = -1
@@ -371,6 +378,8 @@ func _advance() -> void:
 	if _typing:
 		_finish_typing()
 		return
+	if not _choices.is_empty():
+		return   ## ждём выбора варианта
 	_show_next_line()
 
 ## Сразу следующая реплика (без «допечатать»): кнопки и авто-режим.
@@ -437,8 +446,81 @@ func _finish_typing() -> void:
 	_on_line_shown()
 
 func _on_line_shown() -> void:
+	var line = _lines[_index] if _index >= 0 and _index < _lines.size() else null
+	var choices = _read_line_value(line, "choices", []) if line != null else []
+	if choices is Array and not choices.is_empty():
+		_show_choices(choices)
+		return
 	if _auto_mode:
 		_schedule_auto_advance()
+
+# --- Варианты выбора --------------------------------------------------------------
+
+func _show_choices(choices: Array) -> void:
+	_clear_choices()
+	_choices = choices.duplicate()
+	if _choice_box == null:
+		_choice_box = VBoxContainer.new()
+		_choice_box.position = CHOICES_POS
+		_choice_box.add_theme_constant_override("separation", 14)
+		_ui.add_child(_choice_box)
+	_choice_box.visible = true
+	_arrow.visible = false
+	for i in range(_choices.size()):
+		var c = _choices[i]
+		var b := _make_button(String(c.get("text", "…")) if c is Dictionary else String(c))
+		b.custom_minimum_size = CHOICE_SIZE
+		b.size = CHOICE_SIZE
+		b.pivot_offset = CHOICE_SIZE * 0.5
+		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
+		b.add_theme_font_size_override("font_size", 28)
+		b.add_theme_constant_override("h_separation", 0)
+		var st := _button_style(BTN_BG)
+		st.content_margin_left = 30
+		b.add_theme_stylebox_override("normal", st)
+		var sh := _button_style(BTN_HOVER)
+		sh.content_margin_left = 30
+		b.add_theme_stylebox_override("hover", sh)
+		var choice_index := i
+		b.pressed.connect(func() -> void: _on_choice(choice_index))
+		_choice_box.add_child(b)
+		# Появление: слева, по очереди.
+		b.modulate.a = 0.0
+		var tw := b.create_tween().set_parallel(true)
+		tw.tween_property(b, "modulate:a", 1.0, 0.18).set_delay(0.06 * float(i))
+
+func _clear_choices() -> void:
+	_choices.clear()
+	if _choice_box != null:
+		for c in _choice_box.get_children():
+			c.queue_free()
+		_choice_box.visible = false
+
+func _on_choice(i: int) -> void:
+	if i < 0 or i >= _choices.size():
+		return
+	var c = _choices[i]
+	_clear_choices()
+	var text := String(c.get("text", "")) if c is Dictionary else String(c)
+	_history.append(["›", Color(1, 0.86, 0.45), text])
+	var goto := String(c.get("goto", "")) if c is Dictionary else ""
+	if c is Dictionary and StoryDialogueDB_ != null:
+		StoryDialogueDB_.apply_effects(c.get("on_choose", {}))
+	if goto == "" or StoryDialogueDB_ == null:
+		_finish_sequence()
+		return
+	var d := StoryDialogueDB_.get_dialogue(goto)
+	if d.is_empty():
+		push_warning("DialogueOverlay: нет диалога «%s» для выбора" % goto)
+		_finish_sequence()
+		return
+	if StoryState_ != null:
+		StoryState_.mark_dialogue_seen(goto)
+	StoryDialogueDB_.apply_effects(d.get("on_finish", {}))
+	# Реплики выбранной ветки встают сразу после текущей, остальное — как было.
+	var branch := StoryDialogueDB_.resolve_lines(d)
+	_lines = _lines.slice(0, _index + 1) + branch
+	_show_next_line()
 
 func _process(delta: float) -> void:
 	if not visible:
@@ -579,6 +661,7 @@ func _finish_sequence() -> void:
 	if _finished:
 		return
 	_finished = true
+	_clear_choices()
 	_typing = false
 	_cancel_auto_timer()
 	visible = false

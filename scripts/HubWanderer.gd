@@ -41,12 +41,35 @@ var _alive := true
 ## Дыхание — растяжение в вершинном шейдере: не привязано к целым пикселям (scale у Control
 ## округляется до пикселя, отсюда были рывки).
 var _breath_mat: ShaderMaterial
+## glow — подсветка при наведении (у тех, с кем можно поговорить): светлее + золотой контур.
 const BREATH_SHADER := """
 shader_type canvas_item;
 uniform float stretch = 0.0;
 uniform float pivot_y = 0.0;
+uniform float glow : hint_range(0.0, 1.0) = 0.0;
+uniform vec4 glow_color : source_color = vec4(1.0, 0.86, 0.45, 1.0);
+uniform float glow_px = 9.0;
+varying vec4 v_mod;
 void vertex() {
+	v_mod = COLOR;
 	VERTEX.y = pivot_y + (VERTEX.y - pivot_y) * (1.0 + stretch);
+}
+void fragment() {
+	vec4 c = texture(TEXTURE, UV);
+	if (glow > 0.001) {
+		float a = 0.0;
+		vec2 px = TEXTURE_PIXEL_SIZE * glow_px;
+		for (int i = 0; i < 12; i++) {
+			float ang = float(i) * 0.5235988;
+			vec2 d = vec2(cos(ang), sin(ang));
+			a = max(a, texture(TEXTURE, UV + d * px).a);
+			a = max(a, texture(TEXTURE, UV + d * px * 0.5).a);
+		}
+		float rim = clamp(a - c.a, 0.0, 1.0) * glow;
+		vec3 lit = c.rgb * (1.0 + 0.10 * glow) + glow_color.rgb * 0.05 * glow;
+		c = vec4(mix(lit, glow_color.rgb, rim * (1.0 - c.a)), max(c.a, rim * glow_color.a));
+	}
+	COLOR = c * v_mod;
 }
 """
 static var _breath_shader: Shader
@@ -77,6 +100,49 @@ func _ready() -> void:
 
 func _exit_tree() -> void:
 	_alive = false
+
+# --- Для разговоров в доме: подсветка, попадание курсором, «замереть» -------------
+
+var _glow_tween: Tween
+var _glow := 0.0
+static var _images: Dictionary = {}   ## текстура -> Image (для проверки прозрачности)
+
+func set_glow(on: bool) -> void:
+	if _breath_mat == null:
+		return
+	if _glow_tween != null:
+		_glow_tween.kill()
+	_glow_tween = create_tween()
+	_glow_tween.tween_method(func(v: float) -> void:
+		_glow = v
+		_breath_mat.set_shader_parameter("glow", v), _glow, 1.0 if on else 0.0, 0.16)
+
+## Курсор над непрозрачной частью картинки (не над пустым прямоугольником вокруг).
+func is_over(global_point: Vector2) -> bool:
+	if _body == null or _body.texture == null:
+		return false
+	var lp := _body.get_global_transform().affine_inverse() * global_point
+	var tex_size := _body.texture.get_size()
+	var k := minf(_body.size.x / tex_size.x, _body.size.y / tex_size.y)   ## KEEP_ASPECT_CENTERED
+	var drawn := tex_size * k
+	var p := (lp - (_body.size - drawn) * 0.5) / k
+	if p.x < 0.0 or p.y < 0.0 or p.x >= tex_size.x or p.y >= tex_size.y:
+		return false
+	if _body.flip_h:
+		p.x = tex_size.x - 1.0 - p.x
+	var img: Image = _images.get(_body.texture, null)
+	if img == null:
+		img = _body.texture.get_image()
+		if img == null:
+			return true
+		if img.is_compressed():
+			img.decompress()
+		_images[_body.texture] = img
+	return img.get_pixel(int(p.x), int(p.y)).a > 0.25
+
+## Остановиться (на время разговора) и продолжить.
+func set_frozen(on: bool) -> void:
+	process_mode = Node.PROCESS_MODE_DISABLED if on else Node.PROCESS_MODE_INHERIT
 
 func _next_action(delay: float) -> void:
 	_kill(_tween)

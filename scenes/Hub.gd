@@ -67,7 +67,83 @@ func _start_wanderers() -> void:
 		gw.name = "Wanderer_" + String(id)
 		gw.setup(guest, WITCH_MIN_X, WITCH_MAX_X)
 		add_child(gw)
+		_guests[String(id)] = gw
 		k += 1
+
+# --- Разговоры в доме -----------------------------------------------------------
+## Гостью можно позвать: при наведении она подсвечивается, по клику — диалог.
+## Диалог выбирается как у NPC: npc = id героини, type = "hub_talk" (data/dialogues/hub/*.json),
+## поэтому потом легко добавить разговоры по уровню отношений (conditions + priority).
+const HUB_TALK_TYPE := "hub_talk"
+var _guests: Dictionary = {}          ## id -> HubWanderer
+var _hovered_guest := ""
+var _talking := ""
+
+func _process(_delta: float) -> void:
+	var over := ""
+	if _talking == "" and not DialogueManager_.is_showing() and not _over_button():
+		var m := get_viewport().get_mouse_position()
+		# Сверху та, что нарисована последней.
+		var ids := _guests.keys()
+		ids.reverse()
+		for id in ids:
+			var w: HubWanderer = _guests[id]
+			if is_instance_valid(w) and w.is_over(m) and _can_talk(String(id)):
+				over = String(id)
+				break
+	if over == _hovered_guest:
+		return
+	if _hovered_guest != "" and _guests.has(_hovered_guest):
+		(_guests[_hovered_guest] as HubWanderer).set_glow(false)
+	_hovered_guest = over
+	if over != "":
+		(_guests[over] as HubWanderer).set_glow(true)
+	Input.set_default_cursor_shape(Input.CURSOR_POINTING_HAND if over != "" else Input.CURSOR_ARROW)
+
+## Кнопки дома (магазин, ферма, выход...) важнее гостьи под ними.
+func _over_button() -> bool:
+	var hc := get_viewport().gui_get_hovered_control()
+	while hc != null:
+		if hc is BaseButton:
+			return true
+		hc = hc.get_parent() as Control
+	return false
+
+func _can_talk(id: String) -> bool:
+	return StoryDialogueDB_ != null and not StoryDialogueDB_.pick_npc_dialogue(id, HUB_TALK_TYPE).is_empty()
+
+func _input(event: InputEvent) -> void:
+	if _hovered_guest == "" or _talking != "" or DialogueManager_.is_showing():
+		return
+	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+		get_viewport().set_input_as_handled()
+		talk_to(_hovered_guest)
+
+func talk_to(id: String) -> void:
+	var d := StoryDialogueDB_.pick_npc_dialogue(id, HUB_TALK_TYPE)
+	if d.is_empty():
+		return
+	var lines := StoryDialogueDB_.resolve_lines(d)
+	if lines.is_empty():
+		return
+	_talking = id
+	var w: HubWanderer = _guests.get(id, null)
+	if w != null:
+		w.set_glow(false)
+		w.set_frozen(true)   ## стоит на месте, пока говорим
+	_hovered_guest = ""
+	Input.set_default_cursor_shape(Input.CURSOR_ARROW)
+	DialogueManager_.show_sequence(lines, Callable(self, "_on_talk_finished").bind(d))
+
+func _on_talk_finished(dialogue: Dictionary) -> void:
+	var w: HubWanderer = _guests.get(_talking, null)
+	if w != null and is_instance_valid(w):
+		w.set_frozen(false)
+	_talking = ""
+	if StoryState_ != null:
+		StoryState_.mark_dialogue_seen(String(dialogue.get("id", "")))
+	if StoryDialogueDB_ != null:
+		StoryDialogueDB_.apply_effects(dialogue.get("on_finish", {}))
 
 func _on_start_run() -> void:
 	# Тут логично начинать новый забег (seed, сброс золота и т.д.)
