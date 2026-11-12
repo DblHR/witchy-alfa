@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bhl5q4s4cmlbv"
-path="res://.godot/imported/damage_buff.png-3adf6816451f92a68a7ae60e00413820.ctex"
+uid="uid://dtk6bl53ywab1"
+path="res://.godot/imported/fufu_3love.png-14ea03a7f3906ebdf36984cc03b2b766.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://ui/status_icons/damage_buff.png"
-dest_files=["res://.godot/imported/damage_buff.png-3adf6816451f92a68a7ae60e00413820.ctex"]
+source_file="res://assets/love_events/fufu/fufu_3love.png"
+dest_files=["res://.godot/imported/fufu_3love.png-14ea03a7f3906ebdf36984cc03b2b766.ctex"]
 
 [params]
 

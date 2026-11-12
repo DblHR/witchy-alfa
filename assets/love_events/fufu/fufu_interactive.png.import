@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://e0bd4v8dnti1"
-path="res://.godot/imported/charm.png-1e10253c191cad709bd3a426c5d3b752.ctex"
+uid="uid://si8gf4yvpcwk"
+path="res://.godot/imported/fufu_interactive.png-ffd295bacd770d558609fee016ffc0f0.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://ui/status_icons/charm.png"
-dest_files=["res://.godot/imported/charm.png-1e10253c191cad709bd3a426c5d3b752.ctex"]
+source_file="res://assets/love_events/fufu/fufu_interactive.png"
+dest_files=["res://.godot/imported/fufu_interactive.png-ffd295bacd770d558609fee016ffc0f0.ctex"]
 
 [params]
 

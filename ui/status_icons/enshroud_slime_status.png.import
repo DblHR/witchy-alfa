@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://4jblt1wo17yk"
-path="res://.godot/imported/heal.png-f074cb74aae8101b973c506108f1bbbc.ctex"
+uid="uid://flsra336ys8s"
+path="res://.godot/imported/enshroud_slime_status.png-0e37c43fc5776e63ddbf0926790fb11c.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://ui/status_icons/heal.png"
-dest_files=["res://.godot/imported/heal.png-f074cb74aae8101b973c506108f1bbbc.ctex"]
+source_file="res://ui/status_icons/enshroud_slime_status.png"
+dest_files=["res://.godot/imported/enshroud_slime_status.png-0e37c43fc5776e63ddbf0926790fb11c.ctex"]
 
 [params]
 

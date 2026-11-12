@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bhlald1p1ti2q"
-path="res://.godot/imported/haste.png-517efcc5bd3a45d45a625842608ece59.ctex"
+uid="uid://ltf06nspk5fc"
+path="res://.godot/imported/pressure_status.png-6ab4280d0e515c0fd128f6bd7bb0f53f.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://ui/status_icons/haste.png"
-dest_files=["res://.godot/imported/haste.png-517efcc5bd3a45d45a625842608ece59.ctex"]
+source_file="res://ui/status_icons/pressure_status.png"
+dest_files=["res://.godot/imported/pressure_status.png-6ab4280d0e515c0fd128f6bd7bb0f53f.ctex"]
 
 [params]
 

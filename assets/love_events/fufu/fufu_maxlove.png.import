@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dcuac3dac575j"
-path="res://.godot/imported/bleed_stack.png-f4c60b5ee2472aaa83f080c5878f3cdd.ctex"
+uid="uid://dmik3pyadexho"
+path="res://.godot/imported/fufu_maxlove.png-6974321ad100b27196670d9dc085e002.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://ui/status_icons/bleed_stack.png"
-dest_files=["res://.godot/imported/bleed_stack.png-f4c60b5ee2472aaa83f080c5878f3cdd.ctex"]
+source_file="res://assets/love_events/fufu/fufu_maxlove.png"
+dest_files=["res://.godot/imported/fufu_maxlove.png-6974321ad100b27196670d9dc085e002.ctex"]
 
 [params]
 
