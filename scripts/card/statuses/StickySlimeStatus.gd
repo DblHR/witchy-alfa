@@ -26,3 +26,6 @@ func on_added(combat: CardCombat, unit: Unit, old_stacks: int, s: Dictionary) ->
 	s["gained"] = gained % STUN_EVERY
 	if stuns > 0:
 		combat.stun(unit)
+
+func describe(s: Dictionary) -> String:
+	return super(s) + "\nДо оглушения: %d." % (STUN_EVERY - int(s.get("gained", 0)))

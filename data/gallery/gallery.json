@@ -94,7 +94,14 @@
         "res://assets/pics/cards/art/fufu/fufu_lube.png",
         "res://assets/pics/cards/art/fufu/fufu_present.png",
         "res://assets/pics/cards/art/fufu/fufu_sup.png",
-        "res://assets/pics/cards/art/fufu/fufu_trick.png"
+        "res://assets/pics/cards/art/fufu/fufu_trick.png",
+        {
+          "path": "res://assets/love_events/fufu/fufu_hug.png",
+          "unlock": {
+            "seen": true
+          },
+          "hint": "Обнимите Фуфу дома."
+        }
       ]
     },
     {

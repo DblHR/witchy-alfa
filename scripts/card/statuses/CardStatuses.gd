@@ -32,6 +32,38 @@ static func all_ids() -> Array:
 static func _add(s: CardStatus) -> void:
 	_all[s.id] = s
 
+## Значки и подсказки статусов. Новый значок — строка сюда (картинка ui/status_icons/*.png).
+const ICONS := {
+	WEAK: "res://ui/status_icons/weakness_status.png",
+	VULN: "res://ui/status_icons/vulnerability_status.png",
+	BURN: "res://ui/status_icons/fire_status.png",
+	STUN: "res://ui/status_icons/stun_status.png",
+	CHARM: "res://ui/status_icons/charm_status.png",
+	NAZHIM: "res://ui/status_icons/pressure_status.png",
+	STICKY_SLIME: "res://ui/status_icons/sticky_slime_status.png",
+	WRAP_SLIME: "res://ui/status_icons/enshroud_slime_status.png",
+}
+const INFO := {
+	WEAK: "Наносит на 25% меньше урона.",
+	VULN: "Получает на 50% больше урона.",
+	BURN: "В начале хода врагов получает урон за каждый стак.",
+	STUN: "Пропускает ход.",
+	CHARM: "Очарована: бьёт своих.",
+	NAZHIM: "Копится от ударов воина. Карты воина бьют сильнее за каждый стак, а некоторые снимают его целиком.",
+	STICKY_SLIME: "Каждые 5 новых стаков — оглушение. Некоторые карты тратят её для урона.",
+	WRAP_SLIME: "Карты Аки и Фуфу превращают её в лечение, щит или усиление.",
+	EMPOWER: "Каждый удар сильнее на число стаков. Спадает в конце хода.",
+	EXPOSED: "Каждые 25 урона по здоровью дают +1 обволакивающую слизь.",
+	HEAT_BODY: "Враг, ударивший по её щиту, загорается.",
+	SWALLOWED: "Внутри босса: не действует, враги её не бьют.",
+}
+
+static func _decorate() -> void:
+	for id in _all.keys():
+		var s: CardStatus = _all[id]
+		s.icon_path = String(ICONS.get(id, ""))
+		s.info = String(INFO.get(id, ""))
+
 static func _register_all() -> void:
 	_add(WeakStatus.new())
 	_add(VulnStatus.new())
@@ -51,3 +83,4 @@ static func _register_all() -> void:
 	_add(CardStatus.new(WRAP_SLIME, "Обволакивающая слизь", CardStatus.Kind.STACKS, Color(0.45, 0.9, 1.0)))
 	_add(EmpowerStatus.new())
 	_add(ExposedStatus.new())
+	_decorate()

@@ -26,3 +26,6 @@ func on_round_end(_combat: CardCombat, _unit: Unit, _s: Dictionary) -> void:
 
 func trigger(combat: CardCombat, unit: Unit, s: Dictionary) -> void:
 	combat.deal_damage(null, unit, damage_of(s), false)
+
+func describe(s: Dictionary) -> String:
+	return super(s) + "\nСейчас: %d урона за ход." % damage_of(s)

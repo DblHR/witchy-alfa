@@ -6,7 +6,6 @@
 [ext_resource type="Script" uid="uid://c3x2jnilbswvx" path="res://scripts/abilities/steps/DealDamageStep.gd" id="4_pso4l"]
 [ext_resource type="Script" uid="uid://bsxrg4rs717jk" path="res://scripts/abilities/steps/SelectFrontEnemyStep.gd" id="5_673s7"]
 [ext_resource type="Script" uid="uid://dr0inpdaw4xud" path="res://scripts/status/StunEffect.gd" id="6_kwmh7"]
-[ext_resource type="Texture2D" uid="uid://mkirv8lketpj" path="res://ui/status_icons/stun.png" id="6_pso4l"]
 [ext_resource type="Script" uid="uid://bdctm2hj2xn1j" path="res://scripts/abilities/steps/ApplyEffectStep.gd" id="7_oso76"]
 
 [sub_resource type="Resource" id="Resource_so1aw"]
@@ -24,7 +23,6 @@ metadata/_custom_type_script = "uid://bsxrg4rs717jk"
 
 [sub_resource type="Resource" id="Resource_xeyuv"]
 script = ExtResource("6_kwmh7")
-icon = ExtResource("6_pso4l")
 duration = 2.0
 metadata/_custom_type_script = "uid://dr0inpdaw4xud"
 

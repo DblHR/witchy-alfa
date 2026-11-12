@@ -19,6 +19,10 @@ var max_stacks: int = 99
 ## Флаги для хода врага: пропускает ход / бьёт своих.
 var skips_turn := false
 var charms := false
+## Значок над юнитом (ui/status_icons/*.png). Пусто — вместо значка короткая надпись.
+var icon_path := ""
+## Что делает статус (подсказка при наведении на юнита).
+var info := ""
 
 func _init(p_id: String = "", p_title: String = "", p_kind: Kind = Kind.STACKS, p_color: Color = Color(1.0, 0.92, 0.45)) -> void:
 	id = p_id
@@ -49,6 +53,31 @@ func label(s: Dictionary) -> String:
 			return "%s %d (%d)" % [title, int(s["stacks"]), int(s["turns"])]
 		_:
 			return "%s %d" % [title, int(s["stacks"])]
+
+## Число на значке («x3»): стаки; у статусов «на N ходов» — 0 (ходы видны в подсказке).
+func badge_count(s: Dictionary) -> int:
+	return 0 if kind == Kind.DURATION else int(s["stacks"])
+
+## Строка подсказки: «Слабость — 2 х.» + что делает.
+func describe(s: Dictionary) -> String:
+	var head := title
+	match kind:
+		Kind.DURATION:
+			head += " — ещё %s" % turns_text(int(s["turns"]))
+		Kind.STACKS_DURATION:
+			head += " x%d — ещё %s" % [int(s["stacks"]), turns_text(int(s["turns"]))]
+		_:
+			head += " x%d" % int(s["stacks"])
+	return head + ("\n" + info if info != "" else "")
+
+static func turns_text(n: int) -> String:
+	var m10 := n % 10
+	var m100 := n % 100
+	if m10 == 1 and m100 != 11:
+		return "%d ход" % n
+	if m10 >= 2 and m10 <= 4 and (m100 < 12 or m100 > 14):
+		return "%d хода" % n
+	return "%d ходов" % n
 
 ## Всплывающий текст при наложении.
 func float_text(stacks: int, _turns: int) -> String:

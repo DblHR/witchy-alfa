@@ -13,3 +13,9 @@ func label(_s: Dictionary) -> String:
 
 func float_text(_stacks: int, _turns: int) -> String:
 	return "Проглочена!"
+
+func badge_count(_s: Dictionary) -> int:
+	return 0
+
+func describe(_s: Dictionary) -> String:
+	return title + ("\n" + info if info != "" else "")

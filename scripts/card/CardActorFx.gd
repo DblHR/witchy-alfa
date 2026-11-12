@@ -43,13 +43,67 @@ static func intent_label(actor: BattleActor) -> Label:
 		actor.add_child(label)
 	return label
 
-static func status_label(actor: BattleActor) -> Label:
-	var label := actor.get_node_or_null("StatusLabel") as Label
-	if label == null:
-		label = _make_label("StatusLabel", Vector2(-110, -404), Vector2(220, 50), 15, Color(0.95, 0.95, 0.85, 1.0))
-		label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		actor.add_child(label)
-	return label
+## Ряд значков статусов над юнитом (по центру). Пересобирается в refresh_status_icons.
+const STATUS_ICON_SIZE := 36.0
+const STATUS_ROW_W := 260.0
+static var _status_icons: Dictionary = {}
+
+static func status_row(actor: BattleActor) -> HBoxContainer:
+	var row := actor.get_node_or_null("StatusRow") as HBoxContainer
+	if row == null:
+		row = HBoxContainer.new()
+		row.name = "StatusRow"
+		row.alignment = BoxContainer.ALIGNMENT_CENTER
+		row.add_theme_constant_override("separation", 3)
+		row.position = Vector2(-STATUS_ROW_W * 0.5, -404)
+		row.size = Vector2(STATUS_ROW_W, STATUS_ICON_SIZE)
+		row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		actor.add_child(row)
+	return row
+
+## pairs — [CardStatus, данные]. Значок + «xN», если стаков больше одного; без значка — короткая надпись.
+static func refresh_status_icons(actor: BattleActor, pairs: Array, visible: bool) -> void:
+	var row := status_row(actor)
+	for c in row.get_children():
+		c.queue_free()
+	row.visible = visible and not pairs.is_empty()
+	if not row.visible:
+		return
+	for pair in pairs:
+		var st: CardStatus = pair[0]
+		var data: Dictionary = pair[1]
+		var n := st.badge_count(data)
+		var tex: Texture2D = null
+		if st.icon_path != "":
+			if not _status_icons.has(st.icon_path):
+				_status_icons[st.icon_path] = load(st.icon_path) as Texture2D
+			tex = _status_icons[st.icon_path]
+		var cell := Control.new()
+		cell.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		if tex != null:
+			cell.custom_minimum_size = Vector2(STATUS_ICON_SIZE, STATUS_ICON_SIZE)
+			var r := TextureRect.new()
+			r.texture = tex
+			r.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+			r.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+			r.size = Vector2(STATUS_ICON_SIZE, STATUS_ICON_SIZE)
+			r.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			cell.add_child(r)
+			if n > 1:
+				var lab := _make_label("Count", Vector2(STATUS_ICON_SIZE - 26, STATUS_ICON_SIZE - 18), Vector2(32, 22), 16, Color.WHITE)
+				lab.text = "x%d" % n
+				lab.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+				lab.visible = true
+				cell.add_child(lab)
+		else:
+			var chip := _make_label("Chip", Vector2.ZERO, Vector2.ZERO, 15, st.color)
+			chip.text = st.title + (" x%d" % n if n > 1 else "")
+			chip.visible = true
+			chip.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+			cell.custom_minimum_size = Vector2(chip.get_combined_minimum_size().x + 4.0, STATUS_ICON_SIZE)
+			chip.size = cell.custom_minimum_size
+			cell.add_child(chip)
+		row.add_child(cell)
 
 ## Имя врага под ногами (чтобы различать слизней).
 static func name_label(actor: BattleActor) -> Label:
@@ -103,9 +157,8 @@ static func setup_overlays(actor: BattleActor, is_enemy: bool) -> void:
 		var intent := intent_label(actor)
 		y -= intent.size.y
 		intent.position.y = y
-	var status := status_label(actor)
-	status.vertical_alignment = VERTICAL_ALIGNMENT_BOTTOM
-	status.position.y = y - status.size.y
+	var row := status_row(actor)
+	row.position.y = y - STATUS_ICON_SIZE - 4.0
 
 # --- Всплывающий текст -------------------------------------------------------
 

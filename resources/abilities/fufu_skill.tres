@@ -5,7 +5,6 @@
 [ext_resource type="Script" uid="uid://bsxrg4rs717jk" path="res://scripts/abilities/steps/SelectFrontEnemyStep.gd" id="3_qbkgx"]
 [ext_resource type="Script" uid="uid://c3x2jnilbswvx" path="res://scripts/abilities/steps/DealDamageStep.gd" id="4_b6afh"]
 [ext_resource type="Script" uid="uid://c7xhmb8ketweg" path="res://scripts/status/SlowEffect.gd" id="5_cesr5"]
-[ext_resource type="Texture2D" uid="uid://back5scldw1e0" path="res://ui/status_icons/slow.png" id="5_j386m"]
 [ext_resource type="Script" uid="uid://bdctm2hj2xn1j" path="res://scripts/abilities/steps/ApplyEffectStep.gd" id="6_j386m"]
 
 [sub_resource type="Resource" id="Resource_v6wo6"]
@@ -19,7 +18,6 @@ metadata/_custom_type_script = "uid://c3x2jnilbswvx"
 
 [sub_resource type="Resource" id="Resource_1miv5"]
 script = ExtResource("5_cesr5")
-icon = ExtResource("5_j386m")
 duration = 1.0
 metadata/_custom_type_script = "uid://c7xhmb8ketweg"
 

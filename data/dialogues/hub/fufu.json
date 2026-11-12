@@ -11,10 +11,7 @@
           "emotion": "",
           "text": "О, приветики! Что-то нужно?",
           "characters": [{"id": "fufu"}],
-          "choices": [
-            {"text": "Обнять", "goto": "hub_fufu_hug"},
-            {"text": "Уйти"}
-          ]
+          "choices": [{"text": "Обнять", "goto": "hub_fufu_hug"}, {"text": "Уйти"}]
         }
       ]
     },
@@ -27,6 +24,14 @@
           "speaker_name": "",
           "emotion": "",
           "text": "Обнимашки? Конечно, иди сюда~",
+          "characters": [{"id": "fufu"}]
+        },
+        {
+          "speaker": "fufu",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "",
+          "cg": "res://assets/love_events/fufu/fufu_hug.png",
           "characters": [{"id": "fufu"}]
         },
         {

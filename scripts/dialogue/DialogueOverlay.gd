@@ -78,6 +78,9 @@ var _ui_hidden := false
 var _time := 0.0
 ## Выбор вариантов: у реплики поле "choices": [{"text": "Обнять", "goto": "id диалога"}, {"text": "Уйти"}].
 ## goto — какой диалог играть дальше (пусто — разговор закончен); on_choose — эффекты, как on_finish.
+## CG: "cg": "res://...png" — с этой реплики показывается картинка во весь экран (поверх персонажей);
+## "cg": "" — убрать. Реплика с CG и пустым текстом — только картинка, без окна (клик — дальше).
+var _cg: TextureRect
 var _choice_box: VBoxContainer
 var _choices: Array = []
 const CHOICES_POS := Vector2(70, 470)
@@ -122,6 +125,17 @@ func _build() -> void:
 
 	# Снимок экрана сразу после портретов (до нижней полосы): окно текста размывает именно его,
 	# поэтому фигуры под окном не обрезаются полосой и не пропадают.
+	# Картинка-сцена (CG) поверх персонажей, под окном текста: поле реплики "cg".
+	_cg = TextureRect.new()
+	_cg.position = Vector2.ZERO
+	_cg.size = FRAME
+	_cg.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_cg.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	_cg.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
+	_cg.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_cg.visible = false
+	_frame.add_child(_cg)
+
 	var bbc := BackBufferCopy.new()
 	bbc.copy_mode = BackBufferCopy.COPY_MODE_VIEWPORT
 	_frame.add_child(bbc)
@@ -407,6 +421,7 @@ func _apply_line(line) -> void:
 		else:
 			active = "_" + String(_read_line_value(line, "active_slot", "none"))
 	_show_characters(_unique_characters(characters), active)
+	_apply_cg(line)
 
 	var color := VnPortraits.name_color(active)
 	var name_col := color.lightened(0.4)
@@ -430,12 +445,20 @@ func _apply_line(line) -> void:
 	_name_tab.position = Vector2(BUBBLE_RECT.position.x + (BUBBLE_RECT.size.x - _name_tab.size.x) * 0.5, BUBBLE_RECT.position.y - NAME_TAB_H * 0.5)
 	_arrow.add_theme_color_override("font_color", name_col)
 
+	# Реплика без текста при картинке-сцене: только картинка, окно спрятано.
+	var bare := body == "" and _cg.visible
+	_bubble.visible = not bare
+	_text.visible = not bare
+	_band.visible = not _cg.visible
+	if bare:
+		_name_tab.visible = false
 	_text.text = body
 	_text.visible_characters = 0
 	_shown = 0.0
 	_typing = body != ""
 	_arrow.visible = not _typing
-	_history.append([speaker, color, body])
+	if body != "":
+		_history.append([speaker, color, body])
 	if not _typing:
 		_on_line_shown()
 
@@ -488,6 +511,28 @@ func _show_choices(choices: Array) -> void:
 		b.modulate.a = 0.0
 		var tw := b.create_tween().set_parallel(true)
 		tw.tween_property(b, "modulate:a", 1.0, 0.18).set_delay(0.06 * float(i))
+
+func _apply_cg(line) -> void:
+	if not (line is Dictionary) or not line.has("cg"):
+		return
+	var path := String(line["cg"])
+	if path == "":
+		if _cg.visible:
+			var tw := _cg.create_tween()
+			tw.tween_property(_cg, "modulate:a", 0.0, 0.25)
+			tw.tween_callback(func() -> void: _cg.visible = false)
+		return
+	var tex := load(path) as Texture2D
+	if tex == null:
+		push_warning("DialogueOverlay: нет картинки CG %s" % path)
+		return
+	GalleryData.mark_seen(path)
+	if _cg.visible and _cg.texture == tex:
+		return
+	_cg.texture = tex
+	_cg.visible = true
+	_cg.modulate.a = 0.0
+	_cg.create_tween().tween_property(_cg, "modulate:a", 1.0, 0.35)
 
 func _clear_choices() -> void:
 	_choices.clear()
@@ -662,6 +707,7 @@ func _finish_sequence() -> void:
 		return
 	_finished = true
 	_clear_choices()
+	_cg.visible = false
 	_typing = false
 	_cancel_auto_timer()
 	visible = false
@@ -716,6 +762,6 @@ func _set_ui_hidden(hidden: bool) -> void:
 	_ui_hidden = hidden
 	if _ui != null:
 		_ui.visible = not hidden
-		_band.visible = not hidden
+		_band.visible = not hidden and not _cg.visible
 		_top_band.visible = not hidden
 		_hidden_hint.visible = hidden

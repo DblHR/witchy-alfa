@@ -388,11 +388,9 @@ func _refresh_actor(actor: BattleActor) -> void:
 					col = CardCombat.COL_SHIELD   # ослаблен — удар меньше обычного
 				intent_label.add_theme_color_override("font_color", col)
 
-	var status_label := actor.get_node_or_null("StatusLabel") as Label
-	if status_label != null:
-		var text := _combat.status_text(unit)
-		status_label.text = text
-		status_label.visible = text != "" and not unit.is_dead
+	CardActorFx.refresh_status_icons(actor, _combat.status_pairs(unit), not unit.is_dead)
+	if _status_tip_actor == actor:
+		_update_status_tip()
 
 func _refresh_all_actors() -> void:
 	for a in left_actors + right_actors:
@@ -626,6 +624,8 @@ func _input(event: InputEvent) -> void:
 	if event is InputEventMouse:
 		_last_mouse = (event as InputEventMouse).position
 		_has_last_mouse = true
+		if event is InputEventMouseMotion:
+			_hover_status_tip()   ## подсказка по статусам при наведении на юнита
 	if _admin_kill_mode and event is InputEventMouseButton and event.pressed:
 		get_viewport().set_input_as_handled()
 		if event.button_index == MOUSE_BUTTON_LEFT:
@@ -660,6 +660,86 @@ func _process(_delta: float) -> void:
 	# Страховка: если отпускание кнопки «потерялось» (например, пауза), не застреваем.
 	if _dragging != null and not Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
 		_finish_drag()
+
+# --- Подсказка по статусам при наведении на юнита --------------------------------
+
+var _status_tip: PanelContainer
+var _status_tip_label: RichTextLabel
+var _status_tip_actor: BattleActor
+
+func _hover_status_tip() -> void:
+	var actor: BattleActor = null
+	if _dragging == null and not _ended and not DialogueManager_.is_showing():
+		var m := _mouse_pos()
+		var hc := get_viewport().gui_get_hovered_control()
+		if hc == null or not (hc is BaseButton or hc is CardView):
+			var u := _unit_at(right_actors, m)
+			if u == null:
+				u = _unit_at(left_actors, m)
+			if u != null and not _combat.status_pairs(u).is_empty():
+				actor = _find_actor(u)
+	if actor == _status_tip_actor:
+		if actor != null:
+			_place_status_tip()
+		return
+	_status_tip_actor = actor
+	_update_status_tip()
+
+func _update_status_tip() -> void:
+	if _status_tip == null:
+		_status_tip = PanelContainer.new()
+		_status_tip.name = "StatusTip"
+		_status_tip.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_status_tip.z_index = 80
+		var sb := StyleBoxFlat.new()
+		sb.bg_color = Color(0.07, 0.04, 0.12, 0.94)
+		sb.border_color = Color(1, 1, 1, 0.22)
+		sb.set_border_width_all(2)
+		sb.set_corner_radius_all(12)
+		sb.content_margin_left = 14
+		sb.content_margin_right = 14
+		sb.content_margin_top = 10
+		sb.content_margin_bottom = 10
+		_status_tip.add_theme_stylebox_override("panel", sb)
+		_status_tip_label = RichTextLabel.new()
+		_status_tip_label.bbcode_enabled = true
+		_status_tip_label.fit_content = true
+		_status_tip_label.scroll_active = false
+		_status_tip_label.custom_minimum_size = Vector2(380, 0)
+		_status_tip_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_status_tip_label.add_theme_font_size_override("normal_font_size", 18)
+		_status_tip_label.add_theme_font_size_override("bold_font_size", 19)
+		_status_tip.add_child(_status_tip_label)
+		_ui_add(_status_tip)
+	var actor := _status_tip_actor
+	if actor == null or actor.unit == null or actor.unit.is_dead:
+		_status_tip.visible = false
+		return
+	var parts := PackedStringArray()
+	for pair in _combat.status_pairs(actor.unit):
+		var st: CardStatus = pair[0]
+		var lines := st.describe(pair[1]).split("\n", false, 1)
+		var head := "[b][color=#%s]%s[/color][/b]" % [st.color.to_html(false), lines[0]]
+		if st.icon_path != "":
+			head = "[img=26x26]%s[/img] " % st.icon_path + head
+		parts.append(head + ("\n" + lines[1] if lines.size() > 1 else ""))
+	_status_tip_label.text = "\n\n".join(parts)
+	_status_tip.visible = not parts.is_empty()
+	_status_tip.reset_size()
+	_place_status_tip()
+
+## Подсказка — рядом с курсором, не вылезая за экран.
+func _place_status_tip() -> void:
+	if _status_tip == null or not _status_tip.visible:
+		return
+	var m := _mouse_pos()
+	var sz := _status_tip.get_combined_minimum_size()
+	var pos := m + Vector2(24, 24)
+	if pos.x + sz.x > 1900.0:
+		pos.x = m.x - sz.x - 24.0
+	if pos.y + sz.y > 1060.0:
+		pos.y = 1060.0 - sz.y
+	_status_tip.position = pos
 
 ## Цели карт без выбора цели.
 func _zone_targets(card: CardInstance) -> Array[Unit]:

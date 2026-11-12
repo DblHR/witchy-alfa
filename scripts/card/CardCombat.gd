@@ -237,6 +237,10 @@ func is_charmed(unit: Unit) -> bool:
 			return true
 	return false
 
+## Статусы юнита: [CardStatus, данные] — для значков и подсказки.
+func status_pairs(unit: Unit) -> Array:
+	return _status_list(unit)
+
 func status_text(unit: Unit) -> String:
 	var parts := PackedStringArray()
 	for pair in _status_list(unit):
