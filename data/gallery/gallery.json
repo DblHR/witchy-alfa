@@ -101,6 +101,20 @@
             "seen": true
           },
           "hint": "Обнимите Фуфу дома."
+        },
+        {
+          "path": "res://assets/characters/fufu/love/fufu_3love.png",
+          "unlock": {
+            "seen": true
+          },
+          "hint": "Поговорите с Фуфу дома на 3 уровне доверия."
+        },
+        {
+          "path": "res://assets/characters/fufu/love/fufu_maxlove.png",
+          "unlock": {
+            "seen": true
+          },
+          "hint": "Доверие Фуфу 10: вернитесь домой после забега."
         }
       ]
     },

@@ -16,6 +16,51 @@
       ]
     },
     {
+      "id": "hub_fufu_trust3",
+      "type": "hub_talk",
+      "npc": "fufu",
+      "once": true,
+      "priority": 10,
+      "conditions": {
+        "trust": {
+          "fufu": 3
+        }
+      },
+      "lines": [
+        {
+          "speaker": "fufu",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "Доброе утро, милашка.~",
+          "cg": "res://assets/characters/fufu/love/fufu_3love.png",
+          "characters": [{"id": "fufu"}]
+        },
+        {
+          "speaker": "fufu",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "Нашла эту рубашку и решила примерить. Она приятно пахнет...",
+          "characters": [{"id": "fufu"}]
+        },
+        {
+          "speaker": "fufu",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "...Тобой~",
+          "characters": [{"id": "fufu"}]
+        },
+        {
+          "speaker": "fufu",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "О, приветики! Что-то нужно?",
+          "cg": "",
+          "choices": [{"text": "Обнять", "goto": "hub_fufu_hug"}, {"text": "Уйти"}],
+          "characters": [{"id": "fufu"}]
+        }
+      ]
+    },
+    {
       "id": "hub_fufu_hug",
       "type": "hub_choice",
       "lines": [
@@ -40,6 +85,58 @@
           "emotion": "",
           "text": "Упс, кажется, тебе придётся потратить лишнее время на стирку~",
           "characters": [{"id": "fufu"}]
+        }
+      ]
+    },
+    {
+      "id": "fufu_trust10_morning",
+      "type": "after_run",
+      "npc": "fufu",
+      "once": true,
+      "priority": 10,
+      "conditions": {
+        "has_unit": "fufu",
+        "trust": {
+          "fufu": 10
+        }
+      },
+      "lines": [
+        {
+          "speaker": "fufu",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "",
+          "cg": "res://assets/characters/fufu/love/fufu_maxlove.png",
+          "fade_from_black": true,
+          "characters": [{"id": "hero"}, {"id": "fufu"}]
+        },
+        {
+          "speaker": "fufu",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "Ну привет~",
+          "characters": [{"id": "hero"}, {"id": "fufu"}]
+        },
+        {
+          "speaker": "fufu",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "Ты выглядишь очень мило, пока спишь. Так бы и съела.",
+          "characters": [{"id": "hero"}, {"id": "fufu"}]
+        },
+        {
+          "speaker": "hero",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "П-почему ты здесь?",
+          "characters": [{"id": "hero"}, {"id": "fufu"}]
+        },
+        {
+          "speaker": "fufu",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "Мы прошли столько приключений вместе... Решила порадовать тебя с утра~",
+          "characters": [{"id": "hero"}, {"id": "fufu"}]
         }
       ]
     }

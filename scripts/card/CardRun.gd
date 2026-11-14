@@ -25,6 +25,9 @@ const EVENT_WEIGHTS := {"chest": 25, "statue": 25, "shop": 25, "nurse": 25}
 ## С какого уровня отряда встречается ивент-комната (до этого на её месте — бой).
 ## Пока все с 1-го: открытие по уровням (2 / 4 / 6) не понравилось — поставить числа, чтобы вернуть.
 const EVENT_MIN_LEVEL := {"chest": 1, "shop": 1, "nurse": 1, "statue": 1}
+## Ивенты, которые появляются только когда нужный персонаж уже в отряде (ростере).
+## Лавка Сессилии и Ноктрис — после получения воина; до этого из ивентов только сундуки и статуи.
+const EVENT_NEEDS_UNIT := {"shop": "warrior", "nurse": "warrior"}
 
 ## Элитная комната (слизнедевочка ранга A + слизень): шанс среди боёв, не раньше этой комнаты.
 const ELITE_CHANCE := 0.25
@@ -81,7 +84,12 @@ func _init(run_seed: int = -1) -> void:
 		rooms.append({})
 	rooms[0] = make_room(0)
 	index = 0
+	# Карты ещё не открытых ивентов (лавка, медсестра до воина) в колоду не кладём.
+	var events := unlocked_events()
 	for kind in ROOM_DECK:
+		var event_id := "statue" if String(kind).begins_with("statue") else String(kind)
+		if EVENT_WEIGHTS.has(event_id) and not events.has(event_id):
+			continue
 		for _k in range(int(ROOM_DECK[kind])):
 			room_deck.append(String(kind))
 
@@ -129,8 +137,12 @@ static func unlocked_events() -> Dictionary:
 	var lvl := maxi(1, int(DungRun.party_level)) if DungRun != null else 99
 	var out := {}
 	for id in EVENT_WEIGHTS:
-		if lvl >= int(EVENT_MIN_LEVEL.get(id, 1)):
-			out[id] = EVENT_WEIGHTS[id]
+		if lvl < int(EVENT_MIN_LEVEL.get(id, 1)):
+			continue
+		var need_unit := String(EVENT_NEEDS_UNIT.get(id, ""))
+		if need_unit != "" and (UnitRoster_ == null or not UnitRoster_.has_unit(need_unit)):
+			continue
+		out[id] = EVENT_WEIGHTS[id]
 	return out
 
 func _pick_weighted(weights: Dictionary) -> String:

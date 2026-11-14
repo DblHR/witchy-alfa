@@ -8,7 +8,7 @@ script = ExtResource("2_line")
 line_id = "luisa_battle_start_01"
 speaker_id = "luisa"
 line_type = "joke"
-text = "Немного льда будет вам к лицу!"
+text = "Немного слизи будет вам к лицу!"
 chance = 0.1
 once_per_battle = true
 
@@ -17,7 +17,7 @@ script = ExtResource("2_line")
 line_id = "luisa_battle_start_02"
 speaker_id = "luisa"
 line_type = "taunt"
-text = "Сейчас сделаем из тебя мороженое"
+text = "Увязни!"
 chance = 0.1
 once_per_battle = true
 
@@ -26,7 +26,7 @@ script = ExtResource("2_line")
 line_id = "luisa_ability_cast_01"
 speaker_id = "luisa"
 trigger = "ability_cast"
-text = "Замёрзни!"
+text = "Не стой на пути!"
 chance = 0.2
 cooldown_sec = 2.0
 
@@ -36,7 +36,7 @@ line_id = "luisa_ability_cast_02"
 speaker_id = "luisa"
 trigger = "ability_cast"
 line_type = "taunt"
-text = "Кажется, у тебя реснички в инее~"
+text = "Кажется, ты вся в слизи~"
 chance = 0.22
 cooldown_sec = 2.0
 
@@ -45,7 +45,7 @@ script = ExtResource("2_line")
 line_id = "luisa_basic_attack_01"
 speaker_id = "luisa"
 trigger = "basic_attack"
-text = "Застынь"
+text = "Застынь!"
 chance = 0.28
 cooldown_sec = 1.5
 

@@ -81,6 +81,10 @@ var _time := 0.0
 ## CG: "cg": "res://...png" — с этой реплики показывается картинка во весь экран (поверх персонажей);
 ## "cg": "" — убрать. Реплика с CG и пустым текстом — только картинка, без окна (клик — дальше).
 var _cg: TextureRect
+## "fade_from_black": true в реплике — экран начинается чёрным и за FADE_FROM_BLACK_TIME
+## просветляется (удобно для сцен с CG: «проснулся — а там...»).
+const FADE_FROM_BLACK_TIME := 1.6
+var _fade: ColorRect
 var _choice_box: VBoxContainer
 var _choices: Array = []
 const CHOICES_POS := Vector2(70, 470)
@@ -135,6 +139,15 @@ func _build() -> void:
 	_cg.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_cg.visible = false
 	_frame.add_child(_cg)
+
+	# Затемнение для "fade_from_black": true — экран из черноты просветляется на картинку/сцену.
+	_fade = ColorRect.new()
+	_fade.color = Color.BLACK
+	_fade.position = Vector2(-2000, -1000)
+	_fade.size = FRAME + Vector2(4000, 2000)
+	_fade.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_fade.visible = false
+	_frame.add_child(_fade)
 
 	var bbc := BackBufferCopy.new()
 	bbc.copy_mode = BackBufferCopy.COPY_MODE_VIEWPORT
@@ -422,6 +435,7 @@ func _apply_line(line) -> void:
 			active = "_" + String(_read_line_value(line, "active_slot", "none"))
 	_show_characters(_unique_characters(characters), active)
 	_apply_cg(line)
+	_apply_fade(line)
 
 	var color := VnPortraits.name_color(active)
 	var name_col := color.lightened(0.4)
@@ -533,6 +547,16 @@ func _apply_cg(line) -> void:
 	_cg.visible = true
 	_cg.modulate.a = 0.0
 	_cg.create_tween().tween_property(_cg, "modulate:a", 1.0, 0.35)
+
+func _apply_fade(line) -> void:
+	if not (line is Dictionary) or not bool(line.get("fade_from_black", false)):
+		return
+	_fade.visible = true
+	_fade.modulate.a = 1.0
+	var tw := _fade.create_tween()
+	tw.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+	tw.tween_property(_fade, "modulate:a", 0.0, FADE_FROM_BLACK_TIME).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	tw.tween_callback(func() -> void: _fade.visible = false)
 
 func _clear_choices() -> void:
 	_choices.clear()
@@ -708,6 +732,7 @@ func _finish_sequence() -> void:
 	_finished = true
 	_clear_choices()
 	_cg.visible = false
+	_fade.visible = false
 	_typing = false
 	_cancel_auto_timer()
 	visible = false

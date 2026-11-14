@@ -44,11 +44,12 @@
     },
     {
       "id": "rabbit_shop_slimegirl_01",
-      "type": "flag",
+      "type": "event",
       "npc": "rabbit_shop",
-      "weight": 5,
+      "once": true,
+      "priority": 50,
       "conditions": {
-        "has_unit": "base_slime"
+        "has_any_unit": ["aki", "luisa", "fufu"]
       },
       "lines": [
         {

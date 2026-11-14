@@ -1,6 +1,132 @@
 {
   "dialogues": [
     {
+      "id": "lamia_first_meeting",
+      "type": "event",
+      "npc": "lamia",
+      "once": true,
+      "priority": 200,
+      "conditions": {
+        "has_unit": "warrior"
+      },
+      "lines": [
+        {
+          "speaker": "lamia",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "Посетители?! Вы же люди!",
+          "characters": [{"id": "witch"}, {"id": "warrior"}, {"id": "lamia"}]
+        },
+        {
+          "speaker": "witch",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "Ты здесь торгуешь?",
+          "characters": [{"id": "witch"}, {"id": "warrior"}, {"id": "lamia"}]
+        },
+        {
+          "speaker": "lamia",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "Скорее слоняюсь по этажам и собираю безделушки... Но да, иногда продаю и обмениваю.",
+          "characters": [{"id": "witch"}, {"id": "warrior"}, {"id": "lamia"}]
+        },
+        {
+          "speaker": "lamia",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "Как же я соскучилась по людям! Расскажите, как там - наверху?",
+          "characters": [{"id": "witch"}, {"id": "warrior"}, {"id": "lamia"}]
+        },
+        {
+          "speaker": "warrior",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "Ну... Солнечно?",
+          "characters": [{"id": "witch"}, {"id": "warrior"}, {"id": "lamia"}]
+        },
+        {
+          "speaker": "lamia",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "Ого... Это же прекрасно!",
+          "characters": [{"id": "witch"}, {"id": "warrior"}, {"id": "lamia"}]
+        },
+        {
+          "speaker": "lamia",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "Ой, вы, наверное, проголодались! Подходите ближе, я вас согрею и накормлю!",
+          "characters": [{"id": "witch"}, {"id": "warrior"}, {"id": "lamia"}]
+        },
+        {
+          "speaker": "warrior",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "Эй, Ведьмочка, выглядит подозрительно... Ведьмочка?",
+          "characters": [{"id": "witch"}, {"id": "warrior"}, {"id": "lamia"}]
+        },
+        {
+          "speaker": "witch",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "А м-можно потрогать твой хвост?",
+          "characters": [{"id": "witch"}, {"id": "warrior"}, {"id": "lamia"}]
+        }
+      ]
+    },
+    {
+      "id": "lamia_first_leave",
+      "type": "on_leave",
+      "npc": "lamia",
+      "once": true,
+      "priority": 100,
+      "lines": [
+        {
+          "speaker": "lamia",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "Уже уходите?.. Вы же вернётесь ещё?",
+          "characters": [{"id": "witch"}, {"id": "warrior"}, {"id": "lamia"}]
+        },
+        {
+          "speaker": "witch",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "Конечно!",
+          "characters": [{"id": "witch"}, {"id": "warrior"}, {"id": "lamia"}]
+        },
+        {
+          "speaker": "lamia",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "Спасибо... То есть... Буду ждать!",
+          "characters": [{"id": "witch"}, {"id": "warrior"}, {"id": "lamia"}]
+        },
+        {
+          "speaker": "warrior",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "Кажется, если мы сюда вернёмся, я не захочу уходить...",
+          "characters": [{"id": "witch"}, {"id": "warrior"}, {"id": "lamia"}]
+        },
+        {
+          "speaker": "witch",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "Значит буду заходить одна.",
+          "characters": [{"id": "witch"}, {"id": "warrior"}, {"id": "lamia"}]
+        },
+        {
+          "speaker": "warrior",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "Ни за что.",
+          "characters": [{"id": "witch"}, {"id": "warrior"}, {"id": "lamia"}]
+        }
+      ]
+    },
+    {
       "id": "lamia_headphones_finish",
       "type": "event",
       "npc": "lamia",
@@ -49,29 +175,29 @@
           "speaker": "lamia",
           "speaker_name": "",
           "emotion": "",
-          "text": "М-м... вы как раз вовремя. Можно попросить кое-что странное?"
-		  "characters": [{"id": "hero"}, {"id": "lamia"}
+          "text": "М-м... вы как раз вовремя. Можно попросить кое-что странное?",
+          "characters": [{"id": "hero"}, {"id": "lamia"}]
         },
         {
           "speaker": "lamia",
           "speaker_name": "",
           "emotion": "",
-          "text": "Я где-то в подземелье потеряла свои тёплые наушники. Без них тут ужасно зябко."
-		  "characters": [{"id": "hero"}, {"id": "lamia"}
+          "text": "Я где-то в подземелье потеряла свои тёплые наушники. Без них тут ужасно зябко.",
+          "characters": [{"id": "hero"}, {"id": "lamia"}]
         },
         {
           "speaker": "lamia",
           "speaker_name": "",
           "emotion": "",
-          "text": "Если вдруг найдёте их в сундуке или среди хлама — принесите мне, хорошо?"
-		  "characters": [{"id": "hero"}, {"id": "lamia"}
+          "text": "Если вдруг найдёте их в сундуке или среди хлама — принесите мне, хорошо?",
+          "characters": [{"id": "hero"}, {"id": "lamia"}]
         },
         {
           "speaker": "hero",
           "speaker_name": "",
           "emotion": "",
           "text": "Сделаем всё что сможем!",
-          "characters": [{"id": "hero"}, {"id": "lamia"}
+          "characters": [{"id": "hero"}, {"id": "lamia"}]
         }
       ]
     },

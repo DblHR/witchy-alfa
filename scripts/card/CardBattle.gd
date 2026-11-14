@@ -1192,6 +1192,8 @@ func _discard_from_hand(v: CardView) -> void:
 	_refresh_energy()
 	_set_discard_left(_discard_left - 1)
 
+const AFTER_RUN_FLAG := "pending_after_run"
+
 func _finish_run(victory: bool, is_draw: bool) -> void:
 	_set_discard_left(0)
 	_ended = true
@@ -1205,6 +1207,9 @@ func _finish_run(victory: bool, is_draw: bool) -> void:
 	var level_before := maxi(1, DungRun.party_level)
 	var xp_before := int(DungRun.xp)
 	var summary := _apply_run_progress()
+	# В хабе после забега могут сыграть сцены типа "after_run" (например, утро с Фуфу на 10 доверия).
+	if StoryState_ != null and _tutorial == null:
+		StoryState_.set_flag(AFTER_RUN_FLAG)
 	for line in _captured_lines:
 		summary.append(line)
 	_show_end_overlay(victory, is_draw)

@@ -173,6 +173,15 @@ func _play_pending_story_dialogue() -> void:
 			continue
 		DialogueManager_.show_sequence(lines, Callable(self, "_on_pending_story_dialogue_finished").bind(d))
 		return
+	# Только что вернулись из забега — сцена "after_run", если какая-то доступна (по priority).
+	if StoryState_.has_flag(CardBattle.AFTER_RUN_FLAG):
+		StoryState_.set_flag(CardBattle.AFTER_RUN_FLAG, false)
+		var after := StoryDialogueDB_.pick_dialogue_of_type("after_run")
+		if not after.is_empty():
+			var after_lines := StoryDialogueDB_.resolve_lines(after)
+			if not after_lines.is_empty():
+				DialogueManager_.show_sequence(after_lines, Callable(self, "_on_pending_story_dialogue_finished").bind(after))
+				return
 	# Сюжетных диалогов в очереди нет — может, пора спросить, кто главный герой.
 	MainHeroChoicePopup.show_if_needed(self)
 

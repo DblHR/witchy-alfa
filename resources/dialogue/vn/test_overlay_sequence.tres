@@ -1,7 +1,7 @@
-[gd_resource type="Resource" script_class="DialogueSequence" load_steps=5 format=3]
+[gd_resource type="Resource" script_class="DialogueSequence" format=3 uid="uid://ehqmkvjbvxr6"]
 
-[ext_resource type="Script" path="res://scripts/dialogue/DialogueSequence.gd" id="1_seq"]
-[ext_resource type="Script" path="res://scripts/dialogue/DialogueLine.gd" id="2_line"]
+[ext_resource type="Script" uid="uid://tuyvmr6hk5dh" path="res://scripts/dialogue/DialogueSequence.gd" id="1_seq"]
+[ext_resource type="Script" uid="uid://bm2u6k1ihm56b" path="res://scripts/dialogue/DialogueLine.gd" id="2_line"]
 
 [sub_resource type="Resource" id="DialogueLine_1"]
 script = ExtResource("2_line")
@@ -16,4 +16,4 @@ text = "Если это видно и по клику листается дал�
 [resource]
 script = ExtResource("1_seq")
 sequence_id = "test_overlay_sequence"
-lines = Array[ExtResource("2_line")]([SubResource("DialogueLine_1"), SubResource("DialogueLine_2")])
+lines = [SubResource("DialogueLine_1"), SubResource("DialogueLine_2")]

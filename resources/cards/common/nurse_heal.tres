@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="CardDef" format=3]
+[gd_resource type="Resource" script_class="CardDef" format=3 uid="uid://bw0rwml7qyim6"]
 
 [ext_resource type="Script" uid="uid://bi6teh0nyhjdj" path="res://scripts/card/effects/CardEffect.gd" id="1_eff"]
 [ext_resource type="Script" uid="uid://c12uc438o0gye" path="res://scripts/card/effects/EffHeal.gd" id="2_heal"]

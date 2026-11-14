@@ -1,6 +1,125 @@
 {
   "dialogues": [
     {
+      "id": "nurse_first_meeting",
+      "type": "event",
+      "npc": "nurse",
+      "once": true,
+      "priority": 200,
+      "conditions": {
+        "has_unit": "warrior"
+      },
+      "lines": [
+        {
+          "speaker": "nurse",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "Живые люди? Здесь? Да уж, нечастые вы гости.",
+          "characters": [{"id": "witch"}, {"id": "warrior"}, {"id": "nurse"}]
+        },
+        {
+          "speaker": "nurse",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "*Вздох*",
+          "characters": [{"id": "witch"}, {"id": "warrior"}, {"id": "nurse"}]
+        },
+        {
+          "speaker": "nurse",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "А значит и больше работы...",
+          "characters": [{"id": "witch"}, {"id": "warrior"}, {"id": "nurse"}]
+        },
+        {
+          "speaker": "witch",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "Ты здесь работаешь?",
+          "characters": [{"id": "witch"}, {"id": "warrior"}, {"id": "nurse"}]
+        },
+        {
+          "speaker": "nurse",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "Да. Уже целых... Ну, много лет. Лечу всех, кто нуждается в обмен на жизненную энергию.",
+          "characters": [{"id": "witch"}, {"id": "warrior"}, {"id": "nurse"}]
+        },
+        {
+          "speaker": "warrior",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "Жизненную энергию? То есть забираешь годы жизни за лечение?",
+          "characters": [{"id": "witch"}, {"id": "warrior"}, {"id": "nurse"}]
+        },
+        {
+          "speaker": "nurse",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "Обычно так, да. Но жизненную энергию можно получать и по-другому.",
+          "characters": [{"id": "witch"}, {"id": "warrior"}, {"id": "nurse"}]
+        },
+        {
+          "speaker": "witch",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "Правда? Расскажи подробнее.",
+          "characters": [{"id": "witch"}, {"id": "warrior"}, {"id": "nurse"}]
+        },
+        {
+          "speaker": "nurse",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "*Внимательно оглядывает Воина*",
+          "characters": [{"id": "witch"}, {"id": "warrior"}, {"id": "nurse"}]
+        },
+        {
+          "speaker": "nurse",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "Думаю, что вот он сможет за всех вас заплатить.",
+          "characters": [{"id": "witch"}, {"id": "warrior"}, {"id": "nurse"}]
+        },
+        {
+          "speaker": "warrior",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "Как-то меня смущает, что ты смотришь только ниже пояса...",
+          "characters": [{"id": "witch"}, {"id": "warrior"}, {"id": "nurse"}]
+        }
+      ]
+    },
+    {
+      "id": "nurse_after_first_use",
+      "type": "after_use",
+      "npc": "nurse",
+      "once": true,
+      "priority": 100,
+      "lines": [
+        {
+          "speaker": "nurse",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "Готово. В следующий раз будьте аккуратнее и не добавляйте мне работы.",
+          "characters": [{"id": "witch"}, {"id": "warrior"}, {"id": "nurse"}]
+        },
+        {
+          "speaker": "warrior",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "Странная у неё магия.",
+          "characters": [{"id": "witch"}, {"id": "warrior"}, {"id": "nurse"}]
+        },
+        {
+          "speaker": "witch",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "Я бы поверила твоей подозрительности, если бы не эта довольная улыбка.",
+          "characters": [{"id": "witch"}, {"id": "warrior"}, {"id": "nurse"}]
+        }
+      ]
+    },
+    {
       "id": "nurse_default_01",
       "type": "flag",
       "npc": "nurse",

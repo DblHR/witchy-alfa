@@ -104,6 +104,17 @@ func pick_npc_dialogue(npc_id: String, wanted_type: String = "") -> Dictionary:
 			return d
 	return top[0]
 
+## Любой доступный диалог указанного типа (без привязки к NPC), с учётом priority/weight.
+## Например "after_run" — сцены, которые играются в хабе после конца забега.
+func pick_dialogue_of_type(wanted_type: String) -> Dictionary:
+	var best: Dictionary = {}
+	for d in dialogues_by_id.values():
+		if String(d.get("type", "")) != wanted_type or not _can_play(d):
+			continue
+		if best.is_empty() or int(d.get("priority", 0)) > int(best.get("priority", 0)):
+			best = d
+	return best
+
 ## Есть ли у NPC непрочитанный диалог, который выдаёт квест (для значка «!» на кнопке).
 func npc_has_quest_offer(npc_id: String) -> bool:
 	for d in dialogues_by_npc.get(npc_id, []):
@@ -304,6 +315,20 @@ func check_conditions(conditions) -> bool:
 		return false
 	if c.has("not_has_unit") and UnitRoster_ != null and UnitRoster_.has_unit(String(c["not_has_unit"])):
 		return false
+	# "has_any_unit": ["aki", "luisa", "fufu"] — в отряде есть хотя бы одна из них.
+	if c.has("has_any_unit"):
+		var any_found := false
+		for uid in c["has_any_unit"]:
+			if UnitRoster_ != null and UnitRoster_.has_unit(String(uid)):
+				any_found = true
+				break
+		if not any_found:
+			return false
+	# "trust": {"fufu": 3} — уровень доверия (отношений) героини не ниже 3 (как в галерее).
+	if c.has("trust") and c["trust"] is Dictionary:
+		for key in c["trust"].keys():
+			if UnitRoster_ == null or UnitRoster_.get_relationship(String(key)) < int(c["trust"][key]):
+				return false
 	if c.has("has_item") and (Inventory_ == null or not Inventory_.has_item(String(c["has_item"]))):
 		return false
 	if c.has("not_has_item") and Inventory_ != null and Inventory_.has_item(String(c["not_has_item"])):

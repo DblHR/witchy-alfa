@@ -160,10 +160,7 @@ func setup(p_battle: Node, p_room: Dictionary) -> void:
 	_continue = RunUiKit.make_button("ИДТИ ДАЛЬШЕ", CONTINUE_RECT.size, 30)
 	_continue.position = CONTINUE_RECT.position
 	_continue.size = CONTINUE_RECT.size
-	_continue.pressed.connect(func() -> void:
-		finished.emit()
-		queue_free()
-	)
+	_continue.pressed.connect(_on_continue_pressed)
 	add_child(_continue)
 
 	# Золото и прогресс забега сверху (общий HUD закрыт этим экраном).
@@ -223,6 +220,60 @@ func _on_intro_finished() -> void:
 		StoryDialogueDB_.apply_effects(_intro.get("on_finish", {}))
 	_intro = {}
 	_rebuild()
+
+# --- Диалоги после действий ---------------------------------------------------
+## Тип диалога NPC, который сыграет после закрытия картинки услуги ("after_use" у Ноктрис).
+var _after_image_dialogue := ""
+var _leaving := false
+
+func _event_npc_id() -> String:
+	if StoryDialogueDB_ == null:
+		return ""
+	if String(room.get("event", "")) == "shop":
+		return "lamia"
+	return StoryDialogueDB_.event_type_to_npc_id(_event_enum(), _variant_enum())
+
+func _play_after_image_dialogue() -> void:
+	var kind := _after_image_dialogue
+	_after_image_dialogue = ""
+	if kind != "":
+		_play_npc_dialogue(kind, Callable())
+
+## Сыграть диалог NPC этой комнаты указанного типа ("after_use", "on_leave"), если такой есть.
+## Возвращает true, если диалог начался; по окончании вызывается then.
+func _play_npc_dialogue(kind: String, then: Callable) -> bool:
+	if StoryDialogueDB_ == null or DialogueManager_ == null:
+		return false
+	var npc_id := _event_npc_id()
+	if npc_id == "":
+		return false
+	var d := StoryDialogueDB_.pick_npc_dialogue(npc_id, kind)
+	if d.is_empty():
+		return false
+	var lines := StoryDialogueDB_.resolve_lines(d)
+	if lines.is_empty():
+		return false
+	DialogueManager_.show_sequence(lines, func() -> void:
+		if StoryState_ != null:
+			StoryState_.mark_dialogue_seen(String(d.get("id", "")))
+		StoryDialogueDB_.apply_effects(d.get("on_finish", {}))
+		if then.is_valid():
+			then.call()
+	)
+	return true
+
+## «Идти дальше»: сначала прощальный диалог ("on_leave"), если есть, потом выход из комнаты.
+func _on_continue_pressed() -> void:
+	if _leaving:
+		return
+	_leaving = true
+	_set_controls_visible(false)
+	if not _play_npc_dialogue("on_leave", _leave_room):
+		_leave_room()
+
+func _leave_room() -> void:
+	finished.emit()
+	queue_free()
 
 func _set_controls_visible(on: bool) -> void:
 	for c in [_title, _desc, _options, _cards, _continue, _shade]:
@@ -393,6 +444,7 @@ func _on_nurse_card() -> void:
 	room["used"] = true
 	_rebuild()
 	_say("Микстура Ноктрис теперь в колоде. Хватит на один раз.")
+	_after_image_dialogue = "after_use"
 	_show_choice_image("nurse_potion")
 
 ## Выбор героини для лечения или воскрешения.
@@ -419,13 +471,16 @@ func _on_nurse_target(hero_id: String, hero_name: String, revive: bool) -> void:
 	room["used"] = true
 	_rebuild()
 	_say(("%s снова на ногах." if revive else "Ноктрис подлатала: %s.") % hero_name)
+	_after_image_dialogue = "after_use"
 	_show_choice_image("nurse_revive" if revive else "nurse_heal")
 ## Полноэкранная картинка услуги (как в старом забеге): клик закрывает.
 func _show_choice_image(key: String) -> void:
 	if AssetCatalog_ == null:
+		_play_after_image_dialogue()
 		return
 	var tex: Texture2D = AssetCatalog_.get_event_choice_texture(key)
 	if tex == null:
+		_play_after_image_dialogue()
 		return
 	GalleryData.mark_seen_texture(tex)
 	_image_open = true
@@ -439,6 +494,7 @@ func _show_choice_image(key: String) -> void:
 			_image_open = false
 			_continue.disabled = false
 			img.queue_free()
+			_play_after_image_dialogue()
 	)
 	add_child(img)
 
