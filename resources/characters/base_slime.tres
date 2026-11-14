@@ -1,7 +1,7 @@
 [gd_resource type="Resource" script_class="CharacterData" format=3 uid="uid://cnp8njnyrjddn"]
 
 [ext_resource type="Script" path="res://scripts/CharacterData.gd" id="1_6igbr"]
-[ext_resource type="Texture2D" uid="uid://40dcmryxpsf2" path="res://assets/pics/actorSprite/slime_green.png" id="1_bnla2"]
+[ext_resource type="Texture2D" uid="uid://40dcmryxpsf2" path="res://assets/enemies/slimes/slime_green.png" id="1_bnla2"]
 [ext_resource type="Script" path="res://scripts/card/data/CardDef.gd" id="2_e1pwt"]
 [ext_resource type="Texture2D" path="res://icon.svg" id="3_jnehp"]
 

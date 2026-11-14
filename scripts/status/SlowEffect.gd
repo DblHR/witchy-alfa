@@ -8,7 +8,7 @@ func _init(multiplier: float = 0.8, dur: float = 1.0) -> void:
 	mult = multiplier
 	duration = dur
 	time_left = dur
-	icon = load("res://ui/status_icons/slow.png")
+	icon = null
 	ui_name = "Slow" if ui_name == "" else ui_name
 
 func on_apply(unit: Unit) -> void:

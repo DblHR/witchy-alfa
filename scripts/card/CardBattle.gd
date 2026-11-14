@@ -26,8 +26,8 @@ class_name CardBattle
 ## BattleActor используется как «тупой» виджет (читает только Unit/CharacterData).
 
 const BATTLE_ACTOR_SCENE: PackedScene = preload("res://scenes/BattleActor.tscn")
-const VICTORY_TEXTURE: Texture2D = preload("res://assets/pics/bigPics/endscreen/victory.png")
-const DEFEAT_TEXTURE: Texture2D = preload("res://assets/pics/bigPics/endscreen/defeat.png")
+const VICTORY_TEXTURE: Texture2D = preload("res://assets/story/endscreen/victory.png")
+const DEFEAT_TEXTURE: Texture2D = preload("res://assets/story/endscreen/defeat.png")
 const _TargetRing := preload("res://scripts/card/TargetRing.gd")
 const _TargetMark := preload("res://scripts/card/TargetMark.gd")
 

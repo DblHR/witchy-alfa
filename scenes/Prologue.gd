@@ -1,6 +1,6 @@
 extends Control
 
-const PROLOGUE_DIR := "res://assets/pics/bigPics/prologue"
+const PROLOGUE_DIR := "res://assets/story/prologue"
 const SCENE_COUNT := 12
 
 @onready var image_rect: TextureRect = %ImageRect

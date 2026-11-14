@@ -7,26 +7,29 @@ signal pressed(view: CardView)
 
 const CARD_SIZE := Vector2(150, 210)
 
-## Арт на фоне карт героя (из assets/pics/ready but not used, уменьшен до 336x501).
+## Арт на фоне карт героя (из assets/_unused, уменьшен до 336x501).
 ## У героев без арта (воин, общие карты) остаётся цветной заливка.
 const ART_PATHS := {
-	"witch": "res://assets/pics/cards/art/witch/witch.png",
-	"luisa": "res://assets/pics/cards/art/luisa/luisa.png",
-	"aki": "res://assets/pics/cards/art/aki/aki.png",
-	"fufu": "res://assets/pics/cards/art/fufu/fufu.png",
+	"witch": "res://assets/characters/witch/cards/witch.png",
+	"luisa": "res://assets/characters/luisa/cards/luisa.png",
+	"aki": "res://assets/characters/aki/cards/aki.png",
+	"fufu": "res://assets/characters/fufu/cards/fufu.png",
 }
-## Арты лежат по папкам героинь: assets/pics/cards/art/<героиня>/…
+## Арты лежат по папкам героинь: assets/characters/<героиня>/cards/… (общие — assets/cards/<папка>/)
 ## Арт карты по виду: <героиня>/<героиня>_atk.png — карта наносит урон,
 ## <героиня>_sup.png — не наносит (ульта — по тому же правилу). Это полный рисунок карты
 ## с табличкой «Атака»/«Поддержка» сверху: он занимает всю карту, название опускается под табличку.
 ## Нет такого арта — старый вариант: <героиня>.png (ART_PATHS) или цветная заливка с рамкой цвета вида.
-const TAG_ART_PATH := "res://assets/pics/cards/art/%s/%s_%s.png"
+const TAG_ART_PATH := "res://assets/characters/%s/cards/%s_%s.png"
 ## Уникальный рисунок карты: <героиня>/<id карты>.png (общие карты — common/<id>.png), 840×1253,
 ## без таблички сверху — табличка берётся с арта по виду и остаётся видна над рисунком.
 ## Нет файла — карта показывает общий арт героини по виду.
-const CARD_ART_PATH := "res://assets/pics/cards/art/%s/%s.png"
+const CARD_ART_PATH := "res://assets/characters/%s/cards/%s.png"
+## Общие карты (без героини): assets/cards/<папка>/<id>.png.
+const SHARED_ART_PATH := "res://assets/cards/%s/%s.png"
+const SHARED_ART_FOLDERS := ["common", "general"]
 ## Рисунки, которые лежат не по общему правилу (id карты -> путь).
-const CARD_ART_OVERRIDES := {"lure": "res://assets/pics/cards/art/general/gift_card.png"}
+const CARD_ART_OVERRIDES := {"lure": "res://assets/cards/general/gift_card.png"}
 static var _card_art_cache: Dictionary = {}
 ## Доля высоты арта по виду, занятая табличкой сверху (до рамки рисунка).
 const HEADER_FRACTION := 0.15
@@ -38,8 +41,8 @@ const TAG_TITLE_RIGHT := 6.0
 const TAG_DESC_POS := Vector2(12, 38)
 ## Цвет фона верхней полосы рисунков (под название).
 const HEADER_BG := Color(13.0 / 255.0, 11.0 / 255.0, 14.0 / 255.0)
-## Подложка по виду для карт без арта: assets/pics/cards/frames/<вид>.png (необязательно).
-const FRAME_PATH := "res://assets/pics/cards/frames/%s.png"
+## Подложка по виду для карт без арта: assets/cards/frames/<вид>.png (необязательно).
+const FRAME_PATH := "res://assets/cards/frames/%s.png"
 const KIND_BORDER := {
 	"attack": Color(0.92, 0.32, 0.32),
 	"support": Color(0.38, 0.85, 0.5),
@@ -346,7 +349,8 @@ static func _get_card_art(owner_id: String, card_id: String) -> Texture2D:
 	if _card_art_cache.has(key):
 		return _card_art_cache[key]
 	var tex: Texture2D = null
-	var path := String(CARD_ART_OVERRIDES.get(card_id, CARD_ART_PATH % [folder, card_id]))
+	var pattern := SHARED_ART_PATH if SHARED_ART_FOLDERS.has(folder) else CARD_ART_PATH
+	var path := String(CARD_ART_OVERRIDES.get(card_id, pattern % [folder, card_id]))
 	if ResourceLoader.exists(path):
 		tex = load(path) as Texture2D
 	_card_art_cache[key] = tex
@@ -557,8 +561,8 @@ func _refresh_cost_color() -> void:
 
 ## Значки в правом нижнем углу: меч — карта наносит урон, щиток — не наносит
 ## (или вдобавок к урону даёт щит/лечение) — тогда оба.
-const KIND_ICON_ATK := "res://ui/status_icons/atk_card.png"
-const KIND_ICON_SUP := "res://ui/status_icons/sup_card.png"
+const KIND_ICON_ATK := "res://assets/ui/status/atk_card.png"
+const KIND_ICON_SUP := "res://assets/ui/status/sup_card.png"
 const KIND_ICON_SIZE := 30.0
 const KIND_ICON_MARGIN := Vector2(-6, -4)   ## насколько значок выходит за край карты
 static var _kind_icons: Dictionary = {}

@@ -10,11 +10,11 @@ const _BodyScript := preload("res://scripts/alchemy/ingredient_body.gd")
 const _PendulumScript := preload("res://scripts/alchemy/pendulum_meter.gd")
 const _StirScript := preload("res://scripts/alchemy/stirring_minigame.gd")
 
-const BG_PATH := "res://assets/pics/bigPics/backgrounds/alchemyBG.png"
-const CAULDRON_PATH := "res://assets/pics/alchemy/cauldron.png"
-const HOME_ICON := "res://assets/pics/icons/buttons/homeButton.png"
-const FARM_ICON := "res://assets/pics/icons/buttons/farmButton.png"
-const SHOP_ICON := "res://assets/pics/icons/buttons/shopButton.png"
+const BG_PATH := "res://assets/backgrounds/rooms/alchemyBG.png"
+const CAULDRON_PATH := "res://assets/alchemy/cauldron.png"
+const HOME_ICON := "res://assets/ui/buttons/homeButton.png"
+const FARM_ICON := "res://assets/ui/buttons/farmButton.png"
+const SHOP_ICON := "res://assets/ui/buttons/shopButton.png"
 
 # --- Раскладка (доли экрана: x, y, w, h) ---
 const R_RECIPE_BTN := Rect2(0.02, 0.025, 0.30, 0.10)

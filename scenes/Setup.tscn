@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" uid="uid://dqp56ofiyeea6" path="res://scripts/Setup.gd" id="1_5j21s"]
 [ext_resource type="PackedScene" uid="uid://c1k2g5xv2d3y0" path="res://ui/TeamSlot.tscn" id="2_8y2xk"]
-[ext_resource type="Texture2D" uid="uid://ci53sg2irig4u" path="res://assets/pics/ui/setup/setupUI.png" id="2_17ay7"]
+[ext_resource type="Texture2D" uid="uid://ci53sg2irig4u" path="res://assets/ui/setup/setupUI.png" id="2_17ay7"]
 [ext_resource type="PackedScene" uid="uid://d2g0v3e7p1p0t" path="res://ui/CharacterPickerPopup.tscn" id="3_7qv0c"]
 
 [node name="Node2D" type="Node2D" unique_id=402716249]

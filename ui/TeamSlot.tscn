@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://c1k2g5xv2d3y0"]
 
 [ext_resource type="Script" uid="uid://dp80ixiphi1cv" path="res://ui/TeamSlot.gd" id="1_5k1a0"]
-[ext_resource type="Texture2D" uid="uid://cgcmg1om6pucy" path="res://assets/pics/ui/setup/setupcard.png" id="2_bg"]
+[ext_resource type="Texture2D" uid="uid://cgcmg1om6pucy" path="res://assets/ui/setup/setupcard.png" id="2_bg"]
 
 [node name="TeamSlot" type="Panel" unique_id=920824868]
 custom_minimum_size = Vector2(240, 486)

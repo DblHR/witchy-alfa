@@ -1,8 +1,8 @@
 [gd_resource type="Resource" script_class="CharacterData" format=3 uid="uid://cukpsyg0jc5wf"]
 
-[ext_resource type="Texture2D" path="res://assets/pics/actorSprite/fufu.png" id="1_60fp2"]
+[ext_resource type="Texture2D" path="res://assets/characters/fufu/fufu_battle.png" id="1_60fp2"]
 [ext_resource type="Script" path="res://scripts/CharacterData.gd" id="1_ja7c3"]
-[ext_resource type="Texture2D" path="res://assets/pics/cards/fufu_card.png" id="2_70bc2"]
+[ext_resource type="Texture2D" path="res://assets/characters/fufu/fufu_portrait.png" id="2_70bc2"]
 [ext_resource type="Script" path="res://scripts/card/data/CardDef.gd" id="3_hi7rb"]
 [ext_resource type="Texture2D" path="res://icon.svg" id="3_hihko"]
 [ext_resource type="Resource" path="res://resources/cards/fufu/fufu_foreplay.tres" id="3_xxist"]

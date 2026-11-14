@@ -31,7 +31,7 @@
           "speaker_name": "",
           "emotion": "",
           "text": "",
-          "cg": "res://assets/love_events/fufu/fufu_hug.png",
+          "cg": "res://assets/characters/fufu/love/fufu_hug.png",
           "characters": [{"id": "fufu"}]
         },
         {

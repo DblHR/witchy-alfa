@@ -1,12 +1,12 @@
 [gd_scene format=3 uid="uid://dlt8t4201g1gx"]
 
 [ext_resource type="Script" uid="uid://d10t0s6328mbk" path="res://scenes/farm_room.gd" id="1_1t45w"]
-[ext_resource type="Texture2D" uid="uid://muo6um5j18ux" path="res://assets/pics/bigPics/backgrounds/farmBG.png" id="1_mbp2a"]
-[ext_resource type="Texture2D" uid="uid://klsl5qwne66a" path="res://assets/pics/icons/buttons/alchemyButton.png" id="2_1t45w"]
-[ext_resource type="Texture2D" uid="uid://dj3aaaw5qjbp1" path="res://assets/pics/icons/buttons/homeButton.png" id="3_1ckk7"]
-[ext_resource type="Texture2D" uid="uid://bsueyseydns2j" path="res://assets/pics/icons/buttons/shopButton.png" id="4_m66ec"]
-[ext_resource type="Texture2D" uid="uid://r6mi4odvmydo" path="res://assets/pics/farm/table.png" id="4_o7qkg"]
-[ext_resource type="Texture2D" uid="uid://cwcidm8ocahx1" path="res://assets/pics/farm/chair.png" id="5_o7qkg"]
+[ext_resource type="Texture2D" uid="uid://muo6um5j18ux" path="res://assets/backgrounds/rooms/farmBG.png" id="1_mbp2a"]
+[ext_resource type="Texture2D" uid="uid://klsl5qwne66a" path="res://assets/ui/buttons/alchemyButton.png" id="2_1t45w"]
+[ext_resource type="Texture2D" uid="uid://dj3aaaw5qjbp1" path="res://assets/ui/buttons/homeButton.png" id="3_1ckk7"]
+[ext_resource type="Texture2D" uid="uid://bsueyseydns2j" path="res://assets/ui/buttons/shopButton.png" id="4_m66ec"]
+[ext_resource type="Texture2D" uid="uid://r6mi4odvmydo" path="res://assets/farm/furniture/table.png" id="4_o7qkg"]
+[ext_resource type="Texture2D" uid="uid://cwcidm8ocahx1" path="res://assets/farm/furniture/chair.png" id="5_o7qkg"]
 [ext_resource type="PackedScene" uid="uid://cu1a3uu65x45s" path="res://scenes/FarmSlot.tscn" id="5_slot"]
 
 [node name="Control" type="Control" unique_id=1417306981]

@@ -1,10 +1,10 @@
 extends Control
 class_name CardDragPortrait
 ## Портрет героини, выезжающий слева, пока игрок тащит её карту (как в CZN).
-## Картинка: CharacterData.drag_portrait, а если пусто — res://assets/pics/ui/battle pics/<id>_card.png.
+## Картинка: CharacterData.drag_portrait, а если пусто — res://assets/characters/<id>/<id>_drag.png.
 ## Прозрачные поля картинки обрезаются автоматически (один раз на картинку).
 
-const PORTRAIT_DIR := "res://assets/pics/ui/battle pics/%s_card.png"
+const PORTRAIT_DIR := "res://assets/characters/%s/%s_drag.png"
 ## Высота портрета в долях высоты экрана.
 const HEIGHT_RATIO := 0.88
 ## Насколько портрет «заходит» за левый край экрана (доля ширины картинки).
@@ -58,7 +58,7 @@ static func portrait_for(data: CharacterData) -> Texture2D:
 		return null
 	if data.drag_portrait != null:
 		return data.drag_portrait
-	var path := PORTRAIT_DIR % data.id
+	var path := PORTRAIT_DIR % [data.id, data.id]
 	if ResourceLoader.exists(path):
 		return load(path)
 	return null

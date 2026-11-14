@@ -1,9 +1,9 @@
 [gd_resource type="Resource" script_class="CharacterData" format=3 uid="uid://dai6m7icsbflu"]
 
 [ext_resource type="Script" path="res://scripts/CharacterData.gd" id="1_d14mp"]
-[ext_resource type="Texture2D" path="res://assets/pics/actorSprite/warrior.png" id="1_g5w5n"]
+[ext_resource type="Texture2D" path="res://assets/characters/warrior/warrior_battle.png" id="1_g5w5n"]
 [ext_resource type="Script" path="res://scripts/card/data/CardDef.gd" id="2_su34w"]
-[ext_resource type="Texture2D" path="res://assets/pics/cards/warrior.png" id="2_ygci8"]
+[ext_resource type="Texture2D" path="res://assets/characters/warrior/warrior_portrait.png" id="2_ygci8"]
 [ext_resource type="Resource" path="res://resources/cards/warrior/warrior_lunge.tres" id="3_dof06"]
 [ext_resource type="Texture2D" path="res://icon.svg" id="3_qa0yl"]
 [ext_resource type="Resource" path="res://resources/cards/warrior/warrior_press.tres" id="4_pu7u2"]

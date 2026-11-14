@@ -8,7 +8,7 @@ class_name EnemyDefs
 ##   A: Аки, Луиса (элитные комнаты)
 ##   S: Фуфу (босс, EnemyFufu)
 
-const SPRITES := "res://assets/pics/actorSprite/"
+const SPRITES := "res://assets/enemies/slimes/"
 
 ## Кто может встретиться в обычной комнате 1-го этажа и элитной.
 const FLOOR1_B: Array[String] = ["shlep", "bubble", "blob", "acid"]

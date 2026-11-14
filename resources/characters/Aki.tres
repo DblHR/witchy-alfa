@@ -1,8 +1,8 @@
 [gd_resource type="Resource" script_class="CharacterData" format=3 uid="uid://bsjesl37k5jig"]
 
-[ext_resource type="Texture2D" path="res://assets/pics/actorSprite/aki.png" id="1_724k4"]
+[ext_resource type="Texture2D" path="res://assets/characters/aki/aki_battle.png" id="1_724k4"]
 [ext_resource type="Script" path="res://scripts/CharacterData.gd" id="1_ak87d"]
-[ext_resource type="Texture2D" path="res://assets/pics/cards/aki_card.png" id="2_j5b4p"]
+[ext_resource type="Texture2D" path="res://assets/characters/aki/aki_portrait.png" id="2_j5b4p"]
 [ext_resource type="Script" path="res://scripts/card/data/CardDef.gd" id="2_jamtm"]
 [ext_resource type="Resource" path="res://resources/cards/aki/aki_lube.tres" id="3_jamtm"]
 [ext_resource type="Texture2D" path="res://icon.svg" id="4_583m7"]

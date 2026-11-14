@@ -7,7 +7,7 @@
     "image_unlock у раздела - условие для каждой его картинки, у которой нет своего unlock.",
     "Условия (все сразу): \"seen\": true - картинку уже показывали в игре; \"has_unit\": \"fufu\" - героиня в отряде; \"trust\": {\"fufu\": 3} - уровень доверия не ниже 3;",
     "а также условия диалогов: \"flag\", \"not_flag\", \"party_level_min\", \"quest_completed\", \"counter_min\" и т.д.",
-    "Пример картинки за доверие: {\"path\": \"res://assets/pics/cards/art/fufu/fufu_ult.png\", \"unlock\": {\"trust\": {\"fufu\": 5}}, \"hint\": \"Доверие Фуфу 5\"}",
+    "Пример картинки за доверие: {\"path\": \"res://assets/characters/fufu/love/fufu_3love.png\", \"unlock\": {\"trust\": {\"fufu\": 5}}, \"hint\": \"Доверие Фуфу 5\"}",
     "Порядок картинок в списке = порядок в галерее. Чтобы убрать картинку из галереи - удалите её строку.",
     "Осторожно с запятыми: после последнего элемента списка запятой быть не должно."
   ],
@@ -16,11 +16,11 @@
       "id": "witch",
       "title": "Ведьмочка",
       "images": [
-        "res://assets/pics/cards/witch_card.png",
-        "res://assets/pics/actorSprite/witch.png",
-        "res://assets/pics/cards/art/witch/witch.png",
-        "res://assets/pics/cards/art/witch/witch_atk.png",
-        "res://assets/pics/cards/art/witch/witch_sup.png"
+        "res://assets/characters/witch/witch_portrait.png",
+        "res://assets/characters/witch/witch_battle.png",
+        "res://assets/characters/witch/cards/witch.png",
+        "res://assets/characters/witch/cards/witch_atk.png",
+        "res://assets/characters/witch/cards/witch_sup.png"
       ]
     },
     {
@@ -31,10 +31,10 @@
       },
       "hint": "Откроется, когда Воин будет в отряде.",
       "images": [
-        "res://assets/pics/cards/warrior.png",
-        "res://assets/pics/actorSprite/warrior.png",
-        "res://assets/pics/cards/art/warrior/warrior_atk.png",
-        "res://assets/pics/cards/art/warrior/warrior_sup.png"
+        "res://assets/characters/warrior/warrior_portrait.png",
+        "res://assets/characters/warrior/warrior_battle.png",
+        "res://assets/characters/warrior/cards/warrior_atk.png",
+        "res://assets/characters/warrior/cards/warrior_sup.png"
       ]
     },
     {
@@ -45,16 +45,16 @@
       },
       "hint": "Откроется, когда Аки будет в отряде.",
       "images": [
-        "res://assets/pics/cards/aki_card.png",
-        "res://assets/pics/actorSprite/aki.png",
-        "res://assets/pics/cards/art/aki/aki.png",
-        "res://assets/pics/cards/art/aki/aki_atk.png",
-        "res://assets/pics/cards/art/aki/aki_bounce.png",
-        "res://assets/pics/cards/art/aki/aki_cheer_slap.png",
-        "res://assets/pics/cards/art/aki/aki_kiss.png",
-        "res://assets/pics/cards/art/aki/aki_lube.png",
-        "res://assets/pics/cards/art/aki/aki_squeeze.png",
-        "res://assets/pics/cards/art/aki/aki_sup.png"
+        "res://assets/characters/aki/aki_portrait.png",
+        "res://assets/characters/aki/aki_battle.png",
+        "res://assets/characters/aki/cards/aki.png",
+        "res://assets/characters/aki/cards/aki_atk.png",
+        "res://assets/characters/aki/cards/aki_bounce.png",
+        "res://assets/characters/aki/cards/aki_cheer_slap.png",
+        "res://assets/characters/aki/cards/aki_kiss.png",
+        "res://assets/characters/aki/cards/aki_lube.png",
+        "res://assets/characters/aki/cards/aki_squeeze.png",
+        "res://assets/characters/aki/cards/aki_sup.png"
       ]
     },
     {
@@ -65,15 +65,15 @@
       },
       "hint": "Откроется, когда Луиса будет в отряде.",
       "images": [
-        "res://assets/pics/cards/luisa_card.png",
-        "res://assets/pics/actorSprite/luisa.png",
-        "res://assets/pics/cards/art/luisa/luisa.png",
-        "res://assets/pics/cards/art/luisa/luisa_atk.png",
-        "res://assets/pics/cards/art/luisa/luisa_deep.png",
-        "res://assets/pics/cards/art/luisa/luisa_loosen.png",
-        "res://assets/pics/cards/art/luisa/luisa_spank.png",
-        "res://assets/pics/cards/art/luisa/luisa_sup.png",
-        "res://assets/pics/cards/art/luisa/luisa_tentacle.png"
+        "res://assets/characters/luisa/luisa_portrait.png",
+        "res://assets/characters/luisa/luisa_battle.png",
+        "res://assets/characters/luisa/cards/luisa.png",
+        "res://assets/characters/luisa/cards/luisa_atk.png",
+        "res://assets/characters/luisa/cards/luisa_deep.png",
+        "res://assets/characters/luisa/cards/luisa_loosen.png",
+        "res://assets/characters/luisa/cards/luisa_spank.png",
+        "res://assets/characters/luisa/cards/luisa_sup.png",
+        "res://assets/characters/luisa/cards/luisa_tentacle.png"
       ]
     },
     {
@@ -84,19 +84,19 @@
       },
       "hint": "Откроется, когда Фуфу будет в отряде.",
       "images": [
-        "res://assets/pics/cards/fufu_card.png",
-        "res://assets/pics/actorSprite/fufu.png",
-        "res://assets/pics/cards/art/fufu/fufu.png",
-        "res://assets/pics/cards/art/fufu/fufu_atk.png",
-        "res://assets/pics/cards/art/fufu/fufu_break.png",
-        "res://assets/pics/cards/art/fufu/fufu_cover.png",
-        "res://assets/pics/cards/art/fufu/fufu_foreplay.png",
-        "res://assets/pics/cards/art/fufu/fufu_lube.png",
-        "res://assets/pics/cards/art/fufu/fufu_present.png",
-        "res://assets/pics/cards/art/fufu/fufu_sup.png",
-        "res://assets/pics/cards/art/fufu/fufu_trick.png",
+        "res://assets/characters/fufu/fufu_portrait.png",
+        "res://assets/characters/fufu/fufu_battle.png",
+        "res://assets/characters/fufu/cards/fufu.png",
+        "res://assets/characters/fufu/cards/fufu_atk.png",
+        "res://assets/characters/fufu/cards/fufu_break.png",
+        "res://assets/characters/fufu/cards/fufu_cover.png",
+        "res://assets/characters/fufu/cards/fufu_foreplay.png",
+        "res://assets/characters/fufu/cards/fufu_lube.png",
+        "res://assets/characters/fufu/cards/fufu_present.png",
+        "res://assets/characters/fufu/cards/fufu_sup.png",
+        "res://assets/characters/fufu/cards/fufu_trick.png",
         {
-          "path": "res://assets/love_events/fufu/fufu_hug.png",
+          "path": "res://assets/characters/fufu/love/fufu_hug.png",
           "unlock": {
             "seen": true
           },
@@ -112,7 +112,7 @@
       },
       "hint": "Откроется после знакомства.",
       "images": [
-        "res://assets/pics/NPCs/bunny.png"
+        "res://assets/npc/rikka/rikka.png"
       ]
     },
     {
@@ -123,7 +123,7 @@
       },
       "hint": "Откроется после знакомства.",
       "images": [
-        "res://assets/pics/NPCs/shopkeeper.png"
+        "res://assets/npc/sessilia/sessilia.png"
       ]
     },
     {
@@ -134,10 +134,10 @@
       },
       "hint": "Откроется после знакомства.",
       "images": [
-        "res://assets/pics/NPCs/nurse/nurse.png",
-        "res://assets/pics/NPCs/nurse/choises/heal.png",
-        "res://assets/pics/NPCs/nurse/choises/revival.png",
-        "res://assets/pics/NPCs/nurse/choises/potion.png"
+        "res://assets/npc/noctris/noctris.png",
+        "res://assets/npc/noctris/noctris_heal.png",
+        "res://assets/npc/noctris/noctris_revival.png",
+        "res://assets/npc/noctris/noctris_potion.png"
       ]
     }
   ],
@@ -149,8 +149,8 @@
         "seen": true
       },
       "images": [
-        "res://assets/pics/bigPics/endscreen/victory.png",
-        "res://assets/pics/bigPics/endscreen/defeat.png"
+        "res://assets/story/endscreen/victory.png",
+        "res://assets/story/endscreen/defeat.png"
       ]
     },
     {
@@ -160,18 +160,18 @@
         "seen": true
       },
       "images": [
-        "res://assets/pics/bigPics/prologue/scene1.png",
-        "res://assets/pics/bigPics/prologue/scene2.png",
-        "res://assets/pics/bigPics/prologue/scene3.png",
-        "res://assets/pics/bigPics/prologue/scene4.png",
-        "res://assets/pics/bigPics/prologue/scene5.png",
-        "res://assets/pics/bigPics/prologue/scene6.png",
-        "res://assets/pics/bigPics/prologue/scene7.png",
-        "res://assets/pics/bigPics/prologue/scene8.png",
-        "res://assets/pics/bigPics/prologue/scene9.png",
-        "res://assets/pics/bigPics/prologue/scene10.png",
-        "res://assets/pics/bigPics/prologue/scene11.png",
-        "res://assets/pics/bigPics/prologue/scene12.png"
+        "res://assets/story/prologue/scene1.png",
+        "res://assets/story/prologue/scene2.png",
+        "res://assets/story/prologue/scene3.png",
+        "res://assets/story/prologue/scene4.png",
+        "res://assets/story/prologue/scene5.png",
+        "res://assets/story/prologue/scene6.png",
+        "res://assets/story/prologue/scene7.png",
+        "res://assets/story/prologue/scene8.png",
+        "res://assets/story/prologue/scene9.png",
+        "res://assets/story/prologue/scene10.png",
+        "res://assets/story/prologue/scene11.png",
+        "res://assets/story/prologue/scene12.png"
       ]
     },
     {
@@ -181,8 +181,8 @@
         "seen": true
       },
       "images": [
-        "res://assets/pics/NPCs/statue/statue_white.png",
-        "res://assets/pics/NPCs/statue/statue_black.png"
+        "res://assets/npc/statues/statue_white.png",
+        "res://assets/npc/statues/statue_black.png"
       ]
     },
     {
@@ -192,8 +192,8 @@
         "seen": true
       },
       "images": [
-        "res://assets/pics/NPCs/chest/chest.png",
-        "res://assets/pics/NPCs/chest/chest_open.png"
+        "res://assets/npc/chest/chest.png",
+        "res://assets/npc/chest/chest_open.png"
       ]
     }
   ]

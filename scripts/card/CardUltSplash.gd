@@ -3,12 +3,12 @@ class_name CardUltSplash
 ## Заставка ульты: экран вспыхивает белым, по центру появляется картинка ульты,
 ## белое затухает, картинка плавно покачивается влево-вправо и через несколько секунд пропадает.
 ## Клик в любом месте — пропустить. Картинка: CharacterData.ult_splash, а если пусто —
-## файл в assets/pics/ui/battle pics/, имя которого начинается с id героини и содержит «ult»
+## файл в assets/characters/<id>/, имя которого начинается с id героини и содержит «ult»
 ## (например fufu_ult.png).
 
 signal finished
 
-const PICS_DIR := "res://assets/pics/ui/battle pics"
+const PICS_DIR := "res://assets/characters/%s"
 ## Тайминги, сек.
 const WHITE_FADE_TIME := 1.4     ## белый экран затухает
 const SHOW_TIME := 3.2           ## сколько картинка на экране после вспышки (до начала исчезновения)
@@ -42,13 +42,14 @@ static func splash_for(data: CharacterData) -> Texture2D:
 	if _cache.has(data.id):
 		return _cache[data.id]
 	var found: Texture2D = null
-	for f in DirAccess.get_files_at(PICS_DIR):
+	var dir := PICS_DIR % data.id
+	for f in DirAccess.get_files_at(dir):
 		var file := f.trim_suffix(".remap").trim_suffix(".import")
 		var low := file.to_lower()
 		if not low.ends_with(".png") and not low.ends_with(".webp") and not low.ends_with(".jpg"):
 			continue
 		if low.begins_with(data.id.to_lower()) and low.contains("ult"):
-			found = load(PICS_DIR + "/" + file)
+			found = load(dir + "/" + file)
 			break
 	_cache[data.id] = found
 	return found

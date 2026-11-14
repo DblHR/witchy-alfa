@@ -10,7 +10,7 @@ extends Control
 static var requested := false
 
 const INTRO_DIALOGUE := "tutorial_intro"
-const SLIME_PORTRAIT := "res://assets/pics/actorSprite/slime_green.png"
+const SLIME_PORTRAIT := "res://assets/enemies/slimes/slime_green.png"
 const ENEMY_ID := "shlep"
 const ENEMY_HP := 260
 ## Флаг для хаба: после обучения показать диалог Рикки.

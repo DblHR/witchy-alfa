@@ -609,3 +609,17 @@ CardBattle.gd (1909 строк) разрезан, теперь это «дири
 - В бою (и в комнатах без своей картинки — сундук, квест) фон теперь из трёх слоёв: небо → облака → земля (bg_1floor_sky / clouds / ground). Облака медленно плывут слева направо и бесшовно повторяются; каждый бой начинается с другого места.
 - Скорость — FloorBackdrop.CLOUD_SPEED (12 пикс./сек). Новый этаж — набор картинок в FloorBackdrop.FLOORS.
 - background1.png из проекта удалён — ссылки на него в CardBattle.tscn и AssetCatalog заменены (иначе бой не открывался).
+
+## step47 (поверх текущего GitHub) — порядок в картинках
+**Перед распаковкой закройте Godot и удалите из проекта:**
+- папку `assets/pics`
+- папку `assets/love_events`
+- папку `ui/status_icons`
+- файлы `scenes/table.png`, `scenes/table.png.import`, `scenes/portal.png.import`
+
+Потом распакуйте архив поверх проекта и откройте Godot (он заново импортирует картинки — это займёт минуту).
+
+- Все 206 картинок разложены по новой схеме — см. ASSETS_README.md в корне проекта. Пути во всех сценах, ресурсах, скриптах и json обновлены.
+- Переименования: cards/<id>_card.png → characters/<id>/<id>_portrait.png; actorSprite/<id>.png → <id>_battle.png; battle pics/<id>_card.png → <id>_drag.png; NPCs/bunny.png → npc/rikka/rikka.png; shopkeeper.png → npc/sessilia/sessilia.png; nurse.png → npc/noctris/noctris.png, картинки услуг → noctris_heal / noctris_revival / noctris_potion; lusia_spell_icon → luisa_spell_icon; посохи из icons/items/generated и staffs — вместе в items/staffs.
+- Удалены: дубликат scenes/table.png (такой же, как farm/table.png) и «осиротевшие» .import без картинок (старые зелья, flower, seedbag, statue, portal).
+- Код, который сам собирает пути (рисунки карт, портрет при перетаскивании, заставка ульты, спрайты слизней, пролог, эмоции, галерея), переведён на новые папки. Эмоции теперь: assets/characters/<id>/emotions/<эмоция>.png.

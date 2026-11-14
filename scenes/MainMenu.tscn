@@ -1,14 +1,14 @@
 [gd_scene format=3 uid="uid://7ts2e40ecexi"]
 
 [ext_resource type="Script" uid="uid://bppce7y23erno" path="res://scenes/MainMenu.gd" id="1_script"]
-[ext_resource type="Texture2D" uid="uid://dpfiv6ntdxwwx" path="res://assets/pics/bigPics/backgrounds/mainmenu.png" id="2_menu_bg"]
-[ext_resource type="Texture2D" uid="uid://cnnrw0xddb22l" path="res://assets/pics/bigPics/backgrounds/pre_mainmenu_BG.png" id="3_pre_bg"]
-[ext_resource type="Texture2D" uid="uid://dogvcsu1d5gvw" path="res://assets/pics/mainmenu_animations/heart.png" id="4_heart"]
-[ext_resource type="Texture2D" uid="uid://18yifof4frno" path="res://assets/pics/icons/buttons/pre_mainmenu_clickbutton.png" id="5_click"]
-[ext_resource type="Texture2D" uid="uid://wtl36dfm0kpk" path="res://assets/pics/icons/buttons/start game.png" id="6_start"]
-[ext_resource type="Texture2D" uid="uid://ugbub80exsfn" path="res://assets/pics/icons/buttons/loadGameButton.png" id="7_load"]
-[ext_resource type="Texture2D" uid="uid://jc8oy8at6b04" path="res://assets/pics/icons/buttons/optionsMainmenuButton.png" id="8_options"]
-[ext_resource type="Texture2D" uid="uid://b20tcsehsqgcj" path="res://assets/pics/icons/buttons/quitGameButton.png" id="9_quit"]
+[ext_resource type="Texture2D" uid="uid://dpfiv6ntdxwwx" path="res://assets/backgrounds/menu/mainmenu.png" id="2_menu_bg"]
+[ext_resource type="Texture2D" uid="uid://cnnrw0xddb22l" path="res://assets/backgrounds/menu/pre_mainmenu_BG.png" id="3_pre_bg"]
+[ext_resource type="Texture2D" uid="uid://dogvcsu1d5gvw" path="res://assets/ui/menu/heart.png" id="4_heart"]
+[ext_resource type="Texture2D" uid="uid://18yifof4frno" path="res://assets/ui/buttons/pre_mainmenu_clickbutton.png" id="5_click"]
+[ext_resource type="Texture2D" uid="uid://wtl36dfm0kpk" path="res://assets/ui/buttons/start game.png" id="6_start"]
+[ext_resource type="Texture2D" uid="uid://ugbub80exsfn" path="res://assets/ui/buttons/loadGameButton.png" id="7_load"]
+[ext_resource type="Texture2D" uid="uid://jc8oy8at6b04" path="res://assets/ui/buttons/optionsMainmenuButton.png" id="8_options"]
+[ext_resource type="Texture2D" uid="uid://b20tcsehsqgcj" path="res://assets/ui/buttons/quitGameButton.png" id="9_quit"]
 
 [node name="MainMenu" type="Control" unique_id=1885197433]
 layout_mode = 3

@@ -32,16 +32,16 @@ static func all_ids() -> Array:
 static func _add(s: CardStatus) -> void:
 	_all[s.id] = s
 
-## Значки и подсказки статусов. Новый значок — строка сюда (картинка ui/status_icons/*.png).
+## Значки и подсказки статусов. Новый значок — строка сюда (картинка assets/ui/status/*.png).
 const ICONS := {
-	WEAK: "res://ui/status_icons/weakness_status.png",
-	VULN: "res://ui/status_icons/vulnerability_status.png",
-	BURN: "res://ui/status_icons/fire_status.png",
-	STUN: "res://ui/status_icons/stun_status.png",
-	CHARM: "res://ui/status_icons/charm_status.png",
-	NAZHIM: "res://ui/status_icons/pressure_status.png",
-	STICKY_SLIME: "res://ui/status_icons/sticky_slime_status.png",
-	WRAP_SLIME: "res://ui/status_icons/enshroud_slime_status.png",
+	WEAK: "res://assets/ui/status/weakness_status.png",
+	VULN: "res://assets/ui/status/vulnerability_status.png",
+	BURN: "res://assets/ui/status/fire_status.png",
+	STUN: "res://assets/ui/status/stun_status.png",
+	CHARM: "res://assets/ui/status/charm_status.png",
+	NAZHIM: "res://assets/ui/status/pressure_status.png",
+	STICKY_SLIME: "res://assets/ui/status/sticky_slime_status.png",
+	WRAP_SLIME: "res://assets/ui/status/enshroud_slime_status.png",
 }
 const INFO := {
 	WEAK: "Наносит на 25% меньше урона.",

@@ -12,7 +12,7 @@ var _accum: float = 0.0
 func _init() -> void:
 	duration = 999999.0
 	time_left = duration
-	icon = load("res://ui/status_icons/burn.png")
+	icon = load("res://assets/ui/status/fire_status.png")
 	if ui_name == "":
 		ui_name = "Burn"
 

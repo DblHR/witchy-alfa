@@ -12,10 +12,10 @@ extends RefCounted
 ##   "trust": {"fufu": 3}    — уровень доверия не ниже
 ##   и любые условия диалогов: flag, not_flag, party_level_min, quest_completed, counter_min...
 ## Раздел с "character": "fufu" умеет собирать картинки сам ("auto": true): портрет, спрайт и всё
-## из assets/pics/cards/art/fufu/ — но тогда нельзя выбрать, какие именно показывать.
+## из assets/characters/fufu/cards/ — но тогда нельзя выбрать, какие именно показывать.
 
 const FILE := "res://data/gallery/gallery.json"
-const CARD_ART_DIR := "res://assets/pics/cards/art/%s"
+const CARD_ART_DIR := "res://assets/characters/%s/cards"
 const IMAGE_EXT := ["png", "jpg", "jpeg", "webp"]
 const SEEN_FLAG := "gallery_seen:"
 ## Админ: открыть всю галерею (флаг StoryState).

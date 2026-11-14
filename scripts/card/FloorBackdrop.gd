@@ -6,9 +6,9 @@ extends Node2D
 
 const FLOORS := {
 	1: {
-		"sky": "res://assets/pics/bigPics/backgrounds/bg_1floor_sky.png",
-		"clouds": "res://assets/pics/bigPics/backgrounds/bg_1floor_clouds.png",
-		"ground": "res://assets/pics/bigPics/backgrounds/bg_1floor_ground.png",
+		"sky": "res://assets/backgrounds/floor1/bg_1floor_sky.png",
+		"clouds": "res://assets/backgrounds/floor1/bg_1floor_clouds.png",
+		"ground": "res://assets/backgrounds/floor1/bg_1floor_ground.png",
 	},
 }
 ## Скорость облаков, пикселей в секунду (весь проход экрана ~ 2.5 минуты).

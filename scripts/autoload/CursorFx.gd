@@ -7,9 +7,9 @@ var _click_particle_fill_texture: Texture2D
 var _click_particle_ring_texture: Texture2D
 var _cursor_texture: Texture2D
 var _optional_resource_paths := {
-    "click_fill": "res://assets/pics/ui/click_particle_fill.png",
-    "click_ring": "res://assets/pics/ui/click_particle_ring.png",
-    "cursor": "res://assets/pics/ui/cursor.png",
+    "click_fill": "res://assets/ui/cursor/click_particle_fill.png",
+    "click_ring": "res://assets/ui/cursor/click_particle_ring.png",
+    "cursor": "res://assets/ui/cursor/cursor.png",
 }
 var _optional_resource_pending: Dictionary = {}
 

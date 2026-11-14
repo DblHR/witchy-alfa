@@ -9,7 +9,7 @@ func _init(initial_stacks: int = 1) -> void:
 	stacks = clamp(initial_stacks, 0, MAX_STACKS)
 	duration = 999999.0
 	time_left = duration
-	icon = load("res://ui/status_icons/bleed_stack.png")
+	icon = null
 	ui_name = "Ослабление x%d" % stacks
 
 func on_apply(_unit: Unit) -> void:

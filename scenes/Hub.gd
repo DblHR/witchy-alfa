@@ -34,7 +34,7 @@ const WITCH_MAX_X := 1150.0
 ## Кто ещё гуляет по дому, когда есть в ростере: id героини -> её спрайт. Чтобы добавить
 ## новую — строка сюда (картинка того же формата, что witch.png: 1000×1240, смотрит влево).
 const HUB_GUESTS := {
-	"fufu": "res://assets/pics/actorSprite/fufu.png",
+	"fufu": "res://assets/characters/fufu/fufu_battle.png",
 }
 
 func _start_wanderers() -> void:

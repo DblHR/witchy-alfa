@@ -157,7 +157,7 @@ func pick_quest_room_dialogue(quest_id: String) -> Dictionary:
 ##   speaker      — id говорящего (witch, rabbit_shop, ...)
 ##   speaker_name — имя на плашке только в этой реплике; пусто — имя из data/characters/names.json
 ##                  (например «Девушка-кролик», пока Рикка не представилась)
-##   emotion      — эмоция говорящего: картинка res://assets/pics/emotions/<id>/<emotion>.png (нет файла — обычный портрет)
+##   emotion      — эмоция говорящего: картинка res://assets/characters/<id>/emotions/<emotion>.png (нет файла — обычный портрет)
 ## У каждого персонажа в characters тоже можно указать name и emotion.
 func resolve_lines(dialogue: Dictionary) -> Array:
 	var out: Array = []
@@ -219,11 +219,12 @@ func get_character_name(character_id: String) -> String:
 			return cd.display_name
 	return character_id
 
-const EMOTIONS_DIR := "res://assets/pics/emotions"
+## Эмоции: assets/characters/<id>/emotions/<эмоция>.png (у NPC — assets/npc/<папка>/emotions/).
+const EMOTIONS_DIR := "res://assets/characters"
 
 func get_character_portrait(character_id: String, emotion: String = "") -> Texture2D:
 	if emotion != "" and character_id != "":
-		var path := "%s/%s/%s.png" % [EMOTIONS_DIR, character_id, emotion]
+		var path := "%s/%s/emotions/%s.png" % [EMOTIONS_DIR, character_id, emotion]
 		if ResourceLoader.exists(path):
 			return load(path) as Texture2D
 	if AssetCatalog_ != null:

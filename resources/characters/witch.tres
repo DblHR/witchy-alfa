@@ -1,9 +1,9 @@
 [gd_resource type="Resource" script_class="CharacterData" format=3 uid="uid://bcqr84qgru8vg"]
 
 [ext_resource type="Script" path="res://scripts/CharacterData.gd" id="1_d14mp"]
-[ext_resource type="Texture2D" path="res://assets/pics/actorSprite/witch.png" id="1_geb22"]
+[ext_resource type="Texture2D" path="res://assets/characters/witch/witch_battle.png" id="1_geb22"]
 [ext_resource type="Script" path="res://scripts/card/data/CardDef.gd" id="2_b3qse"]
-[ext_resource type="Texture2D" path="res://assets/pics/cards/witch_card.png" id="2_x1yvu"]
+[ext_resource type="Texture2D" path="res://assets/characters/witch/witch_portrait.png" id="2_x1yvu"]
 [ext_resource type="Resource" path="res://resources/cards/witch/witch_spark.tres" id="3_8sle8"]
 [ext_resource type="Texture2D" path="res://icon.svg" id="3_qa0yl"]
 [ext_resource type="Resource" path="res://resources/cards/witch/witch_rain.tres" id="4_ewd1a"]

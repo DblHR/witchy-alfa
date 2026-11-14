@@ -1,9 +1,9 @@
 [gd_resource type="Resource" script_class="CharacterData" format=3 uid="uid://dddm8lfc50q2l"]
 
 [ext_resource type="Script" path="res://scripts/CharacterData.gd" id="1_4idu1"]
-[ext_resource type="Texture2D" path="res://assets/pics/actorSprite/luisa.png" id="1_yeupl"]
+[ext_resource type="Texture2D" path="res://assets/characters/luisa/luisa_battle.png" id="1_yeupl"]
 [ext_resource type="Script" path="res://scripts/card/data/CardDef.gd" id="2_08uh5"]
-[ext_resource type="Texture2D" path="res://assets/pics/cards/luisa_card.png" id="2_rywix"]
+[ext_resource type="Texture2D" path="res://assets/characters/luisa/luisa_portrait.png" id="2_rywix"]
 [ext_resource type="Resource" path="res://resources/cards/luisa/luisa_tentacle.tres" id="3_08uh5"]
 [ext_resource type="Resource" path="res://resources/cards/luisa/luisa_deep.tres" id="4_1pcut"]
 [ext_resource type="Texture2D" path="res://icon.svg" id="4_y7pc5"]

@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://bi4nv1cdnspaw"]
 
 [ext_resource type="Script" uid="uid://dtw8laps2jqik" path="res://scenes/InventoryScreen.gd" id="1"]
-[ext_resource type="Texture2D" uid="uid://ddcf54ma38osu" path="res://assets/pics/ui/inventory/inventory_reference_bg.png" id="2"]
+[ext_resource type="Texture2D" uid="uid://ddcf54ma38osu" path="res://assets/ui/inventory/inventory_reference_bg.png" id="2"]
 [ext_resource type="Script" uid="uid://xkuy1iyqhbwv" path="res://scripts/ui/inventory/LoreDatabase.gd" id="3"]
 [ext_resource type="Resource" path="res://resources/ui/lore/witch_note_test.tres" id="4"]
 [ext_resource type="Script" uid="uid://dd6sbtsthqbsx" path="res://scripts/ui/inventory/LoreEntryData.gd" id="4_5d712"]

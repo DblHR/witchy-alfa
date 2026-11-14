@@ -5,61 +5,61 @@ class_name AssetCatalog
 # Replace these strings with your actual imported asset paths.
 
 const UI_TEXTURE_PATHS := {
-	"farm_bg": "res://assets/pics/bigPics/backgrounds/farmBG.png",
+	"farm_bg": "res://assets/backgrounds/rooms/farmBG.png",
 	"event_bg_default": "",   ## пусто — фон этажа слоями (FloorBackdrop)
-	"event_bg_shop": "res://assets/pics/bigPics/backgrounds/eventroomShopBG.png",
-	"event_bg_nurse": "res://assets/pics/bigPics/backgrounds/nurseBG.png",
+	"event_bg_shop": "res://assets/backgrounds/rooms/eventroomShopBG.png",
+	"event_bg_nurse": "res://assets/backgrounds/rooms/nurseBG.png",
 	"event_bg_chest": "",   ## пусто — фон этажа слоями (FloorBackdrop)
 	"event_bg_statue_white": "",   ## пусто — фон этажа слоями (FloorBackdrop)
 	"event_bg_statue_black": "",   ## пусто — фон этажа слоями (FloorBackdrop)
 	"event_bg_quest": "",   ## пусто — фон этажа слоями (FloorBackdrop)
-	"farm_btn_home": "res://assets/pics/icons/buttons/homeButton.png",
-	"farm_btn_shop": "res://assets/pics/icons/buttons/shopButton.png",
-	"farm_btn_alchemy": "res://assets/pics/icons/buttons/alchemyButton.png",
+	"farm_btn_home": "res://assets/ui/buttons/homeButton.png",
+	"farm_btn_shop": "res://assets/ui/buttons/shopButton.png",
+	"farm_btn_alchemy": "res://assets/ui/buttons/alchemyButton.png",
 }
 
 const FARM_TEXTURE_PATHS := {
-	"sprout": "res://assets/pics/farm/sprout.png",
-	"slimeflower": "res://assets/pics/farm/slime_flower.png",
-	"slimeflower_seed": "res://assets/pics/farm/slime_seedbag.png",
-	"witchflower": "res://assets/pics/farm/witchflower.png",
-	"witchflower_seed": "res://assets/pics/farm/witchflower_seedbag.png",
-	"meatflower": "res://assets/pics/farm/meat_flower.png",
-	"meatflower_seed": "res://assets/pics/farm/meatflower_seedbag.png",
-	"vegetableflower": "res://assets/pics/farm/vegetable_flower.png",
-	"vegetableflower_seed": "res://assets/pics/farm/vegetableflower_seedbag.png",
-	"sweetflower": "res://assets/pics/farm/sweet_flower.png",
-	"sweetflower_seed": "res://assets/pics/farm/sweetflower_seedbag.png",
-	"fruitflower": "res://assets/pics/farm/fruit_flower.png",
-	"fruitflower_seed": "res://assets/pics/farm/fruitflower_seedbag.png",
+	"sprout": "res://assets/farm/plants/sprout.png",
+	"slimeflower": "res://assets/farm/plants/slime_flower.png",
+	"slimeflower_seed": "res://assets/farm/seeds/slime_seedbag.png",
+	"witchflower": "res://assets/farm/plants/witchflower.png",
+	"witchflower_seed": "res://assets/farm/seeds/witchflower_seedbag.png",
+	"meatflower": "res://assets/farm/plants/meat_flower.png",
+	"meatflower_seed": "res://assets/farm/seeds/meatflower_seedbag.png",
+	"vegetableflower": "res://assets/farm/plants/vegetable_flower.png",
+	"vegetableflower_seed": "res://assets/farm/seeds/vegetableflower_seedbag.png",
+	"sweetflower": "res://assets/farm/plants/sweet_flower.png",
+	"sweetflower_seed": "res://assets/farm/seeds/sweetflower_seedbag.png",
+	"fruitflower": "res://assets/farm/plants/fruit_flower.png",
+	"fruitflower_seed": "res://assets/farm/seeds/fruitflower_seedbag.png",
 }
 
 const FARM_POT_TEXTURES := {
-	0: "res://assets/pics/farm/pot1.png",
-	1: "res://assets/pics/farm/pot2.png",
-	2: "res://assets/pics/farm/pot3.png",
-	3: "res://assets/pics/farm/pot4.png",
-	4: "res://assets/pics/farm/pot5.png",
-	5: "res://assets/pics/farm/pot6.png",
-	6: "res://assets/pics/farm/pot7.png",
-	7: "res://assets/pics/farm/pot8.png",
+	0: "res://assets/farm/pots/pot1.png",
+	1: "res://assets/farm/pots/pot2.png",
+	2: "res://assets/farm/pots/pot3.png",
+	3: "res://assets/farm/pots/pot4.png",
+	4: "res://assets/farm/pots/pot5.png",
+	5: "res://assets/farm/pots/pot6.png",
+	6: "res://assets/farm/pots/pot7.png",
+	7: "res://assets/farm/pots/pot8.png",
 }
 
 const EVENT_NPC_TEXTURES := {
-	"shop": "res://assets/pics/NPCs/shopkeeper.png",
-	"rabbit_shop": "res://assets/pics/NPCs/bunny.png",
-	"nurse": "res://assets/pics/NPCs/nurse/nurse.png",
-	"lamia": "res://assets/pics/NPCs/shopkeeper.png",
-	"chest": "res://assets/pics/NPCs/chest/chest.png",
-	"opened_chest": "res://assets/pics/NPCs/chest/chest_open.png",
-	"statue_white": "res://assets/pics/NPCs/statue/statue_white.png",
-	"statue_black": "res://assets/pics/NPCs/statue/statue_black.png",
+	"shop": "res://assets/npc/sessilia/sessilia.png",
+	"rabbit_shop": "res://assets/npc/rikka/rikka.png",
+	"nurse": "res://assets/npc/noctris/noctris.png",
+	"lamia": "res://assets/npc/sessilia/sessilia.png",
+	"chest": "res://assets/npc/chest/chest.png",
+	"opened_chest": "res://assets/npc/chest/chest_open.png",
+	"statue_white": "res://assets/npc/statues/statue_white.png",
+	"statue_black": "res://assets/npc/statues/statue_black.png",
 }
 
 const EVENT_CHOICE_TEXTURES := {
-	"nurse_heal": "res://assets/pics/NPCs/nurse/choises/heal.png",
-	"nurse_revive": "res://assets/pics/NPCs/nurse/choises/revival.png",
-	"nurse_potion": "res://assets/pics/NPCs/nurse/choises/potion.png",
+	"nurse_heal": "res://assets/npc/noctris/noctris_heal.png",
+	"nurse_revive": "res://assets/npc/noctris/noctris_revival.png",
+	"nurse_potion": "res://assets/npc/noctris/noctris_potion.png",
 }
 
 var _texture_cache: Dictionary = {}

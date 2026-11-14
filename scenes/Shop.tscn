@@ -1,10 +1,10 @@
 [gd_scene format=3 uid="uid://bk7ofg5831s0k"]
 
-[ext_resource type="Texture2D" uid="uid://cd7ouptpn7shi" path="res://assets/pics/bigPics/backgrounds/ShopBG.png" id="1_rgcs7"]
+[ext_resource type="Texture2D" uid="uid://cd7ouptpn7shi" path="res://assets/backgrounds/rooms/ShopBG.png" id="1_rgcs7"]
 [ext_resource type="Script" uid="uid://dukrop4adpe2s" path="res://scenes/Shop.gd" id="1_yltc6"]
-[ext_resource type="Texture2D" uid="uid://klsl5qwne66a" path="res://assets/pics/icons/buttons/alchemyButton.png" id="2_cimqq"]
-[ext_resource type="Texture2D" uid="uid://djbr8wah3ntpc" path="res://assets/pics/icons/buttons/farmButton.png" id="4_fpbbi"]
-[ext_resource type="Texture2D" uid="uid://dgjrmrwikjajh" path="res://assets/pics/icons/buttons/back2.png" id="4_yltc6"]
+[ext_resource type="Texture2D" uid="uid://klsl5qwne66a" path="res://assets/ui/buttons/alchemyButton.png" id="2_cimqq"]
+[ext_resource type="Texture2D" uid="uid://djbr8wah3ntpc" path="res://assets/ui/buttons/farmButton.png" id="4_fpbbi"]
+[ext_resource type="Texture2D" uid="uid://dgjrmrwikjajh" path="res://assets/ui/buttons/back2.png" id="4_yltc6"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_yltc6"]
 content_margin_left = 0.0

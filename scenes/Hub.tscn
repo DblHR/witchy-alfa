@@ -1,13 +1,13 @@
 [gd_scene format=3 uid="uid://4e3na5jprilj"]
 
 [ext_resource type="Script" uid="uid://y0lb4ydr6ms6" path="res://scenes/Hub.gd" id="1_6grgh"]
-[ext_resource type="Texture2D" uid="uid://c65oqg3ajp68q" path="res://assets/pics/bigPics/backgrounds/homeBG.png" id="1_hnc56"]
-[ext_resource type="Texture2D" uid="uid://cniy2vvgjr5h7" path="res://assets/pics/icons/buttons/startRunButton.png" id="2_6grgh"]
-[ext_resource type="Texture2D" uid="uid://djbr8wah3ntpc" path="res://assets/pics/icons/buttons/farmButton.png" id="3_48iqm"]
-[ext_resource type="Texture2D" uid="uid://klsl5qwne66a" path="res://assets/pics/icons/buttons/alchemyButton.png" id="4_oj3ng"]
-[ext_resource type="Texture2D" uid="uid://bsueyseydns2j" path="res://assets/pics/icons/buttons/shopButton.png" id="5_o7rky"]
-[ext_resource type="Texture2D" uid="uid://ngcxb0tkqr48" path="res://assets/pics/icons/buttons/inventoryButton.png" id="6_shn0c"]
-[ext_resource type="Texture2D" uid="uid://bocfuam6rgell" path="res://assets/pics/actorSprite/witch.png" id="7_p8ka2"]
+[ext_resource type="Texture2D" uid="uid://c65oqg3ajp68q" path="res://assets/backgrounds/rooms/homeBG.png" id="1_hnc56"]
+[ext_resource type="Texture2D" uid="uid://cniy2vvgjr5h7" path="res://assets/ui/buttons/startRunButton.png" id="2_6grgh"]
+[ext_resource type="Texture2D" uid="uid://djbr8wah3ntpc" path="res://assets/ui/buttons/farmButton.png" id="3_48iqm"]
+[ext_resource type="Texture2D" uid="uid://klsl5qwne66a" path="res://assets/ui/buttons/alchemyButton.png" id="4_oj3ng"]
+[ext_resource type="Texture2D" uid="uid://bsueyseydns2j" path="res://assets/ui/buttons/shopButton.png" id="5_o7rky"]
+[ext_resource type="Texture2D" uid="uid://ngcxb0tkqr48" path="res://assets/ui/buttons/inventoryButton.png" id="6_shn0c"]
+[ext_resource type="Texture2D" uid="uid://bocfuam6rgell" path="res://assets/characters/witch/witch_battle.png" id="7_p8ka2"]
 
 [node name="Control" type="Control" unique_id=391545454]
 custom_minimum_size = Vector2(1920, 1080)
