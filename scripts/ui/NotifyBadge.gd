@@ -8,9 +8,12 @@ const FILL := Color(0.92, 0.18, 0.32)
 const RING := Color(1.0, 0.97, 0.9)
 
 var _t := 0.0
+var _custom_pos := Vector2.INF
+var _base := Vector2.ZERO
 var _label: Label
 
-static func attach(button: Control, show_it: bool) -> NotifyBadge:
+## custom_pos — своё место значка внутри button (например, над головой героини); иначе — правый верхний угол.
+static func attach(button: Control, show_it: bool, custom_pos: Vector2 = Vector2.INF) -> NotifyBadge:
 	if button == null:
 		return null
 	var b := button.get_node_or_null("NotifyBadge") as NotifyBadge
@@ -19,6 +22,7 @@ static func attach(button: Control, show_it: bool) -> NotifyBadge:
 		b.name = "NotifyBadge"
 		button.add_child(b)
 	b.visible = show_it
+	b._custom_pos = custom_pos
 	b._place()
 	return b
 
@@ -45,7 +49,8 @@ func _place() -> void:
 	var p := get_parent() as Control
 	if p == null:
 		return
-	position = Vector2(p.size.x - SIZE * 0.85, -SIZE * 0.1)
+	_base = _custom_pos if _custom_pos != Vector2.INF else Vector2(p.size.x - SIZE * 0.85, -SIZE * 0.1)
+	position = _base
 
 func _process(delta: float) -> void:
 	if not visible:
@@ -54,7 +59,7 @@ func _process(delta: float) -> void:
 	# Подпрыгивает раз в ~1.6 с, между прыжками стоит.
 	var k := fmod(_t, 1.6)
 	var hop := sin(clampf(k / 0.45, 0.0, 1.0) * PI)
-	position.y = -SIZE * 0.1 - hop * 8.0
+	position.y = _base.y - hop * 8.0
 	scale = Vector2.ONE * (1.0 + 0.08 * hop)
 	queue_redraw()
 

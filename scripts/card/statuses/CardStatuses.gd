@@ -15,7 +15,8 @@ const WRAP_SLIME := "wrap_slime"       ## обволакивающая слиз�
 const EMPOWER := "empower"
 const EXPOSED := "exposed"             ## «Подставлена»: урон по HP → обволакивающая слизь
 const HEAT_BODY := "heat_body"         ## «Жар тела»: ударивший по щиту получает Горение
-const SWALLOWED := "swallowed"         ## героиня в животе у Фуфу: не действует, враги её не бьют
+const SWALLOWED := "swallowed"
+const LURED := "lured"                 ## «На крючке»: клюнула на приманку — добейте, и она поймана         ## героиня в животе у Фуфу: не действует, враги её не бьют
 
 static var _all: Dictionary = {}
 
@@ -56,6 +57,7 @@ const INFO := {
 	EXPOSED: "Каждые 25 урона по здоровью дают +1 обволакивающую слизь.",
 	HEAT_BODY: "Враг, ударивший по её щиту, загорается.",
 	SWALLOWED: "Внутри босса: не действует, враги её не бьют.",
+	LURED: "Клюнула на приманку: добейте её любым ударом — и она будет поймана.",
 }
 
 static func _decorate() -> void:
@@ -76,6 +78,9 @@ static func _register_all() -> void:
 	_add(charm)
 	_add(SwallowedStatus.new())
 	_add(HeatBodyStatus.new())
+	var lured := CardStatus.new(LURED, "На крючке", CardStatus.Kind.STACKS, Color(1.0, 0.6, 0.85))
+	lured.max_stacks = 1
+	_add(lured)
 	var nazhim := CardStatus.new(NAZHIM, "Нажим", CardStatus.Kind.STACKS)
 	nazhim.max_stacks = 10
 	_add(nazhim)

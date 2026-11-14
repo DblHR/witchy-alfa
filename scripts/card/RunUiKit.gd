@@ -68,6 +68,27 @@ static func make_option_button(min_size: Vector2, content: Array) -> Button:
 	return b
 
 ## Превью карты для окон (не интерактивное, увеличенное).
+## Плашка в верхнем углу превью карты («Дубль», «Улучшена»).
+static func card_tag(text: String, zoom: float = 1.0, color: Color = Color(0.35, 0.75, 1.0)) -> Label:
+	var tag := Label.new()
+	tag.text = text
+	tag.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	tag.add_theme_font_size_override("font_size", 15)
+	tag.add_theme_color_override("font_color", Color.WHITE)
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = Color(color.r * 0.45, color.g * 0.45, color.b * 0.45, 0.95)
+	sb.set_corner_radius_all(8)
+	sb.set_border_width_all(2)
+	sb.border_color = color
+	sb.content_margin_left = 8
+	sb.content_margin_right = 8
+	sb.content_margin_top = 1
+	sb.content_margin_bottom = 2
+	tag.add_theme_stylebox_override("normal", sb)
+	tag.position = Vector2(CardView.CARD_SIZE.x * zoom - 78, -10)
+	tag.z_index = 5
+	return tag
+
 static func card_preview(card: CardInstance, zoom: float = 1.3) -> Control:
 	var holder := Control.new()
 	holder.custom_minimum_size = CardView.CARD_SIZE * zoom

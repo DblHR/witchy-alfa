@@ -1014,7 +1014,7 @@ func _refresh_loadout_ui() -> void:
 	lure_button.disabled = lures <= 0
 	lure_button.set_pressed_no_signal(DungRun.take_lure and lures > 0)
 	lure_button.modulate = Color(1, 1, 1, 1.0 if lure_button.button_pressed else 0.45)
-	lure_button.tooltip_text = ("Приманка: берём в забег (в сумке %d)" % lures) if lure_button.button_pressed else ("Приманка: не берём (в сумке %d). Нажмите, чтобы взять." % lures if lures > 0 else "Приманок нет — купите у Рикки или Сессилии")
+	lure_button.tooltip_text = ("Приманка: берём в забег (в сумке %d)" % lures) if lure_button.button_pressed else ("Приманка: не берём (в сумке %d). Нажмите, чтобы взять." % lures if lures > 0 else "Приманок нет — их продаёт Рикка")
 	artifact_button.disabled = false
 	food_button.disabled = false
 

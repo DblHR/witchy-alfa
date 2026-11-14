@@ -9,15 +9,56 @@ const CORE_LOCK := false
 
 var unlocked_unit_ids: Array[String] = []
 var discovered_boss_ids: Array[String] = []
-## Копии пойманных героинь (повторная поимка приманкой). Пока без эффекта — потом дубли карт.
+## Копии пойманных героинь (повторная поимка приманкой): каждая копия даёт дубль случайной карты.
 var copies: Dictionary = {}
+## Дубли карт: id героини -> [id карт, у которых есть дубль]. Дубль — отдельная карта (ключ id#2):
+## её можно взять в колоду вместе с оригиналом и улучшать отдельно.
+var card_dupes: Dictionary = {}
+## Улучшенные карты: id героини -> [ключи карт] (ключ = id карты, у дубля — id#2).
+var card_upgrades: Dictionary = {}
 
 func get_copies(unit_id: String) -> int:
 	return int(copies.get(unit_id, 0))
 
-func add_copy(unit_id: String) -> void:
+## Новая копия героини. Возвращает id карты, получившей дубль ("" — у всех карт дубль уже есть).
+func add_copy(unit_id: String) -> String:
 	copies[unit_id] = get_copies(unit_id) + 1
+	var got := ""
+	var data: CharacterData = CharDB.get_by_id(unit_id) if CharDB != null else null
+	if data != null:
+		var have: Array = card_dupes.get(unit_id, [])
+		var pool: Array[String] = []
+		for d in CardLibrary.owned_defs(data):
+			if not have.has(d.id):
+				pool.append(d.id)
+		if not pool.is_empty():
+			got = pool[randi() % pool.size()]
+			have.append(got)
+			card_dupes[unit_id] = have
 	changed.emit()
+	return got
+
+func has_dupe(unit_id: String, card_id: String) -> bool:
+	return (card_dupes.get(unit_id, []) as Array).has(card_id)
+
+## --- Улучшение карт: очко каждые CardBalance.UPGRADE_EVERY_LEVELS уровней отряда, у каждой героини свои ---
+func upgrade_points_total() -> int:
+	return CardBalance.upgrade_points_for_level(int(DungRun.party_level) if DungRun != null else 1)
+
+func upgrade_points_left(unit_id: String) -> int:
+	return maxi(0, upgrade_points_total() - (card_upgrades.get(unit_id, []) as Array).size())
+
+func is_card_upgraded(unit_id: String, card_key: String) -> bool:
+	return (card_upgrades.get(unit_id, []) as Array).has(card_key)
+
+func upgrade_card(unit_id: String, card_key: String) -> bool:
+	if upgrade_points_left(unit_id) <= 0 or is_card_upgraded(unit_id, card_key):
+		return false
+	var list: Array = card_upgrades.get(unit_id, [])
+	list.append(card_key)
+	card_upgrades[unit_id] = list
+	changed.emit()
+	return true
 
 ## Побеждён ли босс хотя бы раз (тогда же он выдаётся в отряд).
 func boss_defeated(unit_id: String) -> bool:
@@ -82,6 +123,8 @@ func reset_to_defaults() -> void:
 	discovered_boss_ids.clear()
 	trust_points.clear()
 	copies.clear()
+	card_dupes.clear()
+	card_upgrades.clear()
 	deck_selection.clear()
 	changed.emit()
 
@@ -127,6 +170,8 @@ func serialize_state() -> Dictionary:
 		"copies": copies.duplicate(),
 		"trust_points": trust_points.duplicate(),
 		"deck_selection": deck_selection.duplicate(true),
+		"card_dupes": card_dupes.duplicate(true),
+		"card_upgrades": card_upgrades.duplicate(true),
 	}
 
 func apply_state(data: Dictionary) -> void:
@@ -164,5 +209,21 @@ func apply_state(data: Dictionary) -> void:
 		for v in decks[k]:
 			ids.append(String(v))
 		deck_selection[String(k)] = ids
+	card_dupes.clear()
+	card_upgrades.clear()
+	for pair in [["card_dupes", card_dupes], ["card_upgrades", card_upgrades]]:
+		var src: Dictionary = data.get(String(pair[0]), {})
+		for k in src.keys():
+			var list: Array = []
+			for v in src[k]:
+				list.append(String(v))
+			(pair[1] as Dictionary)[String(k)] = list
+	# Старое сохранение: копии были, а дублей карт ещё не существовало — выдаём по дублю за копию.
+	if not data.has("card_dupes"):
+		for k in copies.keys():
+			var n := int(copies[k])
+			copies[k] = 0
+			for _i in range(n):
+				add_copy(String(k))
 	unlocked_unit_ids.sort()
 	changed.emit()

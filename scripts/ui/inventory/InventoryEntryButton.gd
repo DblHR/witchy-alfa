@@ -25,6 +25,8 @@ func _ready() -> void:
 			background_panel.modulate = Color(1, 1, 1, 0.72)
 	)
 
+const WIDE_SIZE := Vector2(440, 96)
+
 func setup(data: Dictionary) -> void:
 	if not is_node_ready():
 		await ready
@@ -76,6 +78,14 @@ func setup(data: Dictionary) -> void:
 
 		count_badge.position = Vector2(13, 117)
 		count_badge.size = Vector2(56, 28)
+
+	# Широкая строка без значка (энциклопедия): заголовок и подпись во всю ширину страницы.
+	if bool(data.get("wide", false)):
+		custom_minimum_size = Vector2(WIDE_SIZE.x, WIDE_SIZE.y)
+		title_label.position = Vector2(20, 12)
+		title_label.size = Vector2(WIDE_SIZE.x - 40, 30)
+		subtitle_label.position = Vector2(20, 46)
+		subtitle_label.size = Vector2(WIDE_SIZE.x - 40, 40)
 
 	var selected := bool(data.get("selected", false))
 	set_selected(selected)

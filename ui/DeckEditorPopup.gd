@@ -107,8 +107,8 @@ func open_for(unit_id: String) -> void:
 		return
 	_unit = Unit.new(_data, maxi(1, int(DungRun.party_level)))
 	_chosen.clear()
-	for d in CardLibrary.deck_defs(_data):
-		_chosen.append(d.id)
+	for k in CardLibrary.deck_keys(_data):
+		_chosen.append(k)
 	_rebuild()
 	set_anchors_preset(Control.PRESET_TOP_LEFT)
 	global_position = Vector2.ZERO
@@ -134,7 +134,9 @@ func _rebuild() -> void:
 			_locked_grid.add_child(holder)
 			locked += 1
 			continue
-		var in_deck := _chosen.has(c.id)
+		var in_deck := _chosen.has(c.key)
+		if CardLibrary.is_dupe_key(c.key):
+			holder.add_child(RunUiKit.card_tag("Дубль", CARD_ZOOM))
 		holder.mouse_filter = Control.MOUSE_FILTER_STOP
 		holder.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 		holder.modulate = Color(1, 1, 1, 1.0 if in_deck else OUT_ALPHA)
@@ -149,7 +151,7 @@ func _rebuild() -> void:
 			tag.add_theme_color_override("font_outline_color", Color(0, 0, 0, 1))
 			tag.add_theme_constant_override("outline_size", 6)
 			holder.add_child(tag)
-		var card_id := c.id
+		var card_id := c.key
 		holder.gui_input.connect(func(e: InputEvent) -> void:
 			if e is InputEventMouseButton and e.pressed and e.button_index == MOUSE_BUTTON_LEFT:
 				_toggle(card_id)

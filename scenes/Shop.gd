@@ -62,6 +62,7 @@ func _on_rabbit_shop_dialogue_finished() -> void:
 			StoryState_.mark_dialogue_seen(dialogue_id)
 		StoryDialogueDB_.apply_effects(_pending_shop_dialogue.get("on_finish", {}))
 	_pending_shop_dialogue = {}
+	DungRun.ensure_lure_in_shop()
 	_refresh()
 
 ## Лавка в том же виде, что и у Сессилии (ShopUi): заголовок, описание, карточки товара.

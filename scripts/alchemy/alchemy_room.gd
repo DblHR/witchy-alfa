@@ -507,7 +507,7 @@ func _build_nav() -> void:
 		b.size = (d[1] as Rect2).size
 		b.pressed.connect(d[2])
 		if d[0] == SHOP_ICON:
-			NotifyBadge.attach(b, StoryDialogueDB_ != null and StoryDialogueDB_.npc_has_quest_offer("rabbit_shop"))
+			NotifyBadge.attach(b, StoryDialogueDB_ != null and StoryDialogueDB_.npc_has_news("rabbit_shop"))
 
 func _build_result_panel() -> void:
 	_result_panel = PanelContainer.new()

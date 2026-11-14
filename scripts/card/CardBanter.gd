@@ -30,6 +30,8 @@ func stop() -> void:
 func play_camp(moment: String = "choice", ctx: Dictionary = {}) -> void:
 	if _playing or speech_layer == null or not actor_for_hero.is_valid() or not alive_hero_ids.is_valid():
 		return
+	if GameSettings.banter_mult() <= 0.0:
+		return   ## реплики выключены в настройках
 	var alive: Array = []
 	alive.assign(alive_hero_ids.call())
 	if alive.is_empty():
@@ -96,7 +98,7 @@ func _pick_entry(moment: String, ctx: Dictionary) -> Dictionary:
 				break
 		if not ok or not BanterDB.check(e.get("conditions", {}), ctx):
 			continue
-		if randf() > clampf(float(e.get("chance", 1.0)), 0.0, 1.0):
+		if randf() >= clampf(float(e.get("chance", 1.0)) * GameSettings.banter_mult(), 0.0, 1.0):
 			continue
 		candidates.append(e)
 	return BanterDB.pick_weighted(candidates)

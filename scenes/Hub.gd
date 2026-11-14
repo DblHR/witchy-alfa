@@ -16,6 +16,8 @@ func _ready() -> void:
 	inv.pressed.connect(func(): SceneRouter_.go_to_inventory())
 	_start_wanderers()
 	_refresh_badges()
+	if UnitRoster_ != null and not UnitRoster_.changed.is_connected(_refresh_badges):
+		UnitRoster_.changed.connect(_refresh_badges)
 	if StoryState_ != null and StoryState_.has_signal("changed") and not StoryState_.changed.is_connected(_refresh_badges):
 		StoryState_.changed.connect(_refresh_badges)
 	call_deferred("_play_pending_story_dialogue")
@@ -24,7 +26,14 @@ func _ready() -> void:
 func _refresh_badges() -> void:
 	if not is_inside_tree():
 		return
-	NotifyBadge.attach(shop, StoryDialogueDB_ != null and StoryDialogueDB_.npc_has_quest_offer("rabbit_shop"))
+	NotifyBadge.attach(shop, StoryDialogueDB_ != null and StoryDialogueDB_.npc_has_news("rabbit_shop"))
+	# «!» над героиней дома, если у неё есть новая разовая сцена (например, по уровню доверия).
+	for id in _guests:
+		var gw: HubWanderer = _guests[id]
+		if not is_instance_valid(gw) or gw._body == null:
+			continue
+		var has_news := StoryDialogueDB_ != null and StoryDialogueDB_.npc_has_news(String(id), [HUB_TALK_TYPE])
+		NotifyBadge.attach(gw._body, has_news, Vector2(gw._body.size.x * GUEST_BADGE_POS.x, gw._body.size.y * GUEST_BADGE_POS.y))
 
 ## Ведьмочка бродит по дому. Границы — левый край её картинки (координаты 1920×1080),
 ## чтобы не заходить под кнопки инвентаря и портала.
@@ -75,6 +84,8 @@ func _start_wanderers() -> void:
 ## Диалог выбирается как у NPC: npc = id героини, type = "hub_talk" (data/dialogues/hub/*.json),
 ## поэтому потом легко добавить разговоры по уровню отношений (conditions + priority).
 const HUB_TALK_TYPE := "hub_talk"
+## Где над героиней висит «!» (доли ширины и высоты её картинки).
+const GUEST_BADGE_POS := Vector2(0.5, 0.0)
 var _guests: Dictionary = {}          ## id -> HubWanderer
 var _hovered_guest := ""
 var _talking := ""

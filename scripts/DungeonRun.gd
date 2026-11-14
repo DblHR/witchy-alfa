@@ -213,6 +213,23 @@ func refund_selected_potion_charge() -> void:
 	refresh_selected_potion_charges()
 	emit_changed()
 
+## Флаги сюжета про приманку: была ли хоть одна элитная комната и рассказала ли Рикка о приманке.
+const ELITE_SEEN_FLAG := "entered_elite_room"
+const LURE_UNLOCKED_FLAG := "lure_unlocked"
+
+func lure_unlocked() -> bool:
+	return StoryState_ != null and StoryState_.has_flag(LURE_UNLOCKED_FLAG)
+
+## Рикка только что рассказала о приманке — кладём её на полку прямо сейчас (не дожидаясь нового дня).
+func ensure_lure_in_shop() -> void:
+	if not lure_unlocked() or ground_shop_item_ids.has(LURE_ITEM) or ground_shop_item_ids.is_empty():
+		return
+	var slot := ground_shop_item_ids.find("")
+	if slot < 0:
+		slot = ground_shop_item_ids.size() - 1
+	ground_shop_item_ids[slot] = LURE_ITEM
+	emit_changed()
+
 func ensure_ground_shop_stock() -> void:
 	if ground_shop_item_ids.is_empty():
 		refresh_ground_shop(true)
@@ -227,7 +244,9 @@ func refresh_ground_shop(force_emit: bool = false) -> void:
 	ground_shop_item_ids.clear()
 	ground_shop_item_ids.append("quartz")
 	ground_shop_item_ids.append(RIKKA_SEEDS[rng.randi_range(0, RIKKA_SEEDS.size() - 1)])
-	ground_shop_item_ids.append(LURE_ITEM)
+	# Приманка появляется у Рикки только после её рассказа (data/dialogues/npc/rabbit_shop.json).
+	if lure_unlocked():
+		ground_shop_item_ids.append(LURE_ITEM)
 	var pools: Array = [RunItems.food_ids(), _common_staffs_not_owned(), AlchemyDB.unknown_recipe_items(), RIKKA_FOOD_INGREDIENTS]
 	var guard := 0
 	while ground_shop_item_ids.size() < GROUND_SHOP_SLOT_COUNT and guard < 50:
@@ -260,7 +279,7 @@ const LAMIA_FLOOR_LOOT: Array[String] = ["slime_goop"]
 
 func roll_lamia_stock(r: RandomNumberGenerator) -> Array:
 	var offers: Array = []
-	var kinds := ["quartz", "food", "seeds", "potion", "loot", "staff", "lure"]
+	var kinds := ["quartz", "food", "seeds", "potion", "loot", "staff"]   ## приманку Сессилия не продаёт
 	for i in range(kinds.size() - 1, 0, -1):
 		var j := r.randi_range(0, i)
 		var tmp: String = kinds[i]

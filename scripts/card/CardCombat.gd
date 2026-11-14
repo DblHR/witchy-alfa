@@ -116,6 +116,15 @@ func alive_enemies() -> Array[Unit]:
 			out.append(u)
 	return out
 
+## Можно ли поймать этого врага приманкой: это героиня (char_id), а босс — только уже побеждённый.
+func can_be_lured(unit: Unit) -> bool:
+	var def = unit.enemy_def if unit != null else null
+	if def == null or String(def.char_id) == "" or not enemies.has(unit):
+		return false
+	if def.is_boss() and UnitRoster_ != null and not UnitRoster_.boss_defeated(String(def.char_id)):
+		return false
+	return true
+
 func hero_by_id(id: String) -> Unit:
 	if id == "":
 		return null
@@ -341,9 +350,11 @@ func play_card(card: CardInstance, caster: Unit, targets: Array[Unit], mirrored:
 	var prev_title := credit_card_title
 	credit = CardRunStats.credit_for_card(card)
 	credit_card_title = card.title
+	CardEffect.begin_card(card.def, card.upgraded)
 	for e in card.effects:
 		if e != null:
 			e.apply(ctx)
+	CardEffect.end_card()
 	credit = prev
 	credit_card_title = prev_title
 	card_played.emit(card, caster)
@@ -413,8 +424,11 @@ func apply_damage(unit: Unit, amount: int) -> void:
 	if absorbed > 0:
 		floated.emit(unit, "щит -%d" % absorbed, COL_SHIELD, 26)
 	if killed:
+		var hooked := has_status(unit, CardStatuses.LURED)
 		statuses.erase(unit)
 		died.emit(unit)
+		if hooked:
+			lure_kill.emit(unit)   ## «На крючке»: поймана любым добивающим ударом
 
 func shield_of(unit: Unit) -> int:
 	return int(shields.get(unit, 0))

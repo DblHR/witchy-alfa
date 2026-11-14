@@ -25,6 +25,10 @@ var tags: PackedStringArray = PackedStringArray()
 var effects: Array[CardEffect] = []
 ## Ульта: играется кнопкой, cost — размер шкалы заряда (энергия ульты героя).
 var is_ult: bool = false
+## Улучшена (инвентарь → колода героини): числа ×CardBalance.UPGRADE_MULT или +1 к статусу.
+var upgraded: bool = false
+## Ключ карты у героини: id, а у дубля — id + "#2" (см. CardLibrary.card_key).
+var key: String = ""
 ## Сгорает: после розыгрыша не уходит в сброс, а выходит из игры
 ## (exhaust_scope: до конца боя или до конца забега). Несыгранная карта сбрасывается как обычная.
 var exhaust: bool = false
@@ -32,11 +36,13 @@ var exhaust_scope: CardDef.Exhaust = CardDef.Exhaust.NONE
 ## Ещё не получена (экран персонажа): показывается только подложка, название и «Не получена».
 var locked: bool = false
 
-static func from_def(d: CardDef, owner: Unit, p_color: Color, p_owner_name: String) -> CardInstance:
+static func from_def(d: CardDef, owner: Unit, p_color: Color, p_owner_name: String, p_upgraded: bool = false) -> CardInstance:
 	var c := CardInstance.new()
 	c.def = d
 	c.id = d.id
-	c.title = d.title
+	c.key = d.id
+	c.upgraded = p_upgraded and d.upgrade_kind() != ""
+	c.title = d.title + ("+" if c.upgraded else "")
 	c.cost = d.cost
 	c.target = d.target
 	c.tags = d.tags
@@ -47,7 +53,11 @@ static func from_def(d: CardDef, owner: Unit, p_color: Color, p_owner_name: Stri
 	c.owner_name = p_owner_name
 	if owner != null and owner.data != null:
 		c.owner_id = owner.data.id
+	CardEffect.begin_card(d, c.upgraded)
 	c.description = d.build_description(owner)
+	CardEffect.end_card()
+	if c.upgraded and d.upgrade_kind() == "status":
+		c.description += "\n[e]Улучшена:[/e] %s." % d.upgrade_note()
 	return c
 
 func has_tag(tag: String) -> bool:

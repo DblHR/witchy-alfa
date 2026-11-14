@@ -117,6 +117,8 @@ var _pile_popup: CardPilePopup
 var _admin: CardBattleAdmin
 ## Админ: следующий клик по юниту убивает его.
 var _admin_kill_mode := false
+## Другие режимы «кликни по цели» админки: "damage" (нанести урон) / "capture" (захватить) / "".
+var _admin_pick := ""
 var _drag_portrait: CardDragPortrait
 
 var _hand_views: Array[CardView] = []
@@ -280,6 +282,7 @@ func _spawn_enemies(room: Dictionary) -> void:
 			push_warning("CardBattle: враг не найден в EnemyDefs: %s" % id)
 			continue
 		right_team.append(def.make_unit(_run.floor_no, _run.rng, CardTutorial.ENEMY_HP if _tutorial != null else 0))
+		LoreData.mark_enemy_met(String(id))   ## запись о враге в энциклопедии
 		if right_team.size() >= ENEMY_SLOTS:
 			break
 
@@ -532,6 +535,8 @@ func _start_room(index: int) -> void:
 		await _play_quest_intro(room)
 		_quest_add_hero("warrior")
 
+	if String(room.get("kind", "")) == "elite" and StoryState_ != null and not StoryState_.has_flag(DungRun.ELITE_SEEN_FLAG):
+		StoryState_.set_flag(DungRun.ELITE_SEEN_FLAG)   ## после этого Рикка расскажет о приманке
 	_set_battle_ui(true)
 	_room_loot = {"gold": 0, "xp": 0, "items": {}}
 	_spawn_enemies(room)
@@ -708,15 +713,22 @@ func _input(event: InputEvent) -> void:
 		_has_last_mouse = true
 		if event is InputEventMouseMotion:
 			_hover_status_tip()   ## подсказка по статусам при наведении на юнита
-	if _admin_kill_mode and event is InputEventMouseButton and event.pressed:
+	if (_admin_kill_mode or _admin_pick != "") and event is InputEventMouseButton and event.pressed:
+		# Клик по самой админ-панели (поле с числом, кнопки) режим не сбрасывает.
+		if _admin != null and _admin.is_over_panel(_mouse_pos()):
+			return
 		get_viewport().set_input_as_handled()
 		if event.button_index == MOUSE_BUTTON_LEFT:
 			var u := _unit_at(right_actors, _mouse_pos())
-			if u == null:
+			if u == null and _admin_pick != "capture":
 				u = _unit_at(left_actors, _mouse_pos())
 			if u != null:
-				admin_kill(u)
+				match _admin_pick:
+					"damage": admin_damage(u, _admin.damage_amount())
+					"capture": admin_capture(u)
+					_: admin_kill(u)
 		admin_set_kill_mode(false)
+		admin_set_pick_mode("")
 		return
 	if _dragging == null:
 		return
@@ -1206,7 +1218,34 @@ func admin_heal(heroes: bool) -> void:
 
 func admin_set_kill_mode(on: bool) -> void:
 	_admin_kill_mode = on and admin_can_act()
-	_admin.show_kill_mode(_admin_kill_mode)
+	if _admin_kill_mode:
+		_admin_pick = ""
+	_admin.show_pick_mode("kill" if _admin_kill_mode else _admin_pick)
+
+## Режим выбора цели для «Нанести урон» ("damage") и «Захватить» ("capture"); "" — выключить.
+func admin_set_pick_mode(mode: String) -> void:
+	_admin_pick = mode if admin_can_act() else ""
+	if _admin_pick != "":
+		_admin_kill_mode = false
+	_admin.show_pick_mode("kill" if _admin_kill_mode else _admin_pick)
+
+## Нанести ровно amount урона (сначала по щиту, как обычный удар; статусы не учитываются).
+func admin_damage(u: Unit, amount: int) -> void:
+	if not CardCombat.is_alive(u) or not admin_can_act() or amount <= 0:
+		return
+	_float_stack.clear()
+	_combat.apply_damage(u, amount)
+	_refresh_all_actors()
+	_check_end()
+
+## Захватить врага без приманки: как будто его добила приманка (правила те же: слизни не ловятся,
+## Фуфу — только после первой победы над ней).
+func admin_capture(u: Unit) -> void:
+	if not CardCombat.is_alive(u) or not right_team.has(u) or not admin_can_act():
+		return
+	_float_stack.clear()
+	_on_lure_kill(u)
+	admin_kill(u)
 
 ## Мгновенно убить юнита (щит не спасает). Добыча и выбывание карт — как при обычной смерти.
 func admin_kill(u: Unit, check_end: bool = true) -> void:
@@ -1678,9 +1717,13 @@ func _on_lure_kill(u: Unit) -> void:
 		return
 	var hero_name := (CharDB.get_by_id(char_id) as CharacterData).display_name
 	if UnitRoster_.has_unit(char_id):
-		UnitRoster_.add_copy(char_id)
+		var dupe_id := UnitRoster_.add_copy(char_id)
 		_float_for(u, "Копия: %s!" % hero_name, Color(1.0, 0.6, 0.85), 32)
-		_captured_lines.append("Поймана копия: %s (копий: %d)" % [hero_name, UnitRoster_.get_copies(char_id)])
+		var dupe_def := CardLibrary.def_by_id(dupe_id) if dupe_id != "" else null
+		if dupe_def != null:
+			_captured_lines.append("Поймана копия: %s — дубль карты «%s» (можно взять в колоду вторую такую же)" % [hero_name, dupe_def.title])
+		else:
+			_captured_lines.append("Поймана копия: %s (дубли всех карт уже есть)" % hero_name)
 	else:
 		UnitRoster_.unlock_unit(char_id)
 		_float_for(u, "Поймана: %s!" % hero_name, Color(1.0, 0.6, 0.85), 34)

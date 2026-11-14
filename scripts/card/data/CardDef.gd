@@ -41,6 +41,39 @@ func deals_damage() -> bool:
 func expected_tag() -> String:
 	return TAG_ATTACK if deals_damage() else TAG_SUPPORT
 
+## Как карта улучшается: "numbers" — есть числа от характеристик (урон, щит, лечение): они × UPGRADE_MULT;
+## "status" — чисел нет, только статусы: +1 стак/ход первому статусу; "" — улучшать нечего.
+func upgrade_kind() -> String:
+	for e in effects:
+		if e is EffLure:
+			continue
+		if e is EffDamage or e is EffHeal or e is EffShield:
+			if int(e.get("base")) > 0 or float(e.get("atk_ratio")) > 0.0 or float(e.get("mag_ratio")) > 0.0:
+				return "numbers"
+		elif e is EffConsumeStatus:
+			if int(e.base) > 0 or float(e.atk_ratio) > 0.0 or float(e.mag_ratio) > 0.0:
+				return "numbers"
+	return "status" if upgrade_status_effect() != null else ""
+
+## Эффект-статус, который усиливается у улучшенной карты без чисел.
+func upgrade_status_effect() -> CardEffect:
+	for e in effects:
+		if e is EffApplyStatus and (e.stacks > 0 or e.turns > 0):
+			return e
+	for e in effects:
+		if e is EffExtendStatus and (e.stacks > 0 or e.turns > 0):
+			return e
+	return null
+
+## Короткая подпись, что даёт улучшение («числа +15%» / «+1 стак»).
+func upgrade_note() -> String:
+	match upgrade_kind():
+		"numbers":
+			return "числа +%d%%" % roundi((CardBalance.UPGRADE_MULT - 1.0) * 100.0)
+		"status":
+			return String(upgrade_status_effect().call("upgrade_note"))
+	return ""
+
 func build_description(caster: Unit) -> String:
 	if description.strip_edges() == "":
 		var lines := PackedStringArray()

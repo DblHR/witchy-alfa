@@ -1,18 +1,22 @@
 extends Panel
 class_name SettingsPanel
 
-## Окно «Настройки» в меню паузы. Пока одна настройка — главный герой для диалогов и катсцен
-## (StoryState_.main_hero). Воин выбирается, только когда он уже есть в ростере.
+## Окно «Настройки» в меню паузы:
+##  - главный герой для диалогов и катсцен (StoryState_.main_hero, хранится в сохранении);
+##    воин выбирается, только когда он уже есть в ростере;
+##  - частота реплик в бою и между комнатами (GameSettings, общая для всех сохранений).
 
 signal back_requested
 
-const PANEL_SIZE := Vector2(560, 380)
+const PANEL_SIZE := Vector2(560, 520)
 const SELECTED_COLOR := Color(1.0, 0.62, 0.86)
 const HERO_LABELS := {"witch": "Ведьмочка", "warrior": "Воин"}
 
 var _hero_buttons: Dictionary = {}
 var _hint: Label
 var _back_btn: Button
+var _banter_slider: HSlider
+var _banter_caption: Label
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_WHEN_PAUSED
@@ -63,6 +67,21 @@ func _build() -> void:
 	_hint.custom_minimum_size = Vector2(PANEL_SIZE.x - 80, 56)
 	box.add_child(_hint)
 
+	box.add_child(HSeparator.new())
+	_banter_caption = Label.new()
+	_banter_caption.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	box.add_child(_banter_caption)
+	_banter_slider = HSlider.new()
+	_banter_slider.min_value = GameSettings.BANTER_MIN
+	_banter_slider.max_value = GameSettings.BANTER_MAX
+	_banter_slider.step = GameSettings.BANTER_STEP
+	_banter_slider.custom_minimum_size = Vector2(PANEL_SIZE.x - 80, 32)
+	_banter_slider.value_changed.connect(func(v: float) -> void:
+		GameSettings.set_banter_percent(int(v))
+		_refresh_banter_caption()
+	)
+	box.add_child(_banter_slider)
+
 	_back_btn = Button.new()
 	_back_btn.text = "Назад"
 	_back_btn.custom_minimum_size = Vector2(0, 56)
@@ -94,6 +113,13 @@ func refresh() -> void:
 		_hint.text = "Влияет на то, чьё имя и портрет будут в диалогах отношений и с НПС."
 	else:
 		_hint.text = "Выбор откроется, когда к вам присоединится Воин."
+	_banter_slider.set_value_no_signal(GameSettings.banter_percent())
+	_refresh_banter_caption()
+
+func _refresh_banter_caption() -> void:
+	var p := GameSettings.banter_percent()
+	var word := "молчат" if p == 0 else ("редко" if p < 100 else ("обычно" if p == 100 else "часто"))
+	_banter_caption.text = "Реплики героев в бою: %d%% (%s)" % [p, word]
 
 func focus_default() -> void:
 	if _back_btn != null:

@@ -65,6 +65,17 @@ static func xp_to_next_level(level: int) -> int:
 static func xp_for_kill(rank: String, floor_no: int) -> int:
 	return roundi(float(int(XP_BY_RANK.get(rank, 10))) * floor_mult(floor_no))
 
+# --- Улучшение карт -------------------------------------------------------------
+## Каждые столько уровней отряда каждая героиня получает очко улучшения карты.
+const UPGRADE_EVERY_LEVELS := 5
+## Улучшенная карта: все её числа (урон, щит, лечение) × этот множитель.
+const UPGRADE_MULT := 1.15
+## Карта без чисел (только статусы): улучшение даёт +столько стаков (или ходов, если стаков нет).
+const UPGRADE_STATUS_BONUS := 1
+
+static func upgrade_points_for_level(level: int) -> int:
+	return maxi(0, level) / UPGRADE_EVERY_LEVELS
+
 # --- Доверие ------------------------------------------------------------------
 ## Очки доверия на каждый уровень отношений (1 очко = 1 забег с героиней в отряде).
 const TRUST_STEPS: Array[int] = [1, 2, 2, 2, 3, 3, 3, 4, 4, 4]

@@ -128,6 +128,20 @@ func npc_has_quest_offer(npc_id: String) -> bool:
 			return true
 	return false
 
+## Есть ли у NPC/героини что-то новое для значка «!»: квест или ещё не виденный разовый диалог
+## (once: true) нужного типа, условия которого уже выполнены. Диалоги с "chance" не считаются.
+func npc_has_news(npc_id: String, types: Array = ["event"]) -> bool:
+	if npc_has_quest_offer(npc_id):
+		return true
+	for d in dialogues_by_npc.get(npc_id, []):
+		if not bool(d.get("once", false)) or d.has("chance") or not types.has(String(d.get("type", ""))):
+			continue
+		if StoryState_ != null and StoryState_.has_seen_dialogue(String(d.get("id", ""))):
+			continue
+		if check_conditions(d.get("conditions", {})):
+			return true
+	return false
+
 func pick_intro_for_event(event_type: int, statue_variant: int = 0, npc_override: String = "") -> Dictionary:
 	var npc_id := npc_override if npc_override != "" else event_type_to_npc_id(event_type, statue_variant)
 	var event_d := pick_npc_dialogue(npc_id, "event")

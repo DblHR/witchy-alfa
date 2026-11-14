@@ -80,7 +80,8 @@ func trigger(trigger_name: String, context: Dictionary = {}) -> bool:
 	if now < float(_trigger_cooldowns.get(trigger_name, 0.0)):
 		return false
 	# Сначала — ответит ли кто-то вообще (частота триггера), потом выбор фразы.
-	if randf() > clampf(float(info.get("chance", 1.0)), 0.0, 1.0):
+	# Ползунок «Частота реплик» в настройках умножает шанс (0% — молчат совсем).
+	if randf() >= clampf(float(info.get("chance", 1.0)) * GameSettings.banter_mult(), 0.0, 1.0):
 		return false
 	var ctx := _full_context(context)
 	var candidates: Array = []

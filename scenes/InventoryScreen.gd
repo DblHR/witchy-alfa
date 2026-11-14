@@ -205,19 +205,17 @@ func _build_recipe_entries() -> Array[Dictionary]:
 	return out
 
 func _build_lore_entries() -> Array[Dictionary]:
+	# Энциклопедия: data/lore/lore.json (LoreData) — только то, что уже открыто.
 	var out: Array[Dictionary] = []
-	if lore_database == null:
-		return out
-	for entry: LoreEntryData in lore_database.get_entries():
-		if entry == null:
-			continue
+	for e in LoreData.entries():
 		out.append({
-			"id": entry.id,
-			"title": entry.title,
-			"subtitle": _excerpt(entry.body),
-			"icon": entry.icon,
+			"id": String(e["id"]),
+			"title": String(e["title"]),
+			"subtitle": "%s · %s" % [String(e["category"]), _excerpt(String(e["body"]), 44)],
+			"icon": null,
 			"count": -1,
 			"compact": false,
+			"wide": true,
 		})
 	return out
 
@@ -306,16 +304,14 @@ func _show_recipe_detail(recipe_id: String) -> void:
 	]
 
 func _show_lore_detail(entry_id: String) -> void:
-	if lore_database == null:
-		return
 	_match_detail_visibility(false, false, true, false)
-	detail_title_label.text = "Лорные записи ведьмочки"
-	detail_hint_label.text = "Позже сюда можно добавить выделения, картинки и пометки."
-	for entry: LoreEntryData in lore_database.get_entries():
-		if entry != null and entry.id == entry_id:
-			lore_body.text = "[center][b]%s[/b][/center]\n\n%s" % [entry.title, entry.body]
-			return
-	lore_body.text = "пока здесь пусто"
+	var e := LoreData.entry(entry_id)
+	detail_title_label.text = String(e.get("category", "Записи"))
+	detail_hint_label.text = "Записи появляются по мере того, как вы что-то узнаёте."
+	if e.is_empty():
+		lore_body.text = "пока здесь пусто"
+		return
+	lore_body.text = "[center][b]%s[/b][/center]\n\n%s" % [String(e["title"]), String(e["body"])]
 
 func _show_character_detail(unit_id: String) -> void:
 	_match_detail_visibility(false, true, false, false)
@@ -328,12 +324,16 @@ func _show_character_detail(unit_id: String) -> void:
 	var stats := data.stats_for_level(max(1, int(DungRun.party_level)))
 	character_sprite.texture = data.battle_texture if data.battle_texture != null else _get_character_avatar(data)
 	character_name.text = data.display_name
-	var desc := data.codex_description.strip_edges()
+	# Описание и заметки — из data/lore/lore.json ("characters"); заметки открываются диалогами.
+	var desc := LoreData.character_description(unit_id)
+	if desc == "":
+		desc = data.codex_description.strip_edges()
 	if desc == "":
 		desc = _build_default_character_description(data)
-	var notes := data.codex_notes.strip_edges()
-	if notes == "":
-		notes = "Позже здесь можно добавить личное описание персонажа, реплики и интересные факты."
+	var facts := LoreData.character_facts(unit_id)
+	var notes := "Пока ничего не известно."
+	if not facts.is_empty():
+		notes = "• " + "\n• ".join(facts)
 	_current_char_id = unit_id
 	_rank_label.text = "Ранг %s • карт до %d" % [data.rank, data.card_cap()]
 	var owned := _CardLib.owned_defs(data).size()
@@ -511,16 +511,34 @@ func _open_cards_overlay() -> void:
 		return
 	for grid in [_cards_grid, _locked_grid, _ult_row]:
 		for c in grid.get_children():
+			grid.remove_child(c)
 			c.queue_free()
 	# Числа на картах — для текущего уровня отряда.
 	var preview_unit := Unit.new(data, maxi(1, int(DungRun.party_level)))
 	var cards := _CardLib.hero_pool(preview_unit)
 	var owned := 0
+	var points := UnitRoster_.upgrade_points_left(data.id) if UnitRoster_ != null else 0
 	for card in cards:
 		if card.locked:
 			_locked_grid.add_child(_UiKit.card_preview(card, 1.0))
 		else:
-			_cards_grid.add_child(_UiKit.card_preview(card, 1.0))
+			var holder := _UiKit.card_preview(card, 1.0)
+			if _CardLib.is_dupe_key(card.key):
+				holder.add_child(_UiKit.card_tag("Дубль"))
+			# Улучшение: есть очки, карта ещё не улучшена и ей есть что улучшать — клик по карте.
+			if points > 0 and not card.upgraded and card.def.upgrade_kind() != "":
+				holder.mouse_filter = Control.MOUSE_FILTER_STOP
+				holder.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+				holder.tooltip_text = "Нажмите, чтобы улучшить (%s)" % card.def.upgrade_note()
+				var up_tag := _UiKit.card_tag("▲ Улучшить", 1.0, Color(1.0, 0.82, 0.3))
+				up_tag.position = Vector2(CardView.CARD_SIZE.x * 0.5 - 52, CardView.CARD_SIZE.y * 0.62)
+				holder.add_child(up_tag)
+				var key := card.key
+				holder.gui_input.connect(func(e: InputEvent) -> void:
+					if e is InputEventMouseButton and e.pressed and e.button_index == MOUSE_BUTTON_LEFT:
+						_ask_card_upgrade(key)
+				)
+			_cards_grid.add_child(holder)
 			owned += 1
 	_locked_title.visible = owned < cards.size()
 	_locked_grid.visible = _locked_title.visible
@@ -529,7 +547,83 @@ func _open_cards_overlay() -> void:
 	if ult != null:
 		_ult_row.add_child(_UiKit.card_preview(ult, 1.0))
 	_cards_title.text = "%s — ранг %s, получено карт: %d из %d, в бой берёт до %d" % [data.display_name, data.rank, owned, cards.size(), data.card_cap()]
+	_cards_title.text += "\nОчки улучшения: %d (по одному за каждые %d уровней отряда)%s" % [points, CardBalance.UPGRADE_EVERY_LEVELS, " — нажмите на карту" if points > 0 else ""]
 	_cards_overlay.visible = true
+
+## Окно «Улучшить карту?»: слева карта как есть, справа — какой станет.
+var _upgrade_confirm: Control
+
+func _ask_card_upgrade(card_key: String) -> void:
+	var data: CharacterData = CharDB.get_by_id(_current_char_id)
+	var def := _CardLib.def_by_id(_CardLib.key_id(card_key))
+	if data == null or def == null:
+		return
+	if _upgrade_confirm != null and is_instance_valid(_upgrade_confirm):
+		_upgrade_confirm.queue_free()
+	var unit := Unit.new(data, maxi(1, int(DungRun.party_level)))
+	_upgrade_confirm = Control.new()
+	_upgrade_confirm.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_upgrade_confirm.z_index = 20
+	_cards_overlay.add_child(_upgrade_confirm)
+	var dim := ColorRect.new()
+	dim.color = Color(0, 0, 0, 0.7)
+	dim.set_anchors_preset(Control.PRESET_FULL_RECT)
+	dim.mouse_filter = Control.MOUSE_FILTER_STOP
+	_upgrade_confirm.add_child(dim)
+	var center := CenterContainer.new()
+	center.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_upgrade_confirm.add_child(center)
+	var panel := PanelContainer.new()
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = Color(0.18, 0.10, 0.22, 0.98)
+	sb.set_corner_radius_all(18)
+	sb.set_border_width_all(3)
+	sb.border_color = Color(1.0, 0.82, 0.3, 0.8)
+	sb.set_content_margin_all(24)
+	panel.add_theme_stylebox_override("panel", sb)
+	center.add_child(panel)
+	var box := VBoxContainer.new()
+	box.add_theme_constant_override("separation", 16)
+	panel.add_child(box)
+	var title := Label.new()
+	title.text = "Улучшить «%s»? (%s)" % [def.title, def.upgrade_note()]
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.add_theme_font_size_override("font_size", 26)
+	box.add_child(title)
+	var row := HBoxContainer.new()
+	row.alignment = BoxContainer.ALIGNMENT_CENTER
+	row.add_theme_constant_override("separation", 30)
+	box.add_child(row)
+	row.add_child(_UiKit.card_preview(CardInstance.from_def(def, unit, data.card_color, data.display_name, false), 1.25))
+	var arrow := Label.new()
+	arrow.text = "→"
+	arrow.add_theme_font_size_override("font_size", 56)
+	arrow.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	row.add_child(arrow)
+	row.add_child(_UiKit.card_preview(CardInstance.from_def(def, unit, data.card_color, data.display_name, true), 1.25))
+	var note := Label.new()
+	note.text = "Очко улучшения потратится. Отменить нельзя."
+	note.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	note.modulate = Color(1, 1, 1, 0.7)
+	box.add_child(note)
+	var buttons := HBoxContainer.new()
+	buttons.alignment = BoxContainer.ALIGNMENT_CENTER
+	buttons.add_theme_constant_override("separation", 20)
+	box.add_child(buttons)
+	var yes := Button.new()
+	yes.text = "Улучшить"
+	yes.custom_minimum_size = Vector2(220, 52)
+	yes.pressed.connect(func() -> void:
+		UnitRoster_.upgrade_card(data.id, card_key)
+		_upgrade_confirm.queue_free()
+		_open_cards_overlay()
+	)
+	buttons.add_child(yes)
+	var no := Button.new()
+	no.text = "Отмена"
+	no.custom_minimum_size = Vector2(220, 52)
+	no.pressed.connect(func() -> void: _upgrade_confirm.queue_free())
+	buttons.add_child(no)
 
 
 # --- Админ: выдать любой предмет ---------------------------------------------

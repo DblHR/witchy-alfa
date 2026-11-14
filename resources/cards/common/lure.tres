@@ -15,7 +15,7 @@ title = "Приманка"
 target = 3
 tags = PackedStringArray("attack")
 exhaust = 2
-description = "[d]{0}[/d] урона выбранному врагу.
-Добьёт героиню — она в отряде (или её копия).
+description = "[d]{0}[/d] урона выбранному врагу. Всем врагам [e]Очарование[/e] на 3 хода.
+Добьёт героиню — она поймана. Иначе шанс {0}%: она [e]на крючке[/e] — добейте чем угодно.
 [e]Тратится[/e] из инвентаря."
 effects = Array[ExtResource("1_eff")]([SubResource("Resource_lure")])

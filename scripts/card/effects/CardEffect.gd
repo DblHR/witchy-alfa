@@ -107,10 +107,39 @@ static func _mirror_mode(mode: TargetMode) -> TargetMode:
 			return TargetMode.ALL_ALLIES
 	return mode
 
+## --- Улучшенные карты ---
+## Пока считается улучшенная карта (её описание или розыгрыш), числа умножаются на up_mult,
+## а у карты без чисел эффект up_status получает +UPGRADE_STATUS_BONUS стаков/ходов.
+## Включается парой begin_card / end_card (CardInstance.from_def и CardCombat.play_card).
+static var up_mult := 1.0
+static var up_status: CardEffect = null
+
+static func begin_card(def: CardDef, upgraded: bool) -> void:
+	up_mult = 1.0
+	up_status = null
+	if not upgraded or def == null:
+		return
+	match def.upgrade_kind():
+		"numbers":
+			up_mult = CardBalance.UPGRADE_MULT
+		"status":
+			up_status = def.upgrade_status_effect()
+
+static func end_card() -> void:
+	up_mult = 1.0
+	up_status = null
+
+## Прибавка к стакам/ходам статуса для эффекта e (0, если карта не улучшена или бонус не его).
+static func status_bonus(e: CardEffect) -> int:
+	return CardBalance.UPGRADE_STATUS_BONUS if up_status == e and e != null else 0
+
 static func scaled(base: int, atk_ratio: float, mag_ratio: float, caster: Unit) -> int:
 	if caster == null:
 		return CardBalance.scale_by_level(base, CardBalance.party_level())
-	return base + roundi(atk_ratio * float(caster.attack) + mag_ratio * float(caster.magic))
+	var v := base + roundi(atk_ratio * float(caster.attack) + mag_ratio * float(caster.magic))
+	if up_mult != 1.0 and v > 0:
+		v = maxi(v + 1, roundi(float(v) * up_mult))
+	return v
 
 ## «кому» для автотекста.
 func target_phrase(card_target: CardInstance.Target) -> String:

@@ -61,6 +61,64 @@
       ]
     },
     {
+      "id": "rabbit_shop_lure_intro",
+      "type": "event",
+      "npc": "rabbit_shop",
+      "once": true,
+      "priority": 60,
+      "conditions": {
+        "flag": "entered_elite_room"
+      },
+      "on_finish": {
+        "add_item": "gift",
+        "set_flags": ["lure_unlocked"]
+      },
+      "lines": [
+        {
+          "speaker": "rabbit_shop",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "Шляпка, привет! Я тут подумала, ты же хотела сделать монстров в подземелье добрее?",
+          "characters": [{"id": "rabbit_shop"}, {"id": "witch"}]
+        },
+        {
+          "speaker": "witch",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "Ну да, но заклинание, кажется, не очень сработало.",
+          "characters": [{"id": "rabbit_shop"}, {"id": "witch"}]
+        },
+        {
+          "speaker": "rabbit_shop",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "Думаю, заклинание сработало, просто они слишком уж долго были одинокие.",
+          "characters": [{"id": "rabbit_shop"}, {"id": "witch"}]
+        },
+        {
+          "speaker": "rabbit_shop",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "Попробуй подарить им это. Это точно сделает их счастливее.",
+          "characters": [{"id": "rabbit_shop"}, {"id": "witch"}]
+        },
+        {
+          "speaker": "witch",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "Это... Морковка?",
+          "characters": [{"id": "rabbit_shop"}, {"id": "witch"}]
+        },
+        {
+          "speaker": "rabbit_shop",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "Ну да. Какая одинокая женщина от такого откажется?",
+          "characters": [{"id": "rabbit_shop"}, {"id": "witch"}]
+        }
+      ]
+    },
+    {
       "id": "rabbit_shop_warrior_hint",
       "type": "event",
       "npc": "rabbit_shop",
