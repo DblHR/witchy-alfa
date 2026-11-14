@@ -363,6 +363,7 @@ func _refresh_actor(actor: BattleActor) -> void:
 	if unit.is_dead:
 		CardActorFx.stop_idle(actor)
 	actor.update_visual()
+	CardActorFx.set_charm_aura(actor, not unit.is_dead and _combat.is_charmed(unit))
 
 	var shield := _combat.shield_of(unit)
 	var shield_label := CardActorFx.shield_label(actor)
@@ -612,7 +613,7 @@ func _on_card_pressed(v: CardView) -> void:
 	_place_dragged()
 	var owner := _combat.hero_by_id(v.card.owner_id)
 	if owner != null:
-		_drag_portrait.show_for(owner.data)
+		_drag_portrait.show_for(owner.data, CharacterPhases.phase_of(owner))
 	set_process(true)
 	_update_drag_feedback()
 

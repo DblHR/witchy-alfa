@@ -128,7 +128,7 @@ func update_visual() -> void:
 	visible = true
 
 	# базовый спрайт
-	sprite.texture = unit.data.battle_texture
+	sprite.texture = CharacterPhases.texture(unit.data.battle_texture, CharacterPhases.phase_of(unit))   ## фаза по HP
 	var k := unit.data.battle_scale * unit.visual_scale
 	sprite.scale = Vector2(k, k)
 	sprite.offset.y = unit.data.battle_offset_y

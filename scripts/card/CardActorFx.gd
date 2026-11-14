@@ -261,3 +261,58 @@ static func hop(actor: BattleActor, height: float = HOP_HEIGHT) -> void:
 	t.tween_property(actor, "position:y", base_y - height * 0.25, 0.06).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 	t.tween_property(actor, "position:y", base_y, 0.07).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
 	actor.set_meta("hop_tween", t)
+
+# --- Аура очарования: сердечки поднимаются от юнита и тают ------------------------
+
+const CHARM_HEART := "res://assets/ui/status/charm_effect.png"
+static var _charm_tex: Texture2D
+static var _charm_ramp: Gradient
+
+static func set_charm_aura(actor: BattleActor, on: bool) -> void:
+	if actor == null:
+		return
+	var p := actor.get_node_or_null("CharmAura") as CPUParticles2D
+	if not on:
+		if p != null:
+			p.emitting = false   ## уже летящие сердечки долетают и тают
+		return
+	if p == null:
+		if _charm_tex == null:
+			_charm_tex = load(CHARM_HEART) as Texture2D
+			_charm_ramp = Gradient.new()
+			_charm_ramp.set_color(0, Color(1, 1, 1, 0.0))
+			_charm_ramp.set_color(1, Color(1, 1, 1, 0.0))
+			_charm_ramp.add_point(0.15, Color(1, 1, 1, 1.0))
+			_charm_ramp.add_point(0.6, Color(1, 1, 1, 0.85))
+		p = CPUParticles2D.new()
+		p.name = "CharmAura"
+		p.texture = _charm_tex
+		p.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
+		p.amount = 7
+		p.lifetime = 1.8
+		p.preprocess = 0.6
+		p.emission_shape = CPUParticles2D.EMISSION_SHAPE_RECTANGLE
+		p.direction = Vector2(0, -1)
+		p.spread = 18.0
+		p.gravity = Vector2(0, -25)
+		p.initial_velocity_min = 45.0
+		p.initial_velocity_max = 80.0
+		p.angular_velocity_min = -40.0
+		p.angular_velocity_max = 40.0
+		p.scale_amount_min = 0.14
+		p.scale_amount_max = 0.24
+		p.color_ramp = _charm_ramp
+		actor.add_child(p)
+		# Сердечки — поверх спрайта, из его верхних двух третей.
+		var s := actor.sprite
+		if s != null and s.texture != null:
+			var r := s.get_rect()
+			var k := s.scale.abs()
+			var center := s.position + r.get_center() * s.scale
+			var size := r.size * k
+			p.position = center - Vector2(0, size.y * 0.12)
+			p.emission_rect_extents = Vector2(size.x * 0.3, size.y * 0.3)
+		else:
+			p.position = Vector2(0, -180)
+			p.emission_rect_extents = Vector2(60, 90)
+	p.emitting = true

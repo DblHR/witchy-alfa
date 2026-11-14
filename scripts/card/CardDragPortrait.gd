@@ -63,20 +63,23 @@ static func portrait_for(data: CharacterData) -> Texture2D:
 		return load(path)
 	return null
 
-## Заранее обрезать картинку, чтобы первое перетаскивание не подтормаживало.
+## Заранее обрезать картинку (и картинки фаз), чтобы первое перетаскивание не подтормаживало.
 static func warm_up(data: CharacterData) -> void:
 	var tex := portrait_for(data)
 	if tex != null:
-		_crop(tex)
+		for phase in [1, 2, 3]:
+			_crop(CharacterPhases.texture(tex, phase))
 
-func show_for(data: CharacterData) -> void:
-	var tex := portrait_for(data)
+## phase — фаза по HP (CharacterPhases): портрет меняется так же, как чиби на поле.
+func show_for(data: CharacterData, phase: int = 1) -> void:
+	var tex := CharacterPhases.texture(portrait_for(data), phase)
 	if tex == null:
 		hide_portrait()
 		return
-	if _shown_id == data.id and _slide.visible:
+	var shown := "%s#%d" % [data.id, phase]
+	if _shown_id == shown and _slide.visible:
 		return
-	_shown_id = data.id
+	_shown_id = shown
 	var cropped := _crop(tex)
 	var screen := get_viewport_rect().size
 	var h := screen.y * HEIGHT_RATIO
