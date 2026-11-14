@@ -623,3 +623,6 @@ CardBattle.gd (1909 строк) разрезан, теперь это «дири
 - Переименования: cards/<id>_card.png → characters/<id>/<id>_portrait.png; actorSprite/<id>.png → <id>_battle.png; battle pics/<id>_card.png → <id>_drag.png; NPCs/bunny.png → npc/rikka/rikka.png; shopkeeper.png → npc/sessilia/sessilia.png; nurse.png → npc/noctris/noctris.png, картинки услуг → noctris_heal / noctris_revival / noctris_potion; lusia_spell_icon → luisa_spell_icon; посохи из icons/items/generated и staffs — вместе в items/staffs.
 - Удалены: дубликат scenes/table.png (такой же, как farm/table.png) и «осиротевшие» .import без картинок (старые зелья, flower, seedbag, statue, portal).
 - Код, который сам собирает пути (рисунки карт, портрет при перетаскивании, заставка ульты, спрайты слизней, пролог, эмоции, галерея), переведён на новые папки. Эмоции теперь: assets/characters/<id>/emotions/<эмоция>.png.
+
+## step48 (поверх текущего GitHub)
+- Эмоции: файл ищется как `assets/characters/<id>/emotions/<id>_<эмоция>.png` (fufu_shy.png) или `<эмоция>.png`. В реплике пишется только эмоция: `"emotion": "shy"`. Нет файла — обычный портрет. ASSETS_README.md обновлён.

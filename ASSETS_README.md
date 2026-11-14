@@ -11,7 +11,7 @@ assets/
     cards/                    рисунки карт: <id карты>.png, <id>_atk.png / <id>_sup.png (общий арт по виду),
                               <id>.png (фон карт героини)
     love/                     картинки-сцены (CG) для диалогов: "cg": "res://assets/characters/fufu/love/fufu_hug.png"
-    emotions/                 эмоции для диалогов: <эмоция>.png → "emotion": "<эмоция>" (папку создать при надобности)
+    emotions/                 эмоции для диалогов: <id>_<эмоция>.png → "emotion": "<эмоция>" (fufu_shy.png → "shy")
   npc/                        rikka, sessilia, noctris (+ noctris_heal/revival/potion — картинки услуг), chest, statues
   enemies/slimes/             спрайты слизней
   cards/general/              рисунки общих карт (приманка); новые общие карты — assets/cards/common/<id>.png

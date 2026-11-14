@@ -157,7 +157,8 @@ func pick_quest_room_dialogue(quest_id: String) -> Dictionary:
 ##   speaker      — id говорящего (witch, rabbit_shop, ...)
 ##   speaker_name — имя на плашке только в этой реплике; пусто — имя из data/characters/names.json
 ##                  (например «Девушка-кролик», пока Рикка не представилась)
-##   emotion      — эмоция говорящего: картинка res://assets/characters/<id>/emotions/<emotion>.png (нет файла — обычный портрет)
+##   emotion      — эмоция говорящего: картинка assets/characters/<id>/emotions/<id>_<emotion>.png
+##                  (или <emotion>.png); "emotion": "shy" → fufu_shy.png. Нет файла — обычный портрет
 ## У каждого персонажа в characters тоже можно указать name и emotion.
 func resolve_lines(dialogue: Dictionary) -> Array:
 	var out: Array = []
@@ -224,9 +225,11 @@ const EMOTIONS_DIR := "res://assets/characters"
 
 func get_character_portrait(character_id: String, emotion: String = "") -> Texture2D:
 	if emotion != "" and character_id != "":
-		var path := "%s/%s/emotions/%s.png" % [EMOTIONS_DIR, character_id, emotion]
-		if ResourceLoader.exists(path):
-			return load(path) as Texture2D
+		# Файл эмоции: emotions/<id>_<эмоция>.png (fufu_shy.png) или просто emotions/<эмоция>.png.
+		for file in ["%s_%s" % [character_id, emotion], emotion]:
+			var path := "%s/%s/emotions/%s.png" % [EMOTIONS_DIR, character_id, file]
+			if ResourceLoader.exists(path):
+				return load(path) as Texture2D
 	if AssetCatalog_ != null:
 		var event_tex := AssetCatalog_.get_event_npc_texture(character_id)
 		if event_tex != null:

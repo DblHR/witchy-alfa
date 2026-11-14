@@ -14,7 +14,7 @@
         {
           "speaker": "witch",
           "speaker_name": "",
-          "emotion": "",
+          "emotion": "horny",
           "text": "Так, надо достать блокнот и всё подробно записать! Мистер слизень, а вы мистер или мисс слизень?",
           "characters": [{"id": "witch"}, {"id": "slime"}]
         },
@@ -42,7 +42,7 @@
         {
           "speaker": "witch",
           "speaker_name": "",
-          "emotion": "",
+          "emotion": "confusion",
           "text": "Тот Мистер Слизень... Он меня... Я даже записать ничего не успела!",
           "characters": [{"id": "rabbit_shop"}, {"id": "witch"}]
         },
@@ -63,7 +63,7 @@
         {
           "speaker": "witch",
           "speaker_name": "",
-          "emotion": "",
+          "emotion": "confusion",
           "text": "Я думала что сделаю их дружелюбнее, но, кажется, что-то напутала и он... Ох...",
           "characters": [{"id": "rabbit_shop"}, {"id": "witch"}]
         },
