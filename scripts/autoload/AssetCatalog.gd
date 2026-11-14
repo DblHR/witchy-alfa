@@ -6,13 +6,13 @@ class_name AssetCatalog
 
 const UI_TEXTURE_PATHS := {
 	"farm_bg": "res://assets/pics/bigPics/backgrounds/farmBG.png",
-	"event_bg_default": "res://assets/pics/bigPics/backgrounds/background1.png",
+	"event_bg_default": "",   ## пусто — фон этажа слоями (FloorBackdrop)
 	"event_bg_shop": "res://assets/pics/bigPics/backgrounds/eventroomShopBG.png",
 	"event_bg_nurse": "res://assets/pics/bigPics/backgrounds/nurseBG.png",
-	"event_bg_chest": "res://assets/pics/bigPics/backgrounds/background1.png",
-	"event_bg_statue_white": "res://assets/pics/bigPics/backgrounds/background1.png",
-	"event_bg_statue_black": "res://assets/pics/bigPics/backgrounds/background1.png",
-	"event_bg_quest": "res://assets/pics/bigPics/backgrounds/background1.png",
+	"event_bg_chest": "",   ## пусто — фон этажа слоями (FloorBackdrop)
+	"event_bg_statue_white": "",   ## пусто — фон этажа слоями (FloorBackdrop)
+	"event_bg_statue_black": "",   ## пусто — фон этажа слоями (FloorBackdrop)
+	"event_bg_quest": "",   ## пусто — фон этажа слоями (FloorBackdrop)
 	"farm_btn_home": "res://assets/pics/icons/buttons/homeButton.png",
 	"farm_btn_shop": "res://assets/pics/icons/buttons/shopButton.png",
 	"farm_btn_alchemy": "res://assets/pics/icons/buttons/alchemyButton.png",

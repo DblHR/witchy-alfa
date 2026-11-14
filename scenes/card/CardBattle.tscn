@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" path="res://scripts/dialogue/BattleSpeechLayer.gd" id="speechlayer"]
 [ext_resource type="Script" path="res://scripts/card/CardBattle.gd" id="1_cardbattle"]
-[ext_resource type="Texture2D" uid="uid://cbk4oswir1q8" path="res://assets/pics/bigPics/backgrounds/background1.png" id="2_bg"]
+[ext_resource type="Script" path="res://scripts/card/FloorBackdrop.gd" id="2_bg"]
 
 [node name="CardBattle" type="Node2D"]
 script = ExtResource("1_cardbattle")
@@ -177,9 +177,8 @@ anchor_bottom = 1.0
 mouse_filter = 2
 script = ExtResource("speechlayer")
 
-[node name="Background" type="Sprite2D" parent="."]
-position = Vector2(960, 540)
-texture = ExtResource("2_bg")
+[node name="Background" type="Node2D" parent="."]
+script = ExtResource("2_bg")
 
 [node name="LeftSlotsWorld" type="Node2D" parent="."]
 unique_name_in_owner = true

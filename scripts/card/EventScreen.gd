@@ -85,6 +85,9 @@ func setup(p_battle: Node, p_room: Dictionary) -> void:
 	if not world_mode:
 		_bg.texture = AssetCatalog_.get_event_background(_event_enum(), _variant_enum()) if AssetCatalog_ != null else null
 	add_child(_bg)
+	# Без своей картинки (сундук, квест) — фон этажа слоями, с плывущими облаками.
+	if _bg.texture == null and not world_mode:
+		add_child(FloorBackdrop.new())
 	_npc_sprite = ShopUi.make_npc_sprite("")
 	add_child(_npc_sprite)
 
