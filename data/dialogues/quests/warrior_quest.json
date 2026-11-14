@@ -17,7 +17,7 @@
       "lines": [
         {
           "speaker": "fufu",
-          "speaker_name": "",
+          "speaker_name": "Зелёная девушка-слизень",
           "emotion": "",
           "text": "Оо, смотри-ка, мальчик, тут ещё один человечек пришёл! Кажется, становится всё интереснее и интереснее!",
           "characters": [{"id": "witch"}, {"id": "warrior"}, {"id": "fufu"}]
@@ -60,9 +60,93 @@
           "speaker": "witch",
           "speaker_name": "",
           "emotion": "",
-          "text": "бла-бла. Тестовый текст. НЕ ДУМАЛ ЖЕ ТЫ ВОИН ЧТО ТУТ БУДЕТ ЦЕЛЫЙ ДИАЛОГ, МНЕ ЛЕНЬ ЕГО ПРОПИСЫВАТЬ ВООБЩЕ-ТО",
+          "text": "Упустили! Мы её упустили! Какой ужас...",
           "characters": [{"id": "witch"}, {"id": "warrior"}]
-        }
+        },
+		{
+          "speaker": "warrior",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "Упустили? Мы бы там погибли, если бы не твой камешек.",
+          "characters": [{"id": "witch"}, {"id": "warrior"}]
+        },
+		{
+          "speaker": "witch",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "*Вздох*",
+          "characters": [{"id": "witch"}, {"id": "warrior"}]
+        },
+		{
+          "speaker": "witch",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "Кто это вообще была?",
+          "characters": [{"id": "witch"}, {"id": "warrior"}]
+        },
+		{
+          "speaker": "warrior",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "Фуфу... Главная у слизней. Уже неделю я не могу с ней справиться и пройти дальше.",
+          "characters": [{"id": "witch"}, {"id": "warrior"}]
+        },
+		{
+          "speaker": "witch",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "Ты тоже пытаешься добраться до самого низа?",
+          "characters": [{"id": "witch"}, {"id": "warrior"}]
+        },
+		{
+          "speaker": "witch",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "Мне очень нужно пройти до самого конца подземелья, иначе я вылечу из академии.",
+          "characters": [{"id": "witch"}, {"id": "warrior"}]
+        },
+		{
+          "speaker": "warrior",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "Это подземелье смертельно опасно, а ты переживаешь о своём обучении?",
+          "characters": [{"id": "witch"}, {"id": "warrior"}]
+        },
+		{
+          "speaker": "witch",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "Если я вылечу из академии, то дома меня всё равно прибьют...",
+          "characters": [{"id": "witch"}, {"id": "warrior"}]
+        },
+		{
+          "speaker": "warrior",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "Справедливо.",
+          "characters": [{"id": "witch"}, {"id": "warrior"}]
+        },
+		{
+          "speaker": "warrior",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "...",
+          "characters": [{"id": "witch"}, {"id": "warrior"}]
+        },
+		{
+          "speaker": "witch",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "...",
+          "characters": [{"id": "witch"}, {"id": "warrior"}]
+        },
+		{
+          "speaker": "warrior",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "А как мы оказались в моём доме?",
+          "characters": [{"id": "witch"}, {"id": "warrior"}]
+        },
       ]
     }
   ]

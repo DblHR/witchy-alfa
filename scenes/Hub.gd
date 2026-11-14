@@ -173,9 +173,13 @@ func _play_pending_story_dialogue() -> void:
 			continue
 		DialogueManager_.show_sequence(lines, Callable(self, "_on_pending_story_dialogue_finished").bind(d))
 		return
+	# Сюжетных диалогов в очереди нет — может, пора спросить, кто главный герой.
+	MainHeroChoicePopup.show_if_needed(self)
 
 func _on_pending_story_dialogue_finished(dialogue: Dictionary) -> void:
 	if StoryState_ != null:
 		StoryState_.mark_dialogue_seen(String(dialogue.get("id", "")))
 	if StoryDialogueDB_ != null:
 		StoryDialogueDB_.apply_effects(dialogue.get("on_finish", {}))
+	# После диалога с воином (он только что вступил в отряд) — окно выбора главного героя.
+	MainHeroChoicePopup.show_if_needed(self)

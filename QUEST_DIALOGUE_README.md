@@ -22,6 +22,19 @@ Important current files:
 
 `EventPresentationDB.gd` no longer stores old text. It is an empty fallback for compatibility.
 
+### Главный герой в диалогах: id `hero`
+
+Игрок выбирает главного героя (Ведьмочка / Воин) после получения воина, потом — в «Настройках» меню паузы (ESC). Чтобы реплика шла от выбранного героя, вместо `witch` пишите `hero`:
+
+```json
+{"speaker": "hero", "emotion": "shy", "text": "Привет, Фуфу!", "characters": [{"id": "fufu"}, {"id": "hero"}]}
+```
+
+- `hero` подставляется и в `speaker`, и в `characters` — имя, портрет и эмоции берутся у настоящего персонажа (`witch` или `warrior`).
+- `{hero}` в `text`, `speaker_name` и тексте кнопок `choices` заменяется на имя героя: `"text": "Ой, {hero}, это ты!"`.
+- Условие `"conditions": {"main_hero": "warrior"}` — диалог только для выбранного воина (или `"witch"`).
+- Пока воина нет в отряде, `hero` — всегда ведьмочка. Где герой должен быть именно ведьмочкой или оба сразу — пишите `witch`/`warrior` как раньше.
+
 ## Lamia headphones quest
 
 Current flow:

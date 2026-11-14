@@ -15,6 +15,13 @@ var quests: Dictionary = {}
 var seen_dialogues: Dictionary = {}
 var relationships: Dictionary = {}
 
+## Главный герой для диалогов и катсцен: "witch" или "warrior" (выбор после получения воина,
+## меняется в настройках паузы). В JSON диалогов его подставляет спикер/персонаж "hero".
+const MAIN_HERO_DEFAULT := "witch"
+const MAIN_HERO_OPTIONS := ["witch", "warrior"]
+const MAIN_HERO_CHOSEN_FLAG := "main_hero_chosen"
+var main_hero: String = MAIN_HERO_DEFAULT
+
 func reset_to_defaults() -> void:
 	intro_played = false
 	tutorial_battle_pending = true
@@ -26,6 +33,23 @@ func reset_to_defaults() -> void:
 	quests.clear()
 	seen_dialogues.clear()
 	relationships.clear()
+	main_hero = MAIN_HERO_DEFAULT
+	changed.emit()
+
+## Кто сейчас главный герой. Воин считается, только если он уже есть в ростере.
+func get_main_hero() -> String:
+	if main_hero == "warrior" and UnitRoster_ != null and not UnitRoster_.has_unit("warrior"):
+		return MAIN_HERO_DEFAULT
+	return main_hero
+
+func set_main_hero(hero_id: String) -> void:
+	if not MAIN_HERO_OPTIONS.has(hero_id):
+		return
+	flags[MAIN_HERO_CHOSEN_FLAG] = true
+	if main_hero == hero_id:
+		changed.emit()
+		return
+	main_hero = hero_id
 	changed.emit()
 
 func queue_cutscene(cutscene_id: String, payload: Dictionary = {}) -> void:
@@ -116,6 +140,7 @@ func serialize_state() -> Dictionary:
 		"quests": quests.duplicate(true),
 		"seen_dialogues": seen_dialogues.duplicate(true),
 		"relationships": relationships.duplicate(true),
+		"main_hero": main_hero,
 	}
 
 func apply_state(data: Dictionary) -> void:
@@ -129,4 +154,7 @@ func apply_state(data: Dictionary) -> void:
 	quests = data.get("quests", {}).duplicate(true)
 	seen_dialogues = data.get("seen_dialogues", {}).duplicate(true)
 	relationships = data.get("relationships", {}).duplicate(true)
+	main_hero = String(data.get("main_hero", MAIN_HERO_DEFAULT))
+	if not MAIN_HERO_OPTIONS.has(main_hero):
+		main_hero = MAIN_HERO_DEFAULT
 	changed.emit()

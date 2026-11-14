@@ -160,6 +160,9 @@ func pick_quest_room_dialogue(quest_id: String) -> Dictionary:
 ##   emotion      — эмоция говорящего: картинка assets/characters/<id>/emotions/<id>_<emotion>.png
 ##                  (или <emotion>.png); "emotion": "shy" → fufu_shy.png. Нет файла — обычный портрет
 ## У каждого персонажа в characters тоже можно указать name и emotion.
+##   "hero"       — особый id для speaker и characters: подставляется главный герой, выбранный
+##                  игроком (Ведьмочка или Воин, настройки паузы). Его имя и портрет/эмоции берутся
+##                  у настоящего персонажа. В тексте и speaker_name {hero} заменяется на имя героя.
 func resolve_lines(dialogue: Dictionary) -> Array:
 	var out: Array = []
 	for raw_line in dialogue.get("lines", []):
@@ -169,9 +172,35 @@ func resolve_lines(dialogue: Dictionary) -> Array:
 			out.append(_resolve_line(raw_line))
 	return out
 
+## Id главного героя ("witch"/"warrior"), которым заменяется "hero" в диалогах.
+const HERO_ALIAS := "hero"
+
+func get_main_hero_id() -> String:
+	if StoryState_ != null and StoryState_.has_method("get_main_hero"):
+		return String(StoryState_.get_main_hero())
+	return "witch"
+
+func _hero_id(character_id: String) -> String:
+	return get_main_hero_id() if character_id == HERO_ALIAS else character_id
+
+func _hero_text(text: String) -> String:
+	if text.contains("{hero}"):
+		return text.replace("{hero}", get_character_name(get_main_hero_id()))
+	return text
+
 func _resolve_line(raw: Dictionary) -> Dictionary:
 	var line := raw.duplicate(true)
-	var speaker_id := String(line.get("speaker", line.get("speaker_id", "")))
+	var speaker_id := _hero_id(String(line.get("speaker", line.get("speaker_id", ""))))
+	if line.has("speaker"):
+		line["speaker"] = speaker_id
+	if line.has("text"):
+		line["text"] = _hero_text(String(line["text"]))
+	if line.has("speaker_name"):
+		line["speaker_name"] = _hero_text(String(line["speaker_name"]))
+	if line.has("choices") and line["choices"] is Array:
+		for ch in line["choices"]:
+			if ch is Dictionary and ch.has("text"):
+				ch["text"] = _hero_text(String(ch["text"]))
 	var emotion := String(line.get("emotion", ""))
 	if String(line.get("speaker_name", "")) == "":
 		line["speaker_name"] = get_character_name(speaker_id)
@@ -181,7 +210,8 @@ func _resolve_line(raw: Dictionary) -> Dictionary:
 			if not (c is Dictionary):
 				continue
 			var rc: Dictionary = c.duplicate(true)
-			var cid := String(rc.get("id", ""))
+			var cid := _hero_id(String(rc.get("id", "")))
+			rc["id"] = cid
 			if String(rc.get("name", "")) == "":
 				rc["name"] = get_character_name(cid)
 			var c_emotion := String(rc.get("emotion", ""))
@@ -288,6 +318,8 @@ func check_conditions(conditions) -> bool:
 		for key in c["counter_min"].keys():
 			if StoryState_.get_counter(String(key)) < int(c["counter_min"][key]):
 				return false
+	if c.has("main_hero") and get_main_hero_id() != String(c["main_hero"]):
+		return false
 	if c.has("relationship_min") and StoryState_ != null:
 		for key in c["relationship_min"].keys():
 			if StoryState_.get_relationship(String(key)) < int(c["relationship_min"][key]):

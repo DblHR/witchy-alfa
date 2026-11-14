@@ -1,0 +1,105 @@
+extends Panel
+class_name SettingsPanel
+
+## Окно «Настройки» в меню паузы. Пока одна настройка — главный герой для диалогов и катсцен
+## (StoryState_.main_hero). Воин выбирается, только когда он уже есть в ростере.
+
+signal back_requested
+
+const PANEL_SIZE := Vector2(560, 380)
+const SELECTED_COLOR := Color(1.0, 0.62, 0.86)
+const HERO_LABELS := {"witch": "Ведьмочка", "warrior": "Воин"}
+
+var _hero_buttons: Dictionary = {}
+var _hint: Label
+var _back_btn: Button
+
+func _ready() -> void:
+	process_mode = Node.PROCESS_MODE_WHEN_PAUSED
+	custom_minimum_size = PANEL_SIZE
+	size = PANEL_SIZE
+	position = (Vector2(1920, 1080) - PANEL_SIZE) * 0.5
+	_build()
+	refresh()
+
+func _build() -> void:
+	var box := VBoxContainer.new()
+	box.position = Vector2(40, 24)
+	box.size = PANEL_SIZE - Vector2(80, 48)
+	box.add_theme_constant_override("separation", 14)
+	add_child(box)
+
+	var title := Label.new()
+	title.text = "НАСТРОЙКИ"
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.custom_minimum_size = Vector2(0, 60)
+	title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	box.add_child(title)
+
+	var caption := Label.new()
+	caption.text = "Главный герой в диалогах и катсценах"
+	caption.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	box.add_child(caption)
+
+	var row := HBoxContainer.new()
+	row.alignment = BoxContainer.ALIGNMENT_CENTER
+	row.add_theme_constant_override("separation", 16)
+	box.add_child(row)
+	var group := ButtonGroup.new()
+	for hero_id in HERO_LABELS.keys():
+		var b := Button.new()
+		b.text = String(HERO_LABELS[hero_id])
+		b.toggle_mode = true
+		b.button_group = group
+		b.custom_minimum_size = Vector2(200, 56)
+		b.pressed.connect(_on_hero_pressed.bind(String(hero_id)))
+		row.add_child(b)
+		_hero_buttons[hero_id] = b
+
+	_hint = Label.new()
+	_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_hint.modulate = Color(1, 1, 1, 0.7)
+	_hint.custom_minimum_size = Vector2(PANEL_SIZE.x - 80, 56)
+	box.add_child(_hint)
+
+	_back_btn = Button.new()
+	_back_btn.text = "Назад"
+	_back_btn.custom_minimum_size = Vector2(0, 56)
+	_back_btn.pressed.connect(func(): back_requested.emit())
+	box.add_child(_back_btn)
+
+## Подтягивает текущий выбор героя из StoryState (вызывать при каждом открытии).
+func refresh() -> void:
+	var has_warrior := UnitRoster_ != null and UnitRoster_.has_unit("warrior")
+	var current := "witch"
+	if StoryState_ != null:
+		current = String(StoryState_.get_main_hero())
+	for hero_id in _hero_buttons.keys():
+		var b: Button = _hero_buttons[hero_id]
+		var selected: bool = hero_id == current
+		b.set_pressed_no_signal(selected)
+		b.disabled = hero_id == "warrior" and not has_warrior
+		# Выбранный герой — с галочкой и розовым текстом, чтобы было видно без наведения.
+		b.text = ("✓ " if selected else "") + String(HERO_LABELS[hero_id])
+		if selected:
+			b.add_theme_color_override("font_color", SELECTED_COLOR)
+			b.add_theme_color_override("font_pressed_color", SELECTED_COLOR)
+			b.add_theme_color_override("font_hover_pressed_color", SELECTED_COLOR)
+		else:
+			b.remove_theme_color_override("font_color")
+			b.remove_theme_color_override("font_pressed_color")
+			b.remove_theme_color_override("font_hover_pressed_color")
+	if has_warrior:
+		_hint.text = "Влияет на то, чьё имя и портрет будут в диалогах отношений и с НПС."
+	else:
+		_hint.text = "Выбор откроется, когда к вам присоединится Воин."
+
+func focus_default() -> void:
+	if _back_btn != null:
+		_back_btn.grab_focus()
+
+func _on_hero_pressed(hero_id: String) -> void:
+	if StoryState_ != null:
+		StoryState_.set_main_hero(hero_id)
+	refresh()
