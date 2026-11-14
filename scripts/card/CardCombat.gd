@@ -20,6 +20,9 @@ signal card_played(card: CardInstance, caster: Unit)
 signal discard_requested(count: int)
 ## На юнита наложен статус (враги-боссы реагируют: Фуфу выплёвывает героиню от оглушения).
 signal status_added(unit: Unit, id: String)
+## Юнит вылечен / получил щит (для реплик отряда: CardBattle -> BattleBanter_).
+signal healed(unit: Unit, amount: int)
+signal shielded(unit: Unit, amount: int)
 ## Приманка добила врага (EffLure) — CardBattle решает, поймана ли героиня.
 signal lure_kill(unit: Unit)
 
@@ -423,6 +426,7 @@ func add_shield(unit: Unit, amount: int) -> void:
 	floated.emit(unit, "+%d щит" % amount, COL_SHIELD, 26)
 	if stats != null and not is_enemy(unit):
 		stats.on_shield(credit, unit, amount)
+	shielded.emit(unit, amount)
 
 ## Лечение; возвращает, сколько HP реально восстановлено.
 func heal(unit: Unit, amount: int) -> int:
@@ -433,6 +437,8 @@ func heal(unit: Unit, amount: int) -> int:
 	floated.emit(unit, "+%d HP" % (unit.hp - before), COL_HEAL, 26)
 	if stats != null and not is_enemy(unit):
 		stats.on_heal(credit, unit.hp - before)
+	if unit.hp > before:
+		healed.emit(unit, unit.hp - before)
 	return unit.hp - before
 
 func add_surcharge(owner_id: String, amount: int) -> void:

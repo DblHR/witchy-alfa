@@ -343,6 +343,15 @@ func check_conditions(conditions) -> bool:
 		for key in c["counter_min"].keys():
 			if StoryState_.get_counter(String(key)) < int(c["counter_min"][key]):
 				return false
+	# "seen_dialogue": "nurse_first_meeting" — диалог уже был (например, встреча с НПС); можно списком.
+	if c.has("seen_dialogue") and StoryState_ != null:
+		for did in (c["seen_dialogue"] if c["seen_dialogue"] is Array else [c["seen_dialogue"]]):
+			if not StoryState_.has_seen_dialogue(String(did)):
+				return false
+	if c.has("not_seen_dialogue") and StoryState_ != null:
+		for did in (c["not_seen_dialogue"] if c["not_seen_dialogue"] is Array else [c["not_seen_dialogue"]]):
+			if StoryState_.has_seen_dialogue(String(did)):
+				return false
 	if c.has("main_hero") and get_main_hero_id() != String(c["main_hero"]):
 		return false
 	if c.has("relationship_min") and StoryState_ != null:

@@ -1,0 +1,202 @@
+{
+  "battle": [
+    {
+      "id": "aki_battle_start_01",
+      "speaker": "aki",
+      "trigger": "battle_start",
+      "text": "Оо, кажется они настроены дать мне больше работы!",
+      "once_per_battle": true
+    },
+    {
+      "id": "aki_battle_start_02",
+      "speaker": "aki",
+      "trigger": "battle_start",
+      "text": "Между лечением и калечением я пока не выбрала",
+      "once_per_battle": true
+    },
+    {
+      "id": "aki_battle_start_03",
+      "speaker": "aki",
+      "trigger": "battle_start",
+      "text": "Не бойтесь, если что — залечу. Везде~",
+      "once_per_battle": true
+    },
+    {
+      "id": "aki_battle_start_vs_aki",
+      "speaker": "aki",
+      "trigger": "battle_start",
+      "text": "Это что, я? А я милая!",
+      "conditions": {"enemy_in_room": "aki_enemy"},
+      "priority": 8
+    },
+    {
+      "id": "aki_ability_cast_01",
+      "speaker": "aki",
+      "trigger": "card_played",
+      "text": "Восстанавливающая слизь!",
+      "conditions": {"card_cost_min": 2}
+    },
+    {
+      "id": "aki_ability_cast_02",
+      "speaker": "aki",
+      "trigger": "card_played",
+      "text": "Да, моя слизь полезна. ЕШЬ!",
+      "conditions": {"card_cost_min": 2}
+    },
+    {
+      "id": "aki_basic_attack_01",
+      "speaker": "aki",
+      "trigger": "card_played",
+      "text": "Хи-хи~",
+      "conditions": {"card_cost_max": 1}
+    },
+    {
+      "id": "aki_basic_attack_02",
+      "speaker": "aki",
+      "trigger": "card_played",
+      "text": "Не увязни!",
+      "conditions": {"card_cost_max": 1}
+    },
+    {
+      "id": "aki_card_bounce",
+      "speaker": "aki",
+      "trigger": "card_played",
+      "text": ["Смотри сюда~ Нет, не в глаза.", "Покачаем?~"],
+      "conditions": {"card": "aki_bounce"}
+    },
+    {
+      "id": "aki_card_cheer_slap",
+      "speaker": "aki",
+      "trigger": "card_played",
+      "text": ["Шлёп! Это для бодрости!", "Не ной, это лечебный шлепок!"],
+      "conditions": {"card": "aki_cheer_slap"}
+    },
+    {
+      "id": "aki_card_kiss",
+      "speaker": "aki",
+      "trigger": "card_played",
+      "text": "Муа~ Влажненько, да?",
+      "conditions": {"card": "aki_kiss"}
+    },
+    {
+      "id": "aki_card_lube",
+      "speaker": "aki",
+      "trigger": "card_played",
+      "text": ["Смажем ранку~", "Тихо-тихо, сейчас будет приятно."],
+      "conditions": {"card": "aki_lube"}
+    },
+    {
+      "id": "aki_card_squeeze",
+      "speaker": "aki",
+      "trigger": "card_played",
+      "text": "Обнимашки! Крепкие и упругие!",
+      "conditions": {"card": "aki_squeeze"}
+    },
+    {
+      "id": "aki_ult",
+      "speaker": "aki",
+      "trigger": "ult",
+      "text": ["Танец на шесте! Смотрите все!", "Лечебный танец, сеанс начинается~"]
+    },
+    {
+      "id": "aki_status_wrap",
+      "speaker": "aki",
+      "trigger": "status_applied",
+      "text": ["Укутаю слизью~", "Тепло, мокро и полезно!"],
+      "conditions": {"status": "wrap_slime"}
+    },
+    {
+      "id": "aki_status_weak",
+      "speaker": "aki",
+      "trigger": "status_applied",
+      "text": "Ослабла? Бедняжка~",
+      "conditions": {"status": "weak"}
+    },
+    {
+      "id": "aki_status_charmed",
+      "speaker": "aki",
+      "trigger": "status_applied",
+      "text": "Ой, а можно я её тоже полечу?..",
+      "about": "target",
+      "conditions": {"status": "charm"}
+    },
+    {
+      "id": "aki_status_swallowed",
+      "speaker": "aki",
+      "trigger": "status_applied",
+      "text": "Внутри Фуфу уютно... но выпустите!",
+      "about": "target",
+      "conditions": {"status": "swallowed"}
+    },
+    {
+      "id": "aki_kill_01",
+      "speaker": "aki",
+      "trigger": "kill_enemy",
+      "text": ["Ой. Перелечила.", "Упс~", "Не все пациенты выживают!"]
+    },
+    {
+      "id": "aki_heal_other",
+      "speaker": "aki",
+      "trigger": "heal",
+      "text": ["Лучше? Я же говорила~", "Держи! Не за что!", "Ну-ка покажи, где болит."],
+      "conditions": {"target_side": "ally"}
+    },
+    {
+      "id": "aki_healed",
+      "speaker": "aki",
+      "trigger": "heal",
+      "text": "Ой, меня лечат? Как непривычно~",
+      "about": "target",
+      "conditions": {"actor": ["witch", "warrior", "luisa", "fufu", ""]}
+    },
+    {
+      "id": "aki_shielded",
+      "speaker": "aki",
+      "trigger": "shield",
+      "text": "Спасибки за щит!",
+      "about": "target",
+      "chance": 0.5
+    },
+    {
+      "id": "aki_low_hp",
+      "speaker": "aki",
+      "trigger": "ally_low_hp",
+      "text": ["Доктор, вылечи себя сам... ой.", "Мне самой нужна медсестра!"]
+    },
+    {"id": "aki_big_hit", "speaker": "aki", "trigger": "big_hit", "text": ["Ай-ай-ай!", "Ну и манеры!"]},
+    {
+      "id": "aki_ally_down",
+      "speaker": "aki",
+      "trigger": "ally_down",
+      "text": ["{target}! Я не успела...", "Нет-нет, только не {target}!"]
+    },
+    {
+      "id": "aki_ally_low",
+      "speaker": "aki",
+      "trigger": "ally_low_hp",
+      "text": ["{target}, держись, я уже бегу!", "Не смей падать, {target}!"],
+      "about": "other",
+      "chance": 0.6
+    },
+    {"id": "aki_enemy_low", "speaker": "aki", "trigger": "enemy_low_hp", "text": "Может, её уже полечить? Шучу~"},
+    {
+      "id": "aki_turn",
+      "speaker": "aki",
+      "trigger": "turn_start",
+      "text": ["Все целы? Считаемся!", "Кому тут нужна помощь?"],
+      "chance": 0.5
+    },
+    {
+      "id": "aki_victory",
+      "speaker": "aki",
+      "trigger": "victory",
+      "text": ["Все живы! Ну почти. Ну неважно!", "Победа! Обнимашки!"]
+    },
+    {
+      "id": "aki_capture",
+      "speaker": "aki",
+      "trigger": "capture",
+      "text": ["Новенькая! Сейчас осмотрю~", "Ура, ещё одна пациентка!"]
+    }
+  ]
+}

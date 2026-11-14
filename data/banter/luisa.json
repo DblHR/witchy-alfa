@@ -1,0 +1,195 @@
+{
+  "battle": [
+    {
+      "id": "luisa_battle_start_01",
+      "speaker": "luisa",
+      "trigger": "battle_start",
+      "text": "Немного слизи будет вам к лицу!",
+      "once_per_battle": true
+    },
+    {
+      "id": "luisa_battle_start_02",
+      "speaker": "luisa",
+      "trigger": "battle_start",
+      "text": "Увязни!",
+      "once_per_battle": true
+    },
+    {
+      "id": "luisa_battle_start_03",
+      "speaker": "luisa",
+      "trigger": "battle_start",
+      "text": "Кто первый хочет поиграть?~",
+      "once_per_battle": true
+    },
+    {
+      "id": "luisa_battle_start_vs_luisa",
+      "speaker": "luisa",
+      "trigger": "battle_start",
+      "text": "Эй, копия! Липнуть тут буду я.",
+      "conditions": {"enemy_in_room": "luisa_enemy"},
+      "priority": 8
+    },
+    {
+      "id": "luisa_ability_cast_01",
+      "speaker": "luisa",
+      "trigger": "card_played",
+      "text": "Не стой на пути!",
+      "conditions": {"card_cost_min": 2}
+    },
+    {
+      "id": "luisa_ability_cast_02",
+      "speaker": "luisa",
+      "trigger": "card_played",
+      "text": "Кажется, ты вся в слизи~",
+      "conditions": {"card_cost_min": 2}
+    },
+    {
+      "id": "luisa_basic_attack_01",
+      "speaker": "luisa",
+      "trigger": "card_played",
+      "text": "Застынь!",
+      "conditions": {"card_cost_max": 1}
+    },
+    {
+      "id": "luisa_basic_attack_02",
+      "speaker": "luisa",
+      "trigger": "card_played",
+      "text": "Не подскользнись~",
+      "conditions": {"card_cost_max": 1}
+    },
+    {
+      "id": "luisa_card_deep",
+      "speaker": "luisa",
+      "trigger": "card_played",
+      "text": ["Поглубже~", "Не дёргайся, будет липко."],
+      "conditions": {"card": "luisa_deep"}
+    },
+    {
+      "id": "luisa_card_loosen",
+      "speaker": "luisa",
+      "trigger": "card_played",
+      "text": "Расслабься. Тебе понравится.",
+      "conditions": {"card": "luisa_loosen"}
+    },
+    {
+      "id": "luisa_card_spank",
+      "speaker": "luisa",
+      "trigger": "card_played",
+      "text": ["Плохая девочка!", "Шлёп! И ещё раз!"],
+      "conditions": {"card": "luisa_spank"}
+    },
+    {
+      "id": "luisa_card_tease",
+      "speaker": "luisa",
+      "trigger": "card_played",
+      "text": "Публика, вы готовы?~",
+      "conditions": {"card": "luisa_tease"}
+    },
+    {
+      "id": "luisa_card_tentacle",
+      "speaker": "luisa",
+      "trigger": "card_played",
+      "text": "Щупальце ласковое. Пока что.",
+      "conditions": {"card": "luisa_tentacle"}
+    },
+    {
+      "id": "luisa_ult",
+      "speaker": "luisa",
+      "trigger": "ult",
+      "text": ["До краёв!", "Больше не влезет? Проверим~"]
+    },
+    {
+      "id": "luisa_status_sticky",
+      "speaker": "luisa",
+      "trigger": "status_applied",
+      "text": ["Липнешь? Липнешь~", "Попалась!", "Теперь не отклеишься."],
+      "conditions": {"status": "sticky_slime"}
+    },
+    {
+      "id": "luisa_status_stun",
+      "speaker": "luisa",
+      "trigger": "status_applied",
+      "text": "Застыла. Какая послушная.",
+      "conditions": {"status": "stun", "target_side": "enemy"}
+    },
+    {
+      "id": "luisa_status_vuln",
+      "speaker": "luisa",
+      "trigger": "status_applied",
+      "text": "Открылась. Удобно~",
+      "conditions": {"status": "vuln"}
+    },
+    {
+      "id": "luisa_status_charmed",
+      "speaker": "luisa",
+      "trigger": "status_applied",
+      "text": "М-м? Это я тут соблазняю, вообще-то!",
+      "about": "target",
+      "conditions": {"status": "charm"}
+    },
+    {
+      "id": "luisa_status_swallowed",
+      "speaker": "luisa",
+      "trigger": "status_applied",
+      "text": "Фуфу, ты что, меня СЪЕЛА?!",
+      "about": "target",
+      "conditions": {"status": "swallowed"}
+    },
+    {
+      "id": "luisa_kill_01",
+      "speaker": "luisa",
+      "trigger": "kill_enemy",
+      "text": ["Растеклась~", "Слишком мягкая.", "Скучно. Следующая!"]
+    },
+    {
+      "id": "luisa_healed",
+      "speaker": "luisa",
+      "trigger": "heal",
+      "text": "Мерси. Я в долгу не останусь~",
+      "about": "target"
+    },
+    {
+      "id": "luisa_low_hp",
+      "speaker": "luisa",
+      "trigger": "ally_low_hp",
+      "text": ["Ох... растекаюсь...", "Мне нужно собраться. Буквально."]
+    },
+    {
+      "id": "luisa_big_hit",
+      "speaker": "luisa",
+      "trigger": "big_hit",
+      "text": ["Грубиянка!", "Ты за это заплатишь."]
+    },
+    {
+      "id": "luisa_ally_down",
+      "speaker": "luisa",
+      "trigger": "ally_down",
+      "text": ["{target}... Ну всё, я злая.", "Кто тронул {target}?!"]
+    },
+    {
+      "id": "luisa_enemy_low",
+      "speaker": "luisa",
+      "trigger": "enemy_low_hp",
+      "text": ["Уже течёшь? Рано~", "Ещё чуть-чуть, дорогуша."]
+    },
+    {
+      "id": "luisa_turn",
+      "speaker": "luisa",
+      "trigger": "turn_start",
+      "text": ["Моя очередь шалить.", "Ну что, продолжим?"],
+      "chance": 0.5
+    },
+    {
+      "id": "luisa_victory",
+      "speaker": "luisa",
+      "trigger": "victory",
+      "text": ["Легко.", "Хочу ещё!", "Кто-нибудь, отклейте меня от пола."]
+    },
+    {
+      "id": "luisa_capture",
+      "speaker": "luisa",
+      "trigger": "capture",
+      "text": "Новая игрушка? Ой, то есть подруга~"
+    }
+  ]
+}

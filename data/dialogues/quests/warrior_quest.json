@@ -32,7 +32,7 @@
         {
           "speaker": "witch",
           "speaker_name": "",
-          "emotion": "",
+          "emotion": "horny",
           "text": "И УПУСТИТЬ ВОЗМОЖНОСТЬ ИССЛЕДОВАТЬ ТАКОЙ ОБРАЗЕЦ? НУ УЖ НЕТ!",
           "characters": [{"id": "witch"}, {"id": "warrior"}, {"id": "fufu"}]
         }
@@ -59,7 +59,7 @@
         {
           "speaker": "witch",
           "speaker_name": "",
-          "emotion": "",
+          "emotion": "confusion",
           "text": "Упустили! Мы её упустили! Какой ужас...",
           "characters": [{"id": "witch"}, {"id": "warrior"}]
         },
@@ -73,7 +73,7 @@
 		{
           "speaker": "witch",
           "speaker_name": "",
-          "emotion": "",
+          "emotion": "confusion",
           "text": "*Вздох*",
           "characters": [{"id": "witch"}, {"id": "warrior"}]
         },
@@ -115,7 +115,7 @@
 		{
           "speaker": "witch",
           "speaker_name": "",
-          "emotion": "",
+          "emotion": "confusion",
           "text": "Если я вылечу из академии, то дома меня всё равно прибьют...",
           "characters": [{"id": "witch"}, {"id": "warrior"}]
         },

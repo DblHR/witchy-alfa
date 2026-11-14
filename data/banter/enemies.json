@@ -1,0 +1,98 @@
+{
+  "battle": [
+    {
+      "id": "enemy_fufu_start",
+      "speaker": "fufu",
+      "trigger": "battle_start",
+      "text": [
+        "Добро пожаловать на моё шоу!",
+        "О, гости! Сегодня вы — мой реквизит~",
+        "Снова вы? Обожаю постоянных зрителей!"
+      ],
+      "enemy": true,
+      "priority": 20
+    },
+    {
+      "id": "enemy_fufu_low",
+      "speaker": "fufu",
+      "trigger": "enemy_low_hp",
+      "text": ["Ах так?! Тогда — финальный номер!", "Ну всё, теперь без поддавков!"],
+      "enemy": true,
+      "about": "target"
+    },
+    {
+      "id": "enemy_fufu_swallow",
+      "speaker": "fufu",
+      "trigger": "status_applied",
+      "text": ["Ам! Вкусненько~", "Посиди пока у меня внутри~"],
+      "enemy": true,
+      "conditions": {"status": "swallowed"},
+      "about": "any"
+    },
+    {
+      "id": "enemy_fufu_charm",
+      "speaker": "fufu",
+      "trigger": "status_applied",
+      "text": "Иди ко мне, сладенькая~",
+      "enemy": true,
+      "conditions": {"status": "charm", "target_side": "ally"},
+      "about": "any"
+    },
+    {
+      "id": "enemy_fufu_ally_down",
+      "speaker": "fufu",
+      "trigger": "ally_down",
+      "text": ["Одна ушла со сцены!", "Минус один зритель~"],
+      "enemy": true
+    },
+    {
+      "id": "enemy_aki_start",
+      "speaker": "aki_enemy",
+      "trigger": "battle_start",
+      "text": ["Ой, раненые! Сейчас я вас... долечу~", "Пациенты сами пришли!"],
+      "enemy": true,
+      "priority": 15
+    },
+    {
+      "id": "enemy_aki_low",
+      "speaker": "aki_enemy",
+      "trigger": "enemy_low_hp",
+      "text": "Ай! Мне срочно нужна... я!",
+      "enemy": true,
+      "about": "target"
+    },
+    {
+      "id": "enemy_luisa_start",
+      "speaker": "luisa_enemy",
+      "trigger": "battle_start",
+      "text": ["Новые игрушки? Как мило~", "Сейчас кто-то прилипнет."],
+      "enemy": true,
+      "priority": 15
+    },
+    {
+      "id": "enemy_luisa_low",
+      "speaker": "luisa_enemy",
+      "trigger": "enemy_low_hp",
+      "text": "Ты... меня... испачкала!",
+      "enemy": true,
+      "about": "target"
+    },
+    {
+      "id": "enemy_slime_start",
+      "speaker": "blob",
+      "trigger": "battle_start",
+      "text": ["Бульк.", "БУЛЬК!"],
+      "enemy": true,
+      "chance": 0.4
+    },
+    {
+      "id": "enemy_shlep_low",
+      "speaker": "shlep",
+      "trigger": "enemy_low_hp",
+      "text": "Шлёп...",
+      "enemy": true,
+      "about": "target",
+      "chance": 0.5
+    }
+  ]
+}

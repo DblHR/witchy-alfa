@@ -1,0 +1,178 @@
+{
+  "battle": [
+    {
+      "id": "fufu_battle_start_01",
+      "speaker": "fufu",
+      "trigger": "battle_start",
+      "text": "Шоу начинается!",
+      "once_per_battle": true
+    },
+    {
+      "id": "fufu_battle_start_02",
+      "speaker": "fufu",
+      "trigger": "battle_start",
+      "text": "Во мне много желания победить! И слизи.",
+      "once_per_battle": true
+    },
+    {
+      "id": "fufu_battle_start_03",
+      "speaker": "fufu",
+      "trigger": "battle_start",
+      "text": ["Свет, музыка, мотор!", "Зрители на месте? Начинаем!"],
+      "once_per_battle": true
+    },
+    {
+      "id": "fufu_battle_start_boss",
+      "speaker": "fufu",
+      "trigger": "battle_start",
+      "text": "Фуфу против Фуфу?! Кто из нас звезда?",
+      "conditions": {"room": "boss"},
+      "priority": 10
+    },
+    {
+      "id": "fufu_ability_cast_01",
+      "speaker": "fufu",
+      "trigger": "card_played",
+      "text": "Не переживай, слизь легко отмывается от волос!",
+      "conditions": {"card_cost_min": 2}
+    },
+    {
+      "id": "fufu_ability_cast_02",
+      "speaker": "fufu",
+      "trigger": "card_played",
+      "text": "Не хочешь пообниматься?",
+      "conditions": {"card_cost_min": 2}
+    },
+    {
+      "id": "fufu_basic_attack_01",
+      "speaker": "fufu",
+      "trigger": "card_played",
+      "text": "Ммм~",
+      "conditions": {"card_cost_max": 1}
+    },
+    {
+      "id": "fufu_basic_attack_02",
+      "speaker": "fufu",
+      "trigger": "card_played",
+      "text": "Вот это шлепок, да?",
+      "conditions": {"card_cost_max": 1}
+    },
+    {
+      "id": "fufu_card_break",
+      "speaker": "fufu",
+      "trigger": "card_played",
+      "text": ["Антракт! Мне нужна минутка... для себя~", "Не смотрите! Ну, можно чуть-чуть."],
+      "conditions": {"card": "fufu_break"}
+    },
+    {
+      "id": "fufu_card_cover",
+      "speaker": "fufu",
+      "trigger": "card_played",
+      "text": "Цензура! Временно.",
+      "conditions": {"card": "fufu_cover"}
+    },
+    {
+      "id": "fufu_card_foreplay",
+      "speaker": "fufu",
+      "trigger": "card_played",
+      "text": "Сначала разогрев~",
+      "conditions": {"card": "fufu_foreplay"}
+    },
+    {
+      "id": "fufu_card_lube",
+      "speaker": "fufu",
+      "trigger": "card_played",
+      "text": "Спасибо, спасибо! Аплодисменты!",
+      "conditions": {"card": "fufu_lube"}
+    },
+    {
+      "id": "fufu_card_present",
+      "speaker": "fufu",
+      "trigger": "card_played",
+      "text": ["Ну давай, бей сюда~", "Целься лучше, сладенький!"],
+      "conditions": {"card": "fufu_present"}
+    },
+    {
+      "id": "fufu_card_trick",
+      "speaker": "fufu",
+      "trigger": "card_played",
+      "text": "Смотри на руки! Нет, не на эти части!",
+      "conditions": {"card": "fufu_trick"}
+    },
+    {
+      "id": "fufu_ult",
+      "speaker": "fufu",
+      "trigger": "ult",
+      "text": ["Гвоздь программы!", "Поработаем грудью! В смысле — в полную силу!"]
+    },
+    {
+      "id": "fufu_status_sticky",
+      "speaker": "fufu",
+      "trigger": "status_applied",
+      "text": "Немного моей слизи — тебе к лицу~",
+      "conditions": {"status": "sticky_slime"},
+      "chance": 0.6
+    },
+    {
+      "id": "fufu_status_weak",
+      "speaker": "fufu",
+      "trigger": "status_applied",
+      "text": "Ослабели от восхищения? Понимаю.",
+      "conditions": {"status": "weak"}
+    },
+    {
+      "id": "fufu_status_charmed",
+      "speaker": "fufu",
+      "trigger": "status_applied",
+      "text": "Эй, очаровывать тут умею только я!",
+      "about": "target",
+      "conditions": {"status": "charm"}
+    },
+    {
+      "id": "fufu_kill_01",
+      "speaker": "fufu",
+      "trigger": "kill_enemy",
+      "text": ["Браво! Бис!", "И она уходит со сцены~", "Занавес!"]
+    },
+    {
+      "id": "fufu_healed",
+      "speaker": "fufu",
+      "trigger": "heal",
+      "text": ["Ммм, приятно~", "Ещё! Ой, то есть спасибо."],
+      "about": "target"
+    },
+    {
+      "id": "fufu_low_hp",
+      "speaker": "fufu",
+      "trigger": "ally_low_hp",
+      "text": ["Звезда... немного... потускнела.", "Шоу должно продолжаться... наверное."]
+    },
+    {
+      "id": "fufu_big_hit",
+      "speaker": "fufu",
+      "trigger": "big_hit",
+      "text": ["Ай! По лицу нельзя, это моё лицо!", "Грубо! Я пожалуюсь режиссёру!"]
+    },
+    {
+      "id": "fufu_ally_down",
+      "speaker": "fufu",
+      "trigger": "ally_down",
+      "text": ["{target}! Это не по сценарию!", "Нет! Без {target} шоу не то!"]
+    },
+    {"id": "fufu_enemy_low", "speaker": "fufu", "trigger": "enemy_low_hp", "text": "Последний акт, милая~"},
+    {
+      "id": "fufu_turn",
+      "speaker": "fufu",
+      "trigger": "turn_start",
+      "text": ["Второй акт!", "Публика заскучала? Сейчас исправлю!"],
+      "chance": 0.5
+    },
+    {
+      "id": "fufu_victory",
+      "speaker": "fufu",
+      "trigger": "victory",
+      "text": ["Поклон! Ещё поклон!", "Это был успех!", "Овации, овации~"]
+    },
+    {"id": "fufu_capture", "speaker": "fufu", "trigger": "capture", "text": "Новая звезда в труппе!"}
+  ]
+}

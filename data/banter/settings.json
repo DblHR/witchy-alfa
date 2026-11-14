@@ -1,0 +1,23 @@
+{
+  "settings": {
+    "global_cooldown": 3.2,
+    "reply_gap": 2.4,
+    "triggers": {
+      "card_played": {"chance": 0.3},
+      "kill_enemy": {"chance": 0.55},
+      "status_applied": {"chance": 0.3},
+      "heal": {"chance": 0.45},
+      "shield": {"chance": 0.25},
+      "turn_start": {"chance": 0.3},
+      "battle_start": {"chance": 0.8},
+      "victory": {"chance": 0.6},
+      "ally_low_hp": {"chance": 0.7},
+      "big_hit": {"chance": 0.45},
+      "enemy_low_hp": {"chance": 0.4},
+      "last_enemy": {"chance": 0.5},
+      "ult": {"chance": 0.85},
+      "ally_down": {"chance": 1.0},
+      "capture": {"chance": 1.0}
+    }
+  }
+}

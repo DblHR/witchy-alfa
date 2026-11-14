@@ -176,6 +176,8 @@ func _ready() -> void:
 	_combat.discard_requested.connect(_on_discard_requested)
 	_combat.status_added.connect(_on_status_added)
 	_combat.lure_kill.connect(_on_lure_kill)
+	_combat.healed.connect(_on_unit_healed)
+	_combat.shielded.connect(_on_unit_shielded)
 
 	_run = CardRun.new()
 	if CardTutorial.requested:
@@ -410,20 +412,97 @@ func _on_unit_hurt(unit: Unit, hp_damage: int) -> void:
 		unit.enemy_def.on_hurt(_api, unit, hp_damage)
 	if hp_damage > 0 and left_team.has(unit):
 		_relics.on_hero_hurt(_combat, unit)
+	if hp_damage > 0 and not unit.is_dead:
+		_banter_on_hurt(unit, hp_damage)
 
 func _on_unit_died(unit: Unit) -> void:
 	if left_team.has(unit):
 		_stats.on_hero_died(unit.data.id)
 		_purge_cards_of(unit)
+		banter("ally_down", {"target": unit.data.id})
 	elif right_team.has(unit):
 		_combat.intents.erase(unit)
 		_on_enemy_killed(unit)
 		if unit.enemy_def != null:
 			unit.enemy_def.on_death(_api, unit)
+		var killed_ctx := {"actor": _banter_credit(), "enemy": unit.data.id, "enemy_name": unit.data.display_name}
+		if not banter("kill_enemy", killed_ctx) and _combat.alive_enemies().size() == 1:
+			banter("last_enemy", {})
 
 func _on_status_added(unit: Unit, id: String) -> void:
 	if unit.enemy_def != null and right_team.has(unit) and CardCombat.is_alive(unit):
 		unit.enemy_def.on_status(_api, unit, id)
+	var on_hero := left_team.has(unit)
+	var sctx := {"actor": _banter_credit(), "target": unit.data.id, "target_side": "ally" if on_hero else "enemy", "status": id}
+	if not on_hero:
+		sctx["enemy"] = unit.data.id
+		sctx["enemy_name"] = unit.data.display_name
+	banter("status_applied", sctx)
+
+# --- Реплики отряда (data/banter, BattleBanterManager) ------------------------
+
+## Порог «мало HP» для реплик (союзник / враг) и «сильный удар» (доля max HP за один удар).
+const BANTER_LOW_HP := 0.3
+const BANTER_ENEMY_LOW_HP := 0.25
+const BANTER_BIG_HIT := 0.25
+
+## Сообщить о событии репликам. В обучении молчим, чтобы не мешать подсказкам.
+func banter(trigger_name: String, ctx: Dictionary = {}) -> bool:
+	if _tutorial != null or BattleBanter_ == null:
+		return false
+	return BattleBanter_.trigger(trigger_name, ctx)
+
+## Что бой сообщает о себе для условий реплик: тип комнаты, номер, ход.
+func banter_room_info() -> Dictionary:
+	var room := _run.room(_room_index) if _run != null else {}
+	return {"room": String(room.get("kind", "")), "room_index": _room_index, "turn": _turn_no}
+
+## Кто из героинь сейчас действует (чья карта разыгрывается), иначе "".
+func _banter_credit() -> String:
+	var c := String(_combat.credit)
+	return c if _combat.hero_by_id(c) != null else ""
+
+func _banter_on_hurt(unit: Unit, hp_damage: int) -> void:
+	var before := unit.hp + hp_damage
+	var ratio_before := float(before) / float(maxi(1, unit.max_hp))
+	var ratio := float(unit.hp) / float(maxi(1, unit.max_hp))
+	if left_team.has(unit):
+		var said := false
+		if ratio <= BANTER_LOW_HP and ratio_before > BANTER_LOW_HP:
+			said = banter("ally_low_hp", {"target": unit.data.id})
+		if not said and float(hp_damage) >= BANTER_BIG_HIT * float(unit.max_hp):
+			banter("big_hit", {"target": unit.data.id})
+	elif right_team.has(unit) and ratio <= BANTER_ENEMY_LOW_HP and ratio_before > BANTER_ENEMY_LOW_HP:
+		banter("enemy_low_hp", {"target": unit.data.id, "enemy": unit.data.id, "enemy_name": unit.data.display_name, "actor": _banter_credit()})
+
+func _on_unit_healed(unit: Unit, amount: int) -> void:
+	if left_team.has(unit) and not _ended:
+		banter("heal", {"actor": _banter_credit(), "target": unit.data.id, "target_side": "ally", "amount": amount})
+
+func _on_unit_shielded(unit: Unit, amount: int) -> void:
+	if left_team.has(unit) and not _ended:
+		banter("shield", {"actor": _banter_credit(), "target": unit.data.id, "target_side": "ally", "amount": amount})
+
+## Для разговоров между комнатами: что было и что предлагают.
+func _camp_context() -> Dictionary:
+	var ctx := {"room_index": _room_index, "after_room": String(_run.room(_room_index).get("kind", ""))}
+	var offered: Array = []
+	for r in _run.pending_choices:
+		var kind := String(r.get("kind", ""))
+		offered.append(String(r.get("event", "")) if kind == "event" else kind)
+	ctx["offered"] = offered
+	var low := false
+	var dead := false
+	for u in left_team:
+		if u == null:
+			continue
+		if u.is_dead:
+			dead = true
+		elif float(u.hp) / float(maxi(1, u.max_hp)) < 0.4:
+			low = true
+	ctx["hero_low_hp"] = low
+	ctx["hero_dead"] = dead
+	return ctx
 
 func _float_for(unit: Unit, text: String, color: Color, font_size: int = 26) -> void:
 	var actor := _find_actor(unit)
@@ -468,7 +547,7 @@ func _start_room(index: int) -> void:
 
 	if _tutorial == null:   ## в обучении реплики отряда не мешают подсказкам
 		BattleBanter_.start_battle(self)
-		BattleBanter_.trigger("battle_start")
+		banter("battle_start")
 	await _begin_player_turn()
 
 ## Колода на бой: карты живых героев (выбранные в Setup), общие карты и добытые карты.
@@ -509,6 +588,8 @@ func _begin_player_turn() -> void:
 	_combat.begin_player_turn()
 	_combat.roll_intents(_api)
 	_refresh_all_actors()
+	if _turn_no > 1:
+		banter("turn_start")
 	await _deal_new_hand()
 
 func _clear_hand_views() -> void:
@@ -957,8 +1038,7 @@ func _play_card(v: CardView, targets: Array[Unit]) -> void:
 	_relics.after_card(_combat, card)
 	_ults.gain(card.owner_id)
 	CardActorFx.hop(_find_actor(caster))
-	if card.owner_id != "":
-		BattleBanter_.trigger("ability_cast" if card.cost >= 2 else "basic_attack", {"speaker_id": card.owner_id})
+	banter("card_played", {"actor": card.owner_id, "card": card.id, "card_kind": card.get_kind(), "card_cost": card.cost})
 	_refresh_all_actors()
 	_check_end()
 
@@ -1520,7 +1600,7 @@ func _on_ult_pressed(btn: UltButton) -> void:
 		CardActorFx.show_banner(hud, "%s — %s" % [hero.data.display_name, ult.title], ult.color.lightened(0.45))
 	_float_stack.clear()
 	CardActorFx.hop(_find_actor(hero), ULT_HOP_HEIGHT)
-	BattleBanter_.trigger("ability_cast", {"speaker_id": hero.data.id})
+	banter("ult", {"actor": hero.data.id, "card": ult.id, "card_kind": "ult", "card_cost": ult.cost})
 	_stats.on_card_played(ult, true)
 	_relics.before_card(ult)
 	_combat.play_card(ult, hero, targets)
@@ -1604,6 +1684,7 @@ func _on_lure_kill(u: Unit) -> void:
 	else:
 		UnitRoster_.unlock_unit(char_id)
 		_float_for(u, "Поймана: %s!" % hero_name, Color(1.0, 0.6, 0.85), 34)
+		banter("capture", {"target": char_id, "enemy": u.data.id, "enemy_name": hero_name})
 		_captured_lines.append("Поймана: %s — теперь в отряде!" % hero_name)
 
 # --- Строка зелий и баффов ---------------------------------------------------
@@ -1759,6 +1840,7 @@ func _finish_quest_room(room: Dictionary) -> void:
 	_captured_lines.append("Воин найден! Он присоединится к отряду дома.")
 
 func _on_room_cleared() -> void:
+	banter("victory")
 	await _wait(0.8)
 	_clear_hand_views()
 	_float_stack.clear()
@@ -1780,7 +1862,7 @@ func _show_loot() -> void:
 	var popup := LootPopup.new()
 	_ui_add(popup)
 	popup.setup(_room_loot)
-	_banter.play_camp()
+	_banter.play_camp("loot", _camp_context())
 	await popup.closed
 	await _wait(0.3)
 
@@ -1795,7 +1877,7 @@ func _choose_path_and_go() -> void:
 	var popup := RoomCardHand.new()
 	_ui_add(popup)
 	popup.setup(_run.pending_choices, _run.room_deck_summary())
-	_banter.play_camp()
+	_banter.play_camp("choice", _camp_context())
 	var choice: int = await popup.chosen
 	popup.queue_free()
 	_banter.stop()
