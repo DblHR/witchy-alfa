@@ -134,11 +134,16 @@ func update_visual() -> void:
 	sprite.offset.y = unit.data.battle_offset_y
 	sprite.flip_h = is_left
 
-	# если юнит умер — фиксируем серый цвет и глушим любые "красные" твины
+	# если юнит умер — картинка смерти (<id>_dead.png), а если её нет — серый цвет; глушим «красные» твины
 	if unit.is_dead:
 		if _flash_tween and _flash_tween.is_running():
 			_flash_tween.kill()
-		sprite.modulate = Color(0.6, 0.6, 0.6, 1.0)
+		var dead_tex := CharacterPhases.dead_texture(unit.data.battle_texture)
+		if dead_tex != null:
+			sprite.texture = dead_tex
+			sprite.modulate = Color(1, 1, 1, 1)
+		else:
+			sprite.modulate = Color(0.6, 0.6, 0.6, 1.0)
 	else:
 		# если сейчас идёт флэш — НЕ трогаем modulate, иначе он мгновенно станет белым
 		if not (_flash_tween and _flash_tween.is_running()):
