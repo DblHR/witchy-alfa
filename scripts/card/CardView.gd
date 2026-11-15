@@ -29,7 +29,10 @@ const CARD_ART_PATH := "res://assets/characters/%s/cards/%s.png"
 const SHARED_ART_PATH := "res://assets/cards/%s/%s.png"
 const SHARED_ART_FOLDERS := ["common", "general"]
 ## Рисунки, которые лежат не по общему правилу (id карты -> путь).
-const CARD_ART_OVERRIDES := {"lure": "res://assets/cards/general/gift_card.png"}
+const CARD_ART_OVERRIDES := {
+	"lure": "res://assets/cards/general/gift_card.png",
+	"nurse_heal": "res://assets/cards/general/nurse_heal.png",
+}
 static var _card_art_cache: Dictionary = {}
 ## Доля высоты арта по виду, занятая табличкой сверху (до рамки рисунка).
 const HEADER_FRACTION := 0.15

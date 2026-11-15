@@ -59,7 +59,8 @@ func _refresh_text() -> void:
 		_count.text = ""
 	else:
 		_title.text = "Уровень %d" % _level
-		_count.text = "%d / %d" % [int(_xp), int(_need)]
+		# Полоса копит опыт дробными шагами: int() срезал бы 29.9999 до 29 — отсюда «на 1 меньше».
+		_count.text = "%d / %d" % [roundi(_xp), roundi(_need)]
 
 func _process(delta: float) -> void:
 	_flash = maxf(0.0, _flash - delta * 1.6)
@@ -75,6 +76,9 @@ func _process(delta: float) -> void:
 			step = minf(step, _need - _xp)
 			_xp += step
 			_left -= step
+			if _left < 0.001:
+				_xp = roundf(_xp)   ## дошли до конца — ровно целое число
+				_left = 0.0
 			if _xp >= _need - 0.001:
 				_level += 1
 				_xp = 0.0

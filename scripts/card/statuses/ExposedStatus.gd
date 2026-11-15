@@ -8,7 +8,7 @@ class_name ExposedStatus
 const DAMAGE_PER_STACK := 25
 
 func _init() -> void:
-	super("exposed", "Подставлена", Kind.DURATION, Color(1.0, 0.5, 0.75))
+	super("exposed", "Подставиться", Kind.DURATION, Color(1.0, 0.5, 0.75))
 
 func on_hp_lost(combat: CardCombat, unit: Unit, s: Dictionary, amount: int) -> void:
 	if amount <= 0 or DAMAGE_PER_STACK <= 0:

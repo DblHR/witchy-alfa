@@ -64,11 +64,12 @@ const PAUSE_BUTTON_SIZE := Vector2(72, 72)
 ## Нет сцены в списке — PAUSE_BUTTON_DEFAULT_POS.
 const PAUSE_BUTTON_DEFAULT_POS := Vector2(16, 16)
 const PAUSE_BUTTON_POS := {
-	"res://scenes/card/CardBattle.tscn": Vector2(1505, 44),
+	"res://scenes/card/CardBattle.tscn": Vector2(1809, 40),   ## на месте бывшей «Выйти»
 	"res://scripts/alchemy/Alchemy.tscn": Vector2(16, 992),   ## сверху слева там кнопка рецептов
 	"res://scenes/Setup.tscn": Vector2(16, 992),              ## сверху слева заголовок отряда
 }
 ## Сцены, где своё меню «Главное меню» со своими светящимися кнопками — их не трогаем.
+const PAUSE_BUTTON_TUTORIAL_POS := Vector2(1505, 44)
 const NO_GLOW_SCENES := ["res://scenes/MainMenu.tscn"]
 
 var _pause_button: TextureButton
@@ -99,6 +100,9 @@ func _process(_delta: float) -> void:
 	if path != _last_scene_path:
 		_last_scene_path = path
 		_pause_button.position = PAUSE_BUTTON_POS.get(path, PAUSE_BUTTON_DEFAULT_POS)
+		# В обучении в правом верхнем углу «Пропустить обучение» — пауза левее неё.
+		if scene != null and scene.get("_tutorial") != null:
+			_pause_button.position = PAUSE_BUTTON_TUTORIAL_POS
 	# В диалогах кнопку прячем (там свои кнопки сверху); ESC по-прежнему работает.
 	var in_dialogue := DialogueManager_ != null and DialogueManager_.is_showing()
 	_pause_button.visible = not _is_open and _pause_allowed() and not in_dialogue

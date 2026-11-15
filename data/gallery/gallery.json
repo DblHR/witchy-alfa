@@ -18,9 +18,12 @@
       "images": [
         "res://assets/characters/witch/witch_portrait.png",
         "res://assets/characters/witch/witch_battle.png",
-        "res://assets/characters/witch/cards/witch.png",
-        "res://assets/characters/witch/cards/witch_atk.png",
-        "res://assets/characters/witch/cards/witch_sup.png"
+        "res://assets/characters/witch/cards/witch_candle.png",
+        "res://assets/characters/witch/cards/witch_fan.png",
+        "res://assets/characters/witch/cards/witch_heat.png",
+        "res://assets/characters/witch/cards/witch_rain.png",
+        "res://assets/characters/witch/cards/witch_spark.png",
+        "res://assets/characters/witch/cards/witch_wall.png"
       ]
     },
     {
@@ -32,9 +35,7 @@
       "hint": "Откроется, когда Воин будет в отряде.",
       "images": [
         "res://assets/characters/warrior/warrior_portrait.png",
-        "res://assets/characters/warrior/warrior_battle.png",
-        "res://assets/characters/warrior/cards/warrior_atk.png",
-        "res://assets/characters/warrior/cards/warrior_sup.png"
+        "res://assets/characters/warrior/warrior_battle.png"
       ]
     },
     {
@@ -47,14 +48,11 @@
       "images": [
         "res://assets/characters/aki/aki_portrait.png",
         "res://assets/characters/aki/aki_battle.png",
-        "res://assets/characters/aki/cards/aki.png",
-        "res://assets/characters/aki/cards/aki_atk.png",
         "res://assets/characters/aki/cards/aki_bounce.png",
         "res://assets/characters/aki/cards/aki_cheer_slap.png",
         "res://assets/characters/aki/cards/aki_kiss.png",
         "res://assets/characters/aki/cards/aki_lube.png",
-        "res://assets/characters/aki/cards/aki_squeeze.png",
-        "res://assets/characters/aki/cards/aki_sup.png"
+        "res://assets/characters/aki/cards/aki_squeeze.png"
       ]
     },
     {
@@ -67,12 +65,9 @@
       "images": [
         "res://assets/characters/luisa/luisa_portrait.png",
         "res://assets/characters/luisa/luisa_battle.png",
-        "res://assets/characters/luisa/cards/luisa.png",
-        "res://assets/characters/luisa/cards/luisa_atk.png",
         "res://assets/characters/luisa/cards/luisa_deep.png",
         "res://assets/characters/luisa/cards/luisa_loosen.png",
         "res://assets/characters/luisa/cards/luisa_spank.png",
-        "res://assets/characters/luisa/cards/luisa_sup.png",
         "res://assets/characters/luisa/cards/luisa_tentacle.png"
       ]
     },
@@ -86,14 +81,11 @@
       "images": [
         "res://assets/characters/fufu/fufu_portrait.png",
         "res://assets/characters/fufu/fufu_battle.png",
-        "res://assets/characters/fufu/cards/fufu.png",
-        "res://assets/characters/fufu/cards/fufu_atk.png",
         "res://assets/characters/fufu/cards/fufu_break.png",
         "res://assets/characters/fufu/cards/fufu_cover.png",
         "res://assets/characters/fufu/cards/fufu_foreplay.png",
         "res://assets/characters/fufu/cards/fufu_lube.png",
         "res://assets/characters/fufu/cards/fufu_present.png",
-        "res://assets/characters/fufu/cards/fufu_sup.png",
         "res://assets/characters/fufu/cards/fufu_trick.png",
         {
           "path": "res://assets/characters/fufu/love/fufu_hug.png",

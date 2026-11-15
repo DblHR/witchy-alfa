@@ -193,7 +193,7 @@ func stun(unit: Unit) -> void:
 	if not is_alive(unit):
 		return
 	add_status(unit, CardStatuses.STUN, 0, 1, true)
-	floated.emit(unit, "Оглушена!" if heroes.has(unit) else "Оглушён!", COL_STATUS, 26)
+	floated.emit(unit, "Оглушение!", COL_STATUS, 26)
 
 ## Снять стаки (n <= 0 — все). Возвращает, сколько снято.
 func remove_stacks(unit: Unit, id: String, n: int = 0, quiet: bool = false) -> int:

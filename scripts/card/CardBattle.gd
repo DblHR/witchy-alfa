@@ -62,6 +62,8 @@ const BOSS_SLOT_POS: Array[Vector2] = [Vector2(1060, 715), Vector2(1335, 640), V
 @onready var room_label: Label = %RoomLabel
 @onready var hint_label: Label = %HintLabel
 @onready var exit_button: Button = %ExitButton
+## Слой кнопки «Пропустить обучение»: выше UI боя (10) и подсказок, ниже паузы (100).
+const TUTORIAL_SKIP_LAYER := 60
 @onready var left_world: Node2D = %LeftSlotsWorld
 @onready var right_world: Node2D = %RightSlotsWorld
 @onready var hud: Control = %Hud
@@ -188,6 +190,15 @@ func _ready() -> void:
 		_run.rooms.assign([{"kind": "tutorial", "event": "", "boss": false, "enemies": [CardTutorial.ENEMY_ID], "used": false}])
 		exit_button.text = "Пропустить обучение"
 		exit_button.add_theme_font_size_override("font_size", 24)
+		# Кнопка обучения — на своём слое поверх подсказок обучения (они ловят клики по всему экрану).
+		var skip_layer := CanvasLayer.new()
+		skip_layer.name = "TutorialSkipLayer"
+		skip_layer.layer = TUTORIAL_SKIP_LAYER
+		add_child(skip_layer)
+		exit_button.reparent(skip_layer)
+	else:
+		# Вне обучения кнопки «Выйти» нет: из боя — через паузу (ESC / кнопка) → «В главное меню».
+		exit_button.visible = false
 	_api = EnemyApi.new(_combat, self, _run.rng)
 	DungRun.begin_card_run()
 	_relics = CardRelics.new(DungRun.relics, _run.rng)
@@ -976,8 +987,8 @@ func _finish_drag() -> void:
 		return
 	if _card_blocked(v.card):
 		var owner := _combat.hero_by_id(v.card.owner_id)
-		var why := "Проглочена" if _combat.has_status(owner, CardStatuses.SWALLOWED) else "Оглушена"
-		CardActorFx.spawn_float_text(hud, v.global_position + Vector2(-10, -40), "%s — не может действовать" % why, CardCombat.COL_STATUS, 22)
+		var why := "проглотить" if _combat.has_status(owner, CardStatuses.SWALLOWED) else "оглушение"
+		CardActorFx.spawn_float_text(hud, v.global_position + Vector2(-10, -40), "Не может действовать: %s" % why, CardCombat.COL_STATUS, 22)
 		v.move_to(v.home_position)
 		return
 	if _combat.effective_cost(v.card) > _energy:
