@@ -18,7 +18,7 @@
       "id": "witch_battle_start_03",
       "speaker": "witch",
       "trigger": "battle_start",
-      "text": ["Шляпу берегите. Остальное — как получится.", "Ну что, кто тут хочет погреться?"],
+      "text": ["Только не шляпу... Только не шляпу...", "Ну что, кто тут хочет согреться?"],
       "once_per_battle": true
     },
     {
@@ -33,7 +33,7 @@
       "id": "witch_battle_start_boss",
       "speaker": "witch",
       "trigger": "battle_start",
-      "text": ["Фуфу... Только без фокусов, ладно?", "Главная звезда этажа. Я уже вспотела."],
+      "text": ["Фуфу... Только без фокусов, ладно?"],
       "conditions": {"room": "boss"},
       "priority": 10
     },
@@ -62,49 +62,42 @@
       "id": "witch_card_spark",
       "speaker": "witch",
       "trigger": "card_played",
-      "text": ["Чмок — и ожог на память~", "Горячий поцелуй! Не благодари."],
+      "text": ["Чмок~ И ожог на память~", "Горячий поцелуй!"],
       "conditions": {"card": "witch_spark"}
     },
     {
       "id": "witch_card_candle",
       "speaker": "witch",
       "trigger": "card_played",
-      "text": ["Свечи зажжены. Атмосфера — интимная.", "Немного романтики... и горения."],
+      "text": ["Свечи зажжены. Атмосфера — интимная.", "Немного романтики..."],
       "conditions": {"card": "witch_candle"}
     },
     {
       "id": "witch_card_fan",
       "speaker": "witch",
       "trigger": "card_played",
-      "text": ["Раздуем поярче~", "Ещё жарче? Как скажете."],
+      "text": ["Раздуем поярче~"],
       "conditions": {"card": "witch_fan"}
     },
     {
       "id": "witch_card_heat",
       "speaker": "witch",
       "trigger": "card_played",
-      "text": "Прижмись ко мне — будет тепло. И безопасно.",
+      "text": "Прижмись ко мне — будет тепло.",
       "conditions": {"card": "witch_heat"}
     },
     {
       "id": "witch_card_rain",
       "speaker": "witch",
       "trigger": "card_played",
-      "text": ["Горячий танец! Смотреть, но не трогать!", "Все на танцпол!"],
+      "text": ["Смотри не отрываясь!", "Все на танцпол!"],
       "conditions": {"card": "witch_rain"}
-    },
-    {
-      "id": "witch_card_wall",
-      "speaker": "witch",
-      "trigger": "card_played",
-      "text": "Волна страсти! Держитесь крепче!",
-      "conditions": {"card": "witch_wall"}
     },
     {
       "id": "witch_card_common",
       "speaker": "witch",
       "trigger": "card_played",
-      "text": "Без магии тоже умею, между прочим.",
+      "text": "Может и без магии, но тоже работает!",
       "about": "any",
       "conditions": {"card": "filler_strike", "actor": ""},
       "chance": 0.3
@@ -113,21 +106,15 @@
       "id": "witch_card_lure",
       "speaker": "witch",
       "trigger": "card_played",
-      "text": ["Иди сюда, у меня для тебя подарочек~", "Приманка пошла. Клюй, милашка!"],
+      "text": ["Иди сюда, у меня для тебя подарочек~", "Приманка в бой!"],
       "about": "any",
       "conditions": {"card": "lure"}
-    },
-    {
-      "id": "witch_ult",
-      "speaker": "witch",
-      "trigger": "ult",
-      "text": ["Кульминация!", "А теперь — финал. Все горят!", "Это было долго. Но приятно."]
     },
     {
       "id": "witch_status_burn",
       "speaker": "witch",
       "trigger": "status_applied",
-      "text": ["Гори-гори ясно~", "Пахнет жареной слизью.", "Тебе идёт румянец. Огненный."],
+      "text": ["Гори-гори ясно~", "Пахнет жареным.", "Тебе идёт румянец."],
       "conditions": {"status": "burn"}
     },
     {
@@ -141,7 +128,7 @@
       "id": "witch_status_charmed",
       "speaker": "witch",
       "trigger": "status_applied",
-      "text": ["Ой... а она и правда... симпатичная...", "Голова кружится... это не я, это она!"],
+      "text": ["Какая симпатичная...", "Голова кружится..."],
       "about": "target",
       "conditions": {"status": "charm"}
     },
@@ -149,7 +136,7 @@
       "id": "witch_status_swallowed",
       "speaker": "witch",
       "trigger": "status_applied",
-      "text": "Эй! Выплюнь меня немедленно! Там же липко!",
+      "text": "Эй! Выплюнь меня немедленно! Иначе я всё здесь спалю!",
       "about": "target",
       "conditions": {"status": "swallowed"}
     },
@@ -193,7 +180,7 @@
       "id": "witch_shielded",
       "speaker": "witch",
       "trigger": "shield",
-      "text": "Прикрыли! Обожаю, когда обо мне заботятся.",
+      "text": "Обожаю, когда обо мне заботятся.",
       "about": "target",
       "chance": 0.6
     },
@@ -201,7 +188,7 @@
       "id": "witch_shield_self",
       "speaker": "witch",
       "trigger": "shield",
-      "text": "Щит из жара. Удобно и красиво.",
+      "text": "Щит из огня. Красиво.",
       "conditions": {"card": "witch_heat"},
       "chance": 0.5
     },
@@ -212,14 +199,14 @@
       "text": [
         "Ай... кажется, я подгорела не с той стороны.",
         "Мне нужна передышка... и ванна.",
-        "Шляпа цела? Я — почти нет."
+        "Шляпа цела? Я - не очень."
       ]
     },
     {
       "id": "witch_big_hit",
       "speaker": "witch",
       "trigger": "big_hit",
-      "text": ["Ай! Это было грубо!", "Ну всё, теперь я злая."]
+      "text": ["Это было грубо!", "Ну всё, теперь я злая."]
     },
     {
       "id": "witch_ally_down",
@@ -231,7 +218,7 @@
       "id": "witch_ally_down_warrior",
       "speaker": "witch",
       "trigger": "ally_down",
-      "text": "Эй! Ты обещал меня защищать, дурак!",
+      "text": "Эй! И кто теперь понесёт всю добычу?",
       "conditions": {"target": "warrior"},
       "priority": 5
     },
@@ -245,14 +232,14 @@
       "id": "witch_turn",
       "speaker": "witch",
       "trigger": "turn_start",
-      "text": ["Мой ход? Мой ход.", "Так, что тут у нас в руке...", "Ещё раунд? Я только разогрелась."],
+      "text": ["Мой ход? Мой ход.", "Так, что тут у нас...", "Ещё раунд? Я только разогрелась."],
       "chance": 0.6
     },
     {
       "id": "witch_victory",
       "speaker": "witch",
       "trigger": "victory",
-      "text": ["Красиво сработали!", "И даже шляпа не пострадала.", "Все живы? Тогда я молодец."]
+      "text": ["Красиво сработали!", "Ещё несколько записей!", "А образцы всё не убывают..."]
     },
     {
       "id": "witch_capture",

@@ -1,15 +1,15 @@
 {
   "settings": {
-    "global_cooldown": 8.0,
+    "global_cooldown": 2.0,
     "reply_gap": 2.4,
     "camp": {"choice_chance": 0.45, "loot_chance": 0.2},
     "triggers": {
-      "card_played": {"chance": 0.08, "cooldown": 10.0},
+      "card_played": {"chance": 0.15, "cooldown": 10.0},
       "kill_enemy": {"chance": 0.3, "cooldown": 6.0},
-      "status_applied": {"chance": 0.08, "cooldown": 12.0},
+      "status_applied": {"chance": 0.25, "cooldown": 12.0},
       "heal": {"chance": 0.2, "cooldown": 10.0},
-      "shield": {"chance": 0.08, "cooldown": 12.0},
-      "turn_start": {"chance": 0.08, "cooldown": 20.0},
+      "shield": {"chance": 0.2, "cooldown": 12.0},
+      "turn_start": {"chance": 0.2, "cooldown": 20.0},
       "battle_start": {"chance": 0.5},
       "victory": {"chance": 0.3},
       "ally_low_hp": {"chance": 0.5, "cooldown": 10.0},

@@ -25,7 +25,7 @@
       "id": "luisa_battle_start_vs_luisa",
       "speaker": "luisa",
       "trigger": "battle_start",
-      "text": "Эй, копия! Липнуть тут буду я.",
+      "text": "Эй, жалкая копия!",
       "conditions": {"enemy_in_room": "luisa_enemy"},
       "priority": 8
     },
@@ -61,7 +61,7 @@
       "id": "luisa_card_deep",
       "speaker": "luisa",
       "trigger": "card_played",
-      "text": ["Поглубже~", "Не дёргайся, будет липко."],
+      "text": ["Поглубже~"],
       "conditions": {"card": "luisa_deep"}
     },
     {
@@ -75,7 +75,7 @@
       "id": "luisa_card_spank",
       "speaker": "luisa",
       "trigger": "card_played",
-      "text": ["Плохая девочка!", "Шлёп! И ещё раз!"],
+      "text": ["Плохая девочка!"],
       "conditions": {"card": "luisa_spank"}
     },
     {

@@ -4,14 +4,14 @@
       "id": "warrior_battle_start_01",
       "speaker": "warrior",
       "trigger": "battle_start",
-      "text": ["Строй держим.", "Я впереди. Не высовывайтесь.", "Работаем."],
+      "text": ["Вперёд!", "Впереди ещё много девоч... В смысле сражений.", "Может, вы сразу переметнётесь к нам? Нет? И как у Ведьмочки это выходит..."],
       "once_per_battle": true
     },
     {
       "id": "warrior_battle_start_elite",
       "speaker": "warrior",
       "trigger": "battle_start",
-      "text": "Эти посерьёзнее. Без глупостей.",
+      "text": "Необычные слизни... Красивые...",
       "conditions": {"room": "elite"},
       "priority": 5
     },
@@ -19,7 +19,7 @@
       "id": "warrior_battle_start_boss",
       "speaker": "warrior",
       "trigger": "battle_start",
-      "text": ["Опять она. В этот раз я готов.", "Фуфу. Мы уже встречались. Матч-реванш."],
+      "text": ["Опять ты. В этот раз я готов.", "Фуфу! Матч-реванш."],
       "conditions": {"room": "boss"},
       "priority": 10
     },
@@ -27,14 +27,14 @@
       "id": "warrior_card_chop",
       "speaker": "warrior",
       "trigger": "card_played",
-      "text": ["Получай!", "Жёстко, но честно."],
+      "text": ["Получай!", "Всю одежду забрызгал."],
       "conditions": {"card": "warrior_chop"}
     },
     {
       "id": "warrior_card_press",
       "speaker": "warrior",
       "trigger": "card_played",
-      "text": ["К стене!", "Никуда ты не денешься."],
+      "text": ["К стене!", "Не двигайся!"],
       "conditions": {"card": "warrior_press"}
     },
     {
@@ -48,28 +48,28 @@
       "id": "warrior_card_thrusts",
       "speaker": "warrior",
       "trigger": "card_played",
-      "text": ["Раз! Два! Три!", "Серия — и без передышки."],
+      "text": ["Раз! Два! Три!", "Как я хорош!"],
       "conditions": {"card": "warrior_thrusts"}
     },
     {
       "id": "warrior_card_finish",
       "speaker": "warrior",
       "trigger": "card_played",
-      "text": ["Заканчиваем.", "Финальный удар."],
+      "text": ["Добивание!", "Я закончил здесь."],
       "conditions": {"card": "warrior_finish"}
     },
     {
       "id": "warrior_card_release",
       "speaker": "warrior",
       "trigger": "card_played",
-      "text": "Выдохни. Ненадолго.",
+      "text": "Фух... Отпустило.",
       "conditions": {"card": "warrior_release"}
     },
     {
       "id": "warrior_card_names",
       "speaker": "warrior",
       "trigger": "card_played",
-      "text": "...Кто вообще придумывает названия этим приёмам?",
+      "text": "Зацени эти мускулы!",
       "about": "any",
       "chance": 0.15
     },
@@ -78,14 +78,14 @@
       "id": "warrior_status_nazhim",
       "speaker": "warrior",
       "trigger": "status_applied",
-      "text": ["Давлю.", "Ещё немного нажима.", "Чувствуешь вес?"],
+      "text": ["Ещё немного!", "Оказываю давление."],
       "conditions": {"status": "nazhim"}
     },
     {
       "id": "warrior_status_charmed",
       "speaker": "warrior",
       "trigger": "status_applied",
-      "text": ["Я... не поддамся... наверное.", "Не смотри на меня так..."],
+      "text": ["Смотрю в глаза. Честно.", "Свободна вечером?"],
       "about": "target",
       "conditions": {"status": "charm"}
     },
@@ -93,7 +93,7 @@
       "id": "warrior_status_swallowed",
       "speaker": "warrior",
       "trigger": "status_applied",
-      "text": "Тут темно и... мягко. Это плохо.",
+      "text": "Тут темно и... мягко. Бррр.",
       "about": "target",
       "conditions": {"status": "swallowed"}
     },
@@ -101,7 +101,7 @@
       "id": "warrior_status_wrap_on_me",
       "speaker": "warrior",
       "trigger": "status_applied",
-      "text": "Мне обязательно быть в слизи?",
+      "text": "Опять отмываться от слизи...",
       "about": "target",
       "conditions": {"status": "wrap_slime"},
       "chance": 0.5
@@ -110,13 +110,13 @@
       "id": "warrior_kill_01",
       "speaker": "warrior",
       "trigger": "kill_enemy",
-      "text": ["Один есть.", "Следующий.", "Чисто."]
+      "text": ["Следующий.", "Чисто."]
     },
     {
       "id": "warrior_kill_boss",
       "speaker": "warrior",
       "trigger": "kill_enemy",
-      "text": "Квиты, Фуфу.",
+      "text": "Ву-ху! Самое приятное!",
       "conditions": {"enemy": "fufu"},
       "priority": 10
     },
@@ -124,13 +124,13 @@
       "id": "warrior_last_enemy",
       "speaker": "warrior",
       "trigger": "last_enemy",
-      "text": ["Последний. Не отпускаем.", "Добиваем."]
+      "text": ["Осталось немного!", "Почти закончили."]
     },
     {
       "id": "warrior_healed",
       "speaker": "warrior",
       "trigger": "heal",
-      "text": ["Спасибо. Ещё держусь.", "Пойдёт."],
+      "text": ["Спасибо!", "Взбодрился!"],
       "about": "target"
     },
     {
@@ -145,25 +145,25 @@
       "id": "warrior_low_hp",
       "speaker": "warrior",
       "trigger": "ally_low_hp",
-      "text": ["Терпимо. Пока стою.", "Царапина... большая царапина.", "Мне бы перевязку..."]
+      "text": ["Терпимо. Пока держусь.", "Царапина... Нихрена себе! Большая царапина!", "Щас бы на рыбалочку..."]
     },
     {
       "id": "warrior_big_hit",
       "speaker": "warrior",
       "trigger": "big_hit",
-      "text": ["Кх... сильно бьёт.", "Принял. Не страшно."]
+      "text": ["Ауч!", "Ох...фигеть..."]
     },
     {
       "id": "warrior_ally_down",
       "speaker": "warrior",
       "trigger": "ally_down",
-      "text": ["{target} пала! Прикрываю остальных!", "Держитесь за мной!"]
+      "text": ["{target} закончилась! Ещё держусь!", "Держитесь за мной!"]
     },
     {
       "id": "warrior_ally_down_witch",
       "speaker": "warrior",
       "trigger": "ally_down",
-      "text": "Ведьмочка! Чёрт... я должен был стоять ближе!",
+      "text": "Ведьмочка! Чёрт... надо её вытаскивать!",
       "conditions": {"target": "witch"},
       "priority": 5
     },
@@ -171,26 +171,19 @@
       "id": "warrior_enemy_low",
       "speaker": "warrior",
       "trigger": "enemy_low_hp",
-      "text": ["Шатается. Дожимаем.", "Почти."]
-    },
-    {
-      "id": "warrior_turn",
-      "speaker": "warrior",
-      "trigger": "turn_start",
-      "text": ["Наш ход.", "Не расслабляемся."],
-      "chance": 0.5
+      "text": ["Почти."]
     },
     {
       "id": "warrior_victory",
       "speaker": "warrior",
       "trigger": "victory",
-      "text": ["Чисто сработали.", "Все целы? Хорошо.", "Отдышитесь. Дальше будет хуже."]
+      "text": ["Фух!", "Все целы? Ну и славно.", "Нужна передышка. Перекусим?"]
     },
     {
       "id": "warrior_capture",
       "speaker": "warrior",
       "trigger": "capture",
-      "text": ["Ещё одна в отряде. Надеюсь, не кусается.", "{target} с нами. Я присмотрю."]
+      "text": ["Ещё одна в отряде. Места в доме всё меньше.", "{target} с нами!"]
     }
   ]
 }

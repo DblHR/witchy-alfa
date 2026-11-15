@@ -24,7 +24,7 @@
       "id": "enemy_fufu_swallow",
       "speaker": "fufu",
       "trigger": "status_applied",
-      "text": ["Ам! Вкусненько~", "Посиди пока у меня внутри~"],
+      "text": ["Ам! Вкусненько~", "Посиди пока у меня внутри~", "Не вырывайся, сладенькая~"],
       "enemy": true,
       "conditions": {"status": "swallowed"},
       "about": "any"

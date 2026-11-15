@@ -58,51 +58,17 @@
       "conditions": {"card_cost_max": 1}
     },
     {
-      "id": "aki_card_bounce",
-      "speaker": "aki",
-      "trigger": "card_played",
-      "text": ["Смотри сюда~ Нет, не в глаза.", "Покачаем?~"],
-      "conditions": {"card": "aki_bounce"}
-    },
-    {
       "id": "aki_card_cheer_slap",
       "speaker": "aki",
       "trigger": "card_played",
-      "text": ["Шлёп! Это для бодрости!", "Не ной, это лечебный шлепок!"],
+      "text": ["Не ной, это лечебный шлепок!"],
       "conditions": {"card": "aki_cheer_slap"}
-    },
-    {
-      "id": "aki_card_kiss",
-      "speaker": "aki",
-      "trigger": "card_played",
-      "text": "Муа~ Влажненько, да?",
-      "conditions": {"card": "aki_kiss"}
-    },
-    {
-      "id": "aki_card_lube",
-      "speaker": "aki",
-      "trigger": "card_played",
-      "text": ["Смажем ранку~", "Тихо-тихо, сейчас будет приятно."],
-      "conditions": {"card": "aki_lube"}
-    },
-    {
-      "id": "aki_card_squeeze",
-      "speaker": "aki",
-      "trigger": "card_played",
-      "text": "Обнимашки! Крепкие и упругие!",
-      "conditions": {"card": "aki_squeeze"}
-    },
-    {
-      "id": "aki_ult",
-      "speaker": "aki",
-      "trigger": "ult",
-      "text": ["Танец на шесте! Смотрите все!", "Лечебный танец, сеанс начинается~"]
     },
     {
       "id": "aki_status_wrap",
       "speaker": "aki",
       "trigger": "status_applied",
-      "text": ["Укутаю слизью~", "Тепло, мокро и полезно!"],
+      "text": ["Укутаю слизью~"],
       "conditions": {"status": "wrap_slime"}
     },
     {
@@ -124,7 +90,7 @@
       "id": "aki_status_swallowed",
       "speaker": "aki",
       "trigger": "status_applied",
-      "text": "Внутри Фуфу уютно... но выпустите!",
+      "text": "Мм, внутри Фуфу так тепло~",
       "about": "target",
       "conditions": {"status": "swallowed"}
     },
@@ -138,7 +104,7 @@
       "id": "aki_heal_other",
       "speaker": "aki",
       "trigger": "heal",
-      "text": ["Лучше? Я же говорила~", "Держи! Не за что!", "Ну-ка покажи, где болит."],
+      "text": ["Держи! Не за что!", "Ну-ка покажи, где болит."],
       "conditions": {"target_side": "ally"}
     },
     {
@@ -150,40 +116,30 @@
       "conditions": {"actor": ["witch", "warrior", "luisa", "fufu", ""]}
     },
     {
-      "id": "aki_shielded",
-      "speaker": "aki",
-      "trigger": "shield",
-      "text": "Спасибки за щит!",
-      "about": "target",
-      "chance": 0.5
-    },
-    {
       "id": "aki_low_hp",
       "speaker": "aki",
       "trigger": "ally_low_hp",
       "text": ["Доктор, вылечи себя сам... ой.", "Мне самой нужна медсестра!"]
     },
-    {"id": "aki_big_hit", "speaker": "aki", "trigger": "big_hit", "text": ["Ай-ай-ай!", "Ну и манеры!"]},
     {
       "id": "aki_ally_down",
       "speaker": "aki",
       "trigger": "ally_down",
-      "text": ["{target}! Я не успела...", "Нет-нет, только не {target}!"]
+      "text": ["{target}! Я не успела..."]
     },
     {
       "id": "aki_ally_low",
       "speaker": "aki",
       "trigger": "ally_low_hp",
-      "text": ["{target}, держись, я уже бегу!", "Не смей падать, {target}!"],
+      "text": ["{target}, держись, я уже бегу!"],
       "about": "other",
       "chance": 0.6
     },
-    {"id": "aki_enemy_low", "speaker": "aki", "trigger": "enemy_low_hp", "text": "Может, её уже полечить? Шучу~"},
     {
       "id": "aki_turn",
       "speaker": "aki",
       "trigger": "turn_start",
-      "text": ["Все целы? Считаемся!", "Кому тут нужна помощь?"],
+      "text": ["Кому тут нужна помощь?"],
       "chance": 0.5
     },
     {
@@ -192,11 +148,5 @@
       "trigger": "victory",
       "text": ["Все живы! Ну почти. Ну неважно!", "Победа! Обнимашки!"]
     },
-    {
-      "id": "aki_capture",
-      "speaker": "aki",
-      "trigger": "capture",
-      "text": ["Новенькая! Сейчас осмотрю~", "Ура, ещё одна пациентка!"]
-    }
   ]
 }
