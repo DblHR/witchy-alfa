@@ -1,0 +1,205 @@
+{
+  "dialogues": [
+    {
+      "id": "fufu_claim",
+      "type": "boss_victory",
+      "npc": "fufu",
+      "once": true,
+      "priority": 100,
+      "conditions": {
+        "has_unit": "warrior"
+      },
+      "lines": [
+        {
+          "speaker": "fufu",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "Ох, ребятки... Фух... Вы сильны...",
+          "characters": [{"id": "witch"}, {"id": "fufu"}, {"id": "warrior"}]
+        },
+        {
+          "speaker": "witch",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "Значит, ты признаёшь поражение и теперь принадлежишь мне?",
+          "characters": [{"id": "witch"}, {"id": "fufu"}, {"id": "warrior"}]
+        },
+        {
+          "speaker": "fufu",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "*Вздох*",
+          "characters": [{"id": "witch"}, {"id": "fufu"}, {"id": "warrior"}]
+        },
+        {
+          "speaker": "fufu",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "Да, получается, что так...",
+          "characters": [{"id": "witch"}, {"id": "fufu"}, {"id": "warrior"}]
+        },
+        {
+          "speaker": "witch",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "Отлично! Воин, мни её сиськи!",
+          "characters": [{"id": "witch"}, {"id": "fufu"}, {"id": "warrior"}]
+        },
+        {
+          "speaker": "warrior",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "Отлично... Что?",
+          "characters": [{"id": "witch"}, {"id": "fufu"}, {"id": "warrior"}]
+        },
+        {
+          "speaker": "fufu",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "Что?",
+          "characters": [{"id": "witch"}, {"id": "fufu"}, {"id": "warrior"}]
+        },
+        {
+          "speaker": "witch",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "Что?..",
+          "characters": [{"id": "witch"}, {"id": "fufu"}, {"id": "warrior"}]
+        },
+        {
+          "speaker": "warrior",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "Разве ты не собиралась её победить или там?",
+          "characters": [{"id": "witch"}, {"id": "fufu"}, {"id": "warrior"}]
+        },
+        {
+          "speaker": "witch",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "Я же говорила, мне нужно собрать наблюдения...",
+          "characters": [{"id": "witch"}, {"id": "fufu"}, {"id": "warrior"}]
+        },
+        {
+          "speaker": "warrior",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "Тогда почему я должен мять её сиськи?",
+          "characters": [{"id": "witch"}, {"id": "fufu"}, {"id": "warrior"}]
+        },
+        {
+          "speaker": "witch",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "А вдруг она растворит мои руки?",
+          "characters": [{"id": "witch"}, {"id": "fufu"}, {"id": "warrior"}]
+        },
+        {
+          "speaker": "warrior",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "А вдруг мои?",
+          "characters": [{"id": "witch"}, {"id": "fufu"}, {"id": "warrior"}]
+        },
+        {
+          "speaker": "witch",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "Ну, тебе то не нужно делать записи... И без рук проживёшь...",
+          "characters": [{"id": "witch"}, {"id": "fufu"}, {"id": "warrior"}]
+        },
+        {
+          "speaker": "fufu",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "Хи-хи~",
+          "characters": [{"id": "witch"}, {"id": "fufu"}, {"id": "warrior"}]
+        },
+        {
+          "speaker": "fufu",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "Я могу не растворять, если захочу.",
+          "characters": [{"id": "witch"}, {"id": "fufu"}, {"id": "warrior"}]
+        },
+        {
+          "speaker": "witch",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "Правда?! Тогда мне срочно нужно тебя потрогать.",
+          "characters": [{"id": "witch"}, {"id": "fufu"}, {"id": "warrior"}]
+        },
+        {
+          "speaker": "witch",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "Раздевайся.",
+          "characters": [{"id": "witch"}, {"id": "fufu"}, {"id": "warrior"}]
+        },
+        {
+          "speaker": "fufu",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "Хорошо~",
+          "characters": [{"id": "witch"}, {"id": "fufu"}, {"id": "warrior"}]
+        },
+        {
+          "speaker": "witch",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "Ты тоже.",
+          "characters": [{"id": "witch"}, {"id": "fufu"}, {"id": "warrior"}]
+        },
+        {
+          "speaker": "warrior",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "Я?!",
+          "characters": [{"id": "witch"}, {"id": "fufu"}, {"id": "warrior"}]
+        },
+        {
+          "speaker": "witch",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "Конечно. Она ведь и тебя задирала. Не хочешь отомстить?",
+          "characters": [{"id": "witch"}, {"id": "fufu"}, {"id": "warrior"}]
+        },
+        {
+          "speaker": "warrior",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "Ну...",
+          "characters": [{"id": "witch"}, {"id": "fufu"}, {"id": "warrior"}]
+        },
+        {
+          "speaker": "witch",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "Не переживай, про тебя записывать не стану.",
+          "characters": [{"id": "witch"}, {"id": "fufu"}, {"id": "warrior"}]
+        },
+        {
+          "speaker": "fufu",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "Ну-ну, не нужно пугать этого мальчика... Он, наверное, и женщину никогда не трогал...",
+          "characters": [{"id": "witch"}, {"id": "fufu"}, {"id": "warrior"}]
+        },
+        {
+          "speaker": "warrior",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "Ах ты... Ведьмочка, доставай блокнот.",
+          "characters": [{"id": "witch"}, {"id": "fufu"}, {"id": "warrior"}]
+        },
+        {
+          "speaker": "witch",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "Чувствую, дипломная работа будет на славу.",
+          "characters": [{"id": "witch"}, {"id": "fufu"}, {"id": "warrior"}]
+        }
+      ]
+    }
+  ]
+}

@@ -1312,6 +1312,28 @@ func _discard_from_hand(v: CardView) -> void:
 
 const AFTER_RUN_FLAG := "pending_after_run"
 
+## Диалог типа "boss_victory" (data/dialogues/story/fufu_claim.json и т.п.), если доступен.
+## Играется поверх боя, экран победы показывается после него.
+func _play_boss_victory_dialogue() -> void:
+	if StoryDialogueDB_ == null or DialogueManager_ == null:
+		return
+	var d := StoryDialogueDB_.pick_dialogue_of_type("boss_victory")
+	if d.is_empty():
+		return
+	var lines := StoryDialogueDB_.resolve_lines(d)
+	if lines.is_empty():
+		return
+	await _wait(0.6)
+	_clear_hand_views()
+	_set_battle_ui(false)
+	var state := {"done": false}
+	DialogueManager_.show_sequence(lines, func() -> void: state["done"] = true)
+	while not state["done"]:
+		await get_tree().process_frame
+	if StoryState_ != null:
+		StoryState_.mark_dialogue_seen(String(d.get("id", "")))
+	StoryDialogueDB_.apply_effects(d.get("on_finish", {}))
+
 func _finish_run(victory: bool, is_draw: bool) -> void:
 	_set_discard_left(0)
 	_ended = true
@@ -1320,8 +1342,12 @@ func _finish_run(victory: bool, is_draw: bool) -> void:
 	_refresh_all_actors()
 	if victory:
 		_stats.battles_won += 1
-	if victory and String(_run.room(_room_index).get("kind", "")) == "boss" and UnitRoster_ != null:
+	var boss_win := victory and String(_run.room(_room_index).get("kind", "")) == "boss"
+	if boss_win and UnitRoster_ != null:
 		UnitRoster_.unlock_boss_once(CardRun.BOSS_ID)
+	# Сцена после победы над боссом — до экрана победы (тип "boss_victory", например fufu_claim).
+	if boss_win and _tutorial == null:
+		await _play_boss_victory_dialogue()
 	var level_before := maxi(1, DungRun.party_level)
 	var xp_before := int(DungRun.xp)
 	var summary := _apply_run_progress()
