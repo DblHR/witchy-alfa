@@ -42,7 +42,35 @@
           "speaker": "nurse",
           "speaker_name": "",
           "emotion": "",
-          "text": "Да. Уже целых... Ну, много лет. Лечу всех, кто нуждается в обмен на жизненную энергию.",
+          "text": "Да. Уже целых...",
+          "characters": [{"id": "witch"}, {"id": "warrior"}, {"id": "nurse"}]
+        },
+		{
+          "speaker": "nurse",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "...",
+          "characters": [{"id": "witch"}, {"id": "warrior"}, {"id": "nurse"}]
+        },
+		{
+          "speaker": "nurse",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "...",
+          "characters": [{"id": "witch"}, {"id": "warrior"}, {"id": "nurse"}]
+        },
+		{
+          "speaker": "nurse",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "...",
+          "characters": [{"id": "witch"}, {"id": "warrior"}, {"id": "nurse"}]
+        },
+		{
+          "speaker": "nurse",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "Ну, много лет. Лечу всех, кто нуждается в обмен на жизненную энергию.",
           "characters": [{"id": "witch"}, {"id": "warrior"}, {"id": "nurse"}]
         },
         {

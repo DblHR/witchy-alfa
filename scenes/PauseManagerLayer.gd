@@ -99,7 +99,9 @@ func _process(_delta: float) -> void:
 	if path != _last_scene_path:
 		_last_scene_path = path
 		_pause_button.position = PAUSE_BUTTON_POS.get(path, PAUSE_BUTTON_DEFAULT_POS)
-	_pause_button.visible = not _is_open and _pause_allowed()
+	# В диалогах кнопку прячем (там свои кнопки сверху); ESC по-прежнему работает.
+	var in_dialogue := DialogueManager_ != null and DialogueManager_.is_showing()
+	_pause_button.visible = not _is_open and _pause_allowed() and not in_dialogue
 
 func _on_node_added(node: Node) -> void:
 	if node is TextureButton and node != _pause_button:

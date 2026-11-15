@@ -47,9 +47,9 @@ const CHEST_GOLD_PER_ROOM := 5
 const HAND_CENTER_X := 960.0
 const HAND_TOP_Y := 845.0
 const HAND_GAP := 16.0
-## Зона «вернуть в руку» (невидимая): ниже линии и между рукавом и кнопкой «Завершить ход».
+## Зона «вернуть в руку» (невидимая): ниже линии, слева от рукава (рукав — справа от руки).
 ## Карты без выбора цели играются в любой точке вне неё.
-const RETURN_RECT := Rect2(460, 770, 1130, 310)
+const RETURN_RECT := Rect2(330, 770, 1055, 310)
 ## Высота прыжка героя при ульте (при обычной карте — CardActorFx.HOP_HEIGHT).
 const ULT_HOP_HEIGHT := 34.0
 ## Слотов врагов: 4 в сцене + 5-й для призывов босса.
@@ -282,7 +282,6 @@ func _spawn_enemies(room: Dictionary) -> void:
 			push_warning("CardBattle: враг не найден в EnemyDefs: %s" % id)
 			continue
 		right_team.append(def.make_unit(_run.floor_no, _run.rng, CardTutorial.ENEMY_HP if _tutorial != null else 0))
-		LoreData.mark_enemy_met(String(id))   ## запись о враге в энциклопедии
 		if right_team.size() >= ENEMY_SLOTS:
 			break
 

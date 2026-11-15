@@ -4,7 +4,7 @@ class_name EffLure
 ##  - добила врага-героиню — CardCombat.lure_kill → CardBattle ловит её в ростер (или даёт копию);
 ##  - не добила — с шансом base% (урон карты = шанс) героиня «клюёт» (статус «На крючке»):
 ##    теперь её поймает любой добивающий удар. Поймать можно только добив.
-##  - все враги получают Очарование на CHARM_TURNS ходов.
+##  - цель получает Очарование на CHARM_TURNS ходов.
 
 const CHARM_TURNS := 3
 
@@ -23,5 +23,5 @@ func _apply_one(ctx: CardContext, target: Unit) -> void:
 			ctx.combat.lure_kill.emit(target)
 	elif was_alive and ctx.combat.can_be_lured(target) and randf() * 100.0 < float(base):
 		ctx.combat.add_status(target, CardStatuses.LURED, 1, 0)
-	for enemy in ctx.combat.alive_enemies():
-		ctx.combat.add_status(enemy, CardStatuses.CHARM, 0, CHARM_TURNS)
+	if CardCombat.is_alive(target):
+		ctx.combat.add_status(target, CardStatuses.CHARM, 0, CHARM_TURNS)

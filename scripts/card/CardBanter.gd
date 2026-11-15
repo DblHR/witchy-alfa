@@ -32,6 +32,11 @@ func play_camp(moment: String = "choice", ctx: Dictionary = {}) -> void:
 		return
 	if GameSettings.banter_mult() <= 0.0:
 		return   ## реплики выключены в настройках
+	# Будет ли вообще разговор в этот момент: settings.json → "camp": {"choice_chance", "loot_chance"}.
+	var camp_cfg = BanterDB.settings.get("camp", {})
+	var moment_chance := float(camp_cfg.get(moment + "_chance", 1.0)) if camp_cfg is Dictionary else 1.0
+	if randf() >= clampf(moment_chance * GameSettings.banter_mult(), 0.0, 1.0):
+		return
 	var alive: Array = []
 	alive.assign(alive_hero_ids.call())
 	if alive.is_empty():
@@ -98,7 +103,7 @@ func _pick_entry(moment: String, ctx: Dictionary) -> Dictionary:
 				break
 		if not ok or not BanterDB.check(e.get("conditions", {}), ctx):
 			continue
-		if randf() >= clampf(float(e.get("chance", 1.0)) * GameSettings.banter_mult(), 0.0, 1.0):
+		if randf() >= clampf(float(e.get("chance", 1.0)), 0.0, 1.0):
 			continue
 		candidates.append(e)
 	return BanterDB.pick_weighted(candidates)

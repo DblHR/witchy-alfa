@@ -128,13 +128,32 @@ func npc_has_quest_offer(npc_id: String) -> bool:
 			return true
 	return false
 
+## Зажигает ли диалог значок «!». Можно задать прямо: "notify": true / false.
+## По умолчанию: сцены с героинями дома (hub_talk) — да; остальные — только если диалог что-то
+## меняет (есть on_finish: предмет, квест, флаг...) или выдаёт предмет репликой (give_item).
+func _dialogue_notifies(d: Dictionary) -> bool:
+	if d.has("notify"):
+		return bool(d["notify"])
+	if String(d.get("type", "")) == "hub_talk":
+		return true
+	var fin = d.get("on_finish", {})
+	if fin is Dictionary and not (fin as Dictionary).is_empty():
+		return true
+	for l in d.get("lines", []):
+		if l is Dictionary and (l.has("give_item") or l.has("notice")):
+			return true
+	return false
+
 ## Есть ли у NPC/героини что-то новое для значка «!»: квест или ещё не виденный разовый диалог
-## (once: true) нужного типа, условия которого уже выполнены. Диалоги с "chance" не считаются.
+## (once: true) нужного типа, условия которого уже выполнены и который что-то даёт
+## (см. _dialogue_notifies). Диалоги с "chance" не считаются.
 func npc_has_news(npc_id: String, types: Array = ["event"]) -> bool:
 	if npc_has_quest_offer(npc_id):
 		return true
 	for d in dialogues_by_npc.get(npc_id, []):
 		if not bool(d.get("once", false)) or d.has("chance") or not types.has(String(d.get("type", ""))):
+			continue
+		if not _dialogue_notifies(d):
 			continue
 		if StoryState_ != null and StoryState_.has_seen_dialogue(String(d.get("id", ""))):
 			continue

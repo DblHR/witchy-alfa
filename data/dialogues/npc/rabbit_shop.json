@@ -70,7 +70,6 @@
         "flag": "entered_elite_room"
       },
       "on_finish": {
-        "add_item": "gift",
         "set_flags": ["lure_unlocked"]
       },
       "lines": [
@@ -100,7 +99,8 @@
           "speaker_name": "",
           "emotion": "",
           "text": "Попробуй подарить им это. Это точно сделает их счастливее.",
-          "characters": [{"id": "rabbit_shop"}, {"id": "witch"}]
+          "characters": [{"id": "rabbit_shop"}, {"id": "witch"}],
+          "give_item": "gift"
         },
         {
           "speaker": "witch",

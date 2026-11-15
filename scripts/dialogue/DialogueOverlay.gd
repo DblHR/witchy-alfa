@@ -353,6 +353,7 @@ func show_sequence(lines: Array, on_finished: Callable = Callable()) -> void:
 	_lines = lines.duplicate()
 	_sequence_characters = _collect_sequence_characters(_lines)
 	_index = -1
+	_rewarded.clear()
 	_history.clear()
 	_auto_mode = false
 	_on_finished = on_finished
@@ -391,7 +392,7 @@ func _gui_input(event: InputEvent) -> void:
 		_advance()
 
 func _unhandled_key_input(event: InputEvent) -> void:
-	if not visible or get_tree().paused or _history_panel.visible:
+	if not visible or get_tree().paused or _history_panel.visible or _notice_open():
 		return
 	if event.is_action_pressed("ui_accept"):
 		get_viewport().set_input_as_handled()
@@ -409,9 +410,63 @@ func _advance() -> void:
 		return   ## ждём выбора варианта
 	_show_next_line()
 
+# --- Уведомления «Получено: ...» (ItemNotice) -----------------------------------
+## Поля реплики:
+##   "give_item": "gift" (+ "give_amount": 2) — после этой реплики предмет выдаётся и по центру
+##       экрана появляется «Получено: <предмет>» с картинкой; клик — диалог идёт дальше;
+##   "notice": {"title": "Новое поручение", "text": "Найти наушники", "icon": "res://...png"} —
+##       такое же окно со своим текстом (ничего не выдаёт).
+## Если диалог пропустили кнопкой — предметы всё равно выдаются, окна показываются подряд.
+var _rewarded: Dictionary = {}     ## номер реплики -> уже показано/выдано
+var _notice: ItemNotice
+
+func _line_has_reward(i: int) -> bool:
+	if i < 0 or i >= _lines.size() or _rewarded.has(i):
+		return false
+	var line = _lines[i]
+	return line is Dictionary and (String(line.get("give_item", "")) != "" or line.get("notice") is Dictionary)
+
+## Показать награду реплики i; then — что делать после закрытия окна.
+func _show_reward(i: int, then: Callable) -> void:
+	_rewarded[i] = true
+	_cancel_auto_timer()
+	var after := then
+	then = func() -> void:
+		_notice = null   ## окно закрыто — диалог снова принимает клики
+		after.call()
+	var line: Dictionary = _lines[i]
+	var item_id := String(line.get("give_item", ""))
+	if item_id != "":
+		var amount := maxi(1, int(line.get("give_amount", 1)))
+		if Inventory_ != null:
+			Inventory_.add_item(item_id, amount)
+		_notice = ItemNotice.show_item(_frame, item_id, amount, then)
+	else:
+		var n: Dictionary = line["notice"]
+		var icon_path := String(n.get("icon", ""))
+		var icon: Texture2D = load(icon_path) as Texture2D if icon_path != "" and ResourceLoader.exists(icon_path) else null
+		_notice = ItemNotice.show_notice(_frame, String(n.get("title", "")), String(n.get("text", "")), icon, then)
+
+func _notice_open() -> bool:
+	return _notice != null and is_instance_valid(_notice)
+
+## Конец диалога: сначала все невыданные награды оставшихся реплик (если диалог пропустили).
+func _finish_with_rewards() -> void:
+	for i in range(maxi(0, _index), _lines.size()):
+		if _line_has_reward(i):
+			_show_reward(i, _finish_with_rewards)
+			return
+	_finish_sequence()
+
 ## Сразу следующая реплика (без «допечатать»): кнопки и авто-режим.
 func _show_next_line() -> void:
 	_cancel_auto_timer()
+	if _notice_open():
+		return
+	# У только что прочитанной реплики есть награда — сначала окно «Получено».
+	if _line_has_reward(_index):
+		_show_reward(_index, _show_next_line)
+		return
 	_index += 1
 	if _index >= _lines.size():
 		_finish_sequence()
@@ -755,7 +810,9 @@ func _schedule_auto_advance() -> void:
 	)
 
 func _on_skip_pressed() -> void:
-	_finish_sequence()
+	if _notice_open():
+		return
+	_finish_with_rewards()
 
 func _on_auto_pressed() -> void:
 	_auto_mode = not _auto_mode
