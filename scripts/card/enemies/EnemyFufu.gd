@@ -22,8 +22,8 @@ func _init() -> void:
 	super("fufu", "Фуфу", "S")
 	char_id = "fufu"
 	drops_goop = true
-	hp_min = 520
-	hp_max = 520
+	hp_min = 820   ## было 520: на 2-м уровне отряда её проходили слишком легко
+	hp_max = 820
 
 	var m := EnemyMove.new("summon_minis", "Позвать малышей", EnemyMove.Kind.SUMMON)
 	m.intent = "Призыв слизней"

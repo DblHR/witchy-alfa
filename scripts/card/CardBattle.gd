@@ -2131,34 +2131,44 @@ const CHEST_LOOT_CHANCE := 0.5
 const CHEST_SEED_CHANCE := 0.2
 const CHEST_RECIPE_CHANCE := 0.12
 
-func run_roll_chest(_room: Dictionary) -> String:
+## Открыть сундук: выдать добычу. В room["chest_loot"] — список {id, n} для показа иконками
+## (id "gold" — монеты); возвращает то же самое текстом.
+func run_roll_chest(chest_room: Dictionary) -> String:
 	var r := _run.rng
+	var loot: Array = []
 	var gold_amount := CHEST_GOLD_BASE + _room_index * CHEST_GOLD_PER_ROOM
 	run_gain_gold(gold_amount)
+	loot.append({"id": "gold", "n": gold_amount})
 	var lines: Array[String] = ["Золото ×%d" % gold_amount]
 	if r.randf() < CHEST_QUARTZ_CHANCE:
 		var q := r.randi_range(1, 3)
 		Inventory_.add_item("quartz", q)
+		loot.append({"id": "quartz", "n": q})
 		lines.append("Кварц ×%d" % q)
 	if r.randf() < CHEST_LOOT_CHANCE:
 		var loot_id: String = DungRun.LAMIA_FLOOR_LOOT[r.randi_range(0, DungRun.LAMIA_FLOOR_LOOT.size() - 1)]
 		var n := r.randi_range(2, 4)
 		Inventory_.add_item(loot_id, n)
+		loot.append({"id": loot_id, "n": n})
 		lines.append("%s ×%d" % [RunItems.get_item_name(loot_id), n])
 	if r.randf() < CHEST_SEED_CHANCE:
 		var seed_id: String = DungRun.RIKKA_SEEDS[r.randi_range(0, DungRun.RIKKA_SEEDS.size() - 1)]
 		var sn := r.randi_range(1, 2)
 		Inventory_.add_item(seed_id, sn)
+		loot.append({"id": seed_id, "n": sn})
 		lines.append("%s ×%d" % [RunItems.get_item_name(seed_id), sn])
 	var unknown := AlchemyDB.unknown_recipe_items()
 	if not unknown.is_empty() and r.randf() < CHEST_RECIPE_CHANCE:
 		var rec := unknown[r.randi_range(0, unknown.size() - 1)]
 		Inventory_.add_item(rec, 1)
+		loot.append({"id": rec, "n": 1, "note": "изучен!"})
 		lines.append("%s — изучен!" % RunItems.get_item_name(rec))
 	if StoryState_ != null and StoryState_.is_quest_active("lamia_headphones") and not Inventory_.has_item("warm_headphones"):
 		if r.randf() < 0.18:
 			Inventory_.add_item("warm_headphones", 1)
+			loot.append({"id": "warm_headphones", "n": 1, "note": "лежали между монетами"})
 			lines.append("Тёплые наушники (между монетами)")
+	chest_room["chest_loot"] = loot
 	return "В сундуке:\n" + "\n".join(lines)
 
 # --- Обучение (CardTutorial) -------------------------------------------------

@@ -11,6 +11,8 @@ const GREETED_FLAG := "rikka_greeted_today"
 @onready var stock_grid: GridContainer = %StockGrid
 
 var _pending_shop_dialogue: Dictionary = {}
+## Пузыри дежурных фраз Рикки и клик по ней (как у Сессилии и Ноктрис в забеге).
+var _bubbles: NpcBubbles
 
 func _ready() -> void:
 	UIThemeHelper.apply_pink_theme(self)
@@ -20,6 +22,7 @@ func _ready() -> void:
 		var npc := ShopUi.make_npc_sprite("rabbit_shop")
 		add_child(npc)
 		move_child(npc, bg.get_index() + 1)
+		_bubbles = NpcBubbles.attach(self, npc, "rabbit_shop")
 	home_button.pressed.connect(func(): SceneRouter_.go_to_hub())
 	if DungRun != null and not DungRun.changed.is_connected(_refresh):
 		DungRun.changed.connect(_refresh)
@@ -40,20 +43,29 @@ func _show_rabbit_shop_greeting() -> void:
 	_pending_shop_dialogue = {}
 	if StoryDialogueDB_ == null or DialogueManager_ == null:
 		return
-	# Сюжетные диалоги (квесты) — всегда; обычное приветствие — раз в день (день = забег).
-	_pending_shop_dialogue = StoryDialogueDB_.pick_npc_dialogue("rabbit_shop", "event")
-	if _pending_shop_dialogue.is_empty():
-		if StoryState_ != null and StoryState_.has_flag(GREETED_FLAG):
+	# Сюжетные диалоги (квесты, разовые сцены) — окном диалога (VN), всегда.
+	var d := StoryDialogueDB_.pick_npc_dialogue("rabbit_shop", "event")
+	if d.is_empty():
+		d = StoryDialogueDB_.pick_npc_dialogue("rabbit_shop", "flag")
+	if not d.is_empty() and not StoryDialogueDB_.is_routine(d):
+		var lines := StoryDialogueDB_.resolve_lines(d)
+		if not lines.is_empty():
+			_pending_shop_dialogue = d
+			DialogueManager_.show_sequence(lines, Callable(self, "_on_rabbit_shop_dialogue_finished"))
 			return
-		_pending_shop_dialogue = StoryDialogueDB_.pick_npc_dialogue("rabbit_shop", "flag")
-	if _pending_shop_dialogue.is_empty():
+	# Обычное приветствие — пузырём у Рикки (при каждом заходе), без окна диалога.
+	if d.is_empty() or _bubbles == null:
 		return
+	_bubbles.raise_layer()
+	_bubbles.say(StoryDialogueDB_.resolve_lines(d))
+	# Приманка докладывается в лавку раз в день (как раньше — после первого приветствия за день).
+	var first_today := StoryState_ == null or not StoryState_.has_flag(GREETED_FLAG)
 	if StoryState_ != null:
 		StoryState_.set_flag(GREETED_FLAG, true)
-	var lines := StoryDialogueDB_.resolve_lines(_pending_shop_dialogue)
-	if lines.is_empty():
-		return
-	DialogueManager_.show_sequence(lines, Callable(self, "_on_rabbit_shop_dialogue_finished"))
+		StoryState_.mark_dialogue_seen(String(d.get("id", "")))
+	if first_today:
+		DungRun.ensure_lure_in_shop()
+		_refresh()
 
 func _on_rabbit_shop_dialogue_finished() -> void:
 	if not _pending_shop_dialogue.is_empty() and StoryDialogueDB_ != null:

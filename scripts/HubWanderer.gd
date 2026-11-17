@@ -197,6 +197,7 @@ func _walk() -> void:
 	)
 
 func _hop(double: bool) -> void:
+	_stop_bob()   ## прыжок посреди ходьбы: шаговое покачивание иначе продолжалось бы вечно
 	_stop_breath()
 	_kill(_tween)
 	_tween = create_tween()

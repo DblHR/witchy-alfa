@@ -81,6 +81,11 @@ func _start_wanderers() -> void:
 		add_child(gw)
 		_guests[String(id)] = gw
 		k += 1
+	# Пока открыт диалог (VN), гуляющие по дому прячутся — на экране только портреты из диалога.
+	var bodies: Array = [witch]
+	for id in _guests:
+		bodies.append((_guests[id] as HubWanderer)._body)
+	VnSpriteHider.attach(self, bodies)
 
 # --- Разговоры в доме -----------------------------------------------------------
 ## Гостью можно позвать: при наведении она подсвечивается, по клику — диалог.

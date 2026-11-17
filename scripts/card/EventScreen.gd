@@ -90,9 +90,6 @@ func setup(p_battle: Node, p_room: Dictionary) -> void:
 		add_child(FloorBackdrop.new())
 	_npc_sprite = ShopUi.make_npc_sprite("")
 	add_child(_npc_sprite)
-	# Клик по NPC — ещё одна дежурная фраза пузырём (ловим по непрозрачным пикселям спрайта).
-	_npc_sprite.mouse_filter = Control.MOUSE_FILTER_PASS
-	_npc_sprite.gui_input.connect(_on_npc_gui_input)
 
 	_chest_pic = _make_full_texture()
 	_chest_pic.visible = false
@@ -178,14 +175,12 @@ func setup(p_battle: Node, p_room: Dictionary) -> void:
 	add_child(progress)
 	progress.setup(run.total_rooms(), run.index)
 
-	# Пузыри дежурных фраз NPC (как боевые реплики), поверх всего экрана комнаты.
-	_bubble_layer = BattleSpeechLayer.new()
-	_bubble_layer.bubble_offset = Vector2.ZERO
-	_bubble_layer.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	_bubble_layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(_bubble_layer)
-	_bubble_anchor = Node2D.new()
-	add_child(_bubble_anchor)
+	# Пузыри дежурных фраз NPC (как боевые реплики), поверх всего экрана комнаты; клик по NPC —
+	# ещё фраза; на время диалога (VN) картинка NPC прячется.
+	_bubbles = NpcBubbles.attach(self, _npc_sprite, _npc_key())
+	if _event_npc_id() != "":
+		_bubbles.npc_id = _event_npc_id()
+	_bubbles.blocked = func() -> bool: return _intro_waiting or _image_open
 
 	_begin_intro.call_deferred()
 
@@ -239,20 +234,9 @@ func _on_intro_finished() -> void:
 	_intro = {}
 	_rebuild()
 
-# --- Пузыри дежурных фраз NPC --------------------------------------------------
-## Где над NPC появляется пузырь (точка «у головы», экран 1920×1080). Подвинуть — здесь.
-const NPC_BUBBLE_POS := {
-	"lamia": Vector2(1215, 330),
-	"nurse": Vector2(1215, 270),
-}
-## Пауза между репликами одной фразы, если в ней несколько строк, сек.
-const BUBBLE_LINE_GAP := 3.2
-
-var _bubble_layer: BattleSpeechLayer
-var _bubble_anchor: Node2D
-var _bubble_token := 0
-var _last_bark_id := ""
-var _npc_hovered := false
+# --- Пузыри дежурных фраз NPC (NpcBubbles) -------------------------------------
+## Где появляется пузырь — NpcBubbles.BUBBLE_POS.
+var _bubbles: NpcBubbles
 
 func _npc_key() -> String:
 	var event_id := String(room.get("event", ""))
@@ -262,73 +246,13 @@ func _npc_key() -> String:
 func _has_npc_sprite() -> bool:
 	return _npc_key() != "" and _npc_sprite != null and AssetCatalog_ != null and AssetCatalog_.get_event_npc_texture(_npc_key()) != null
 
-## Показать реплики пузырями по очереди (только реплики самого NPC).
 func _say_bubbles(lines: Array) -> void:
-	if _bubble_layer == null:
-		return
-	_bubble_token += 1
-	var token := _bubble_token
-	_bubble_anchor.position = NPC_BUBBLE_POS.get(_npc_key(), Vector2(1400, 300))
-	_bubble_layer.clear_lines()
-	for l in lines:
-		if token != _bubble_token or not is_inside_tree():
-			return
-		var text := String(l.get("text", "")).strip_edges()
-		if text == "":
-			continue
-		_bubble_layer.show_line_for_actor(_bubble_anchor, text)
-		await get_tree().create_timer(BUBBLE_LINE_GAP).timeout
+	if _bubbles != null:
+		_bubbles.say(lines)
 
-## Ещё одна случайная дежурная фраза этого NPC (не та же, что в прошлый раз).
 func _say_random_bark() -> void:
-	if StoryDialogueDB_ == null:
-		return
-	var pool: Array = StoryDialogueDB_.routine_dialogues(_event_npc_id())
-	if pool.size() > 1:
-		pool = pool.filter(func(d): return String(d.get("id", "")) != _last_bark_id)
-	if pool.is_empty():
-		return
-	var d: Dictionary = pool[randi() % pool.size()]
-	_last_bark_id = String(d.get("id", ""))
-	_say_bubbles(StoryDialogueDB_.resolve_lines(d))
-
-## Пиксель спрайта NPC под точкой p (локально) непрозрачный? (картинка вписана с сохранением пропорций)
-func _npc_pixel_hit(p: Vector2) -> bool:
-	var tex := _npc_sprite.texture
-	if tex == null:
-		return false
-	var box := _npc_sprite.size
-	var ts := tex.get_size()
-	var k := minf(box.x / ts.x, box.y / ts.y)
-	var draw := ts * k
-	var off := (box - draw) * 0.5
-	var uv := (p - off) / draw
-	if uv.x < 0.0 or uv.y < 0.0 or uv.x >= 1.0 or uv.y >= 1.0:
-		return false
-	if _npc_image == null:
-		_npc_image = tex.get_image()
-		if _npc_image != null and _npc_image.is_compressed():
-			_npc_image.decompress()
-	if _npc_image == null:
-		return true
-	var px := Vector2i(int(uv.x * _npc_image.get_width()), int(uv.y * _npc_image.get_height()))
-	return _npc_image.get_pixelv(px).a > 0.4
-
-var _npc_image: Image
-
-func _on_npc_gui_input(event: InputEvent) -> void:
-	if _intro_waiting or _image_open or DialogueManager_ != null and DialogueManager_.is_showing():
-		return
-	if event is InputEventMouseMotion:
-		var hit := _npc_pixel_hit(event.position)
-		if hit != _npc_hovered:
-			_npc_hovered = hit
-			_npc_sprite.modulate = Color(1.12, 1.08, 1.12) if hit else Color.WHITE
-			_npc_sprite.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND if hit else Control.CURSOR_ARROW
-	elif event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
-		if _npc_pixel_hit(event.position):
-			accept_event()
-			_say_random_bark()
+	if _bubbles != null:
+		_bubbles.say_random_bark()
 
 # --- Диалоги после действий ---------------------------------------------------
 ## Тип диалога NPC, который сыграет после закрытия картинки услуги ("after_use" у Ноктрис).
@@ -381,9 +305,8 @@ func _on_continue_pressed() -> void:
 		_leave_room()
 
 func _leave_room() -> void:
-	_bubble_token += 1
-	if _bubble_layer != null:
-		_bubble_layer.clear_lines()
+	if _bubbles != null:
+		_bubbles.clear()
 	finished.emit()
 	queue_free()
 
@@ -487,6 +410,7 @@ func _apply_world_layout() -> void:
 
 func _rebuild() -> void:
 	_chest_waiting = false
+	_clear_chest_loot()
 	_desc.position = DESC_RECT.position
 	_desc.size = DESC_RECT.size
 	_desc.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
@@ -621,10 +545,92 @@ func _build_chest() -> void:
 	_continue.position = Vector2(760, CONTINUE_RECT.position.y)
 	_place_chest_text()
 	if opened:
-		_desc.text = String(room.get("chest_text", "Сундук уже открыт."))
+		var loot: Array = room.get("chest_loot", [])
+		if loot.is_empty():
+			_desc.text = String(room.get("chest_text", "Сундук уже открыт."))
+		else:
+			_desc.text = "В сундуке:"
+			_desc.position = Vector2(220, LOOT_ROW_Y - 78)
+			_desc.size = Vector2(1480, 64)
+			_show_chest_loot(loot)
 		return
 	_chest_waiting = true
 	_desc.text = "Нажмите на экран, чтобы открыть сундук."
+
+## Добыча из сундука — иконками с количеством; при наведении — название и описание.
+const LOOT_ROW_Y := 772.0
+const LOOT_SLOT := Vector2(132, 132)
+const LOOT_GAP := 22
+const COIN_ICON := "res://assets/items/loot/coin.png"
+var _loot_row: HBoxContainer
+
+func _show_chest_loot(loot: Array) -> void:
+	_clear_chest_loot()
+	_loot_row = HBoxContainer.new()
+	_loot_row.name = "ChestLoot"
+	_loot_row.add_theme_constant_override("separation", LOOT_GAP)
+	_loot_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	_loot_row.position = Vector2(0, LOOT_ROW_Y)
+	_loot_row.size = Vector2(1920, LOOT_SLOT.y)
+	add_child(_loot_row)
+	for e in loot:
+		_loot_row.add_child(_make_loot_slot(String(e.get("id", "")), int(e.get("n", 1)), String(e.get("note", ""))))
+	if _bubbles != null:
+		_bubbles.raise_layer()
+
+func _clear_chest_loot() -> void:
+	if _loot_row != null and is_instance_valid(_loot_row):
+		_loot_row.queue_free()
+	_loot_row = null
+
+func _make_loot_slot(id: String, n: int, note: String) -> Control:
+	var slot := Panel.new()
+	slot.custom_minimum_size = LOOT_SLOT
+	slot.mouse_filter = Control.MOUSE_FILTER_STOP
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = Color(0.16, 0.08, 0.20, 0.82)
+	sb.set_corner_radius_all(18)
+	sb.set_border_width_all(3)
+	sb.border_color = Color(1.0, 0.86, 0.42, 0.85)
+	slot.add_theme_stylebox_override("panel", sb)
+	var icon := TextureRect.new()
+	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	icon.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
+	icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	icon.position = Vector2(14, 12)
+	icon.size = LOOT_SLOT - Vector2(28, 28)
+	var item_name := ""
+	var item_desc := ""
+	if id == "gold":
+		icon.texture = load(COIN_ICON) as Texture2D if ResourceLoader.exists(COIN_ICON) else null
+		item_name = "Золото"
+		item_desc = "Монеты: тратятся в лавках и у медсестры."
+	else:
+		icon.texture = Inventory_.get_item_icon(id) if Inventory_ != null else null
+		item_name = RunItems.get_item_name(id)
+		item_desc = RunItems.get_item_desc(id)
+	slot.add_child(icon)
+	if n > 1 or id == "gold":
+		var count := Label.new()
+		count.text = "×%d" % n
+		count.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		count.add_theme_font_size_override("font_size", 30)
+		count.add_theme_color_override("font_color", Color(1.0, 0.95, 0.80))
+		count.add_theme_color_override("font_outline_color", Color(0.12, 0.05, 0.14))
+		count.add_theme_constant_override("outline_size", 9)
+		count.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+		count.vertical_alignment = VERTICAL_ALIGNMENT_BOTTOM
+		count.position = Vector2(0, 0)
+		count.size = LOOT_SLOT - Vector2(10, 4)
+		slot.add_child(count)
+	var tip := "%s ×%d" % [item_name, n] if n > 1 else item_name
+	if note != "":
+		tip += " — " + note
+	if item_desc != "":
+		tip += "\n" + item_desc
+	slot.tooltip_text = tip
+	return slot
 
 func _place_chest_text() -> void:
 	_desc.position = Vector2(220, 720)

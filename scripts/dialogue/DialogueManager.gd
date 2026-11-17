@@ -6,6 +6,10 @@ const OVERLAY_SCENE := preload("res://scenes/DialogueOverlay.tscn")
 ## но ниже меню паузы (слой 100). Иначе экран на CanvasLayer перекрывает диалог и забирает клики.
 const OVERLAY_LAYER := 50
 
+## Окно диалога (VN) появилось / закрылось. Сцены прячут по нему спрайты NPC на фоне,
+## чтобы на экране был только портрет из диалога (см. VnSpriteHider).
+signal showing_changed(on: bool)
+
 var _overlay: DialogueOverlay = null
 var _overlay_layer: CanvasLayer = null
 var _overlay_scene_id: int = 0
@@ -42,6 +46,7 @@ func _create_overlay() -> DialogueOverlay:
 	var current_scene := get_tree().current_scene
 	_overlay_scene_id = current_scene.get_instance_id() if current_scene != null else 0
 	_overlay.sequence_finished.connect(_on_overlay_finished, CONNECT_ONE_SHOT)
+	showing_changed.emit(true)
 	return overlay
 
 func _on_overlay_finished() -> void:
@@ -49,6 +54,7 @@ func _on_overlay_finished() -> void:
 		_overlay.call_deferred("queue_free")
 	_overlay = null
 	_overlay_scene_id = 0
+	showing_changed.emit(false)
 
 func show_sequence(lines: Array, on_finished: Callable = Callable()) -> void:
 	var overlay := _create_overlay()
@@ -63,10 +69,13 @@ func show_sequence_resource(seq: DialogueSequence, on_finished: Callable = Calla
 	overlay.show_sequence_resource(seq, on_finished)
 
 func hide_overlay() -> void:
-	if _overlay != null and is_instance_valid(_overlay):
+	var was := _overlay != null and is_instance_valid(_overlay)
+	if was:
 		_overlay.queue_free()
 	_overlay = null
 	_overlay_scene_id = 0
+	if was:
+		showing_changed.emit(false)
 
 func is_showing() -> bool:
 	return _overlay != null and is_instance_valid(_overlay) and _overlay.visible
