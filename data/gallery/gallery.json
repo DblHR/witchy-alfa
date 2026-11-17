@@ -35,7 +35,13 @@
       "hint": "Откроется, когда Воин будет в отряде.",
       "images": [
         "res://assets/characters/warrior/warrior_portrait.png",
-        "res://assets/characters/warrior/warrior_battle.png"
+        "res://assets/characters/warrior/warrior_battle.png",
+		"res://assets/characters/warrior/cards/warrior_chop.png",
+        "res://assets/characters/warrior/cards/warrior_finish.png",
+        "res://assets/characters/warrior/cards/warrior_lunge.png",
+        "res://assets/characters/warrior/cards/warrior_press.png",
+        "res://assets/characters/warrior/cards/warrior_release.png",
+        "res://assets/characters/warrior/cards/warrior_thrusts.png"
       ]
     },
     {
