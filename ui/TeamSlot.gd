@@ -29,6 +29,19 @@ func set_frame_color(c: Color) -> void:
 	_border_color = c
 	_update_style()
 
+## --- Значок класса в левом верхнем углу карточки героини ---
+## Картинка: assets/ui/classes/<класс>.png, где класс — из CharacterData.unit_class:
+## воин -> fighter, маг -> mage, саппорт -> support, танк -> tank. Нет картинки — подпись словом.
+const CLASS_ICON_DIR := "res://assets/ui/classes/"
+const CLASS_ICON_FILES := {"воин": "fighter", "маг": "mage", "саппорт": "support", "танк": "tank"}
+const CLASS_ICON_SIZE := 0.24   ## доля ширины карточки
+
+var _class_icon: TextureRect
+var _class_label: Label
+
+static func class_icon_path(unit_class: String) -> String:
+	return CLASS_ICON_DIR + String(CLASS_ICON_FILES.get(unit_class, unit_class)) + ".png"
+
 func set_character(id: String, display_name: String, tex: Texture2D) -> void:
 	character_id = id
 	if not is_node_ready():
@@ -36,6 +49,43 @@ func set_character(id: String, display_name: String, tex: Texture2D) -> void:
 	name_label.text = display_name
 	portrait.texture = tex
 	portrait.modulate = Color.WHITE if tex != null else Color(1, 1, 1, 0.0)
+	_update_class_icon()
+
+func _update_class_icon() -> void:
+	var data: CharacterData = CharDB.get_by_id(character_id) if character_id != "" and CharDB != null else null
+	var cls := data.unit_class if data != null else ""
+	if _class_icon == null:
+		_class_icon = TextureRect.new()
+		_class_icon.name = "ClassIcon"
+		_class_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		_class_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		_class_icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		add_child(_class_icon)
+		_class_label = Label.new()
+		_class_label.name = "ClassLabel"
+		_class_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_class_label.add_theme_font_size_override("font_size", 15)
+		_class_label.add_theme_color_override("font_color", Color.WHITE)
+		var sb := StyleBoxFlat.new()
+		sb.bg_color = Color(0.12, 0.06, 0.18, 0.85)
+		sb.set_corner_radius_all(8)
+		sb.content_margin_left = 7
+		sb.content_margin_right = 7
+		sb.content_margin_top = 1
+		sb.content_margin_bottom = 2
+		_class_label.add_theme_stylebox_override("normal", sb)
+		add_child(_class_label)
+	var path := class_icon_path(cls)
+	var has_icon := cls != "" and ResourceLoader.exists(path)
+	var side := maxf(28.0, size.x * CLASS_ICON_SIZE)
+	_class_icon.visible = has_icon
+	_class_icon.texture = load(path) as Texture2D if has_icon else null
+	_class_icon.position = Vector2(8, 8)
+	_class_icon.size = Vector2(side, side)
+	_class_icon.tooltip_text = cls
+	_class_label.visible = cls != "" and not has_icon
+	_class_label.text = cls
+	_class_label.position = Vector2(8, 8)
 
 func _gui_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:

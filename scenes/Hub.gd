@@ -27,6 +27,8 @@ func _refresh_badges() -> void:
 	if not is_inside_tree():
 		return
 	NotifyBadge.attach(shop, StoryDialogueDB_ != null and StoryDialogueDB_.npc_has_news("rabbit_shop"))
+	# «!» на инвентаре: новые очки улучшения карт, а в инвентарь после этого ещё не заходили.
+	NotifyBadge.attach(inv, UnitRoster_ != null and UnitRoster_.upgrade_news(UnitRoster_.UPGRADE_SEEN_INVENTORY))
 	# «!» над героиней дома, если у неё есть новая разовая сцена (например, по уровню доверия).
 	for id in _guests:
 		var gw: HubWanderer = _guests[id]
@@ -54,6 +56,7 @@ func _start_wanderers() -> void:
 	w.name = "WitchWanderer"
 	w.setup(witch, WITCH_MIN_X, WITCH_MAX_X)
 	add_child(w)
+	_witch_wanderer = w
 	# Гости: такая же картинка, как у ведьмочки (размер, слой), со своим маршрутом.
 	var k := 0
 	for id in HUB_GUESTS:
@@ -123,7 +126,26 @@ func _over_button() -> bool:
 func _can_talk(id: String) -> bool:
 	return StoryDialogueDB_ != null and not StoryDialogueDB_.pick_npc_dialogue(id, HUB_TALK_TYPE).is_empty()
 
+## Ведьмочка дома: по клику на миг становится «фазой 2» и подпрыгивает — просто так.
+var _witch_wanderer: HubWanderer
+
+func _poke_witch(event: InputEvent) -> bool:
+	if _witch_wanderer == null or not is_instance_valid(_witch_wanderer) or _talking != "" or DialogueManager_.is_showing():
+		return false
+	if not (event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT):
+		return false
+	if _over_button() or not _witch_wanderer.is_over(get_viewport().get_mouse_position()):
+		return false
+	var body := get_node_or_null("TextureRect") as TextureRect
+	var base: Texture2D = body.texture if body != null else null
+	var alt := CharacterPhases.texture(base, 2) if base != null else null
+	_witch_wanderer.poke(alt if alt != base else null)
+	get_viewport().set_input_as_handled()
+	return true
+
 func _input(event: InputEvent) -> void:
+	if _hovered_guest == "" and _poke_witch(event):
+		return
 	if _hovered_guest == "" or _talking != "" or DialogueManager_.is_showing():
 		return
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:

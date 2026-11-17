@@ -32,6 +32,17 @@ const ITEM_ALIASES := {
 }
 
 const ITEM_DEFS := {
+	"return_stone": {
+		"name": "Камень возвращения",
+		"desc": "Подарок Рикки. В опасности возвращает туда, где вы спали в последний раз. Долго пылился — может барахлить.",
+		"kind": "quest",
+		"equippable": false,
+		"unique": true,
+		"stackable": false,
+		"sellable": false,
+		"price": 0,
+		"rarity": 0,
+	},
 	"warm_headphones": {
 		"name": "Тёплые наушники",
 		"desc": "Потерянные наушники ламии. Мягкие, тёплые и почему-то пахнут ванилью.",
@@ -268,7 +279,7 @@ const ITEM_DEFS := {
 	},
 	"slime_potion": {
 		"name": "Зелье слаймов",
-		"desc": "Зелье: лечит самую раненую героиню на 40% макс. HP.",
+		"desc": "Зелье: лечит самого раненого персонажа на 40% макс. HP.",
 		"kind": "potion",
 		"equippable": true,
 		"unique": false,
@@ -312,7 +323,7 @@ const ITEM_DEFS := {
 	},
 	"steak": {
 		"name": "Стейк",
-		"desc": "Еда на забег: один раз за забег героиня, упавшая ниже 30% HP, сразу лечится на 40%.",
+		"desc": "Еда на забег: один раз за забег персонаж, опустившийся ниже 30% HP, сразу лечится на 40%.",
 		"kind": "food",
 		"equippable": true,
 		"unique": false,
@@ -544,7 +555,7 @@ const ITEM_DEFS := {
 }
 
 const POTION_DEFS := {
-	"heal_potion": {"name": "Зелье слаймов", "desc": "Лечит самую раненую героиню на 40% макс. HP.", "charges": 0},
+	"heal_potion": {"name": "Зелье слаймов", "desc": "Лечит самого раненого персонажа на 40% макс. HP.", "charges": 0},
 	"energy_potion": {"name": "Тоник энергии", "desc": "+2 энергии в этот ход.", "charges": 0},
 	"battle_potion": {"name": "Фиал ярости", "desc": "До конца хода урон карт +30%.", "charges": 0},
 }

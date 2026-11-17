@@ -42,7 +42,7 @@
       "id": "enemy_fufu_ally_down",
       "speaker": "fufu",
       "trigger": "ally_down",
-      "text": ["Одна ушла со сцены!", "Минус один зритель~"],
+      "text": ["Кто-то ушёл со сцены!", "Минус один зритель~"],
       "enemy": true
     },
     {

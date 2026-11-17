@@ -12,11 +12,11 @@ offset_right = 1920.0
 offset_bottom = 1080.0
 
 [node name="Panel" type="Panel" parent="." unique_id=677844118]
-custom_minimum_size = Vector2(500, 420)
+custom_minimum_size = Vector2(500, 490)
 offset_left = 710.0
-offset_top = 330.0
+offset_top = 295.0
 offset_right = 1210.0
-offset_bottom = 750.0
+offset_bottom = 785.0
 
 [node name="VBoxContainer" type="VBoxContainer" parent="Panel" unique_id=1169466485]
 custom_minimum_size = Vector2(400, 300)
@@ -24,7 +24,7 @@ layout_mode = 0
 offset_left = 50.0
 offset_top = 100.0
 offset_right = 450.0
-offset_bottom = 400.0
+offset_bottom = 470.0
 
 [node name="Resume" type="Button" parent="Panel/VBoxContainer" unique_id=1191175535]
 unique_name_in_owner = true
@@ -37,6 +37,12 @@ unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 60)
 layout_mode = 2
 text = "Настройки"
+
+[node name="Save" type="Button" parent="Panel/VBoxContainer" unique_id=1562093318]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 60)
+layout_mode = 2
+text = "Сохранить"
 
 [node name="MainMenu" type="Button" parent="Panel/VBoxContainer" unique_id=1873402219]
 unique_name_in_owner = true

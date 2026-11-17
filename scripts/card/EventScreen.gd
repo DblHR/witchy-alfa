@@ -90,6 +90,9 @@ func setup(p_battle: Node, p_room: Dictionary) -> void:
 		add_child(FloorBackdrop.new())
 	_npc_sprite = ShopUi.make_npc_sprite("")
 	add_child(_npc_sprite)
+	# Клик по NPC — ещё одна дежурная фраза пузырём (ловим по непрозрачным пикселям спрайта).
+	_npc_sprite.mouse_filter = Control.MOUSE_FILTER_PASS
+	_npc_sprite.gui_input.connect(_on_npc_gui_input)
 
 	_chest_pic = _make_full_texture()
 	_chest_pic.visible = false
@@ -175,6 +178,15 @@ func setup(p_battle: Node, p_room: Dictionary) -> void:
 	add_child(progress)
 	progress.setup(run.total_rooms(), run.index)
 
+	# Пузыри дежурных фраз NPC (как боевые реплики), поверх всего экрана комнаты.
+	_bubble_layer = BattleSpeechLayer.new()
+	_bubble_layer.bubble_offset = Vector2.ZERO
+	_bubble_layer.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_bubble_layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_bubble_layer)
+	_bubble_anchor = Node2D.new()
+	add_child(_bubble_anchor)
+
 	_begin_intro.call_deferred()
 
 # --- Вступительный диалог ----------------------------------------------------
@@ -191,6 +203,12 @@ func _begin_intro() -> void:
 		if not _intro.is_empty():
 			lines = StoryDialogueDB_.resolve_lines(_intro)
 	room["intro_seen"] = true
+	# Дежурная фраза (не квест, не первая встреча) — пузырём у NPC, без окна диалога.
+	if not lines.is_empty() and StoryDialogueDB_.is_routine(_intro) and _has_npc_sprite():
+		_intro = {}
+		_rebuild()
+		_say_bubbles(lines)
+		return
 	if lines.is_empty():
 		_rebuild()
 		return
@@ -220,6 +238,97 @@ func _on_intro_finished() -> void:
 		StoryDialogueDB_.apply_effects(_intro.get("on_finish", {}))
 	_intro = {}
 	_rebuild()
+
+# --- Пузыри дежурных фраз NPC --------------------------------------------------
+## Где над NPC появляется пузырь (точка «у головы», экран 1920×1080). Подвинуть — здесь.
+const NPC_BUBBLE_POS := {
+	"lamia": Vector2(1215, 330),
+	"nurse": Vector2(1215, 270),
+}
+## Пауза между репликами одной фразы, если в ней несколько строк, сек.
+const BUBBLE_LINE_GAP := 3.2
+
+var _bubble_layer: BattleSpeechLayer
+var _bubble_anchor: Node2D
+var _bubble_token := 0
+var _last_bark_id := ""
+var _npc_hovered := false
+
+func _npc_key() -> String:
+	var event_id := String(room.get("event", ""))
+	return "lamia" if event_id == "shop" else ("nurse" if event_id == "nurse" else "")
+
+## Комната с NPC-спрайтом (лавка, медсестра). Спрайт ставится в _rebuild, поэтому смотрим по типу комнаты.
+func _has_npc_sprite() -> bool:
+	return _npc_key() != "" and _npc_sprite != null and AssetCatalog_ != null and AssetCatalog_.get_event_npc_texture(_npc_key()) != null
+
+## Показать реплики пузырями по очереди (только реплики самого NPC).
+func _say_bubbles(lines: Array) -> void:
+	if _bubble_layer == null:
+		return
+	_bubble_token += 1
+	var token := _bubble_token
+	_bubble_anchor.position = NPC_BUBBLE_POS.get(_npc_key(), Vector2(1400, 300))
+	_bubble_layer.clear_lines()
+	for l in lines:
+		if token != _bubble_token or not is_inside_tree():
+			return
+		var text := String(l.get("text", "")).strip_edges()
+		if text == "":
+			continue
+		_bubble_layer.show_line_for_actor(_bubble_anchor, text)
+		await get_tree().create_timer(BUBBLE_LINE_GAP).timeout
+
+## Ещё одна случайная дежурная фраза этого NPC (не та же, что в прошлый раз).
+func _say_random_bark() -> void:
+	if StoryDialogueDB_ == null:
+		return
+	var pool: Array = StoryDialogueDB_.routine_dialogues(_event_npc_id())
+	if pool.size() > 1:
+		pool = pool.filter(func(d): return String(d.get("id", "")) != _last_bark_id)
+	if pool.is_empty():
+		return
+	var d: Dictionary = pool[randi() % pool.size()]
+	_last_bark_id = String(d.get("id", ""))
+	_say_bubbles(StoryDialogueDB_.resolve_lines(d))
+
+## Пиксель спрайта NPC под точкой p (локально) непрозрачный? (картинка вписана с сохранением пропорций)
+func _npc_pixel_hit(p: Vector2) -> bool:
+	var tex := _npc_sprite.texture
+	if tex == null:
+		return false
+	var box := _npc_sprite.size
+	var ts := tex.get_size()
+	var k := minf(box.x / ts.x, box.y / ts.y)
+	var draw := ts * k
+	var off := (box - draw) * 0.5
+	var uv := (p - off) / draw
+	if uv.x < 0.0 or uv.y < 0.0 or uv.x >= 1.0 or uv.y >= 1.0:
+		return false
+	if _npc_image == null:
+		_npc_image = tex.get_image()
+		if _npc_image != null and _npc_image.is_compressed():
+			_npc_image.decompress()
+	if _npc_image == null:
+		return true
+	var px := Vector2i(int(uv.x * _npc_image.get_width()), int(uv.y * _npc_image.get_height()))
+	return _npc_image.get_pixelv(px).a > 0.4
+
+var _npc_image: Image
+
+func _on_npc_gui_input(event: InputEvent) -> void:
+	if _intro_waiting or _image_open or DialogueManager_ != null and DialogueManager_.is_showing():
+		return
+	if event is InputEventMouseMotion:
+		var hit := _npc_pixel_hit(event.position)
+		if hit != _npc_hovered:
+			_npc_hovered = hit
+			_npc_sprite.modulate = Color(1.12, 1.08, 1.12) if hit else Color.WHITE
+			_npc_sprite.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND if hit else Control.CURSOR_ARROW
+	elif event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+		if _npc_pixel_hit(event.position):
+			accept_event()
+			_say_random_bark()
 
 # --- Диалоги после действий ---------------------------------------------------
 ## Тип диалога NPC, который сыграет после закрытия картинки услуги ("after_use" у Ноктрис).
@@ -272,6 +381,9 @@ func _on_continue_pressed() -> void:
 		_leave_room()
 
 func _leave_room() -> void:
+	_bubble_token += 1
+	if _bubble_layer != null:
+		_bubble_layer.clear_lines()
 	finished.emit()
 	queue_free()
 
@@ -431,8 +543,8 @@ func _build_nurse() -> void:
 		return
 	_desc.text = "Ноктрис окажет одну услугу на выбор."
 	var gold := _gold()
-	_add_option("Вылечить героиню на %d%% HP — %d зол." % [int(NURSE_HEAL_PERCENT * 100.0), NURSE_HEAL_PRICE], func() -> void: _pick_hero(false), not bool(battle.call("run_has_wounded")) or gold < NURSE_HEAL_PRICE)
-	_add_option("Воскресить героиню с %d%% HP — %d зол." % [int(NURSE_REVIVE_PERCENT * 100.0), NURSE_REVIVE_PRICE], func() -> void: _pick_hero(true), not bool(battle.call("run_has_dead")) or gold < NURSE_REVIVE_PRICE)
+	_add_option("Вылечить персонажа на %d%% HP — %d зол." % [int(NURSE_HEAL_PERCENT * 100.0), NURSE_HEAL_PRICE], func() -> void: _pick_hero(false), not bool(battle.call("run_has_wounded")) or gold < NURSE_HEAL_PRICE)
+	_add_option("Воскресить персонажа с %d%% HP — %d зол." % [int(NURSE_REVIVE_PERCENT * 100.0), NURSE_REVIVE_PRICE], func() -> void: _pick_hero(true), not bool(battle.call("run_has_dead")) or gold < NURSE_REVIVE_PRICE)
 	_add_option("Микстура в колоду: разовая карта, лечит 25%% HP — %d зол." % NURSE_CARD_PRICE, _on_nurse_card, gold < NURSE_CARD_PRICE)
 
 ## Микстура: карта лечения в колоду до конца забега (сгорает, когда её разыграют).
@@ -454,7 +566,7 @@ func _pick_hero(revive: bool) -> void:
 	for h in battle.call("run_heroes"):
 		var d: Dictionary = h
 		var ok_target := bool(d["dead"]) if revive else (not bool(d["dead"]) and int(d["hp"]) < int(d["max_hp"]))
-		var label := "%s — %s" % [String(d["name"]), "пала" if bool(d["dead"]) else "%d/%d HP" % [int(d["hp"]), int(d["max_hp"])]]
+		var label := "%s — %s" % [String(d["name"]), "без сил" if bool(d["dead"]) else "%d/%d HP" % [int(d["hp"]), int(d["max_hp"])]]
 		var hero_id := String(d["id"])
 		var hero_name := String(d["name"])
 		_add_option(label, func() -> void: _on_nurse_target(hero_id, hero_name, revive), not ok_target)
@@ -546,16 +658,12 @@ func _build_statue() -> void:
 	var white := String(room.get("variant", "")) == "white"
 	if AssetCatalog_ != null and not world_mode:
 		_npc.texture = AssetCatalog_.get_event_npc_texture("statue_white" if white else "statue_black")
+	# Дар принимается сразу (без кнопки): остаётся описание и «Идти дальше».
+	if not bool(room.get("used", false)):
+		room["used"] = true
+		battle.call("run_take_statue", String(room.get("variant", "")))
 	if white:
 		_desc.text = "Белая статуя. На %d боевые комнаты: +1 энергия в первые 2 хода боя, после каждой победы отряд лечится на 10%% макс. HP." % CardRelics.STATUE_ROOMS
 	else:
 		_desc.text = "Чёрная статуя. На %d боевые комнаты: +1 карта в первые 2 хода боя, урон карт +20%%." % CardRelics.STATUE_ROOMS
-	_add_option("Принять дар", _on_statue_take, bool(room.get("used", false)))
-
-func _on_statue_take() -> void:
-	if bool(room.get("used", false)):
-		return
-	room["used"] = true
-	battle.call("run_take_statue", String(room.get("variant", "")))
-	_rebuild()
-	_say("Дар принят.")
+	_desc.text += "\nДар принят."

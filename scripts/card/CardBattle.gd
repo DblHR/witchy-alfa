@@ -1113,6 +1113,11 @@ func _on_end_turn_pressed() -> void:
 	# 1. Рука уходит в сброс.
 	_stats.cards_discarded_turn += _hand_views.size()
 	_clear_hand_views()
+	# Сработавшее очарование на своих (см. _auto_play_charmed) снимаем в конце хода игрока.
+	for hero in _combat.alive_heroes():
+		var hs: Dictionary = _combat.statuses.get(hero, {})
+		if hs.has(CardStatuses.CHARM) and bool((hs[CardStatuses.CHARM] as Dictionary).get("spent", false)):
+			hs.erase(CardStatuses.CHARM)
 	_combat.end_player_turn()
 	_relics.on_turn_end()
 	_refresh_all_actors()
@@ -1509,13 +1514,16 @@ func _auto_play_charmed() -> void:
 	for hero in _combat.alive_heroes():
 		if not _combat.has_status(hero, CardStatuses.CHARM):
 			continue
+		var charm_state: Dictionary = _combat.statuses.get(hero, {}).get(CardStatuses.CHARM, {})
+		if bool(charm_state.get("spent", false)):
+			continue
 		var own: Array[CardView] = []
 		for v in _hand_views:
 			if v.card.owner_id == hero.data.id:
 				own.append(v)
 		if not own.is_empty():
 			_float_stack.clear()
-			_float_for(hero, "Очарована!", Color(1.0, 0.55, 0.85), 30)
+			_float_for(hero, "Очарование: карты разыгрываются сами!", Color(1.0, 0.55, 0.85), 30)
 			await _wait(0.45)
 		for v in own:
 			if not CardCombat.is_alive(hero) or _ended:
@@ -1541,7 +1549,9 @@ func _auto_play_charmed() -> void:
 			await _wait(0.55)
 			if _check_end():
 				return
-		_combat.statuses.get(hero, {}).erase(CardStatuses.CHARM)
+		# Очарование уже сработало, но значок висит до конца хода игрока — чтобы было видно,
+		# почему карты разыгрались сами. Снимается по «Завершить ход».
+		charm_state["spent"] = true
 		_refresh_all_actors()
 
 ## Цели зеркальной карты: «по врагу» -> по союзнице (не по себе, если есть другие),
@@ -1982,6 +1992,13 @@ func _start_event_room(room: Dictionary) -> void:
 	screen.setup(self, room)   ## полноэкранная комната с диалогом NPC — реплики отряда тут не нужны
 	await screen.finished
 	screen.queue_free()
+	# Опыт за пройденную ивент-комнату (копится в забеге, как за врагов).
+	_run.xp_gained += CardBalance.XP_EVENT_ROOM
+	if hud != null and shrine == null:
+		CardActorFx.spawn_float_text(hud, Vector2(960, 420), "+%d опыта" % CardBalance.XP_EVENT_ROOM, Color(0.75, 0.9, 1.0), 30)
+	elif shrine != null:
+		CardActorFx.spawn_float_text(hud, STATUE_POS + Vector2(-60, -420), "+%d опыта" % CardBalance.XP_EVENT_ROOM, Color(0.75, 0.9, 1.0), 30)
+	refresh_run_hud()
 	if shrine != null and is_instance_valid(shrine):
 		shrine.vanish()
 	_banter.stop()
@@ -1995,7 +2012,7 @@ func _spawn_statue_shrine(room: Dictionary) -> StatueShrine:
 	shrine.position = STATUE_POS
 	right_world.add_child(shrine)
 	var key := "statue_white" if String(room.get("variant", "")) == "white" else "statue_black"
-	shrine.setup(AssetCatalog_.get_event_npc_texture(key) if AssetCatalog_ != null else null)
+	shrine.setup(AssetCatalog_.get_event_npc_texture(key) if AssetCatalog_ != null else null, key == "statue_black")
 	return shrine
 
 # --- API для окон забега (EventScreen вызывает по имени) ---------------------

@@ -167,6 +167,39 @@ func _dialogue_notifies(d: Dictionary) -> bool:
 			return true
 	return false
 
+## --- Дежурные фразы (пузыри у NPC в ивент-комнатах) ---
+## Дежурная = не разовая (once), ничего не меняет (нет on_finish), без выбора / выдачи предметов /
+## уведомлений, и все реплики — самого NPC. Такие диалоги в ивент-комнатах показываются пузырём
+## рядом с NPC, а не окном VN. Тип "bark" — только для пузырей (клик по NPC), в VN не попадает никогда.
+const BARK_TYPE := "bark"
+
+func is_routine(d: Dictionary) -> bool:
+	if d.is_empty() or bool(d.get("once", false)):
+		return false
+	var fin = d.get("on_finish", {})
+	if fin is Dictionary and not (fin as Dictionary).is_empty():
+		return false
+	var npc := String(d.get("npc", ""))
+	for l in d.get("lines", []):
+		if not (l is Dictionary):
+			return false
+		if l.has("choices") or l.has("give_item") or l.has("notice") or String(l.get("cg", "")) != "":
+			return false
+		if String(l.get("speaker", npc)) != npc:
+			return false
+	return true
+
+## Все дежурные фразы NPC, доступные сейчас (условия выполнены): для клика по NPC.
+func routine_dialogues(npc_id: String) -> Array:
+	var out: Array = []
+	for d in dialogues_by_npc.get(npc_id, []):
+		var t := String(d.get("type", ""))
+		if not ["event", "flag", BARK_TYPE].has(t):
+			continue
+		if is_routine(d) and check_conditions(d.get("conditions", {})):
+			out.append(d)
+	return out
+
 ## Есть ли у NPC/героини что-то новое для значка «!»: квест или ещё не виденный разовый диалог
 ## (once: true) нужного типа, условия которого уже выполнены и который что-то даёт
 ## (см. _dialogue_notifies). Диалоги с "chance" не считаются.

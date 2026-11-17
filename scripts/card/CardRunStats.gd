@@ -192,7 +192,7 @@ func to_bbcode(relics: CardRelics, summary: PackedStringArray, gold_now: int, ro
 
 	# --- Что получили героини ---
 	if not heroes.is_empty():
-		t += "[font_size=26]%sПолучено героинями[/color][/font_size]\n" % gold
+		t += "[font_size=26]%sПолучено отрядом[/color][/font_size]\n" % gold
 		for id in heroes:
 			var h: Dictionary = heroes[id]
 			t += "• %s: урон по HP %d, щит принял %d%s\n" % [actor_name(id), int(h["taken"]), int(h["absorbed"]), (", падала %d раз" % int(h["deaths"])) if int(h["deaths"]) > 0 else ""]

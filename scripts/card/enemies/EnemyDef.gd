@@ -67,9 +67,14 @@ func make_unit(floor_no: int, rng: RandomNumberGenerator, hp_override: int = 0) 
 
 # --- Выбор хода --------------------------------------------------------------
 
+## Щит и лечение — «поддержка». Два хода поддержки подряд нельзя: хил-удар-хил можно, хил-хил нельзя.
+static func is_support(move: EnemyMove) -> bool:
+	return move != null and (move.kind == EnemyMove.Kind.DEFEND or move.kind == EnemyMove.Kind.HEAL)
+
 ## Выбрать ход: вес, «не больше N подряд», перезарядка, условие. Особые враги переопределяют.
 func choose(api: EnemyApi, me: Unit) -> EnemyMove:
 	var cd: Dictionary = me.ai.get("cd", {})
+	var after_support := bool(me.ai.get("last_support", false))
 	var pool: Array[EnemyMove] = []
 	var total := 0
 	for m in moves:
@@ -81,9 +86,15 @@ func choose(api: EnemyApi, me: Unit) -> EnemyMove:
 			continue
 		if m.cond.is_valid() and not bool(m.cond.call(api, me)):
 			continue
+		if after_support and is_support(m):
+			continue
 		pool.append(m)
 		total += m.weight
 	if pool.is_empty():
+		# Всё отсеялось — берём первый ход не-поддержки (обычно удар), а если такого нет — первый.
+		for m in moves:
+			if not is_support(m) or not after_support:
+				return m
 		return moves[0]
 	var roll := api.rng.randi_range(1, total)
 	for m in pool:
@@ -107,6 +118,7 @@ func on_chosen(me: Unit, move: EnemyMove) -> void:
 	else:
 		me.ai["row"] = 1
 	me.ai["last"] = move.id
+	me.ai["last_support"] = is_support(move)
 
 # --- Хуки (по умолчанию ничего) ---------------------------------------------
 

@@ -100,6 +100,7 @@
           "speaker_name": "",
           "emotion": "",
           "text": "Правда, он так долго лежал и пылился... Надеюсь, барахлить он не будет.",
+          "give_item": "return_stone",
           "characters": [{"id": "rabbit_shop"}, {"id": "witch"}]
         },
         {

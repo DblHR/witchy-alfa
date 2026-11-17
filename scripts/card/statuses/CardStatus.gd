@@ -63,12 +63,21 @@ func describe(s: Dictionary) -> String:
 	var head := title
 	match kind:
 		Kind.DURATION:
-			head += " — ещё %s" % turns_text(int(s["turns"]))
+			head += " — " + left_text(s)
 		Kind.STACKS_DURATION:
-			head += " x%d — ещё %s" % [int(s["stacks"]), turns_text(int(s["turns"]))]
+			head += " x%d — %s" % [int(s["stacks"]), left_text(s)]
 		_:
 			head += " x%d" % int(s["stacks"])
 	return head + ("\n" + info if info != "" else "")
+
+## Сколько продержится статус — без двусмысленного «ещё 1 ход»: ходы считаются после хода врагов.
+static func left_text(s: Dictionary) -> String:
+	if bool(s.get("spent", false)):
+		return "уже сработало, спадёт, когда вы завершите ход"
+	var n := int(s.get("turns", 0))
+	if n <= 1:
+		return "спадёт после ближайшего хода врагов"
+	return "спадёт через %s врагов" % turns_text(n)
 
 static func turns_text(n: int) -> String:
 	var m10 := n % 10

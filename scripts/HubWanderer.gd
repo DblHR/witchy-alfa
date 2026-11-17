@@ -141,6 +141,21 @@ func is_over(global_point: Vector2) -> bool:
 	return img.get_pixel(int(p.x), int(p.y)).a > 0.25
 
 ## Остановиться (на время разговора) и продолжить.
+## «Тык»: на время прыжка картинка меняется на alt (например, фаза 2), потом возвращается.
+var _poke_tex: Texture2D
+func poke(alt: Texture2D, hold: float = 1.1) -> void:
+	if not _alive or not is_instance_valid(_body) or _poke_tex != null:
+		return
+	_poke_tex = _body.texture
+	if alt != null:
+		_body.texture = alt
+	_hop(false)
+	get_tree().create_timer(hold).timeout.connect(func() -> void:
+		if is_instance_valid(_body) and _poke_tex != null:
+			_body.texture = _poke_tex
+		_poke_tex = null
+	)
+
 func set_frozen(on: bool) -> void:
 	process_mode = Node.PROCESS_MODE_DISABLED if on else Node.PROCESS_MODE_INHERIT
 

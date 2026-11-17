@@ -82,6 +82,7 @@ var _mat: ShaderMaterial
 var _panel: PanelContainer
 var _label: Label
 var _next: Button
+var _back: Button
 var _pulse_tween: Tween
 var _done := false
 var _free_play := false
@@ -131,10 +132,19 @@ func setup(p_battle: CardBattle) -> void:
 	_label.add_theme_font_size_override("font_size", 30)
 	_label.add_theme_color_override("font_color", Color(1, 0.97, 1))
 	box.add_child(_label)
+	# «◂ Назад» слева, «Далее ▸» справа: случайно пролистанную подсказку можно вернуть.
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 12)
+	box.add_child(row)
+	_back = RunUiKit.make_button("◂  Назад", Vector2(170, 54), 24)
+	_back.pressed.connect(_go_back)
+	row.add_child(_back)
+	var spacer := Control.new()
+	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_child(spacer)
 	_next = RunUiKit.make_button("Далее  ▸", Vector2(200, 54), 26)
-	_next.size_flags_horizontal = Control.SIZE_SHRINK_END
 	_next.pressed.connect(_advance)
-	box.add_child(_next)
+	row.add_child(_next)
 
 	_pulse_tween = create_tween().set_loops()
 	_pulse_tween.tween_method(_set_pulse, 0.0, 1.0, 0.6).set_trans(Tween.TRANS_SINE)
@@ -177,15 +187,25 @@ func _gui_input(event: InputEvent) -> void:
 		_advance()
 
 func _advance() -> void:
-	_step += 1
-	if _step >= STEPS.size():
+	if _step + 1 >= STEPS.size():
 		return
+	_show_step(_step + 1)
+
+## На подсказку назад. Через «свободную игру» (где игрок уже разыграл карты) назад не вернуться.
+func _go_back() -> void:
+	var i := _step - 1
+	if i >= 0 and not bool(STEPS[i].get("free", false)):
+		_show_step(i)
+
+func _show_step(i: int) -> void:
+	_step = i
 	var s: Dictionary = STEPS[_step]
 	_free_play = bool(s.get("free", false))
 	# В свободной игре затемнения нет и клики проходят в бой; подсвечены рука и «Завершить ход».
 	mouse_filter = Control.MOUSE_FILTER_IGNORE if _free_play else Control.MOUSE_FILTER_STOP
 	_mat.set_shader_parameter("dim_color", Color(DIM, 0.0) if _free_play else DIM)
 	_next.visible = not _free_play
+	_back.visible = not _free_play and _step > 0 and not bool(STEPS[_step - 1].get("free", false))
 	_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE if _free_play else Control.MOUSE_FILTER_STOP
 	_label.text = String(s.get("text", ""))
 	_set_holes(_target_rects(String(s.get("target", ""))))

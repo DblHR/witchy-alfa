@@ -56,6 +56,8 @@ var _roster_cards: Array[TeamSlot] = []
 var _item_popup: PopupPanel = null
 var _item_popup_title: Label = null
 var _item_popup_grid: GridContainer = null
+## Описание предмета под сеткой выбора: при наведении — эффект наведённого, иначе — выбранного.
+var _item_popup_info: RichTextLabel = null
 var _popup_kind: String = ""
 
 var _admin_open := false
@@ -349,6 +351,21 @@ func _build_item_popup() -> void:
 	_item_popup_grid.add_theme_constant_override("h_separation", 12)
 	_item_popup_grid.add_theme_constant_override("v_separation", 12)
 	scroll.add_child(_item_popup_grid)
+
+	_item_popup_info = RichTextLabel.new()
+	_item_popup_info.bbcode_enabled = true
+	_item_popup_info.fit_content = true
+	_item_popup_info.scroll_active = false
+	_item_popup_info.custom_minimum_size = Vector2(0, 110)
+	_item_popup_info.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_item_popup_info.add_theme_font_size_override("normal_font_size", 18)
+	_item_popup_info.add_theme_font_size_override("bold_font_size", 21)
+	var info_sb := StyleBoxFlat.new()
+	info_sb.bg_color = Color(0.10, 0.05, 0.12, 0.85)
+	info_sb.set_corner_radius_all(14)
+	info_sb.set_content_margin_all(12)
+	_item_popup_info.add_theme_stylebox_override("normal", info_sb)
+	outer.add_child(_item_popup_info)
 
 	var close_button := Button.new()
 	close_button.text = "Закрыть"
@@ -891,7 +908,8 @@ func _open_item_popup(kind: String) -> void:
 		_:
 			_item_popup_title.text = "Выбор зелья"
 	_rebuild_item_popup_grid()
-	_item_popup.popup_centered(Vector2i(420, 350))
+	_show_popup_info(_current_popup_id())
+	_item_popup.popup_centered(Vector2i(560, 520))
 
 func _rebuild_item_popup_grid() -> void:
 	if _item_popup_grid == null:
@@ -912,6 +930,8 @@ func _rebuild_item_popup_grid() -> void:
 
 		var id := String(entry.get("id", ""))
 		btn.pressed.connect(_on_popup_entry_pressed.bind(_popup_kind, id))
+		btn.mouse_entered.connect(_show_popup_info.bind(id))
+		btn.mouse_exited.connect(func() -> void: _show_popup_info(_current_popup_id()))
 
 		var sb := StyleBoxFlat.new()
 		sb.bg_color = Color(0.43, 0.26, 0.45, 0.94)
@@ -978,6 +998,30 @@ func _get_popup_entries(kind: String) -> Array[Dictionary]:
 	return out
 
 
+## Что сейчас выбрано в открытом окне (посох / еда / зелье этого слота).
+func _current_popup_id() -> String:
+	match _popup_kind:
+		"artifact":
+			return DungRun.selected_artifact_id
+		"food":
+			return DungRun.selected_food_id
+	return DungRun.selected_potion_ids[_potion_slot] if _potion_slot >= 0 and _potion_slot < DungRun.selected_potion_ids.size() else ""
+
+## Название и эффект предмета (id из окна выбора: у зелий — id зелья, иначе id предмета).
+func _loadout_item_text(kind: String, id: String) -> Array[String]:
+	if id == "":
+		var empty := {"artifact": "Без посоха", "food": "Без еды"}
+		return [String(empty.get(kind, "Без зелья")), ""]
+	if kind == "artifact" or kind == "food":
+		return [RunItems.get_item_name(id), RunItems.get_item_desc(id)]
+	return [RunItems.get_potion_name(id), RunItems.get_potion_desc(id)]
+
+func _show_popup_info(id: String) -> void:
+	if _item_popup_info == null:
+		return
+	var t := _loadout_item_text(_popup_kind, id)
+	_item_popup_info.text = "[b]%s[/b]\n%s" % [t[0], t[1]] if t[1] != "" else "[b]%s[/b]" % t[0]
+
 func _on_popup_entry_pressed(kind: String, id: String) -> void:
 	_match_popup_selection(kind, id)
 	if _item_popup != null:
@@ -1003,10 +1047,15 @@ func _refresh_loadout_ui() -> void:
 	potion_button2.icon = _get_potion_icon(DungRun.selected_potion_ids[1])
 	for i in range(2):
 		var pid := DungRun.selected_potion_ids[i]
-		(potion_button if i == 0 else potion_button2).tooltip_text = "Зелье %d: %s" % [i + 1, RunItems.get_potion_name(pid) if pid != "" else "пусто"]
+		var pt := _loadout_item_text("potion", pid)
+		(potion_button if i == 0 else potion_button2).tooltip_text = "Зелье %d: %s%s" % [i + 1, pt[0] if pid != "" else "пусто", ("\n" + pt[1]) if pt[1] != "" else ""]
 	# Пустой слот посоха/еды — без иконки (раньше там был цветной квадрат-заглушка).
 	artifact_button.icon = _get_item_icon_or_null(DungRun.selected_artifact_id)
 	food_button.icon = _get_item_icon_or_null(DungRun.selected_food_id)
+	# Подсказка при наведении на слот — сразу эффект, без похода в инвентарь.
+	for pair in [[artifact_button, "artifact", DungRun.selected_artifact_id, "Посох"], [food_button, "food", DungRun.selected_food_id, "Еда"]]:
+		var t := _loadout_item_text(String(pair[1]), String(pair[2]))
+		(pair[0] as Button).tooltip_text = "%s: %s%s" % [pair[3], t[0], ("\n" + t[1]) if t[1] != "" else "\nНажмите, чтобы выбрать."]
 	potion_button.disabled = DungRun.get_available_potion_ids().is_empty()
 	potion_button2.disabled = potion_button.disabled
 	var lures := Inventory_.get_item_count(DungRun.LURE_ITEM) if Inventory_ != null else 0

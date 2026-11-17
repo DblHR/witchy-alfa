@@ -54,13 +54,21 @@ const XP_BY_RANK := {"B": 10, "A": 25, "S": 60}
 ## а на 2-м уровне Рикка даёт квест на воина. Уровень -> сколько опыта до следующего.
 const EARLY_LEVEL_XP := {1: 100, 2: 200}
 
+## Все уровни дешевле таблиц выше на столько (0.7 = на 30% меньше опыта на уровень).
+const LEVEL_XP_MULT := 0.7
+## Опыт за пройденную ивент-комнату (сундук, лавка, медсестра, статуя).
+const XP_EVENT_ROOM := 10
+
 static func xp_to_next_level(level: int) -> int:
 	var lvl := maxi(level, 1)
+	var raw := 0
 	if EARLY_LEVEL_XP.has(lvl):
-		return int(EARLY_LEVEL_XP[lvl])
-	var floor_no := (lvl - 1) / LEVELS_PER_FLOOR + 1
-	var runs: int = RUNS_PER_LEVEL[(lvl - 1) % LEVELS_PER_FLOOR]
-	return roundi(float(XP_PER_RUN * runs) * floor_mult(floor_no))
+		raw = int(EARLY_LEVEL_XP[lvl])
+	else:
+		var floor_no := (lvl - 1) / LEVELS_PER_FLOOR + 1
+		var runs: int = RUNS_PER_LEVEL[(lvl - 1) % LEVELS_PER_FLOOR]
+		raw = roundi(float(XP_PER_RUN * runs) * floor_mult(floor_no))
+	return maxi(1, roundi(float(raw) * LEVEL_XP_MULT))
 
 static func xp_for_kill(rank: String, floor_no: int) -> int:
 	return roundi(float(int(XP_BY_RANK.get(rank, 10))) * floor_mult(floor_no))

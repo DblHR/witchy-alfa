@@ -111,7 +111,7 @@ func _on_node_added(node: Node) -> void:
 	if node is TextureButton and node != _pause_button:
 		_attach_glow.call_deferred(node)
 
-func _attach_glow(node: Node) -> void:
+func _attach_glow(node) -> void:   ## без типа: узел мог уже удалиться до отложенного вызова
 	if not is_instance_valid(node) or not node.is_inside_tree():
 		return
 	var scene := get_tree().current_scene

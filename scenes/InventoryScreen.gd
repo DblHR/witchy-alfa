@@ -64,6 +64,10 @@ func _ready() -> void:
 	_build_gallery_ui()
 	_build_admin_ui()
 	_select_section(Section.ITEMS)
+	# Заглянули в инвентарь — значок с хаба снимается; дальше он ведёт к вкладке «Персонажи».
+	if UnitRoster_ != null:
+		UnitRoster_.mark_upgrade_seen(UnitRoster_.UPGRADE_SEEN_INVENTORY)
+	_refresh_upgrade_badges()
 
 func _exit_tree() -> void:
 	if DungRun != null and DungRun.changed.is_connected(_refresh_header):
@@ -78,7 +82,10 @@ func _save_default_selection_ids() -> void:
 		selected_entry_by_section[section] = ""
 
 func _save_button_connections() -> void:
-	save_button.pressed.connect(_on_save_pressed)
+	# Сохранение переехало в меню паузы (ESC / кнопка паузы) — кнопку в инвентаре прячем.
+	save_button.visible = false
+	save_button.disabled = true
+	_build_level_box()
 	back_button.pressed.connect(func() -> void:
 		SceneRouter_.go_to_hub()
 	)
@@ -103,14 +110,104 @@ func _subscribe_state() -> void:
 		UnitRoster_.changed.connect(_refresh_current_section)
 	_refresh_header()
 
-func _on_save_pressed() -> void:
-	SaveManager_.save_game()
-	footer_label.text = "Сохранение записано."
+# --- Уровень отряда: кружок с уровнем + полоса опыта ---------------------------
+const LEVEL_BOX_RECT := Rect2(970, 850, 578, 88)
+var _level_num: Label
+var _xp_bar: ProgressBar
+var _xp_text: Label
+var _upgrade_hint: Label
+
+func _build_level_box() -> void:
+	xp_label.visible = false
+	level_label.visible = false
+	var box := Control.new()
+	box.name = "LevelBox"
+	box.position = LEVEL_BOX_RECT.position
+	box.size = LEVEL_BOX_RECT.size
+	box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(box)
+	# Кружок с номером уровня.
+	var circle := Panel.new()
+	var csb := StyleBoxFlat.new()
+	csb.bg_color = Color(0.33, 0.16, 0.38, 0.97)
+	csb.set_corner_radius_all(40)
+	csb.set_border_width_all(4)
+	csb.border_color = Color(1.0, 0.82, 0.36)
+	csb.shadow_color = Color(1.0, 0.7, 0.3, 0.35)
+	csb.shadow_size = 8
+	circle.add_theme_stylebox_override("panel", csb)
+	circle.position = Vector2(0, 4)
+	circle.size = Vector2(80, 80)
+	circle.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	box.add_child(circle)
+	_level_num = Label.new()
+	_level_num.position = Vector2(0, 2)
+	_level_num.size = Vector2(80, 56)
+	_level_num.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_level_num.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_level_num.add_theme_font_size_override("font_size", 36)
+	_level_num.add_theme_color_override("font_color", Color(1.0, 0.92, 0.6))
+	circle.add_child(_level_num)
+	var cap := Label.new()
+	cap.text = "ур."
+	cap.position = Vector2(0, 48)
+	cap.size = Vector2(80, 24)
+	cap.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	cap.add_theme_font_size_override("font_size", 15)
+	cap.add_theme_color_override("font_color", Color(1, 0.9, 1, 0.75))
+	circle.add_child(cap)
+	# Подпись и полоса опыта.
+	var title := Label.new()
+	title.text = "Уровень отряда"
+	title.position = Vector2(96, 2)
+	title.size = Vector2(300, 28)
+	title.add_theme_font_size_override("font_size", 22)
+	title.add_theme_color_override("font_color", Color(0.33, 0.16, 0.38))   ## страница книги светлая
+	box.add_child(title)
+	_xp_bar = ProgressBar.new()
+	_xp_bar.show_percentage = false
+	_xp_bar.position = Vector2(96, 34)
+	_xp_bar.size = Vector2(LEVEL_BOX_RECT.size.x - 96, 26)
+	var bg := StyleBoxFlat.new()
+	bg.bg_color = Color(0.2, 0.1, 0.24, 0.85)
+	bg.set_corner_radius_all(13)
+	var fill := StyleBoxFlat.new()
+	fill.bg_color = Color(0.98, 0.62, 0.86)
+	fill.set_corner_radius_all(13)
+	_xp_bar.add_theme_stylebox_override("background", bg)
+	_xp_bar.add_theme_stylebox_override("fill", fill)
+	_xp_bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	box.add_child(_xp_bar)
+	_xp_text = Label.new()
+	_xp_text.position = Vector2.ZERO
+	_xp_text.size = _xp_bar.size
+	_xp_text.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_xp_text.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_xp_text.add_theme_font_size_override("font_size", 16)
+	_xp_text.add_theme_color_override("font_color", Color.WHITE)
+	_xp_text.add_theme_color_override("font_outline_color", Color(0.25, 0.08, 0.25))
+	_xp_text.add_theme_constant_override("outline_size", 4)
+	_xp_bar.add_child(_xp_text)
+	_upgrade_hint = Label.new()
+	_upgrade_hint.position = Vector2(96, 62)
+	_upgrade_hint.size = Vector2(LEVEL_BOX_RECT.size.x - 96, 24)
+	_upgrade_hint.add_theme_font_size_override("font_size", 15)
+	_upgrade_hint.add_theme_color_override("font_color", Color(0.45, 0.3, 0.5))
+	box.add_child(_upgrade_hint)
 
 func _refresh_header() -> void:
 	gold_label.text = "%d" % int(DungRun.gold)
-	xp_label.text = "Опыт: %d / %d" % [int(DungRun.xp), int(DungRun.xp_to_next_level())]
-	level_label.text = "Уровень группы: %d" % int(DungRun.party_level)
+	if _level_num == null:
+		return
+	var lvl := int(DungRun.party_level)
+	var need := int(DungRun.xp_to_next_level())
+	_level_num.text = str(lvl)
+	_xp_bar.max_value = maxi(1, need)
+	_xp_bar.value = clampi(int(DungRun.xp), 0, need)
+	_xp_text.text = "опыт %d / %d" % [int(DungRun.xp), need]
+	var every := CardBalance.UPGRADE_EVERY_LEVELS
+	var next_point := (lvl / every + 1) * every
+	_upgrade_hint.text = "Следующее очко улучшения карт — на %d уровне" % next_point
 
 func _refresh_current_section() -> void:
 	_select_section(current_section, false)
@@ -128,7 +225,19 @@ func _select_section(section: int, reset_status: bool = true) -> void:
 		_gallery_panel.visible = false
 	if reset_status:
 		footer_label.text = ""
+	if section == Section.CHARACTERS and UnitRoster_ != null:
+		UnitRoster_.mark_upgrade_seen(UnitRoster_.UPGRADE_SEEN_CHARACTERS)
 	_rebuild_entry_grid()
+	_refresh_upgrade_badges()
+
+## Значки «!» про очки улучшения: вкладка «Персонажи» (пока не заглянули после новых очков),
+## сами героини и кнопка «Все карты» (пока очки не потрачены).
+func _refresh_upgrade_badges() -> void:
+	if UnitRoster_ == null:
+		return
+	NotifyBadge.attach(characters_button, UnitRoster_.upgrade_news(UnitRoster_.UPGRADE_SEEN_CHARACTERS))
+	if _cards_button != null:
+		NotifyBadge.attach(_cards_button, _current_char_id != "" and UnitRoster_.upgrade_points_left(_current_char_id) > 0)
 
 func _rebuild_entry_grid() -> void:
 	for child in grid_container.get_children():
@@ -149,6 +258,8 @@ func _rebuild_entry_grid() -> void:
 		grid_container.add_child(button)
 		button.setup(entry)
 		button.entry_pressed.connect(_on_entry_pressed)
+		if current_section == Section.CHARACTERS and UnitRoster_ != null:
+			NotifyBadge.attach(button, UnitRoster_.upgrade_points_left(String(entry.get("id", ""))) > 0)
 	_show_entry_detail(selected_id)
 
 func _entries_have_id(entries: Array[Dictionary], entry_id: String) -> bool:

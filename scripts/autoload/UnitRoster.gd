@@ -51,6 +51,34 @@ func upgrade_points_left(unit_id: String) -> int:
 func is_card_upgraded(unit_id: String, card_key: String) -> bool:
 	return (card_upgrades.get(unit_id, []) as Array).has(card_key)
 
+## --- Значки «!» про очки улучшения ---
+## Инвентарь и вкладка «Персонажи»: значок, пока игрок не заглянул туда после получения новых очков
+## (запоминаем, сколько очков всего было при последнем заходе — StoryState counters).
+## Сами героини и кнопка «Все карты»: значок, пока у героини есть непотраченные очки.
+const UPGRADE_SEEN_INVENTORY := "upgrade_seen_inventory"
+const UPGRADE_SEEN_CHARACTERS := "upgrade_seen_characters"
+
+func any_upgrade_points() -> bool:
+	for id in unlocked_unit_ids:
+		if upgrade_points_left(String(id)) > 0:
+			return true
+	return false
+
+## Есть непросмотренные новые очки для места where (UPGRADE_SEEN_INVENTORY / _CHARACTERS).
+func upgrade_news(where: String) -> bool:
+	if StoryState_ == null or not any_upgrade_points():
+		return false
+	return upgrade_points_total() > StoryState_.get_counter(where)
+
+## Игрок заглянул (в инвентарь / во вкладку персонажей): новые очки увидены.
+func mark_upgrade_seen(where: String) -> void:
+	if StoryState_ == null:
+		return
+	var total := upgrade_points_total()
+	var seen := StoryState_.get_counter(where)
+	if total > seen:
+		StoryState_.add_counter(where, total - seen)
+
 func upgrade_card(unit_id: String, card_key: String) -> bool:
 	if upgrade_points_left(unit_id) <= 0 or is_card_upgraded(unit_id, card_key):
 		return false

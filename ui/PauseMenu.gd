@@ -9,6 +9,7 @@ signal quit_requested
 @onready var resume_btn: Button = $Panel/VBoxContainer/Resume
 @onready var settings_btn: Button = $Panel/VBoxContainer/Settings
 @onready var main_menu_btn: Button = $Panel/VBoxContainer/MainMenu
+@onready var save_btn: Button = $Panel/VBoxContainer/Save
 @onready var quit_btn: Button = $Panel/VBoxContainer/Quit
 
 ## Окно настроек создаётся кодом (ui/SettingsPanel.gd) и открывается поверх паузы вместо панели.
@@ -29,6 +30,8 @@ func _ready() -> void:
 		settings_btn.pressed.connect(open_settings)
 	if main_menu_btn != null:
 		main_menu_btn.pressed.connect(func(): main_menu_requested.emit())
+	if save_btn != null:
+		save_btn.pressed.connect(_on_save_pressed)
 	if quit_btn != null:
 		quit_btn.pressed.connect(func(): quit_requested.emit())
 
@@ -39,8 +42,23 @@ func _ready() -> void:
 
 	visible = false
 
+## «Сохранить» (раньше была в инвентаре). Сохранять нечего (главное меню без загруженной игры) — кнопка серая.
+func _on_save_pressed() -> void:
+	if SaveManager_ == null:
+		return
+	SaveManager_.save_game()
+	save_btn.text = "Сохранено ✓"
+	save_btn.disabled = true
+	await get_tree().create_timer(1.2, true, false, true).timeout
+	if is_instance_valid(save_btn):
+		save_btn.text = "Сохранить"
+		save_btn.disabled = false
+
 func open() -> void:
 	visible = true
+	if save_btn != null:
+		save_btn.text = "Сохранить"
+		save_btn.disabled = false
 	close_settings()
 	if background != null:
 		background.mouse_filter = Control.MOUSE_FILTER_STOP

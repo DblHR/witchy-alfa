@@ -7,6 +7,13 @@ signal clicked
 
 const SCALE := 0.31
 const HOVER_TIME := 0.16
+## Зов «нажми на меня», пока статую не нажали: светящийся круг под ней и лучи света вверх.
+const CALL_COLOR_WHITE := Color(1.0, 0.95, 0.75)
+const CALL_COLOR_BLACK := Color(0.85, 0.6, 1.0)
+const CIRCLE_RADIUS := Vector2(150, 34)   ## полуоси круга у подножия, px
+const RAYS_AMOUNT := 28
+## Исчезновение после комнаты, сек.
+const VANISH_TIME := 1.1
 
 const GLOW_SHADER := "shader_type canvas_item;
 uniform float glow : hint_range(0.0, 1.0) = 0.0;
@@ -39,8 +46,14 @@ var _mat: ShaderMaterial
 var _image: Image
 var _hovered := false
 var _glow_tween: Tween
+var _call: Node2D            ## круг и лучи
+var _rays: CPUParticles2D
+var _call_color := CALL_COLOR_WHITE
+var _t := 0.0
 
-func setup(texture: Texture2D) -> void:
+func setup(texture: Texture2D, black: bool = false) -> void:
+	_call_color = CALL_COLOR_BLACK if black else CALL_COLOR_WHITE
+	_build_call()
 	_sprite = Sprite2D.new()
 	_sprite.texture = texture
 	GalleryData.mark_seen_texture(texture)
@@ -59,6 +72,7 @@ func setup(texture: Texture2D) -> void:
 	_mat.set_shader_parameter("glow", 0.0)
 	_sprite.material = _mat
 	add_child(_sprite)
+	add_child(_rays)
 	# Появление: как враги перед боем — из прозрачности, чуть снизу.
 	modulate.a = 0.0
 	_sprite.position = Vector2(0, 24)
@@ -70,18 +84,91 @@ func set_interactive(on: bool) -> void:
 	interactive = on
 	if not on:
 		_set_hovered(false)
+		_stop_call()
 
+## Круг под ногами (рисуется в _draw узла _call) и лучи — частицы-полоски, летящие вверх.
+func _build_call() -> void:
+	_call = Node2D.new()
+	_call.name = "Call"
+	_call.draw.connect(_draw_call)
+	var add := CanvasItemMaterial.new()
+	add.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD
+	_call.material = add
+	add_child(_call)
+	_rays = CPUParticles2D.new()
+	_rays.amount = RAYS_AMOUNT
+	_rays.lifetime = 2.4
+	_rays.preprocess = 2.4
+	_rays.emission_shape = CPUParticles2D.EMISSION_SHAPE_RECTANGLE
+	_rays.emission_rect_extents = Vector2(CIRCLE_RADIUS.x * 0.85, CIRCLE_RADIUS.y * 0.4)
+	_rays.direction = Vector2.UP
+	_rays.spread = 4.0
+	_rays.gravity = Vector2.ZERO
+	_rays.initial_velocity_min = 110.0
+	_rays.initial_velocity_max = 210.0
+	_rays.scale_amount_min = 0.6
+	_rays.scale_amount_max = 1.3
+	var ramp := Gradient.new()
+	ramp.set_color(0, Color(_call_color, 0.0))
+	ramp.add_point(0.25, Color(_call_color, 0.85))
+	ramp.set_color(ramp.get_point_count() - 1, Color(_call_color, 0.0))
+	_rays.color_ramp = ramp
+	var streak := Gradient.new()
+	streak.set_color(0, Color(1, 1, 1, 0.0))
+	streak.add_point(0.5, Color(1, 1, 1, 1.0))
+	streak.set_color(streak.get_point_count() - 1, Color(1, 1, 1, 0.0))
+	var tex := GradientTexture2D.new()
+	tex.gradient = streak
+	tex.width = 14
+	tex.height = 130
+	tex.fill_from = Vector2(0, 0)
+	tex.fill_to = Vector2(1, 0)
+	_rays.texture = tex
+	_rays.material = add
+	_rays.position = Vector2(0, -10)
+	_rays.z_index = 1   ## лучи поверх статуи (добавляются к узлу после спрайта, см. setup)
+
+func _draw_call() -> void:
+	var pulse := 0.5 + 0.5 * sin(_t * 3.0)
+	_call.draw_set_transform(Vector2.ZERO, 0.0, Vector2(1.0, CIRCLE_RADIUS.y / CIRCLE_RADIUS.x))
+	for i in range(6):
+		var k := 1.0 - float(i) / 6.0
+		_call.draw_circle(Vector2.ZERO, CIRCLE_RADIUS.x * (0.45 + 0.55 * k), Color(_call_color, (0.05 + 0.07 * pulse) * (1.0 - k * 0.6)))
+	_call.draw_arc(Vector2.ZERO, CIRCLE_RADIUS.x, 0.0, TAU, 64, Color(_call_color, 0.55 + 0.35 * pulse), 4.0, true)
+	_call.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+
+func _stop_call() -> void:
+	if _call == null or not is_instance_valid(_call):
+		return
+	_rays.emitting = false
+	var tw := _call.create_tween()
+	tw.tween_property(_call, "modulate:a", 0.0, 0.6)
+	tw.tween_callback(_call.queue_free)
+	var rays := _rays
+	get_tree().create_timer(_rays.lifetime).timeout.connect(func() -> void:
+		if is_instance_valid(rays):
+			rays.queue_free()
+	)
+	_call = null
+
+## Комната пройдена: статуя медленно растворяется — светлеет, чуть поднимается и тает.
 func vanish() -> void:
 	set_interactive(false)
-	var tw := create_tween()
-	tw.tween_property(self, "modulate:a", 0.0, 0.35)
-	tw.tween_callback(queue_free)
+	var tw := create_tween().set_parallel(true)
+	tw.tween_property(self, "modulate:a", 0.0, VANISH_TIME).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+	tw.tween_property(self, "position:y", position.y - 40.0, VANISH_TIME).set_trans(Tween.TRANS_SINE)
+	if _mat != null:
+		tw.tween_method(_set_glow, 0.0, 1.0, VANISH_TIME * 0.5)
+	tw.chain().tween_callback(queue_free)
 
 func _exit_tree() -> void:
 	if _hovered:
 		Input.set_default_cursor_shape(Input.CURSOR_ARROW)
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
+	_t += delta
+	if _call != null and is_instance_valid(_call):
+		_call.queue_redraw()
 	_set_hovered(interactive and _blocking_overlay() == false and _is_over(get_global_mouse_position()))
 
 func _input(event: InputEvent) -> void:

@@ -4,6 +4,7 @@ class_name InventoryState
 signal changed
 
 const ICON_PATHS := {
+	"return_stone": "res://assets/items/quest/return_stone.png",
 	"slime_potion": "res://assets/items/potions/slime_potion.png",
 	"energy_tonic": "res://assets/items/potions/energy_tonic.png",
 	"rage_phial": "res://assets/items/potions/rage_phial.png",
