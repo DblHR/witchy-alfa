@@ -148,7 +148,8 @@ func _set_hover(on: bool) -> void:
 		return
 	_hovered = on
 	## self_modulate: modulate.a занят прятанием на время диалога.
-	_sprite.self_modulate = Color(1.12, 1.08, 1.12) if on else Color.WHITE
+	var a := _sprite.self_modulate.a   ## альфа может быть занята (Рикка с панелькой в лавке)
+	_sprite.self_modulate = Color(1.12, 1.08, 1.12, a) if on else Color(1, 1, 1, a)
 	_sprite.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND if on else Control.CURSOR_ARROW
 
 func _on_sprite_gui_input(event: InputEvent) -> void:

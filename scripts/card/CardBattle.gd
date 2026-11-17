@@ -47,6 +47,13 @@ const CHEST_GOLD_PER_ROOM := 5
 const HAND_CENTER_X := 960.0
 const HAND_TOP_Y := 845.0
 const HAND_GAP := 16.0
+## Рука не шире этого (от левого края первой карты до правого последней): если карт много, они
+## заходят друг на друга, а не на рукав и зелья. 960 ± 420 — от зелий слева до рукава справа.
+const HAND_MAX_WIDTH := 840.0
+## Наведение на карту в «сжатой» руке: соседи отъезжают, чтобы освободить место увеличенной карте.
+const HAND_HOVER_GAP := 196.0      ## расстояние от наведённой карты до соседей (шаг без нахлёста 166)
+const HAND_MIN_STEP := 26.0        ## минимальный шаг между картами при раздвигании
+const HAND_UNHOVER_DELAY := 0.06   ## пауза перед «сдвинуть обратно» (переход курсора на соседнюю карту)
 ## Зона «вернуть в руку» (невидимая): ниже линии, слева от рукава (рукав — справа от руки).
 ## Карты без выбора цели играются в любой точке вне неё.
 const RETURN_RECT := Rect2(330, 770, 1055, 310)
@@ -648,26 +655,89 @@ func _add_card_view(c: CardInstance) -> CardView:
 	hand_layer.add_child(v)
 	v.position = deck_button.get_global_rect().get_center() - CardView.CARD_SIZE * 0.5
 	v.pressed.connect(_on_card_pressed)
+	v.mouse_entered.connect(_on_hand_card_hover.bind(v, true))
+	v.mouse_exited.connect(_on_hand_card_hover.bind(v, false))
 	v.appear()
 	_hand_views.append(v)
 	return v
 
+## Шаг между левыми краями карт: обычный (карта + зазор) или меньше, если иначе рука не влезает.
+func _hand_step(count: int) -> float:
+	var full := CardView.CARD_SIZE.x + HAND_GAP
+	if count <= 1:
+		return full
+	return minf(full, (HAND_MAX_WIDTH - CardView.CARD_SIZE.x) / float(count - 1))
+
 func _hand_slot_position(index: int, count: int) -> Vector2:
-	var total := count * CardView.CARD_SIZE.x + (count - 1) * HAND_GAP
-	var x := HAND_CENTER_X - total * 0.5 + index * (CardView.CARD_SIZE.x + HAND_GAP)
+	var step := _hand_step(count)
+	var total := CardView.CARD_SIZE.x + (count - 1) * step
+	var x := HAND_CENTER_X - total * 0.5 + index * step
 	return Vector2(x, HAND_TOP_Y)
+
+## Позиции карт, когда наведена карта h: она стоит на своём месте, карты слева и справа сжимаются
+## к краям руки, освобождая вокруг неё HAND_HOVER_GAP.
+func _hand_hover_positions(h: int, count: int) -> Array[float]:
+	var xs: Array[float] = []
+	for i in range(count):
+		xs.append(_hand_slot_position(i, count).x)
+	var step := _hand_step(count)
+	if step >= CardView.CARD_SIZE.x + HAND_GAP:
+		return xs   ## рука не сжата — раздвигать нечего
+	var left_edge := HAND_CENTER_X - HAND_MAX_WIDTH * 0.5
+	var right_edge := HAND_CENTER_X + HAND_MAX_WIDTH * 0.5 - CardView.CARD_SIZE.x
+	var xh := xs[h]
+	if h > 0:
+		var last := maxf(xh - HAND_HOVER_GAP, left_edge + (h - 1) * HAND_MIN_STEP)
+		var sl := step if h == 1 else minf(step, (last - left_edge) / float(h - 1))
+		for i in range(h):
+			xs[i] = minf(xs[i], last - (h - 1 - i) * sl)
+	var right_n := count - 1 - h
+	if right_n > 0:
+		var first := minf(xh + HAND_HOVER_GAP, right_edge - (right_n - 1) * HAND_MIN_STEP)
+		var sr := step if right_n == 1 else minf(step, (right_edge - first) / float(right_n - 1))
+		for i in range(h + 1, count):
+			xs[i] = maxf(xs[i], first + (i - h - 1) * sr)
+	return xs
+
+var _hand_hover: CardView
+var _hand_hover_token := 0
+
+func _on_hand_card_hover(v: CardView, on: bool) -> void:
+	_hand_hover_token += 1
+	if on:
+		_hand_hover = v
+		_layout_hand(true)
+		return
+	if v != _hand_hover:
+		return
+	# Курсор мог уйти на соседнюю карту — не дёргаем руку туда-обратно.
+	var token := _hand_hover_token
+	await get_tree().create_timer(HAND_UNHOVER_DELAY).timeout
+	if token == _hand_hover_token and is_inside_tree():
+		_hand_hover = null
+		_layout_hand(true)
 
 func _layout_hand(animated: bool) -> void:
 	var n := _hand_views.size()
+	var hover_i := -1
+	if _hand_hover != null and is_instance_valid(_hand_hover) and _dragging == null:
+		hover_i = _hand_views.find(_hand_hover)
+	var xs: Array[float] = []
+	if hover_i >= 0:
+		xs = _hand_hover_positions(hover_i, n)
 	for i in range(n):
 		var v := _hand_views[i]
 		v.home_position = _hand_slot_position(i, n)
 		if v == _dragging:
 			continue
+		var target := v.home_position if xs.is_empty() else Vector2(xs[i], HAND_TOP_Y)
 		if animated:
-			v.move_to(v.home_position)
+			v.move_to(target, 0.14)
 		else:
-			v.position = v.home_position
+			v.position = target
+		# Правая карта лежит поверх левой (наведённая — поверх всех, это делает сама карта).
+		if v.get_parent() == hand_layer:
+			hand_layer.move_child(v, -1)
 
 func _wait(seconds: float) -> void:
 	# Твин привязан к узлу: если сцену закрыли, ожидание просто не продолжится.

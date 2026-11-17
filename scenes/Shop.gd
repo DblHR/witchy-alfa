@@ -16,6 +16,12 @@ var _bubbles: NpcBubbles
 ## Цветок Рикки (с 3-го уровня отряда) и окно его кормления.
 var _flower: RikkaFlower
 var _feed_panel: FlowerFeedPanel
+## Рикка с панелькой в руках (на ней окно кормления) — поверх обычной Рикки, плавная смена.
+const RIKKA_WITH_FLOWER := "res://assets/npc/rikka/rikka_with_flower.png"
+const SWAP_TIME := 0.35
+var _rikka: TextureRect
+var _rikka_alt: TextureRect
+var _swap: Tween
 
 func _ready() -> void:
 	UIThemeHelper.apply_pink_theme(self)
@@ -26,6 +32,7 @@ func _ready() -> void:
 		add_child(npc)
 		move_child(npc, bg.get_index() + 1)
 		_bubbles = NpcBubbles.attach(self, npc, "rabbit_shop")
+		_rikka = npc
 	home_button.pressed.connect(func(): SceneRouter_.go_to_hub())
 	if DungRun != null and not DungRun.changed.is_connected(_refresh):
 		DungRun.changed.connect(_refresh)
@@ -92,6 +99,22 @@ func _build_flower() -> void:
 	_feed_panel = FlowerFeedPanel.new()
 	add_child(_feed_panel)
 	_feed_panel.fed.connect(_on_flower_fed)
+	_feed_panel.close_requested.connect(_close_feed_panel)
+	# Рикка с панелькой: дочерний узел обычной Рикки (прячется вместе с ней на время диалогов).
+	if _rikka != null and ResourceLoader.exists(RIKKA_WITH_FLOWER):
+		_rikka_alt = TextureRect.new()
+		_rikka_alt.name = "RikkaWithFlower"
+		_rikka_alt.texture = load(RIKKA_WITH_FLOWER)
+		_rikka_alt.expand_mode = _rikka.expand_mode
+		_rikka_alt.stretch_mode = _rikka.stretch_mode
+		_rikka_alt.texture_filter = _rikka.texture_filter
+		_rikka_alt.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		_rikka_alt.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_rikka_alt.modulate.a = 0.0
+		_rikka_alt.visible = false
+		_rikka.add_child(_rikka_alt)
+	if _bubbles != null:
+		_bubbles.blocked = func() -> bool: return _feed_panel.is_open()
 	if _bubbles != null:
 		_bubbles.raise_layer()
 
@@ -105,15 +128,36 @@ func _on_flower_clicked() -> void:
 			return
 		if StoryState_ != null:
 			StoryState_.mark_dialogue_seen(RikkaFlower.INTRO_ID)
-	if _feed_panel.visible:
-		_feed_panel.close()
+	if _feed_panel.is_open():
+		_close_feed_panel()
 	else:
 		_open_feed_panel()
 
+## Рикка плавно сменяется на картинку с панелькой, на панельке появляется инвентарь.
 func _open_feed_panel() -> void:
 	if _bubbles != null:
 		_bubbles.clear()   ## пузыри Рикки — там же, где окно
-	_feed_panel.open()
+	if _rikka_alt == null:
+		_feed_panel.open()
+		return
+	_swap_rikka(true)
+	_feed_panel.open_after(SWAP_TIME * 0.6)
+
+## Назад к обычной лавке: инвентарь гаснет, Рикка возвращается.
+func _close_feed_panel() -> void:
+	_feed_panel.close()
+	if _rikka_alt != null:
+		_swap_rikka(false)
+
+func _swap_rikka(with_board: bool) -> void:
+	if _swap != null and _swap.is_valid():
+		_swap.kill()
+	_rikka_alt.visible = true
+	_swap = create_tween().set_parallel(true)
+	_swap.tween_property(_rikka_alt, "modulate:a", 1.0 if with_board else 0.0, SWAP_TIME)
+	_swap.tween_property(_rikka, "self_modulate:a", 0.0 if with_board else 1.0, SWAP_TIME)
+	if not with_board:
+		_swap.chain().tween_callback(func() -> void: _rikka_alt.visible = false)
 
 func _on_flower_intro_finished() -> void:
 	if StoryState_ != null:
