@@ -415,16 +415,20 @@ func _advance() -> void:
 ##   "give_item": "gift" (+ "give_amount": 2) — после этой реплики предмет выдаётся и по центру
 ##       экрана появляется «Получено: <предмет>» с картинкой; клик — диалог идёт дальше;
 ##   "notice": {"title": "Новое поручение", "text": "Найти наушники", "icon": "res://...png"} —
-##       такое же окно со своим текстом (ничего не выдаёт).
+##       такое же окно со своим текстом (ничего не выдаёт);
+##   "ask_name": {"key": "rikka_flower", "title": "Как назовём цветок?", "default": "Игорь"} —
+##       после реплики окно ввода имени (NameInputBox); имя -> StoryState_.custom_names[key].
 ## Если диалог пропустили кнопкой — предметы всё равно выдаются, окна показываются подряд.
 var _rewarded: Dictionary = {}     ## номер реплики -> уже показано/выдано
 var _notice: ItemNotice
+var _name_box: NameInputBox
 
 func _line_has_reward(i: int) -> bool:
 	if i < 0 or i >= _lines.size() or _rewarded.has(i):
 		return false
 	var line = _lines[i]
-	return line is Dictionary and (String(line.get("give_item", "")) != "" or line.get("notice") is Dictionary)
+	return line is Dictionary and (String(line.get("give_item", "")) != "" or line.get("notice") is Dictionary \
+		or line.get("ask_name") is Dictionary)
 
 ## Показать награду реплики i; then — что делать после закрытия окна.
 func _show_reward(i: int, then: Callable) -> void:
@@ -433,8 +437,14 @@ func _show_reward(i: int, then: Callable) -> void:
 	var after := then
 	then = func() -> void:
 		_notice = null   ## окно закрыто — диалог снова принимает клики
+		_name_box = null
 		after.call()
 	var line: Dictionary = _lines[i]
+	if line.get("ask_name") is Dictionary:
+		var a: Dictionary = line["ask_name"]
+		_name_box = NameInputBox.ask(_frame, String(a.get("key", "")), String(a.get("title", "Как назовём?")),
+			String(a.get("default", "")), func(_chosen: String) -> void: then.call())
+		return
 	var item_id := String(line.get("give_item", ""))
 	if item_id != "":
 		var amount := maxi(1, int(line.get("give_amount", 1)))
@@ -448,7 +458,7 @@ func _show_reward(i: int, then: Callable) -> void:
 		_notice = ItemNotice.show_notice(_frame, String(n.get("title", "")), String(n.get("text", "")), icon, then)
 
 func _notice_open() -> bool:
-	return _notice != null and is_instance_valid(_notice)
+	return (_notice != null and is_instance_valid(_notice)) or (_name_box != null and is_instance_valid(_name_box))
 
 ## Конец диалога: сначала все невыданные награды оставшихся реплик (если диалог пропустили).
 func _finish_with_rewards() -> void:

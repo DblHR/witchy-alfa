@@ -287,7 +287,21 @@ func _hero_id(character_id: String) -> String:
 
 func _hero_text(text: String) -> String:
 	if text.contains("{hero}"):
-		return text.replace("{hero}", get_character_name(get_main_hero_id()))
+		text = text.replace("{hero}", get_character_name(get_main_hero_id()))
+	return names_text(text)
+
+## {name:ключ} -> имя, которое придумал игрок (StoryState_.custom_names), например {name:rikka_flower}.
+## Пока имени нет — подставляется DEFAULT_CUSTOM_NAMES или пусто.
+const DEFAULT_CUSTOM_NAMES := {"rikka_flower": "цветочек"}
+func names_text(text: String) -> String:
+	if not text.contains("{name:"):
+		return text
+	var re := RegEx.new()
+	re.compile("\\{name:([a-z0-9_]+)\\}")
+	for m in re.search_all(text):
+		var key := m.get_string(1)
+		var v: String = StoryState_.get_custom_name(key, String(DEFAULT_CUSTOM_NAMES.get(key, ""))) if StoryState_ != null else ""
+		text = text.replace(m.get_string(0), v)
 	return text
 
 func _resolve_line(raw: Dictionary) -> Dictionary:

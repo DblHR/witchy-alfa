@@ -14,6 +14,8 @@ var counters: Dictionary = {}
 var quests: Dictionary = {}
 var seen_dialogues: Dictionary = {}
 var relationships: Dictionary = {}
+## Имена, которые придумал игрок: ключ -> имя (например, "rikka_flower" -> "Игорь").
+var custom_names: Dictionary = {}
 
 ## Главный герой для диалогов и катсцен: "witch" или "warrior" (выбор после получения воина,
 ## меняется в настройках паузы). В JSON диалогов его подставляет спикер/персонаж "hero".
@@ -33,6 +35,7 @@ func reset_to_defaults() -> void:
 	quests.clear()
 	seen_dialogues.clear()
 	relationships.clear()
+	custom_names.clear()
 	main_hero = MAIN_HERO_DEFAULT
 	changed.emit()
 
@@ -128,6 +131,15 @@ func add_relationship(character_id: String, amount: int = 1) -> int:
 func get_relationship(character_id: String) -> int:
 	return int(relationships.get(character_id, 0))
 
+## Имя, которое дал игрок (цветок Рикки и т.п.). В тексте диалогов — {name:ключ}.
+func set_custom_name(key: String, value: String) -> void:
+	custom_names[key] = value.strip_edges()
+	changed.emit()
+
+func get_custom_name(key: String, fallback: String = "") -> String:
+	var v := String(custom_names.get(key, ""))
+	return v if v != "" else fallback
+
 func serialize_state() -> Dictionary:
 	return {
 		"intro_played": intro_played,
@@ -140,6 +152,7 @@ func serialize_state() -> Dictionary:
 		"quests": quests.duplicate(true),
 		"seen_dialogues": seen_dialogues.duplicate(true),
 		"relationships": relationships.duplicate(true),
+		"custom_names": custom_names.duplicate(true),
 		"main_hero": main_hero,
 	}
 
@@ -154,6 +167,7 @@ func apply_state(data: Dictionary) -> void:
 	quests = data.get("quests", {}).duplicate(true)
 	seen_dialogues = data.get("seen_dialogues", {}).duplicate(true)
 	relationships = data.get("relationships", {}).duplicate(true)
+	custom_names = data.get("custom_names", {}).duplicate(true)
 	main_hero = String(data.get("main_hero", MAIN_HERO_DEFAULT))
 	if not MAIN_HERO_OPTIONS.has(main_hero):
 		main_hero = MAIN_HERO_DEFAULT

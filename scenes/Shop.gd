@@ -13,6 +13,9 @@ const GREETED_FLAG := "rikka_greeted_today"
 var _pending_shop_dialogue: Dictionary = {}
 ## Пузыри дежурных фраз Рикки и клик по ней (как у Сессилии и Ноктрис в забеге).
 var _bubbles: NpcBubbles
+## Цветок Рикки (с 3-го уровня отряда) и окно его кормления.
+var _flower: RikkaFlower
+var _feed_panel: FlowerFeedPanel
 
 func _ready() -> void:
 	UIThemeHelper.apply_pink_theme(self)
@@ -30,6 +33,7 @@ func _ready() -> void:
 		Inventory_.changed.connect(_refresh)
 	DungRun.ensure_ground_shop_stock()
 	_build_stock_grid()
+	_build_flower()
 	_refresh()
 	call_deferred("_show_rabbit_shop_greeting")
 
@@ -76,6 +80,62 @@ func _on_rabbit_shop_dialogue_finished() -> void:
 	_pending_shop_dialogue = {}
 	DungRun.ensure_lure_in_shop()
 	_refresh()
+
+# --- Цветок Рикки -------------------------------------------------------------
+
+func _build_flower() -> void:
+	if not RikkaFlower.is_unlocked():
+		return
+	_flower = RikkaFlower.new()
+	add_child(_flower)   ## поверх панели лавки (табуретка заходит на её угол)
+	_flower.clicked.connect(_on_flower_clicked)
+	_feed_panel = FlowerFeedPanel.new()
+	add_child(_feed_panel)
+	_feed_panel.fed.connect(_on_flower_fed)
+	if _bubbles != null:
+		_bubbles.raise_layer()
+
+func _on_flower_clicked() -> void:
+	if not RikkaFlower.intro_seen():
+		var d := StoryDialogueDB_.pick_npc_dialogue(RikkaFlower.NPC_ID, "event") if StoryDialogueDB_ != null else {}
+		if not d.is_empty() and DialogueManager_ != null:
+			if _bubbles != null:
+				_bubbles.clear()
+			DialogueManager_.show_sequence(StoryDialogueDB_.resolve_lines(d), _on_flower_intro_finished)
+			return
+		if StoryState_ != null:
+			StoryState_.mark_dialogue_seen(RikkaFlower.INTRO_ID)
+	if _feed_panel.visible:
+		_feed_panel.close()
+	else:
+		_open_feed_panel()
+
+func _open_feed_panel() -> void:
+	if _bubbles != null:
+		_bubbles.clear()   ## пузыри Рикки — там же, где окно
+	_feed_panel.open()
+
+func _on_flower_intro_finished() -> void:
+	if StoryState_ != null:
+		StoryState_.mark_dialogue_seen(RikkaFlower.INTRO_ID)
+	_flower.refresh_badge()
+	_open_feed_panel()
+
+func _on_flower_fed(_id: String, _n: int, gold: int) -> void:
+	_flower.chomp()
+	var f := Label.new()
+	f.text = "+%d зол." % gold
+	f.add_theme_font_size_override("font_size", 40)
+	f.add_theme_color_override("font_color", ShopUi.GOLD)
+	f.add_theme_color_override("font_outline_color", Color(0.25, 0.10, 0.20))
+	f.add_theme_constant_override("outline_size", 10)
+	f.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	f.position = _flower.position + Vector2(_flower.size.x * 0.42, 0)
+	add_child(f)
+	var tw := f.create_tween().set_parallel(true)
+	tw.tween_property(f, "position:y", f.position.y - 90, 0.9)
+	tw.tween_property(f, "modulate:a", 0.0, 0.9).set_delay(0.3)
+	tw.chain().tween_callback(f.queue_free)
 
 ## Лавка в том же виде, что и у Сессилии (ShopUi): заголовок, описание, карточки товара.
 func _build_stock_grid() -> void:

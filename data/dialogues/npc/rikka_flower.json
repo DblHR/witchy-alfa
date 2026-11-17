@@ -1,0 +1,214 @@
+{
+  "_comment": "Цветок в лавке Рикки (появляется с 3-го уровня отряда, Shop.gd / RikkaFlower.gd). Первый клик по цветку — rikka_flower_intro (имя цветку — поле ask_name), дальше клик открывает окно кормления. Имя в тексте: {name:rikka_flower}.",
+  "dialogues": [
+    {
+      "id": "rikka_flower_intro",
+      "type": "event",
+      "npc": "rikka_flower",
+      "once": true,
+      "notify": true,
+      "conditions": {
+        "party_level_min": 3
+      },
+      "lines": [
+        {
+          "speaker": "hero",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "Рикка, это что за чудище?"
+        },
+        {
+          "speaker": "rabbit_shop",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "Это цветочек! Я его с одного этажа своро... Ну, взяла себе на воспитание."
+        },
+        {
+          "speaker": "rabbit_shop",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "Правда он миленький?"
+        },
+        {
+          "speaker": "hero",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "Ну..."
+        },
+        {
+          "speaker": "hero",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "И как его зовут?"
+        },
+        {
+          "speaker": "rabbit_shop",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "Я пока не решила."
+        },
+        {
+          "speaker": "rabbit_shop",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "Он такой обжора! Уже половину моего прилавка съел."
+        },
+        {
+          "speaker": "rabbit_shop",
+          "speaker_name": "",
+          "emotion": "worried",
+          "text": "Я так скоро разорюсь."
+        },
+        {
+          "speaker": "hero",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "А что он ест?"
+        },
+        {
+          "speaker": "rabbit_shop",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "Всё. Ну типа... Вообще всё!!!"
+        },
+        {
+          "speaker": "rabbit_shop",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "Сначала я кормила его удобрениями, но ему поплохело."
+        },
+        {
+          "speaker": "rabbit_shop",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "Потом попробовала скормить насекомых — так он мне чуть руку не оттяпал!"
+        },
+        {
+          "speaker": "rabbit_shop",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "А когда я отвернулась, он зажевал мой хвостик..."
+        },
+        {
+          "speaker": "rabbit_shop",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "Я так злилась, что кинула в него первое, что попало под руку!"
+        },
+        {
+          "speaker": "rabbit_shop",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "А он и ту книгу зажевал..."
+        },
+        {
+          "speaker": "rabbit_shop",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "Я тогда немного увлеклась и..."
+        },
+        {
+          "speaker": "rabbit_shop",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "Скормила ему половину прилавка..."
+        },
+        {
+          "speaker": "hero",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "Так это не он сам съел?"
+        },
+        {
+          "speaker": "rabbit_shop",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "В общем, мне бы найти, чем его кормить..."
+        },
+        {
+          "speaker": "rabbit_shop",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "Слушай, а ты же много всего из подземелья вытаскиваешь?"
+        },
+        {
+          "speaker": "hero",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "Когда как..."
+        },
+        {
+          "speaker": "rabbit_shop",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "А приноси это мне, а?"
+        },
+        {
+          "speaker": "rabbit_shop",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "Я ему скормлю. И раз не потеряю свой товар, то даже доплачу тебе за корм для него!"
+        },
+        {
+          "speaker": "hero",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "И много ему нужно?"
+        },
+        {
+          "speaker": "rabbit_shop",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "Вроде бы нет... В него помещается очень много!"
+        },
+        {
+          "speaker": "rabbit_shop",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "Но он вроде не требует ничего особо."
+        },
+        {
+          "speaker": "rabbit_shop",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "..."
+        },
+        {
+          "speaker": "rabbit_shop",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "Раз уж мы партнёры, я доверяю тебе дать ему имя!"
+        },
+        {
+          "speaker": "hero",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "Тебе ведь просто лень?"
+        },
+        {
+          "speaker": "rabbit_shop",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "Е-хе-хе~"
+        },
+        {
+          "speaker": "rabbit_shop",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "Давай-давай, ты наверняка придумаешь что-то интересное!",
+          "ask_name": {
+            "key": "rikka_flower",
+            "title": "Как назовём цветок?",
+            "default": "Игорь"
+          }
+        },
+        {
+          "speaker": "rabbit_shop",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "Мда, ну у тебя и фантазия..."
+        }
+      ]
+    }
+  ]
+}

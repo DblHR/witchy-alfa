@@ -2,6 +2,9 @@ extends RefCounted
 class_name RunItems
 
 const SELL_PRICE_RATIO := 0.70
+## Цветок Рикки: сколько Рикка доплачивает за корм — доля цены в лавке (минимум 1 зол.).
+## Слизь (4) -> 1, кварц (5) -> 2, цветы (6) -> 2, еда (~20) -> 6, посох (18-60) -> 5-18, приманка (40) -> 12.
+const FLOWER_PAY_RATIO := 0.30
 
 const ITEM_ALIASES := {
 	"control_fang": "heart_staff_rare",
@@ -663,6 +666,16 @@ static func is_unique_item(id: String) -> bool:
 
 static func is_stackable(id: String) -> bool:
 	return bool(get_item_def(id).get("stackable", true))
+
+## Можно ли скормить цветку Рикки: не квестовое, не рецепт (их не продают).
+static func can_feed_flower(id: String) -> bool:
+	var kind := get_item_kind(id)
+	return kind != "" and kind != "quest" and kind != "recipe" and is_sellable(id)
+
+static func get_flower_pay(id: String) -> int:
+	if not can_feed_flower(id):
+		return 0
+	return maxi(1, roundi(get_item_price(id) * FLOWER_PAY_RATIO))
 
 static func is_sellable(id: String) -> bool:
 	return bool(get_item_def(id).get("sellable", true))
