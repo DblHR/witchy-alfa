@@ -51,6 +51,26 @@ func _load_file(path: String) -> void:
 	else:
 		push_warning("StoryDialogueDB: invalid JSON root in %s" % path)
 
+## Проверка диалога при загрузке: предупреждения в консоль Godot, если картинки "cg" нет на диске
+## (игра молча покажет диалог без неё). {hero_id} проверяется для обоих героев.
+func _check_dialogue(d: Dictionary, path: String) -> void:
+	var lines = d.get("lines", [])
+	if not (lines is Array):
+		push_warning("Диалоги: %s, «%s» — lines должно быть списком [...]" % [path.get_file(), String(d.get("id", ""))])
+		return
+	for i in range((lines as Array).size()):
+		var l = lines[i]
+		if not (l is Dictionary):
+			push_warning("Диалоги: %s, «%s» — реплика %d не в фигурных скобках" % [path.get_file(), String(d.get("id", "")), i + 1])
+			continue
+		var cg := String(l.get("cg", ""))
+		if cg == "":
+			continue
+		for hero in (StoryState.MAIN_HERO_OPTIONS if cg.contains("{hero_id}") else [""]):
+			var cg_path := cg.replace("{hero_id}", String(hero))
+			if not ResourceLoader.exists(cg_path):
+				push_warning("Диалоги: %s, «%s», реплика %d — нет картинки %s" % [path.get_file(), String(d.get("id", "")), i + 1, cg_path])
+
 func _register_dialogue(entry, path: String) -> void:
 	if not (entry is Dictionary):
 		return
@@ -60,6 +80,9 @@ func _register_dialogue(entry, path: String) -> void:
 		push_warning("StoryDialogueDB: dialogue without id in %s" % path)
 		return
 	d["_source_path"] = path
+	if dialogues_by_id.has(id):
+		push_warning("Диалоги: id «%s» повторяется (%s и %s) — останется последний" % [id, String(dialogues_by_id[id].get("_source_path", "")).get_file(), path.get_file()])
+	_check_dialogue(d, path)
 	dialogues_by_id[id] = d
 	var npc_id := String(d.get("npc", ""))
 	if npc_id != "":
@@ -207,6 +230,8 @@ func pick_quest_room_dialogue(quest_id: String) -> Dictionary:
 ##   "hero"       — особый id для speaker и characters: подставляется главный герой, выбранный
 ##                  игроком (Ведьмочка или Воин, настройки паузы). Его имя и портрет/эмоции берутся
 ##                  у настоящего персонажа. В тексте и speaker_name {hero} заменяется на имя героя.
+##                  В пути "cg" {hero_id} заменяется на id героя (witch / warrior) — своя картинка
+##                  на каждого: "cg": "res://.../fufu_hug_{hero_id}.png".
 func resolve_lines(dialogue: Dictionary) -> Array:
 	var out: Array = []
 	for raw_line in dialogue.get("lines", []):
@@ -241,6 +266,9 @@ func _resolve_line(raw: Dictionary) -> Dictionary:
 		line["text"] = _hero_text(String(line["text"]))
 	if line.has("speaker_name"):
 		line["speaker_name"] = _hero_text(String(line["speaker_name"]))
+	# Картинка под выбранного героя: "cg": ".../fufu_hug_{hero_id}.png" -> fufu_hug_witch / fufu_hug_warrior.
+	if line.has("cg") and String(line["cg"]).contains("{hero_id}"):
+		line["cg"] = String(line["cg"]).replace("{hero_id}", get_main_hero_id())
 	if line.has("choices") and line["choices"] is Array:
 		for ch in line["choices"]:
 			if ch is Dictionary and ch.has("text"):

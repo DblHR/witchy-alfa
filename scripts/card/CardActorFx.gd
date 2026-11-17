@@ -44,8 +44,8 @@ static func intent_label(actor: BattleActor) -> Label:
 	return label
 
 ## Ряд значков статусов над юнитом (по центру). Пересобирается в refresh_status_icons.
-const STATUS_ICON_SIZE := 36.0
-const STATUS_ROW_W := 260.0
+const STATUS_ICON_SIZE := 44.0
+const STATUS_ROW_W := 300.0
 static var _status_icons: Dictionary = {}
 
 static func status_row(actor: BattleActor) -> HBoxContainer:

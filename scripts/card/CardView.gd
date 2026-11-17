@@ -56,10 +56,51 @@ static var _frame_cache: Dictionary = {}
 ## Цвета разметки в описаниях (см. CardLibrary).
 const MARKUP_COLORS := {
 	"d": "#ff6b6b",   # урон
-	"s": "#6ec8ff",   # щит
+	"s": "#9fb2ff",   # щит (сине-сиреневый, чтобы не путать с голубой липкой слизью)
 	"h": "#6dff8e",   # лечение
-	"e": "#ff7fd0",   # эффекты и статусы
+	"e": "#e6c2ff",   # прочие эффекты (у ключевых слов — свои цвета, см. KEYWORD_COLORS)
 }
+## Цвета ключевых слов внутри [e]...[/e]: [начало слова (в любом регистре и падеже), цвет].
+## Проверяются сверху вниз, берётся первое совпадение. Нет совпадения — цвет "e" выше.
+const KEYWORD_COLORS := [
+	["липк", "#45dcff"],        # Липкая слизь — голубой
+	["обволак", "#ff8fd6"],     # Обволакивающая слизь — розовый
+	["горен", "#ff9a3c"],       # Горение — оранжевый
+	["жар", "#ff9a3c"],
+	["нажим", "#e0a060"],       # Нажим — бронзовый
+	["слабост", "#b79cff"],     # Слабость — сиреневый
+	["уязвим", "#ffe14d"],      # Уязвимость — жёлтый
+	["оглуш", "#cfd9e6"],       # Оглушение — серебристый
+	["очаров", "#f76cff"],      # Очарование — пурпурный
+	["усилен", "#a8ff5e"],      # Усиление — салатовый
+	["подстав", "#ffb7a0"],     # Подставиться — персиковый
+	["крюч", "#ff9ec4"],        # На крючке
+	["одноразов", "#ffd27a"],   # служебные пометки — золотистый
+	["тратится", "#ffd27a"],
+	["улучшена", "#ffd27a"],
+]
+
+static var _keyword_regex: RegEx
+
+## [e]Липкая слизь +2[/e] -> [color=#45dcff]Липкая слизь +2[/color] (цвет по ключевому слову).
+static func color_keywords(text: String) -> String:
+	if not text.contains("[e]"):
+		return text
+	if _keyword_regex == null:
+		_keyword_regex = RegEx.create_from_string("\\[e\\](.*?)\\[/e\\]")
+	var out := ""
+	var last := 0
+	for m in _keyword_regex.search_all(text):
+		var inner := m.get_string(1)
+		var low := inner.to_lower()
+		var color := String(MARKUP_COLORS["e"])
+		for pair in KEYWORD_COLORS:
+			if low.contains(String(pair[0])):
+				color = String(pair[1])
+				break
+		out += text.substr(last, m.get_start() - last) + "[color=%s]%s[/color]" % [color, inner]
+		last = m.get_end()
+	return out + text.substr(last)
 const COST_COLOR_LOW := Color(0.22, 0.62, 0.30, 1.0)    ## цена 0-1
 const COST_COLOR_MID := Color(0.86, 0.68, 0.14, 1.0)    ## цена 2
 const COST_COLOR_HIGH := Color(0.80, 0.24, 0.24, 1.0)   ## цена 3 и выше
@@ -481,9 +522,9 @@ func _set_desc_visible(on: bool) -> void:
 	if _desc_plate != null:
 		_desc_plate.visible = on
 
-## Описание с цветной разметкой: [d] урон, [s] щит, [h] лечение, [e] эффект.
+## Описание с цветной разметкой: [d] урон, [s] щит, [h] лечение, [e] эффект (цвет — по ключевому слову).
 func _make_description(text: String, pos: Vector2, box: Vector2, font_size: int = -1) -> RichTextLabel:
-	var bb := text
+	var bb := color_keywords(text)
 	for tag in MARKUP_COLORS.keys():
 		bb = bb.replace("[%s]" % tag, "[color=%s]" % MARKUP_COLORS[tag]).replace("[/%s]" % tag, "[/color]")
 	var r := RichTextLabel.new()

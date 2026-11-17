@@ -132,8 +132,12 @@ func _reset_session_meta() -> void:
 	guardian_cookie_used = false
 	if selected_artifact_id != "" and Inventory_ != null and Inventory_.has_item(selected_artifact_id):
 		add_item(selected_artifact_id)
-	if selected_food_id != "" and Inventory_ != null and Inventory_.remove_item(selected_food_id, 1):
-		add_item(selected_food_id)
+	# id запоминаем ДО списания: remove_item шлёт сигнал «инвентарь изменился», по нему
+	# _validate_loadout мог сменить selected_food_id (последняя штука съедена) — и в забег
+	# попадала другая еда или никакая.
+	var food_id := selected_food_id
+	if food_id != "" and Inventory_ != null and Inventory_.remove_item(food_id, 1):
+		add_item(food_id)
 	rooms_cleared = 0
 	battles_started = 0
 
@@ -154,7 +158,7 @@ func _validate_loadout() -> void:
 	if available_foods.is_empty():
 		selected_food_id = ""
 	elif selected_food_id != "" and not available_foods.has(selected_food_id):
-		selected_food_id = available_foods[0]
+		selected_food_id = ""   ## выбранная еда кончилась — слот пустеет, другую сами не подставляем
 
 ## Слоты зелий: в слоте только зелье, которое есть в инвентаре (два одинаковых — если их ≥2).
 func _validate_potion_slots() -> void:

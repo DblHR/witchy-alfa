@@ -7,7 +7,7 @@ class_name StickySlimeStatus
 const STUN_EVERY := 5
 
 func _init() -> void:
-	super("sticky_slime", "Липкая слизь", Kind.STACKS, Color(0.55, 1.0, 0.45))
+	super("sticky_slime", "Липкая слизь", Kind.STACKS, Color(0.27, 0.86, 1.0))
 
 ## Статус остаётся на враге, пока есть стаки или копится счётчик до стана.
 func is_active(s: Dictionary) -> bool:

@@ -76,7 +76,7 @@
           "speaker_name": "",
           "emotion": "",
           "text": "",
-          "cg": "res://assets/characters/fufu/love/fufu_hug.png",
+          "cg": "res://assets/characters/fufu/love/fufu_hug_{hero_id}.png",
           "characters": [{"id": "fufu"}]
         },
         {

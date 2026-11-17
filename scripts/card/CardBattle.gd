@@ -463,6 +463,9 @@ const BANTER_BIG_HIT := 0.25
 func banter(trigger_name: String, ctx: Dictionary = {}) -> bool:
 	if _tutorial != null or BattleBanter_ == null:
 		return false
+	# Событие вызвано картой (убийство, статус, лечение, щит) — её id тоже попадает в условия.
+	if not ctx.has("card") and _combat != null and _combat.current_card_id != "":
+		ctx["card"] = _combat.current_card_id
 	return BattleBanter_.trigger(trigger_name, ctx)
 
 ## Что бой сообщает о себе для условий реплик: тип комнаты, номер, ход.

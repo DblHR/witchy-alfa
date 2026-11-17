@@ -85,7 +85,7 @@ static func _register_all() -> void:
 	nazhim.max_stacks = 10
 	_add(nazhim)
 	_add(StickySlimeStatus.new())
-	_add(CardStatus.new(WRAP_SLIME, "Обволакивающая слизь", CardStatus.Kind.STACKS, Color(0.45, 0.9, 1.0)))
+	_add(CardStatus.new(WRAP_SLIME, "Обволакивающая слизь", CardStatus.Kind.STACKS, Color(1.0, 0.56, 0.84)))
 	_add(EmpowerStatus.new())
 	_add(ExposedStatus.new())
 	_decorate()

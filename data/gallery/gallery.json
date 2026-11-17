@@ -88,11 +88,18 @@
         "res://assets/characters/fufu/cards/fufu_present.png",
         "res://assets/characters/fufu/cards/fufu_trick.png",
         {
-          "path": "res://assets/characters/fufu/love/fufu_hug.png",
+          "path": "res://assets/characters/fufu/love/fufu_hug_witch.png",
           "unlock": {
             "seen": true
           },
-          "hint": "Обнимите Фуфу дома."
+          "hint": "Обнимите Фуфу дома Ведьмочкой."
+        },
+        {
+          "path": "res://assets/characters/fufu/love/fufu_hug_warrior.png",
+          "unlock": {
+            "seen": true
+          },
+          "hint": "Обнимите Фуфу дома Воином (главный герой — в настройках)."
         },
         {
           "path": "res://assets/characters/fufu/love/fufu_3love.png",

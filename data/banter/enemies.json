@@ -10,7 +10,7 @@
         "Снова вы? Обожаю постоянных зрителей!"
       ],
       "enemy": true,
-      "priority": 20
+      "priority": 10
     },
     {
       "id": "enemy_fufu_low",
@@ -51,7 +51,7 @@
       "trigger": "battle_start",
       "text": ["Ой, раненые! Сейчас я вас... долечу~", "Пациенты сами пришли!"],
       "enemy": true,
-      "priority": 15
+      "priority": 5
     },
     {
       "id": "enemy_aki_low",
@@ -67,7 +67,7 @@
       "trigger": "battle_start",
       "text": ["Новые игрушки? Как мило~", "Сейчас кто-то прилипнет."],
       "enemy": true,
-      "priority": 15
+      "priority": 5
     },
     {
       "id": "enemy_luisa_low",

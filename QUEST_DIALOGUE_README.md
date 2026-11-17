@@ -32,6 +32,7 @@ Important current files:
 
 - `hero` подставляется и в `speaker`, и в `characters` — имя, портрет и эмоции берутся у настоящего персонажа (`witch` или `warrior`).
 - `{hero}` в `text`, `speaker_name` и тексте кнопок `choices` заменяется на имя героя: `"text": "Ой, {hero}, это ты!"`.
+- `{hero_id}` в пути `cg` заменяется на id героя: `"cg": "res://assets/characters/fufu/love/fufu_hug_{hero_id}.png"` → `fufu_hug_witch.png` / `fufu_hug_warrior.png` (нужны обе картинки).
 - Условие `"conditions": {"main_hero": "warrior"}` — диалог только для выбранного воина (или `"witch"`).
 - Пока воина нет в отряде, `hero` — всегда ведьмочка. Где герой должен быть именно ведьмочкой или оба сразу — пишите `witch`/`warrior` как раньше.
 

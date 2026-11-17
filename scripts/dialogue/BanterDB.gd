@@ -23,6 +23,7 @@ static func load_all() -> void:
 	battle_lines.clear()
 	camp_entries.clear()
 	settings.clear()
+	_seen_ids.clear()
 	var files := DirAccess.get_files_at(ROOT)
 	files.sort()
 	for f in files:
@@ -42,15 +43,69 @@ static func _load_file(path: String) -> void:
 			else:
 				settings[k] = st[k]
 	for e in parsed.get("battle", []):
+		if e is Dictionary:
+			_check_entry(e, path, true)
 		if e is Dictionary and String(e.get("id", "")) != "" and not bool(e.get("disabled", false)):
 			var line: Dictionary = e.duplicate(true)
 			line["_file"] = path
 			battle_lines.append(line)
 	for e in parsed.get("camp", []):
+		if e is Dictionary:
+			_check_entry(e, path, false)
 		if e is Dictionary and String(e.get("id", "")) != "" and not bool(e.get("disabled", false)):
 			var entry: Dictionary = e.duplicate(true)
 			entry["_file"] = path
 			camp_entries.append(entry)
+
+# --- Проверка записей при загрузке ----------------------------------------------
+## Опечатки в json игра молча пропускает (фраза просто никогда не звучит). Здесь — предупреждения
+## в консоль Godot (вкладка «Вывод» / жёлтые строки в отладчике): что именно не так и в каком файле.
+const KNOWN_TRIGGERS := ["battle_start", "turn_start", "card_played", "ult", "kill_enemy", "last_enemy",
+	"status_applied", "heal", "shield", "ally_down", "ally_low_hp", "big_hit", "enemy_low_hp", "capture", "victory"]
+const STORY_KEYS := ["counter_min", "flag", "has_any_unit", "has_item", "has_unit", "main_hero", "not_flag",
+	"not_has_item", "not_has_unit", "not_seen_dialogue", "party_level_min", "quest_active", "quest_completed",
+	"quest_not_started", "relationship_min", "rooms_cleared_min", "seen_dialogue", "trust"]
+const BATTLE_FIELDS := ["id", "speaker", "trigger", "text", "about", "chance", "priority", "weight",
+	"once_per_battle", "once", "cooldown", "conditions", "reply", "enemy", "disabled"]
+const CAMP_FIELDS := ["id", "lines", "when", "chance", "priority", "weight", "once", "conditions", "disabled"]
+static var _seen_ids: Dictionary = {}
+
+static func _warn(path: String, id: String, what: String) -> void:
+	push_warning("Реплики: %s, «%s» — %s" % [path.get_file(), id, what])
+
+static func _check_entry(e: Dictionary, path: String, battle: bool) -> void:
+	var id := String(e.get("id", ""))
+	if id == "":
+		_warn(path, "?", "нет id — запись пропущена")
+		return
+	if _seen_ids.has(id):
+		_warn(path, id, "такой id уже есть в %s" % String(_seen_ids[id]).get_file())
+	_seen_ids[id] = path
+	for k in e.keys():
+		if not (BATTLE_FIELDS if battle else CAMP_FIELDS).has(String(k)):
+			_warn(path, id, "неизвестное поле «%s» (опечатка?) — не учитывается" % String(k))
+	var cond = e.get("conditions", {})
+	if cond is Dictionary:
+		for k in (cond as Dictionary).keys():
+			if not LOCAL_KEYS.has(String(k)) and not STORY_KEYS.has(String(k)):
+				_warn(path, id, "неизвестное условие «%s» — не проверяется" % String(k))
+	elif cond != null:
+		_warn(path, id, "conditions должно быть {...}")
+	if battle:
+		if not KNOWN_TRIGGERS.has(String(e.get("trigger", ""))):
+			_warn(path, id, "нет триггера «%s» — фраза никогда не прозвучит" % String(e.get("trigger", "")))
+		if String(e.get("speaker", "")) == "":
+			_warn(path, id, "не указан speaker")
+		if pick_text(e.get("text", "")) == "":
+			_warn(path, id, "пустой text")
+		if e.has("about") and not ["actor", "target", "other", "any"].has(String(e["about"])):
+			_warn(path, id, "about «%s»: бывает actor / target / other / any" % String(e["about"]))
+	else:
+		var lines = e.get("lines", [])
+		if not (lines is Array) or (lines as Array).is_empty():
+			_warn(path, id, "нет реплик в lines")
+		if e.has("when") and not ["choice", "loot", "any"].has(String(e["when"])):
+			_warn(path, id, "when «%s»: бывает choice / loot / any" % String(e["when"]))
 
 ## "text": "строка" или ["вариант 1", "вариант 2"] — берётся случайный вариант.
 static func pick_text(value) -> String:

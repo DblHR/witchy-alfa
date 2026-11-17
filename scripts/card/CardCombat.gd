@@ -20,6 +20,9 @@ signal card_played(card: CardInstance, caster: Unit)
 signal discard_requested(count: int)
 ## На юнита наложен статус (враги-боссы реагируют: Фуфу выплёвывает героиню от оглушения).
 signal status_added(unit: Unit, id: String)
+## id карты, эффекты которой применяются прямо сейчас ("" — никакая). Для реплик: условие "card"
+## работает и у событий, вызванных картой (убийство, статус, лечение, щит).
+var current_card_id: String = ""
 ## Юнит вылечен / получил щит (для реплик отряда: CardBattle -> BattleBanter_).
 signal healed(unit: Unit, amount: int)
 signal shielded(unit: Unit, amount: int)
@@ -351,9 +354,11 @@ func play_card(card: CardInstance, caster: Unit, targets: Array[Unit], mirrored:
 	credit = CardRunStats.credit_for_card(card)
 	credit_card_title = card.title
 	CardEffect.begin_card(card.def, card.upgraded)
+	current_card_id = card.id
 	for e in card.effects:
 		if e != null:
 			e.apply(ctx)
+	current_card_id = ""
 	CardEffect.end_card()
 	credit = prev
 	credit_card_title = prev_title
