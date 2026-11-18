@@ -96,6 +96,7 @@ func _build_flower() -> void:
 	_flower = RikkaFlower.new()
 	add_child(_flower)   ## поверх панели лавки (табуретка заходит на её угол)
 	_flower.clicked.connect(_on_flower_clicked)
+	_flower.below = _bubbles
 	_feed_panel = FlowerFeedPanel.new()
 	add_child(_feed_panel)
 	_feed_panel.fed.connect(_on_flower_fed)
@@ -211,11 +212,7 @@ func _on_stock_pressed(slot_idx: int) -> void:
 
 func _refresh(message: String = "") -> void:
 	gold_label.text = "%d" % DungRun.gold
-	info_label.text = "Кварц и семена есть всегда; ещё еда, обычные посохи, рецепты и ингредиенты. Товар обновляется после каждого забега."
-	if StoryState_ != null and StoryState_.is_quest_active("find_warrior"):
-		info_label.text += "\nКвест «Пропавший воин»: ищите его в первых комнатах подземелья."
-	var note := "Кварц: %d · рецептов еды открыто: %d из %d" % [Inventory_.get_item_count("quartz"), DungRun.known_recipes.size(), DungRun.known_recipes.size() + AlchemyDB.unknown_recipe_items().size()]
-	seed_label.text = message if message != "" else note
+	info_label.text = "Товар обновляется после каждого забега."
 	for child in stock_grid.get_children():
 		stock_grid.remove_child(child)
 		child.queue_free()

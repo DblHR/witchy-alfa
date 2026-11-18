@@ -20,14 +20,14 @@
         {
           "speaker": "nurse",
           "speaker_name": "",
-          "emotion": "",
+          "emotion": "confusion",
           "text": "*Вздох*",
           "characters": [{"id": "witch"}, {"id": "warrior"}, {"id": "nurse"}]
         },
         {
           "speaker": "nurse",
           "speaker_name": "",
-          "emotion": "",
+          "emotion": "irritation",
           "text": "А значит и больше работы...",
           "characters": [{"id": "witch"}, {"id": "warrior"}, {"id": "nurse"}]
         },
@@ -62,7 +62,7 @@
 		{
           "speaker": "nurse",
           "speaker_name": "",
-          "emotion": "",
+          "emotion": "irritation",
           "text": "...",
           "characters": [{"id": "witch"}, {"id": "warrior"}, {"id": "nurse"}]
         },
@@ -83,7 +83,7 @@
         {
           "speaker": "nurse",
           "speaker_name": "",
-          "emotion": "",
+          "emotion": "confusion",
           "text": "Обычно так, да. Но жизненную энергию можно получать и по-другому.",
           "characters": [{"id": "witch"}, {"id": "warrior"}, {"id": "nurse"}]
         },
@@ -156,7 +156,7 @@
         {
           "speaker": "nurse",
           "speaker_name": "",
-          "emotion": "",
+          "emotion": "irritation",
           "text": "Как это вообще вывернулось под ТАКИМ углом?.."
         }
       ]

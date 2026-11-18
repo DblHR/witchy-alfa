@@ -54,7 +54,7 @@ func _init() -> void:
 	_hint.size = Vector2(RECT.size.x - 16, 48)
 	_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_hint.text = "Клик — скормить 1 шт., правый клик — всю стопку. Рикка доплачивает за корм. Ещё раз на цветок — назад к лавке."
+	_hint.text = "ЛКМ — скормить 1 шт., ПКМ — всю стопку"
 	add_child(_hint)
 
 	_scroll = ScrollContainer.new()

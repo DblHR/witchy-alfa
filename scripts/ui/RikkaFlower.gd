@@ -16,6 +16,8 @@ const INTRO_ID := "rikka_flower_intro"
 const UNLOCK_LEVEL := 3
 
 var _image: Image
+## Рикка за цветком: курсор над прозрачной частью цветка «проходит» к ней (обводка, клик).
+var below: NpcBubbles
 var _hovered := false
 var _chomp: Tween
 
@@ -43,6 +45,10 @@ func _init() -> void:
 	pivot_offset = Vector2(RECT.size.x * 0.5, RECT.size.y)
 	mouse_filter = Control.MOUSE_FILTER_PASS
 	gui_input.connect(_on_gui_input)
+	mouse_exited.connect(func() -> void:
+		_set_hover(false)
+		if below != null:
+			below.unhover())
 
 func _ready() -> void:
 	refresh_badge()
@@ -83,16 +89,23 @@ func _set_hover(on: bool) -> void:
 	if on == _hovered:
 		return
 	_hovered = on
-	self_modulate = Color(1.14, 1.10, 1.10) if on else Color.WHITE
+	HoverOutline.set_on(self, on)   ## тонкая обводка вместо подсветки
 	mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND if on else Control.CURSOR_ARROW
 
 func _on_gui_input(event: InputEvent) -> void:
 	if DialogueManager_ != null and DialogueManager_.is_showing():
 		_set_hover(false)
 		return
-	if event is InputEventMouseMotion:
-		_set_hover(pixel_hit(event.position))
-	elif event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
-		if pixel_hit(event.position):
+	var is_click: bool = event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT
+	if not (event is InputEventMouseMotion or is_click):
+		return
+	var hit := pixel_hit(event.position)
+	_set_hover(hit)
+	if hit:
+		if below != null:
+			below.unhover()
+		if is_click:
 			accept_event()
 			clicked.emit()
+	elif below != null:
+		below.pointer_at(get_global_transform() * event.position, is_click)

@@ -267,12 +267,40 @@ func pick_quest_room_dialogue(quest_id: String) -> Dictionary:
 ##                  на каждого: "cg": "res://.../fufu_hug_{hero_id}.png".
 func resolve_lines(dialogue: Dictionary) -> Array:
 	var out: Array = []
+	var cast := _dialogue_cast(dialogue)
 	for raw_line in dialogue.get("lines", []):
 		if raw_line is String:
 			out.append({"speaker_name": "", "text": String(raw_line)})
 		elif raw_line is Dictionary:
-			out.append(_resolve_line(raw_line))
+			var line: Dictionary = raw_line
+			# Без "characters" на сцене все, кто говорит в этом диалоге (а не только говорящий сейчас).
+			if cast.size() > 1 and not line.has("characters"):
+				line = line.duplicate(true)
+				var chars: Array = []
+				for cid in cast:
+					chars.append({"id": cid})
+				line["characters"] = chars
+			out.append(_resolve_line(line))
 	return out
+
+## Кто говорит в диалоге (по порядку появления, главный герой — последним, как в остальных сценах:
+## NPC слева, герой справа).
+func _dialogue_cast(dialogue: Dictionary) -> Array:
+	var cast: Array = []
+	var hero_in := false
+	for l in dialogue.get("lines", []):
+		if not (l is Dictionary):
+			continue
+		var sid := String(l.get("speaker", l.get("speaker_id", "")))
+		if sid == "" or sid == "narrator":
+			continue
+		if _hero_id(sid) == get_main_hero_id():
+			hero_in = true
+		elif not cast.has(sid):
+			cast.append(sid)
+	if hero_in:
+		cast.append(HERO_ALIAS)
+	return cast
 
 ## Id главного героя ("witch"/"warrior"), которым заменяется "hero" в диалогах.
 const HERO_ALIAS := "hero"

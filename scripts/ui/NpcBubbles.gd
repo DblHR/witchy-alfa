@@ -54,6 +54,7 @@ static func attach(host: Control, sprite: TextureRect, p_npc_id: String) -> NpcB
 	if sprite != null:
 		sprite.mouse_filter = Control.MOUSE_FILTER_PASS
 		sprite.gui_input.connect(nb._on_sprite_gui_input)
+		sprite.mouse_exited.connect(nb.unhover)
 		nb._hider = VnSpriteHider.attach(nb, [sprite])
 	return nb
 
@@ -147,10 +148,23 @@ func _set_hover(on: bool) -> void:
 	if on == _hovered or _sprite == null:
 		return
 	_hovered = on
-	## self_modulate: modulate.a занят прятанием на время диалога.
-	var a := _sprite.self_modulate.a   ## альфа может быть занята (Рикка с панелькой в лавке)
-	_sprite.self_modulate = Color(1.12, 1.08, 1.12, a) if on else Color(1, 1, 1, a)
+	HoverOutline.set_on(_sprite, on)   ## тонкая обводка вместо подсветки
 	_sprite.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND if on else Control.CURSOR_ARROW
+
+## Убрать обводку (курсор ушёл на другой объект поверх NPC, например цветок Рикки).
+func unhover() -> void:
+	_set_hover(false)
+
+## Курсор / клик в точке экрана, пришедшие не от самой картинки (через прозрачный край картинки поверх).
+func pointer_at(global_pos: Vector2, click: bool = false) -> void:
+	if _sprite == null or _is_blocked():
+		_set_hover(false)
+		return
+	var local := _sprite.get_global_transform().affine_inverse() * global_pos
+	var hit := Rect2(Vector2.ZERO, _sprite.size).has_point(local) and pixel_hit(local)
+	_set_hover(hit)
+	if click and hit:
+		say_random_bark()
 
 func _on_sprite_gui_input(event: InputEvent) -> void:
 	if _is_blocked():
