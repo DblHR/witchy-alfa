@@ -1,0 +1,293 @@
+{
+  "dialogues": [
+    {
+      "id": "sessilia_first_meeting",
+      "type": "event",
+      "npc": "sessilia",
+      "once": true,
+      "priority": 200,
+      "conditions": {
+        "has_unit": "warrior"
+      },
+      "lines": [
+        {
+          "speaker": "sessilia",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "Посетители?! Вы же люди!",
+          "characters": [{"id": "witch"}, {"id": "warrior"}, {"id": "sessilia"}]
+        },
+        {
+          "speaker": "witch",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "Ты здесь торгуешь?",
+          "characters": [{"id": "witch"}, {"id": "warrior"}, {"id": "sessilia"}]
+        },
+        {
+          "speaker": "sessilia",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "Скорее слоняюсь по этажам и собираю безделушки... Но да, иногда продаю и обмениваю.",
+          "characters": [{"id": "witch"}, {"id": "warrior"}, {"id": "sessilia"}]
+        },
+        {
+          "speaker": "sessilia",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "Как же я соскучилась по людям! Расскажите, как там - наверху?",
+          "characters": [{"id": "witch"}, {"id": "warrior"}, {"id": "sessilia"}]
+        },
+        {
+          "speaker": "warrior",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "Ну... Солнечно?",
+          "characters": [{"id": "witch"}, {"id": "warrior"}, {"id": "sessilia"}]
+        },
+        {
+          "speaker": "sessilia",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "Ого... Это же прекрасно!",
+          "characters": [{"id": "witch"}, {"id": "warrior"}, {"id": "sessilia"}]
+        },
+        {
+          "speaker": "sessilia",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "Ой, вы, наверное, проголодались! Подходите ближе, я вас согрею и накормлю!",
+          "characters": [{"id": "witch"}, {"id": "warrior"}, {"id": "sessilia"}]
+        },
+        {
+          "speaker": "warrior",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "Эй, Ведьмочка, выглядит подозрительно... Ведьмочка?",
+          "characters": [{"id": "witch"}, {"id": "warrior"}, {"id": "sessilia"}]
+        },
+        {
+          "speaker": "witch",
+          "speaker_name": "",
+          "emotion": "horny",
+          "text": "А м-можно потрогать твой хвост?",
+          "characters": [{"id": "witch"}, {"id": "warrior"}, {"id": "sessilia"}]
+        }
+      ]
+    },
+    {
+      "id": "sessilia_first_leave",
+      "type": "on_leave",
+      "npc": "sessilia",
+      "once": true,
+      "priority": 100,
+      "lines": [
+        {
+          "speaker": "sessilia",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "Уже уходите?.. Вы же вернётесь ещё?",
+          "characters": [{"id": "witch"}, {"id": "warrior"}, {"id": "sessilia"}]
+        },
+        {
+          "speaker": "witch",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "Конечно!",
+          "characters": [{"id": "witch"}, {"id": "warrior"}, {"id": "sessilia"}]
+        },
+        {
+          "speaker": "sessilia",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "Спасибо... То есть... Буду ждать!",
+          "characters": [{"id": "witch"}, {"id": "warrior"}, {"id": "sessilia"}]
+        },
+        {
+          "speaker": "warrior",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "Кажется, если мы сюда вернёмся, я не захочу уходить...",
+          "characters": [{"id": "witch"}, {"id": "warrior"}, {"id": "sessilia"}]
+        },
+        {
+          "speaker": "witch",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "Значит буду заходить одна.",
+          "characters": [{"id": "witch"}, {"id": "warrior"}, {"id": "sessilia"}]
+        },
+        {
+          "speaker": "warrior",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "Ни за что.",
+          "characters": [{"id": "witch"}, {"id": "warrior"}, {"id": "sessilia"}]
+        }
+      ]
+    },
+    {
+      "id": "sessilia_headphones_finish",
+      "type": "event",
+      "npc": "sessilia",
+      "once": true,
+      "priority": 100,
+      "conditions": {
+        "quest_active": "sessilia_headphones",
+        "has_item": "warm_headphones"
+      },
+      "on_finish": {
+        "complete_quest": "sessilia_headphones",
+        "remove_item": "warm_headphones"
+      },
+      "lines": [
+        {
+          "speaker": "sessilia",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "Это они... мои наушники. Спасибо вам."
+        },
+        {
+          "speaker": "sessilia",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "Я правда думала, что больше их не увижу. Они очень много для меня значат."
+        }
+      ]
+    },
+    {
+      "id": "sessilia_headphones_start",
+      "type": "event",
+      "npc": "sessilia",
+      "once": true,
+      "priority": 90,
+      "chance": 0.3,
+      "conditions": {
+        "quest_not_started": "sessilia_headphones",
+        "not_has_item": "warm_headphones"
+      },
+      "on_finish": {
+        "start_quest": "sessilia_headphones",
+        "set_flags": ["sessilia_asked_for_headphones"]
+      },
+      "lines": [
+        {
+          "speaker": "sessilia",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "М-м... вы как раз вовремя. Можно попросить кое-что странное?",
+          "characters": [{"id": "hero"}, {"id": "sessilia"}]
+        },
+        {
+          "speaker": "sessilia",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "Я где-то в подземелье потеряла свои тёплые наушники. Без них тут ужасно зябко.",
+          "characters": [{"id": "hero"}, {"id": "sessilia"}]
+        },
+        {
+          "speaker": "sessilia",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "Если вдруг найдёте их в сундуке или среди хлама — принесите мне, хорошо?",
+          "characters": [{"id": "hero"}, {"id": "sessilia"}]
+        },
+        {
+          "speaker": "hero",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "Сделаем всё что сможем!",
+          "characters": [{"id": "hero"}, {"id": "sessilia"}]
+        }
+      ]
+    },
+    {
+      "id": "sessilia_headphones_waiting",
+      "type": "event",
+      "npc": "sessilia",
+      "priority": 70,
+      "conditions": {
+        "quest_active": "sessilia_headphones",
+        "not_has_item": "warm_headphones"
+      },
+      "lines": [
+        {
+          "speaker": "sessilia",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "Если увидите мои наушники — пожалуйста, не проходите мимо. Они мягкие, розовые и очень тёплые."
+        }
+      ]
+    },
+    {
+      "id": "sessilia_default_01",
+      "type": "flag",
+      "npc": "sessilia",
+      "weight": 10,
+      "lines": [
+        {
+          "speaker": "sessilia",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "Ну привет, Шляпка и Воин. Что ищем сегодня?"
+        }
+      ]
+    },
+    {
+      "id": "sessilia_default_02",
+      "type": "flag",
+      "npc": "sessilia",
+      "weight": 10,
+      "lines": [
+        {
+          "speaker": "sessilia",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "Ох, привет~ Вы сегодня особенно… вымотанные."
+        }
+      ]
+    },
+    {
+      "id": "sessilia_default_03",
+      "type": "flag",
+      "npc": "sessilia",
+      "weight": 10,
+      "lines": [
+        {
+          "speaker": "sessilia",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "Если устанете от подземелий — можете просто посидеть тут. Я не против компании."
+        }
+      ]
+    },
+    {
+      "id": "sessilia_default_04",
+      "type": "flag",
+      "npc": "sessilia",
+      "weight": 10,
+      "lines": [
+        {
+          "speaker": "sessilia",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "В моей коллекции прибавилось блестящих игрушек! Как-нибудь я вам её покажу."
+        }
+      ]
+    },
+    {
+      "id": "sessilia_default_05",
+      "type": "flag",
+      "npc": "sessilia",
+      "weight": 10,
+      "lines": [
+        {
+          "speaker": "sessilia",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "Недавно нашла такие милые шортики! Хотела бы я их поносить…"
+        }
+      ]
+    }
+  ]
+}

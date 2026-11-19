@@ -2181,9 +2181,9 @@ func run_revive_hero(hero_id: String, percent: float) -> void:
 			return
 
 ## Товары Сессилии для этой комнаты (кешируются в room["stock"]).
-func run_lamia_stock(room: Dictionary) -> Array:
+func run_sessilia_stock(room: Dictionary) -> Array:
 	if not room.has("stock"):
-		room["stock"] = DungRun.roll_lamia_stock(_run.rng)
+		room["stock"] = DungRun.roll_sessilia_stock(_run.rng)
 	return room["stock"]
 
 ## Купить товар Сессилии: золото списывается, предметы — в инвентарь.
@@ -2216,7 +2216,7 @@ func run_roll_chest(chest_room: Dictionary) -> String:
 		loot.append({"id": "quartz", "n": q})
 		lines.append("Кварц ×%d" % q)
 	if r.randf() < CHEST_LOOT_CHANCE:
-		var loot_id: String = DungRun.LAMIA_FLOOR_LOOT[r.randi_range(0, DungRun.LAMIA_FLOOR_LOOT.size() - 1)]
+		var loot_id: String = DungRun.SESSILIA_FLOOR_LOOT[r.randi_range(0, DungRun.SESSILIA_FLOOR_LOOT.size() - 1)]
 		var n := r.randi_range(2, 4)
 		Inventory_.add_item(loot_id, n)
 		loot.append({"id": loot_id, "n": n})
@@ -2233,7 +2233,7 @@ func run_roll_chest(chest_room: Dictionary) -> String:
 		Inventory_.add_item(rec, 1)
 		loot.append({"id": rec, "n": 1, "note": "изучен!"})
 		lines.append("%s — изучен!" % RunItems.get_item_name(rec))
-	if StoryState_ != null and StoryState_.is_quest_active("lamia_headphones") and not Inventory_.has_item("warm_headphones"):
+	if StoryState_ != null and StoryState_.is_quest_active("sessilia_headphones") and not Inventory_.has_item("warm_headphones"):
 		if r.randf() < 0.18:
 			Inventory_.add_item("warm_headphones", 1)
 			loot.append({"id": "warm_headphones", "n": 1, "note": "лежали между монетами"})

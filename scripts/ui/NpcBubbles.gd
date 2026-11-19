@@ -4,16 +4,16 @@ class_name NpcBubbles
 ## (не по прозрачному краю) — ещё одна случайная дежурная фраза. Пока открыт диалог (VN),
 ## картинка NPC прячется, пузыри убираются.
 ##
-##   var nb := NpcBubbles.attach(host_control, npc_sprite, "lamia")
+##   var nb := NpcBubbles.attach(host_control, npc_sprite, "sessilia")
 ##   nb.say(lines)            ## показать реплики по очереди
 ##   nb.say_random_bark()     ## случайная дежурная фраза этого NPC
 
 ## Где у NPC появляется пузырь: точка под нижним краем пузыря, экран 1920×1080.
 ## Пузыри ниже лица — на уровне пояса/подола. Подвинуть — здесь.
 const BUBBLE_POS := {
-	"lamia": Vector2(1330, 905),
-	"nurse": Vector2(1340, 905),
-	"rabbit_shop": Vector2(1330, 905),
+	"sessilia": Vector2(1330, 905),
+	"noctris": Vector2(1340, 905),
+	"rikka": Vector2(1330, 905),
 }
 const DEFAULT_POS := Vector2(1340, 905)
 ## Пауза между репликами одной фразы, если в ней несколько строк, сек.

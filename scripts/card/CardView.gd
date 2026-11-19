@@ -31,7 +31,7 @@ const SHARED_ART_FOLDERS := ["common", "general"]
 ## Рисунки, которые лежат не по общему правилу (id карты -> путь).
 const CARD_ART_OVERRIDES := {
 	"lure": "res://assets/cards/general/gift_card.png",
-	"nurse_heal": "res://assets/cards/general/nurse_heal.png",
+	"noctris_heal": "res://assets/cards/general/noctris_heal.png",
 }
 static var _card_art_cache: Dictionary = {}
 ## Доля высоты арта по виду, занятая табличкой сверху (до рамки рисунка).

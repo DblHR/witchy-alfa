@@ -33,89 +33,89 @@
       "once": true,
       "lines": [
         {
-          "speaker": "rabbit_shop",
+          "speaker": "rikka",
           "speaker_name": "Девушка-кролик",
           "emotion": "",
           "text": "О, ты, наконец, очнулась? Вот это тебя сделал этот слизень. Я как раз собирала ингредиенты на продажу, когда увидела как тебя прямо там... В общем, тебя и слизня.",
-          "characters": [{"id": "rabbit_shop"}, {"id": "witch"}]
+          "characters": [{"id": "rikka"}, {"id": "witch"}]
         },
         {
           "speaker": "witch",
           "speaker_name": "",
           "emotion": "confusion",
           "text": "Тот Мистер Слизень... Он меня... Я даже записать ничего не успела!",
-          "characters": [{"id": "rabbit_shop"}, {"id": "witch"}]
+          "characters": [{"id": "rikka"}, {"id": "witch"}]
         },
         {
-          "speaker": "rabbit_shop",
+          "speaker": "rikka",
           "speaker_name": "Девушка-кролик",
           "emotion": "",
           "text": "Да, слизней тут много... И зачем ты к нему полезла?",
-          "characters": [{"id": "rabbit_shop"}, {"id": "witch"}]
+          "characters": [{"id": "rikka"}, {"id": "witch"}]
         },
         {
           "speaker": "witch",
           "speaker_name": "",
           "emotion": "",
           "text": "Мне нужно изучить активности монстров в этом подземелье для моей академии...",
-          "characters": [{"id": "rabbit_shop"}, {"id": "witch"}]
+          "characters": [{"id": "rikka"}, {"id": "witch"}]
         },
         {
           "speaker": "witch",
           "speaker_name": "",
           "emotion": "confusion",
           "text": "Я думала что сделаю их дружелюбнее, но, кажется, что-то напутала и он... Ох...",
-          "characters": [{"id": "rabbit_shop"}, {"id": "witch"}]
+          "characters": [{"id": "rikka"}, {"id": "witch"}]
         },
 		{
-          "speaker": "rabbit_shop",
+          "speaker": "rikka",
           "speaker_name": "Девушка-кролик",
           "emotion": "",
           "text": "Так ты искательница приключений!",
-          "characters": [{"id": "rabbit_shop"}, {"id": "witch"}]
+          "characters": [{"id": "rikka"}, {"id": "witch"}]
         },
         {
-          "speaker": "rabbit_shop",
+          "speaker": "rikka",
           "speaker_name": "Девушка-кролик",
           "emotion": "",
           "text": "Раньше тут было много искателей приключений, которые пытались дойти до самого низа... Все у меня закупались...",
-          "characters": [{"id": "rabbit_shop"}, {"id": "witch"}]
+          "characters": [{"id": "rikka"}, {"id": "witch"}]
         },
         {
-          "speaker": "rabbit_shop",
+          "speaker": "rikka",
           "speaker_name": "",
           "emotion": "",
           "text": "А сейчас редко кто заходит. И мой магазинчик терпит убытки... Слушай, если тебе нужно будет что-то прикупить - приходи ко мне! Меня, кстати, зовут Рикка!",
-          "characters": [{"id": "rabbit_shop"}, {"id": "witch"}]
+          "characters": [{"id": "rikka"}, {"id": "witch"}]
         },
         {
-          "speaker": "rabbit_shop",
+          "speaker": "rikka",
           "speaker_name": "",
           "emotion": "",
           "text": "А в качестве вложения в нашу дружбу, держи! Почти бесплатно! Этот камешек вернёт тебя на место, где ты спала последний раз, когда ты будешь в опасности.",
-          "characters": [{"id": "rabbit_shop"}, {"id": "witch"}]
+          "characters": [{"id": "rikka"}, {"id": "witch"}]
         },
         {
-          "speaker": "rabbit_shop",
+          "speaker": "rikka",
           "speaker_name": "",
           "emotion": "",
           "text": "Правда, он так долго лежал и пылился... Надеюсь, барахлить он не будет.",
           "give_item": "return_stone",
-          "characters": [{"id": "rabbit_shop"}, {"id": "witch"}]
+          "characters": [{"id": "rikka"}, {"id": "witch"}]
         },
         {
           "speaker": "witch",
           "speaker_name": "",
           "emotion": "",
           "text": "В каком смысле «Барахлить»?!",
-          "characters": [{"id": "rabbit_shop"}, {"id": "witch"}]
+          "characters": [{"id": "rikka"}, {"id": "witch"}]
         },
         {
-          "speaker": "rabbit_shop",
+          "speaker": "rikka",
           "speaker_name": "",
           "emotion": "",
           "text": "Всё-всё, тебе пора отдыхать! Можешь разместиться вон в том домике. Он, кажется, пустует.",
-          "characters": [{"id": "rabbit_shop"}, {"id": "witch"}]
+          "characters": [{"id": "rikka"}, {"id": "witch"}]
         }
       ]
     }

@@ -507,7 +507,7 @@ func _build_nav() -> void:
 		b.size = (d[1] as Rect2).size
 		b.pressed.connect(d[2])
 		if d[0] == SHOP_ICON:
-			NotifyBadge.attach(b, StoryDialogueDB_ != null and StoryDialogueDB_.npc_has_news("rabbit_shop"))
+			NotifyBadge.attach(b, StoryDialogueDB_ != null and StoryDialogueDB_.npc_has_news("rikka"))
 
 func _build_result_panel() -> void:
 	_result_panel = PanelContainer.new()
@@ -671,8 +671,8 @@ func _refresh_legend() -> void:
 	if Inventory_ == null:
 		return
 	if _recipe_id == "":
-		_shelf_note.text = "Сначала выберите рецепт — здесь появится то, что для него нужно."
-		_shelf_note.visible = true
+		_shelf_note.text = ""
+		_shelf_note.visible = false
 		return
 	var any := false
 	for id in AlchemyDB.get_shelf_ids(_recipe_id):
@@ -683,8 +683,8 @@ func _refresh_legend() -> void:
 			continue   # посохи, которых нет, не показываем
 		any = true
 		_legend_box.add_child(_make_slot(id, maxi(0, have - _in_pot(id) - _live_count(id))))
-	_shelf_note.text = "Тяните в котёл или кликайте. Промахнулись — предмет вернётся в ячейку." if any else "Для этого рецепта у вас пока ничего нет."
-	_shelf_note.visible = true
+	_shelf_note.text = "Для этого рецепта у вас пока ничего нет."
+	_shelf_note.visible = not any
 
 func _make_slot(item_id: String, left: int) -> Control:
 	var slot := Panel.new()

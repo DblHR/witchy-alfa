@@ -20,12 +20,12 @@ const COIN_TEXT_POS := Vector2(1590, 46)
 ## Где стоят продавцы и медсестра (фоны теперь без них): прямоугольник картинки на экране 1920×1080.
 ## Картинка вписывается с сохранением пропорций; выходить за край экрана можно.
 const NPC_RECTS := {
-	"rabbit_shop": Rect2(1016, 40, 909, 1178),
-	"lamia": Rect2(988, 44, 1023, 1078),
-	"nurse": Rect2(504, 0, 1920, 1080),
+	"rikka": Rect2(1016, 40, 909, 1178),
+	"sessilia": Rect2(988, 44, 1023, 1078),
+	"noctris": Rect2(504, 0, 1920, 1080),
 }
 
-## Спрайт продавца справа от панели. id — ключ AssetCatalog (rabbit_shop / lamia / nurse).
+## Спрайт продавца справа от панели. id — ключ AssetCatalog (rikka / sessilia / noctris).
 static func make_npc_sprite(id: String) -> TextureRect:
 	var t := TextureRect.new()
 	t.name = "NpcSprite"

@@ -795,3 +795,24 @@ CardBattle.gd (1909 строк) разрезан, теперь это «дири
 - **Оба собеседника на экране:** если у реплик диалога нет поля `characters`, на сцене все, кто говорит в этом диалоге (NPC слева, герой справа), а не только говорящий сейчас (StoryDialogueDB.resolve_lines). Так было в сцене с цветком Рикки; в остальных диалогах `characters` прописаны и ничего не меняется.
 - **Обводка вместо подсветки:** у Рикки, Сессилии, Ноктрис и цветка при наведении — тонкая светлая обводка по контуру (scripts/ui/HoverOutline.gd: цвет, толщина), картинка больше не светлеет.
 - **Рикка и цветок не перебивают друг друга:** с Рикки на цветок — обводка Рикки снимается; над прозрачной частью картинки цветка курсор «проходит» к Рикке (обводка и клик по ней работают); ушёл с картинки — обводка гаснет.
+
+## step65 (поверх step64)
+**Персонажи по именам, а не по кодовым id** (кроме witch / warrior):
+- `rabbit_shop` → `rikka`, `lamia` → `sessilia`, `nurse` → `noctris` — везде: код, диалоги (id диалогов, speaker, npc), флаги, квесты (`sessilia_headphones`), счётчики, реплики в бою, names.json, карта `noctris_heal`, тип комнаты `noctris`.
+- Переименованы файлы: data/dialogues/npc/rikka.json, sessilia.json, noctris.json; resources/cards/common/noctris_heal.tres; assets/cards/general/noctris_heal.png; assets/backgrounds/rooms/noctrisBG.png; assets/_unused/sessilia card.png.
+- **Старые файлы удалить вручную** (zip их не удаляет):
+  - `assets/_unused/lamia card.png`
+  - `assets/_unused/lamia card.png.import`
+  - `assets/backgrounds/rooms/nurseBG.png`
+  - `assets/backgrounds/rooms/nurseBG.png.import`
+  - `assets/cards/general/nurse_heal.png`
+  - `assets/cards/general/nurse_heal.png.import`
+  - `data/dialogues/npc/lamia.json`
+  - `data/dialogues/npc/nurse.json`
+  - `data/dialogues/npc/rabbit_shop.json`
+  - `resources/cards/common/nurse_heal.tres`
+- Эмоции NPC: ищутся и в `assets/npc/<id>/emotions/` (раньше — только в assets/characters/), так что `"emotion": "confusion"` у Ноктрис берёт noctris/emotions/noctris_confusion.png.
+- Старые сохранения переводятся на новые id при загрузке (SaveManager, версия сохранения 2).
+
+**Убран вспомогательный текст:** описание лавки Сессилии («дороже, чем у Рикки…»), «Ноктрис окажет одну услугу…» / «Одна услуга за визит», подсказки в инвентаре («На этой вкладке лежат…», «Вкладка рецептов показывает…», «Слева — открытые персонажи…», «Записи появляются…», «Нажмите на картинку…»), пояснения про очки улучшения и доверие, «Ульта — не карта…» → «Ульта», в алхимии — «Сначала выберите рецепт…» и «Тяните в котёл или кликайте…».
+- Попутно: убрана лишняя запятая в конце data/banter/aki.json.

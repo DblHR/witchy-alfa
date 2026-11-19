@@ -44,14 +44,14 @@ func _build_ui() -> void:
 	box.add_child(_status_label)
 
 	_add_button(box, "Reload JSON dialogues", _reload_dialogues)
-	_add_button(box, "Force dungeon Lamia shop", _force_lamia_shop_room)
+	_add_button(box, "Force dungeon Sessilia shop", _force_sessilia_shop_room)
 	_add_button(box, "Force chest room", _force_chest_room)
 	_add_button(box, "Force ??? warrior quest room", _force_warrior_quest_room)
-	_add_button(box, "Start quest: lamia_headphones", _start_lamia_headphones)
+	_add_button(box, "Start quest: sessilia_headphones", _start_sessilia_headphones)
 	_add_button(box, "Give item: warm_headphones", _give_headphones)
-	_add_button(box, "Complete quest: lamia_headphones", _complete_lamia_headphones)
-	_add_button(box, "Reset lamia headphones quest", _reset_lamia_headphones)
-	_add_button(box, "+1 lamia_visits", _add_lamia_visit)
+	_add_button(box, "Complete quest: sessilia_headphones", _complete_sessilia_headphones)
+	_add_button(box, "Reset sessilia headphones quest", _reset_sessilia_headphones)
+	_add_button(box, "+1 sessilia_visits", _add_sessilia_visit)
 	_add_button(box, "Start quest: find_warrior", _start_find_warrior)
 	_add_button(box, "Reset quest: find_warrior", _reset_find_warrior)
 	_add_button(box, "Set party level to 3", _set_party_level_3)
@@ -66,24 +66,24 @@ func _add_button(parent: Node, text: String, callback: Callable) -> void:
 	parent.add_child(b)
 
 func _refresh_status() -> void:
-	var lamia_status := ""
+	var sessilia_status := ""
 	var warrior_status := ""
 	var visits := 0
 	var has_item := false
 	var flags_text := ""
 	var level := 0
 	if StoryState_ != null:
-		lamia_status = StoryState_.get_quest_status("lamia_headphones")
+		sessilia_status = StoryState_.get_quest_status("sessilia_headphones")
 		warrior_status = StoryState_.get_quest_status("find_warrior")
-		visits = StoryState_.get_counter("lamia_visits")
+		visits = StoryState_.get_counter("sessilia_visits")
 		flags_text = str(StoryState_.flags)
 	if Inventory_ != null:
 		has_item = Inventory_.has_item("warm_headphones")
 	if DungRun != null:
 		level = DungRun.party_level
-	_status_label.text = "party_level: %d\nlamia_headphones: %s\nlamia_visits: %d\nwarm_headphones: %s\nfind_warrior: %s\nflags: %s" % [
+	_status_label.text = "party_level: %d\nsessilia_headphones: %s\nsessilia_visits: %d\nwarm_headphones: %s\nfind_warrior: %s\nflags: %s" % [
 		level,
-		lamia_status if lamia_status != "" else "not_started",
+		sessilia_status if sessilia_status != "" else "not_started",
 		visits,
 		str(has_item),
 		warrior_status if warrior_status != "" else "not_started",
@@ -95,9 +95,9 @@ func _reload_dialogues() -> void:
 		StoryDialogueDB_.reload()
 	_refresh_status()
 
-func _start_lamia_headphones() -> void:
+func _start_sessilia_headphones() -> void:
 	if StoryState_ != null:
-		StoryState_.start_quest("lamia_headphones")
+		StoryState_.start_quest("sessilia_headphones")
 	_refresh_status()
 
 func _give_headphones() -> void:
@@ -105,26 +105,26 @@ func _give_headphones() -> void:
 		Inventory_.add_item("warm_headphones", 1)
 	_refresh_status()
 
-func _complete_lamia_headphones() -> void:
+func _complete_sessilia_headphones() -> void:
 	if StoryState_ != null:
-		StoryState_.complete_quest("lamia_headphones")
+		StoryState_.complete_quest("sessilia_headphones")
 	if Inventory_ != null and Inventory_.has_item("warm_headphones"):
 		Inventory_.remove_item("warm_headphones", 1)
 	_refresh_status()
 
-func _reset_lamia_headphones() -> void:
+func _reset_sessilia_headphones() -> void:
 	if StoryState_ != null:
-		StoryState_.quests.erase("lamia_headphones")
-		StoryState_.seen_dialogues.erase("lamia_headphones_start")
-		StoryState_.seen_dialogues.erase("lamia_headphones_finish")
-		StoryState_.set_flag("lamia_asked_for_headphones", false)
+		StoryState_.quests.erase("sessilia_headphones")
+		StoryState_.seen_dialogues.erase("sessilia_headphones_start")
+		StoryState_.seen_dialogues.erase("sessilia_headphones_finish")
+		StoryState_.set_flag("sessilia_asked_for_headphones", false)
 	if Inventory_ != null and Inventory_.has_item("warm_headphones"):
 		Inventory_.remove_item("warm_headphones", 1)
 	_refresh_status()
 
-func _add_lamia_visit() -> void:
+func _add_sessilia_visit() -> void:
 	if StoryState_ != null:
-		StoryState_.add_counter("lamia_visits", 1)
+		StoryState_.add_counter("sessilia_visits", 1)
 	_refresh_status()
 
 func _start_find_warrior() -> void:
@@ -136,7 +136,7 @@ func _start_find_warrior() -> void:
 func _reset_find_warrior() -> void:
 	if StoryState_ != null:
 		StoryState_.quests.erase("find_warrior")
-		StoryState_.seen_dialogues.erase("rabbit_shop_warrior_hint")
+		StoryState_.seen_dialogues.erase("rikka_warrior_hint")
 		StoryState_.set_flag("heard_about_lost_warrior", false)
 		StoryState_.set_flag("find_warrior_room_done", false)
 		StoryState_.seen_dialogues.erase("find_warrior_room_intro")
@@ -149,11 +149,11 @@ func _set_party_level_3() -> void:
 		DungRun.emit_changed()
 	_refresh_status()
 
-func _force_lamia_shop_room() -> void:
+func _force_sessilia_shop_room() -> void:
 	var room := _ensure_current_room()
 	room.room_type = RoomParams.RoomType.EVENT
 	room.event_type = RoomParams.EventType.SHOP
-	room.event_npc_id = "lamia"
+	room.event_npc_id = "sessilia"
 	room.used = false
 	room.shop_refreshed = true
 	room.shop_item_ids = RunItems.random_item_ids(DungRun.rng, DungRun.EVENT_SHOP_SLOT_COUNT, DungRun.get_owned_unique_artifacts())

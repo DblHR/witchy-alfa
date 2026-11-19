@@ -6,7 +6,7 @@ class_name CardRun
 ## Комната — Dictionary:
 ##   kind: "battle" | "elite" | "boss" | "event" | "quest"
 ##   quest: id квеста (для kind == "quest"; «find_warrior» — бой с Фуфу, после него воин в ростере)
-##   event: "shop" | "nurse" | "chest" | "statue" (для kind == "event")
+##   event: "shop" | "noctris" | "chest" | "statue" (для kind == "event")
 ##   variant: "white" | "black" (статуя)
 ##   enemies: Array[String] — id врагов из EnemyDefs (в порядке строя, первый — передний)
 ##   boss: bool
@@ -21,13 +21,13 @@ const FLOOR := 1
 
 ## Шансы (как в старом забеге): 70% бой, 30% ивент; ивенты поровну.
 const BATTLE_CHANCE := 0.70
-const EVENT_WEIGHTS := {"chest": 25, "statue": 25, "shop": 25, "nurse": 25}
+const EVENT_WEIGHTS := {"chest": 25, "statue": 25, "shop": 25, "noctris": 25}
 ## С какого уровня отряда встречается ивент-комната (до этого на её месте — бой).
 ## Пока все с 1-го: открытие по уровням (2 / 4 / 6) не понравилось — поставить числа, чтобы вернуть.
-const EVENT_MIN_LEVEL := {"chest": 1, "shop": 1, "nurse": 1, "statue": 1}
+const EVENT_MIN_LEVEL := {"chest": 1, "shop": 1, "noctris": 1, "statue": 1}
 ## Ивенты, которые появляются только когда нужный персонаж уже в отряде (ростере).
 ## Лавка Сессилии и Ноктрис — после получения воина; до этого из ивентов только сундуки и статуи.
-const EVENT_NEEDS_UNIT := {"shop": "warrior", "nurse": "warrior"}
+const EVENT_NEEDS_UNIT := {"shop": "warrior", "noctris": "warrior"}
 
 ## Элитная комната (слизнедевочка ранга A + слизень): шанс среди боёв, не раньше этой комнаты.
 const ELITE_CHANCE := 0.25
@@ -45,8 +45,8 @@ var quest_placed := false
 ## Колода комнат («ограниченный рандом»). После комнаты игроку сдаются 2-3 карты из неё;
 ## выбранная уходит из колоды, остальные остаются. Первая комната (бой), комната перед боссом
 ## (лавка или медсестра) и босс — вне колоды.
-##   battle / elite — бой и элита; chest, nurse, shop — ивенты; statue_white / statue_black — статуи.
-const ROOM_DECK := {"battle": 9, "elite": 3, "chest": 3, "nurse": 2, "shop": 1, "statue_white": 1, "statue_black": 1}
+##   battle / elite — бой и элита; chest, noctris, shop — ивенты; statue_white / statue_black — статуи.
+const ROOM_DECK := {"battle": 9, "elite": 3, "chest": 3, "noctris": 2, "shop": 1, "statue_white": 1, "statue_black": 1}
 ## Сколько ивент-комнат можно пройти подряд: после стольких в следующей раздаче только бои.
 const MAX_EVENTS_IN_ROW := 1
 var room_deck: Array[String] = []
@@ -117,7 +117,7 @@ func make_room(i: int) -> Dictionary:
 	if i == n - 2:
 		# Перед боссом безопасная комната: лавка или медсестра (что открыто); иначе любая открытая, иначе бой.
 		var safe: Array[String] = []
-		for id in ["shop", "nurse"]:
+		for id in ["shop", "noctris"]:
 			if events.has(id):
 				safe.append(id)
 		if not safe.is_empty():
@@ -304,7 +304,7 @@ static func enemy_list(r: Dictionary) -> String:
 static func event_name(event_id: String, variant: String = "") -> String:
 	match event_id:
 		"shop": return "Лавка ламии"
-		"nurse": return "Медсестра"
+		"noctris": return "Медсестра"
 		"chest": return "Сундук"
 		"statue": return "Белая статуя" if variant == "white" else "Чёрная статуя"
 	return "Событие"
@@ -329,7 +329,7 @@ static func room_hint(r: Dictionary) -> String:
 		"event":
 			match String(r.get("event", "")):
 				"shop": return "Купить карты\nи лечение"
-				"nurse": return "Лечение или\nвоскрешение"
+				"noctris": return "Лечение или\nвоскрешение"
 				"chest": return "Золото и\nдобыча"
 				"statue":
 					return "Лечит после\nпобед" if String(r.get("variant", "")) == "white" else "Усиливает урон\nкарт"

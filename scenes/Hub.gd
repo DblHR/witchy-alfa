@@ -27,7 +27,7 @@ func _refresh_badges() -> void:
 	if not is_inside_tree():
 		return
 	# ...и когда в лавке появился цветок Рикки, а знакомства с ним ещё не было.
-	NotifyBadge.attach(shop, StoryDialogueDB_ != null and (StoryDialogueDB_.npc_has_news("rabbit_shop") \
+	NotifyBadge.attach(shop, StoryDialogueDB_ != null and (StoryDialogueDB_.npc_has_news("rikka") \
 		or StoryDialogueDB_.npc_has_news(RikkaFlower.NPC_ID)))
 	# «!» на инвентаре: новые очки улучшения карт, а в инвентарь после этого ещё не заходили.
 	NotifyBadge.attach(inv, UnitRoster_ != null and UnitRoster_.upgrade_news(UnitRoster_.UPGRADE_SEEN_INVENTORY))

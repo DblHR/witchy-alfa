@@ -9,13 +9,13 @@ class_name EventScreen
 signal finished
 
 ## Медсестра Ноктрис: одна платная услуга из трёх за заход.
-const NURSE_HEAL_PERCENT := 0.5
-const NURSE_REVIVE_PERCENT := 0.3
-const NURSE_HEAL_PRICE := 25
-const NURSE_REVIVE_PRICE := 45
-## Микстура: одноразовая карта в колоду (resources/cards/common/nurse_heal.tres, лечит 25% HP).
-const NURSE_CARD_PRICE := 20
-const NURSE_CARD_ID := "nurse_heal"
+const NOCTRIS_HEAL_PERCENT := 0.5
+const NOCTRIS_REVIVE_PERCENT := 0.3
+const NOCTRIS_HEAL_PRICE := 25
+const NOCTRIS_REVIVE_PRICE := 45
+## Микстура: одноразовая карта в колоду (resources/cards/common/noctris_heal.tres, лечит 25% HP).
+const NOCTRIS_CARD_PRICE := 20
+const NOCTRIS_CARD_ID := "noctris_heal"
 
 const LEFT_X := 120.0
 const TITLE_RECT := Rect2(120, 60, 860, 110)
@@ -37,7 +37,7 @@ const COIN_TEXT_POS := ShopUi.COIN_TEXT_POS
 
 const TITLES := {
 	"shop": "Тихая лавка Сессилии",
-	"nurse": "Медсестра Ноктрис",
+	"noctris": "Медсестра Ноктрис",
 	"chest": "Сундук",
 }
 
@@ -190,10 +190,10 @@ func _begin_intro() -> void:
 	var event_id := String(room.get("event", ""))
 	if event_id == "shop" and StoryState_ != null and not bool(room.get("visit_counted", false)):
 		room["visit_counted"] = true
-		StoryState_.add_counter("lamia_visits", 1)
+		StoryState_.add_counter("sessilia_visits", 1)
 	var lines: Array = []
 	if StoryDialogueDB_ != null and DialogueManager_ != null and not bool(room.get("intro_seen", false)):
-		var npc_override := "lamia" if event_id == "shop" else ""
+		var npc_override := "sessilia" if event_id == "shop" else ""
 		_intro = StoryDialogueDB_.pick_intro_for_event(_event_enum(), _variant_enum(), npc_override)
 		if not _intro.is_empty():
 			lines = StoryDialogueDB_.resolve_lines(_intro)
@@ -240,7 +240,7 @@ var _bubbles: NpcBubbles
 
 func _npc_key() -> String:
 	var event_id := String(room.get("event", ""))
-	return "lamia" if event_id == "shop" else ("nurse" if event_id == "nurse" else "")
+	return "sessilia" if event_id == "shop" else ("noctris" if event_id == "noctris" else "")
 
 ## Комната с NPC-спрайтом (лавка, медсестра). Спрайт ставится в _rebuild, поэтому смотрим по типу комнаты.
 func _has_npc_sprite() -> bool:
@@ -263,7 +263,7 @@ func _event_npc_id() -> String:
 	if StoryDialogueDB_ == null:
 		return ""
 	if String(room.get("event", "")) == "shop":
-		return "lamia"
+		return "sessilia"
 	return StoryDialogueDB_.event_type_to_npc_id(_event_enum(), _variant_enum())
 
 func _play_after_image_dialogue() -> void:
@@ -329,7 +329,7 @@ func _make_full_texture() -> TextureRect:
 func _event_enum() -> int:
 	match String(room.get("event", "")):
 		"shop": return RoomParams.EventType.SHOP
-		"nurse": return RoomParams.EventType.NURSE
+		"noctris": return RoomParams.EventType.NOCTRIS
 		"chest": return RoomParams.EventType.CHEST
 		"statue": return RoomParams.EventType.STATUE
 	return RoomParams.EventType.NONE
@@ -420,26 +420,26 @@ func _rebuild() -> void:
 	_clear(_cards)
 	battle.call("refresh_run_hud")
 	var event_id := String(room.get("event", ""))
-	_apply_layout(event_id == "shop" or event_id == "nurse")
+	_apply_layout(event_id == "shop" or event_id == "noctris")
 	_title.text = String(TITLES.get(event_id, CardRun.event_name(event_id, String(room.get("variant", "")))))
 	_title.visible = true
 	_chest_pic.visible = false
 	_npc.texture = null
-	ShopUi.set_npc(_npc_sprite, "lamia" if event_id == "shop" else ("nurse" if event_id == "nurse" else ""))
+	ShopUi.set_npc(_npc_sprite, "sessilia" if event_id == "shop" else ("noctris" if event_id == "noctris" else ""))
 	_continue.text = "ИДТИ ДАЛЬШЕ"
 	_continue.visible = true
 	_continue.disabled = _image_open
 	match event_id:
 		"shop": _build_shop()
-		"nurse": _build_nurse()
+		"noctris": _build_noctris()
 		"chest": _build_chest()
 		"statue": _build_statue()
 
 # --- Лавка Сессилии ---------------------------------------------------------
 
 func _build_shop() -> void:
-	_desc.text = "Сессилия раскладывает товар: дороже, чем у Рикки, зато наборами и с редкими находками."
-	for offer in battle.call("run_lamia_stock", room):
+	_desc.text = ""
+	for offer in battle.call("run_sessilia_stock", room):
 		_add_offer(offer)
 
 func _add_offer(offer: Dictionary) -> void:
@@ -460,28 +460,28 @@ func _on_buy(offer: Dictionary) -> void:
 
 # --- Медсестра Ноктрис -------------------------------------------------------
 
-func _build_nurse() -> void:
+func _build_noctris() -> void:
 	var used := bool(room.get("used", false))
 	if used:
-		_desc.text = "Ноктрис уже помогла отряду. Одна услуга за визит."
+		_desc.text = "Ноктрис уже помогла отряду."
 		return
-	_desc.text = "Ноктрис окажет одну услугу на выбор."
+	_desc.text = ""
 	var gold := _gold()
-	_add_option("Вылечить персонажа на %d%% HP — %d зол." % [int(NURSE_HEAL_PERCENT * 100.0), NURSE_HEAL_PRICE], func() -> void: _pick_hero(false), not bool(battle.call("run_has_wounded")) or gold < NURSE_HEAL_PRICE)
-	_add_option("Воскресить персонажа с %d%% HP — %d зол." % [int(NURSE_REVIVE_PERCENT * 100.0), NURSE_REVIVE_PRICE], func() -> void: _pick_hero(true), not bool(battle.call("run_has_dead")) or gold < NURSE_REVIVE_PRICE)
-	_add_option("Микстура в колоду: разовая карта, лечит 25%% HP — %d зол." % NURSE_CARD_PRICE, _on_nurse_card, gold < NURSE_CARD_PRICE)
+	_add_option("Вылечить персонажа на %d%% HP — %d зол." % [int(NOCTRIS_HEAL_PERCENT * 100.0), NOCTRIS_HEAL_PRICE], func() -> void: _pick_hero(false), not bool(battle.call("run_has_wounded")) or gold < NOCTRIS_HEAL_PRICE)
+	_add_option("Воскресить персонажа с %d%% HP — %d зол." % [int(NOCTRIS_REVIVE_PERCENT * 100.0), NOCTRIS_REVIVE_PRICE], func() -> void: _pick_hero(true), not bool(battle.call("run_has_dead")) or gold < NOCTRIS_REVIVE_PRICE)
+	_add_option("Микстура в колоду: разовая карта, лечит 25%% HP — %d зол." % NOCTRIS_CARD_PRICE, _on_noctris_card, gold < NOCTRIS_CARD_PRICE)
 
 ## Микстура: карта лечения в колоду до конца забега (сгорает, когда её разыграют).
-func _on_nurse_card() -> void:
-	if not bool(battle.call("run_spend_gold", NURSE_CARD_PRICE)):
+func _on_noctris_card() -> void:
+	if not bool(battle.call("run_spend_gold", NOCTRIS_CARD_PRICE)):
 		_say("Не хватает золота.")
 		return
-	battle.call("run_add_card", NURSE_CARD_ID)
+	battle.call("run_add_card", NOCTRIS_CARD_ID)
 	room["used"] = true
 	_rebuild()
 	_say("Микстура Ноктрис теперь в колоде. Хватит на один раз.")
 	_after_image_dialogue = "after_use"
-	_show_choice_image("nurse_potion")
+	_show_choice_image("noctris_potion")
 
 ## Выбор героини для лечения или воскрешения.
 func _pick_hero(revive: bool) -> void:
@@ -493,22 +493,22 @@ func _pick_hero(revive: bool) -> void:
 		var label := "%s — %s" % [String(d["name"]), "без сил" if bool(d["dead"]) else "%d/%d HP" % [int(d["hp"]), int(d["max_hp"])]]
 		var hero_id := String(d["id"])
 		var hero_name := String(d["name"])
-		_add_option(label, func() -> void: _on_nurse_target(hero_id, hero_name, revive), not ok_target)
+		_add_option(label, func() -> void: _on_noctris_target(hero_id, hero_name, revive), not ok_target)
 	_add_option("Назад", _rebuild)
 
-func _on_nurse_target(hero_id: String, hero_name: String, revive: bool) -> void:
-	if not bool(battle.call("run_spend_gold", NURSE_REVIVE_PRICE if revive else NURSE_HEAL_PRICE)):
+func _on_noctris_target(hero_id: String, hero_name: String, revive: bool) -> void:
+	if not bool(battle.call("run_spend_gold", NOCTRIS_REVIVE_PRICE if revive else NOCTRIS_HEAL_PRICE)):
 		_say("Не хватает золота.")
 		return
 	if revive:
-		battle.call("run_revive_hero", hero_id, NURSE_REVIVE_PERCENT)
+		battle.call("run_revive_hero", hero_id, NOCTRIS_REVIVE_PERCENT)
 	else:
-		battle.call("run_heal_hero", hero_id, NURSE_HEAL_PERCENT)
+		battle.call("run_heal_hero", hero_id, NOCTRIS_HEAL_PERCENT)
 	room["used"] = true
 	_rebuild()
 	_say(("%s снова на ногах." if revive else "Ноктрис подлатала: %s.") % hero_name)
 	_after_image_dialogue = "after_use"
-	_show_choice_image("nurse_revive" if revive else "nurse_heal")
+	_show_choice_image("noctris_revive" if revive else "noctris_heal")
 ## Полноэкранная картинка услуги (как в старом забеге): клик закрывает.
 func _show_choice_image(key: String) -> void:
 	if AssetCatalog_ == null:

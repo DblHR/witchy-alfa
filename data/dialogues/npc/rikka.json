@@ -1,0 +1,168 @@
+{
+  "dialogues": [
+    {
+      "id": "rikka_default_01",
+      "type": "flag",
+      "npc": "rikka",
+      "weight": 10,
+      "lines": [
+        {
+          "speaker": "rikka",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "Добро пожаловать в лавку. Не трогай блестящее без оплаты, ладно?"
+        }
+      ]
+    },
+    {
+      "id": "rikka_default_02",
+      "type": "flag",
+      "npc": "rikka",
+      "weight": 10,
+      "lines": [
+        {
+          "speaker": "rikka",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "Если опять собираешься в подземелье — сначала проверь сумку. Потом уже геройствуй."
+        }
+      ]
+    },
+    {
+      "id": "rikka_default_03",
+      "type": "flag",
+      "npc": "rikka",
+      "weight": 10,
+      "lines": [
+        {
+          "speaker": "rikka",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "У меня есть товары, слухи и терпение. Последнее заканчивается быстрее всего."
+        }
+      ]
+    },
+    {
+      "id": "rikka_slimegirl_01",
+      "type": "event",
+      "npc": "rikka",
+      "once": true,
+      "priority": 50,
+      "conditions": {
+        "has_any_unit": ["aki", "luisa", "fufu"]
+      },
+      "lines": [
+        {
+          "speaker": "rikka",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "Ого, ты теперь водишь с собой слизнедевочку? Миленько. Липко, наверное, но миленько."
+        }
+      ]
+    },
+    {
+      "id": "rikka_lure_intro",
+      "type": "event",
+      "npc": "rikka",
+      "once": true,
+      "priority": 60,
+      "conditions": {
+        "flag": "entered_elite_room"
+      },
+      "on_finish": {
+        "set_flags": ["lure_unlocked"]
+      },
+      "lines": [
+        {
+          "speaker": "rikka",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "Шляпка, привет! Я тут подумала, ты же хотела сделать монстров в подземелье добрее?",
+          "characters": [{"id": "rikka"}, {"id": "witch"}]
+        },
+        {
+          "speaker": "witch",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "Ну да, но заклинание, кажется, не очень сработало.",
+          "characters": [{"id": "rikka"}, {"id": "witch"}]
+        },
+        {
+          "speaker": "rikka",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "Думаю, заклинание сработало, просто они слишком уж долго были одинокие.",
+          "characters": [{"id": "rikka"}, {"id": "witch"}]
+        },
+        {
+          "speaker": "rikka",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "Попробуй подарить им это. Это точно сделает их счастливее.",
+          "characters": [{"id": "rikka"}, {"id": "witch"}],
+          "give_item": "gift"
+        },
+        {
+          "speaker": "witch",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "Это... Морковка?",
+          "characters": [{"id": "rikka"}, {"id": "witch"}]
+        },
+        {
+          "speaker": "rikka",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "Ну да. Какая одинокая женщина от такого откажется?",
+          "characters": [{"id": "rikka"}, {"id": "witch"}]
+        }
+      ]
+    },
+    {
+      "id": "rikka_warrior_hint",
+      "type": "event",
+      "npc": "rikka",
+      "once": true,
+      "priority": 100,
+      "conditions": {
+        "party_level_min": 2,
+        "quest_not_started": "find_warrior",
+        "not_has_unit": "warrior"
+      },
+      "on_finish": {
+        "start_quest": "find_warrior",
+        "set_flags": ["heard_about_lost_warrior"]
+      },
+      "lines": [
+        {
+          "speaker": "rikka",
+          "speaker_name": "",
+          "emotion": "serious",
+          "text": "Слушай, Шляпка... Один воин ушёл в подземелье уже давно.",
+          "characters": [{"id": "rikka"}, {"id": "witch"}]
+        },
+        {
+          "speaker": "rikka",
+          "speaker_name": "",
+          "emotion": "worried",
+          "text": "Обычно такие возвращаются быстро. Или не возвращаются вовсе.",
+          "characters": [{"id": "rikka"}, {"id": "witch"}]
+        },
+        {
+          "speaker": "witch",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "Это меня не испугает. Мне всё равно нужно добраться до самого низа.",
+          "characters": [{"id": "rikka"}, {"id": "witch"}]
+        },
+        {
+          "speaker": "rikka",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "Я уже поняла, что ты бойкая. Но будь аккуратнее. А если что-нибудь о нём узнаешь - дай мне знать.",
+          "characters": [{"id": "rikka"}, {"id": "witch"}]
+        }
+      ]
+    }
+  ]
+}

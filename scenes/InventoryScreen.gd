@@ -387,7 +387,7 @@ func _show_empty_detail_for_section() -> void:
 func _show_item_detail(item_id: String) -> void:
 	_match_detail_visibility(true, false, false, false)
 	detail_title_label.text = "Карточка предмета"
-	detail_hint_label.text = "На этой вкладке лежат все типы предметов: посохи, еда, зелья, ингредиенты и семена."
+	detail_hint_label.text = ""
 	item_icon.texture = Inventory_.get_item_icon(item_id)
 	item_name.text = RunItems.get_item_name(item_id)
 	var rarity := RunItems.get_item_rarity_label(item_id)
@@ -397,7 +397,7 @@ func _show_item_detail(item_id: String) -> void:
 func _show_recipe_detail(recipe_id: String) -> void:
 	_match_detail_visibility(true, false, false, false)
 	detail_title_label.text = "Карточка рецепта"
-	detail_hint_label.text = "Вкладка рецептов показывает требования и позволяет быстро сверить наличие ингредиентов."
+	detail_hint_label.text = ""
 	var result_item_id := AlchemyDB.get_result_item_id(recipe_id)
 	item_icon.texture = Inventory_.get_item_icon(result_item_id)
 	item_name.text = AlchemyDB.get_recipe_name(recipe_id)
@@ -418,7 +418,7 @@ func _show_lore_detail(entry_id: String) -> void:
 	_match_detail_visibility(false, false, true, false)
 	var e := LoreData.entry(entry_id)
 	detail_title_label.text = String(e.get("category", "Записи"))
-	detail_hint_label.text = "Записи появляются по мере того, как вы что-то узнаёте."
+	detail_hint_label.text = ""
 	if e.is_empty():
 		lore_body.text = "пока здесь пусто"
 		return
@@ -427,7 +427,7 @@ func _show_lore_detail(entry_id: String) -> void:
 func _show_character_detail(unit_id: String) -> void:
 	_match_detail_visibility(false, true, false, false)
 	detail_title_label.text = "Карточка персонажа"
-	detail_hint_label.text = "Слева — открытые персонажи, справа — подробности по выбранному."
+	detail_hint_label.text = ""
 	var data: CharacterData = CharDB.get_by_id(unit_id)
 	if data == null:
 		_show_empty_detail_for_section()
@@ -519,7 +519,7 @@ func _relationship_text(data: CharacterData) -> String:
 	var bar := "[color=#ff7fc8]%s[/color][color=#6a5a70]%s[/color]" % ["■".repeat(rel), "■".repeat(mx - rel)]
 	var text := "[b]Отношения:[/b] %s %d/%d" % [bar, rel, mx]
 	if rel < mx:
-		text += "\n[b]Доверие:[/b] %d/%d до следующего уровня (+1 за забег в отряде)" % [int(prog["into_level"]), int(prog["need"])]
+		text += "\n[b]Доверие:[/b] %d/%d до следующего уровня" % [int(prog["into_level"]), int(prog["need"])]
 	if not data.unlock_cards.is_empty():
 		var levels := PackedStringArray()
 		for i in range(data.unlock_cards.size()):
@@ -604,7 +604,7 @@ func _build_cards_ui() -> void:
 	_locked_grid.add_theme_constant_override("v_separation", 14)
 	content.add_child(_locked_grid)
 	_ult_title = Label.new()
-	_ult_title.text = "Ульта — не карта: копит заряд в бою и жмётся кнопкой"
+	_ult_title.text = "Ульта"
 	_ult_title.add_theme_font_size_override("font_size", 20)
 	_ult_title.add_theme_color_override("font_color", Color(1.0, 0.82, 0.3))
 	content.add_child(_ult_title)
@@ -658,7 +658,7 @@ func _open_cards_overlay() -> void:
 	if ult != null:
 		_ult_row.add_child(_UiKit.card_preview(ult, 1.0))
 	_cards_title.text = "%s — ранг %s, получено карт: %d из %d, в бой берёт до %d" % [data.display_name, data.rank, owned, cards.size(), data.card_cap()]
-	_cards_title.text += "\nОчки улучшения: %d (по одному за каждые %d уровней отряда)%s" % [points, CardBalance.UPGRADE_EVERY_LEVELS, " — нажмите на карту" if points > 0 else ""]
+	_cards_title.text += "\nОчки улучшения: %d" % points
 	_cards_overlay.visible = true
 
 ## Окно «Улучшить карту?»: слева карта как есть, справа — какой станет.
@@ -1090,7 +1090,7 @@ func _show_gallery_category(cat_id: String) -> void:
 		set_process(false)
 		return
 	detail_title_label.text = String(cat["title"])
-	detail_hint_label.text = "Нажмите на картинку, чтобы рассмотреть её."
+	detail_hint_label.text = ""
 	for im in cat["images"]:
 		if bool(im["unlocked"]):
 			_gallery_images.append(String(im["path"]))

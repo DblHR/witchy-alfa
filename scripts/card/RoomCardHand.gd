@@ -151,7 +151,7 @@ static func _room_art(room: Dictionary) -> Texture2D:
 			var event_id := String(room.get("event", ""))
 			key = event_id
 			match event_id:
-				"shop": key = "lamia"
+				"shop": key = "sessilia"
 				"statue": key = "statue_white" if String(room.get("variant", "")) == "white" else "statue_black"
 			if _art_cache.has(key):
 				return _art_cache[key]

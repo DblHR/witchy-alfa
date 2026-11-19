@@ -4,7 +4,9 @@ class_name SaveManager
 const SAVE_PATH := "user://savegame.json"
 const SAVE_BACKUP_PATH := "user://savegame.bak.json"
 const SAVE_TMP_PATH := "user://savegame.tmp.json"
-const SAVE_VERSION := 1
+const SAVE_VERSION := 2
+## Сохранения версии 1: персонажи-NPC по старым кодовым id -> по именам (step65).
+const LEGACY_IDS := [["rabbit_shop", "rikka"], ["nurse", "noctris"], ["lamia", "sessilia"]]
 
 var _is_loading := false
 var _autosave_enabled := false
@@ -76,6 +78,11 @@ func _read_save_file(path: String) -> Dictionary:
 	if text.strip_edges().is_empty():
 		return {}
 	var parsed = JSON.parse_string(text)
+	if parsed is Dictionary and int(parsed.get("version", 1)) < 2:
+		# Старые id (флаги, просмотренные диалоги, квесты, карта noctris_heal, комнаты) -> новые.
+		for pair in LEGACY_IDS:
+			text = text.replace(pair[0], pair[1])
+		parsed = JSON.parse_string(text)
 	if parsed is Dictionary:
 		return parsed
 	return {}

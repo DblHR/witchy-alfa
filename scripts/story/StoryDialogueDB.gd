@@ -227,9 +227,9 @@ func pick_intro_for_event(event_type: int, statue_variant: int = 0, npc_override
 func event_type_to_npc_id(event_type: int, statue_variant: int = 0) -> String:
 	match event_type:
 		RoomParams.EventType.SHOP:
-			return "lamia"
-		RoomParams.EventType.NURSE:
-			return "nurse"
+			return "sessilia"
+		RoomParams.EventType.NOCTRIS:
+			return "noctris"
 		RoomParams.EventType.CHEST:
 			return "chest"
 		RoomParams.EventType.STATUE:
@@ -254,10 +254,11 @@ func pick_quest_room_dialogue(quest_id: String) -> Dictionary:
 	return candidates[0]
 
 ## Поля реплики (пустая строка или нет поля — стандартное значение):
-##   speaker      — id говорящего (witch, rabbit_shop, ...)
+##   speaker      — id говорящего (witch, rikka, ...)
 ##   speaker_name — имя на плашке только в этой реплике; пусто — имя из data/characters/names.json
 ##                  (например «Девушка-кролик», пока Рикка не представилась)
 ##   emotion      — эмоция говорящего: картинка assets/characters/<id>/emotions/<id>_<emotion>.png
+##                  (у NPC — assets/npc/<id>/emotions/: noctris_confusion.png, rikka_happy.png)
 ##                  (или <emotion>.png); "emotion": "shy" → fufu_shy.png. Нет файла — обычный портрет
 ## У каждого персонажа в characters тоже можно указать name и emotion.
 ##   "hero"       — особый id для speaker и characters: подставляется главный герой, выбранный
@@ -374,7 +375,7 @@ func _resolve_line(raw: Dictionary) -> Dictionary:
 		line["active_character"] = speaker_id
 	return line
 
-## Имена персонажей в диалогах: data/characters/names.json — {"rabbit_shop": "Рикка", ...}.
+## Имена персонажей в диалогах: data/characters/names.json — {"rikka": "Рикка", ...}.
 ## Нет в таблице — имя из CharDB, иначе id. Разово другое имя — поле speaker_name в реплике.
 const NAMES_FILE := "res://data/characters/names.json"
 var _names: Dictionary = {}
@@ -399,14 +400,17 @@ func get_character_name(character_id: String) -> String:
 
 ## Эмоции: assets/characters/<id>/emotions/<эмоция>.png (у NPC — assets/npc/<папка>/emotions/).
 const EMOTIONS_DIR := "res://assets/characters"
+const NPC_EMOTIONS_DIR := "res://assets/npc"
 
 func get_character_portrait(character_id: String, emotion: String = "") -> Texture2D:
 	if emotion != "" and character_id != "":
 		# Файл эмоции: emotions/<id>_<эмоция>.png (fufu_shy.png) или просто emotions/<эмоция>.png.
-		for file in ["%s_%s" % [character_id, emotion], emotion]:
-			var path := "%s/%s/emotions/%s.png" % [EMOTIONS_DIR, character_id, file]
-			if ResourceLoader.exists(path):
-				return load(path) as Texture2D
+		# Папка героинь — assets/characters/<id>/, NPC (Рикка, Сессилия, Ноктрис) — assets/npc/<id>/.
+		for dir in [EMOTIONS_DIR, NPC_EMOTIONS_DIR]:
+			for file in ["%s_%s" % [character_id, emotion], emotion]:
+				var path := "%s/%s/emotions/%s.png" % [dir, character_id, file]
+				if ResourceLoader.exists(path):
+					return load(path) as Texture2D
 	if AssetCatalog_ != null:
 		var event_tex := AssetCatalog_.get_event_npc_texture(character_id)
 		if event_tex != null:
@@ -479,7 +483,7 @@ func check_conditions(conditions) -> bool:
 		for key in c["counter_min"].keys():
 			if StoryState_.get_counter(String(key)) < int(c["counter_min"][key]):
 				return false
-	# "seen_dialogue": "nurse_first_meeting" — диалог уже был (например, встреча с НПС); можно списком.
+	# "seen_dialogue": "noctris_first_meeting" — диалог уже был (например, встреча с НПС); можно списком.
 	if c.has("seen_dialogue") and StoryState_ != null:
 		for did in (c["seen_dialogue"] if c["seen_dialogue"] is Array else [c["seen_dialogue"]]):
 			if not StoryState_.has_seen_dialogue(String(did)):

@@ -13,8 +13,8 @@ const FILLER_SHIELD: CardDef = preload("res://resources/cards/common/filler_shie
 const LURE: CardDef = preload("res://resources/cards/common/lure.tres")
 const COLOR_LURE := Color(0.88, 0.36, 0.62, 1.0)
 ## Одноразовая карта лечения от Ноктрис (покупается в её комнате, сгорает до конца забега).
-const NURSE_HEAL: CardDef = preload("res://resources/cards/common/nurse_heal.tres")
-const COLOR_NURSE := Color(0.36, 0.62, 0.72, 1.0)
+const NOCTRIS_HEAL: CardDef = preload("res://resources/cards/common/noctris_heal.tres")
+const COLOR_NOCTRIS := Color(0.36, 0.62, 0.72, 1.0)
 
 const COLOR_FILLER := Color(0.45, 0.45, 0.50, 1.0)
 
@@ -161,7 +161,7 @@ static var _index: Dictionary = {}
 
 static func _build_index() -> void:
 	_index.clear()
-	for d in [FILLER_STRIKE, FILLER_SHIELD, NURSE_HEAL]:
+	for d in [FILLER_STRIKE, FILLER_SHIELD, NOCTRIS_HEAL]:
 		_index[d.id] = [d, ""]
 	if CharDB == null:
 		return
@@ -191,8 +191,8 @@ static func card_by_id(card_id: String, owner: Unit = null) -> CardInstance:
 	var d := def_by_id(card_id)
 	if d == null:
 		return null
-	if d == NURSE_HEAL:
-		return CardInstance.from_def(d, null, COLOR_NURSE, "Ноктрис")
+	if d == NOCTRIS_HEAL:
+		return CardInstance.from_def(d, null, COLOR_NOCTRIS, "Ноктрис")
 	if owner_of(card_id) == "":
 		return CardInstance.from_def(d, null, COLOR_FILLER, "Общая")
 	if owner == null:

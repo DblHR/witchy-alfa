@@ -113,18 +113,18 @@ Id карт — имена файлов в `resources/cards/` (`aki_kiss`, `witc
 - `party_has` — все эти живы в отряде; `party_has_any` — хотя бы одна; `not_party_has` — никого из них
 
 **Между комнатами:** `after_room` — какую комнату только что прошли; `offered` — среди предложенных есть
-`shop` / `nurse` / `chest` / `statue` / `battle` / `elite`; `hero_low_hp: true` — у кого-то меньше 40% HP;
+`shop` / `noctris` / `chest` / `statue` / `battle` / `elite`; `hero_low_hp: true` — у кого-то меньше 40% HP;
 `hero_dead: true` — кто-то пал; а также `party_has`, `party_has_any`, `not_party_has`, `room_min`, `room_max`.
 
 **Сюжет (как в диалогах):** `has_unit`, `has_any_unit`, `not_has_unit`, `trust` (`{"fufu": 5}`), `flag`, `not_flag`,
 `quest_active`, `quest_completed`, `quest_not_started`, `party_level_min`, `rooms_cleared_min`, `has_item`, `not_has_item`,
-`counter_min`, `main_hero`, `seen_dialogue` / `not_seen_dialogue` (например `"seen_dialogue": "nurse_first_meeting"` —
+`counter_min`, `main_hero`, `seen_dialogue` / `not_seen_dialogue` (например `"seen_dialogue": "noctris_first_meeting"` —
 после встречи с Ноктрис).
 
 Пример — Фуфу вспоминает Ноктрис, если доверие 3+, и только один раз:
 ```json
-{"id": "fufu_about_nurse", "once": true, "priority": 5,
- "conditions": {"seen_dialogue": "nurse_first_meeting", "trust": {"fufu": 3}},
+{"id": "fufu_about_noctris", "once": true, "priority": 5,
+ "conditions": {"seen_dialogue": "noctris_first_meeting", "trust": {"fufu": 3}},
  "lines": [["fufu", "Эта медсестра так на тебя смотрела~"], ["warrior", "Не начинай."]]}
 ```
 

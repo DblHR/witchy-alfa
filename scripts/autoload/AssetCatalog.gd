@@ -8,7 +8,7 @@ const UI_TEXTURE_PATHS := {
 	"farm_bg": "res://assets/backgrounds/rooms/farmBG.png",
 	"event_bg_default": "",   ## пусто — фон этажа слоями (FloorBackdrop)
 	"event_bg_shop": "res://assets/backgrounds/rooms/eventroomShopBG.png",
-	"event_bg_nurse": "res://assets/backgrounds/rooms/nurseBG.png",
+	"event_bg_noctris": "res://assets/backgrounds/rooms/noctrisBG.png",
 	"event_bg_chest": "",   ## пусто — фон этажа слоями (FloorBackdrop)
 	"event_bg_statue_white": "",   ## пусто — фон этажа слоями (FloorBackdrop)
 	"event_bg_statue_black": "",   ## пусто — фон этажа слоями (FloorBackdrop)
@@ -47,9 +47,9 @@ const FARM_POT_TEXTURES := {
 
 const EVENT_NPC_TEXTURES := {
 	"shop": "res://assets/npc/sessilia/sessilia.png",
-	"rabbit_shop": "res://assets/npc/rikka/rikka.png",
-	"nurse": "res://assets/npc/noctris/noctris.png",
-	"lamia": "res://assets/npc/sessilia/sessilia.png",
+	"rikka": "res://assets/npc/rikka/rikka.png",
+	"noctris": "res://assets/npc/noctris/noctris.png",
+	"sessilia": "res://assets/npc/sessilia/sessilia.png",
 	"chest": "res://assets/npc/chest/chest.png",
 	"opened_chest": "res://assets/npc/chest/chest_open.png",
 	"statue_white": "res://assets/npc/statues/statue_white.png",
@@ -57,9 +57,9 @@ const EVENT_NPC_TEXTURES := {
 }
 
 const EVENT_CHOICE_TEXTURES := {
-	"nurse_heal": "res://assets/npc/noctris/noctris_heal.png",
-	"nurse_revive": "res://assets/npc/noctris/noctris_revival.png",
-	"nurse_potion": "res://assets/npc/noctris/noctris_potion.png",
+	"noctris_heal": "res://assets/npc/noctris/noctris_heal.png",
+	"noctris_revive": "res://assets/npc/noctris/noctris_revival.png",
+	"noctris_potion": "res://assets/npc/noctris/noctris_potion.png",
 }
 
 var _texture_cache: Dictionary = {}
@@ -78,12 +78,12 @@ func get_event_npc_texture(key: String) -> Texture2D:
 	if tex != null:
 		return tex
 	match key:
-		"lamia":
-			return _build_placeholder_texture("lamia", Color(0.68, 0.50, 0.86, 1.0))
-		"rabbit_shop", "shop":
-			return _build_placeholder_texture("rabbit_shop", Color(0.92, 0.62, 0.74, 1.0))
-		"nurse":
-			return _build_placeholder_texture("nurse", Color(0.62, 0.80, 0.95, 1.0))
+		"sessilia":
+			return _build_placeholder_texture("sessilia", Color(0.68, 0.50, 0.86, 1.0))
+		"rikka", "shop":
+			return _build_placeholder_texture("rikka", Color(0.92, 0.62, 0.74, 1.0))
+		"noctris":
+			return _build_placeholder_texture("noctris", Color(0.62, 0.80, 0.95, 1.0))
 	return null
 
 func get_event_choice_texture(key: String) -> Texture2D:
@@ -94,8 +94,8 @@ func get_event_background(event_type: int, statue_variant: int = 0) -> Texture2D
 	match event_type:
 		RoomParams.EventType.SHOP:
 			key = "event_bg_shop"
-		RoomParams.EventType.NURSE:
-			key = "event_bg_nurse"
+		RoomParams.EventType.NOCTRIS:
+			key = "event_bg_noctris"
 		RoomParams.EventType.CHEST:
 			key = "event_bg_chest"
 		RoomParams.EventType.STATUE:

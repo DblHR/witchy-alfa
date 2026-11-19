@@ -2,7 +2,7 @@ extends RefCounted
 class_name RoomParams
 
 enum RoomType { BATTLE, BOSS, EVENT }
-enum EventType { NONE, SHOP, NURSE, CHEST, STATUE, QUEST }
+enum EventType { NONE, SHOP, NOCTRIS, CHEST, STATUE, QUEST }
 enum StatueVariant { NONE, WHITE, BLACK }
 
 var index: int

@@ -5,7 +5,7 @@ signal changed
 
 const GROUND_SHOP_SLOT_COUNT := 6
 const EVENT_SHOP_SLOT_COUNT := 4
-const LAMIA_SHOP_CHANCE := 0.35
+const SESSILIA_SHOP_CHANCE := 0.35
 const FIND_WARRIOR_QUEST_ROOM_CHANCE := 0.35
 
 var rooms: Array[RoomParams] = []
@@ -248,7 +248,7 @@ func refresh_ground_shop(force_emit: bool = false) -> void:
 	ground_shop_item_ids.clear()
 	ground_shop_item_ids.append("quartz")
 	ground_shop_item_ids.append(RIKKA_SEEDS[rng.randi_range(0, RIKKA_SEEDS.size() - 1)])
-	# Приманка появляется у Рикки только после её рассказа (data/dialogues/npc/rabbit_shop.json).
+	# Приманка появляется у Рикки только после её рассказа (data/dialogues/npc/rikka.json).
 	if lure_unlocked():
 		ground_shop_item_ids.append(LURE_ITEM)
 	var pools: Array = [RunItems.food_ids(), _common_staffs_not_owned(), AlchemyDB.unknown_recipe_items(), RIKKA_FOOD_INGREDIENTS]
@@ -276,12 +276,12 @@ func _common_staffs_not_owned() -> Array[String]:
 	return out
 
 ## Лавка Сессилии (ламия, ивент в забеге): 4 слота, дороже Рикки, но наборами или редкостью.
-## Возвращает [{id, count, price}]. Посох — обычный или (LAMIA_RARE_CHANCE) редкий.
-const LAMIA_PRICE_MULT := 1.3
-const LAMIA_RARE_CHANCE := 0.2
-const LAMIA_FLOOR_LOOT: Array[String] = ["slime_goop"]
+## Возвращает [{id, count, price}]. Посох — обычный или (SESSILIA_RARE_CHANCE) редкий.
+const SESSILIA_PRICE_MULT := 1.3
+const SESSILIA_RARE_CHANCE := 0.2
+const SESSILIA_FLOOR_LOOT: Array[String] = ["slime_goop"]
 
-func roll_lamia_stock(r: RandomNumberGenerator) -> Array:
+func roll_sessilia_stock(r: RandomNumberGenerator) -> Array:
 	var offers: Array = []
 	var kinds := ["quartz", "food", "seeds", "potion", "loot", "staff"]   ## приманку Сессилия не продаёт
 	for i in range(kinds.size() - 1, 0, -1):
@@ -306,11 +306,11 @@ func roll_lamia_stock(r: RandomNumberGenerator) -> Array:
 				var potions := ["slime_potion", "energy_tonic", "rage_phial"]
 				id = potions[r.randi_range(0, potions.size() - 1)]
 			"loot":
-				id = LAMIA_FLOOR_LOOT[r.randi_range(0, LAMIA_FLOOR_LOOT.size() - 1)]; count = r.randi_range(4, 6)
+				id = SESSILIA_FLOOR_LOOT[r.randi_range(0, SESSILIA_FLOOR_LOOT.size() - 1)]; count = r.randi_range(4, 6)
 			"lure":
 				id = LURE_ITEM
 			"staff":
-				var rare := r.randf() < LAMIA_RARE_CHANCE
+				var rare := r.randf() < SESSILIA_RARE_CHANCE
 				var pool: Array[String] = []
 				for sid in RunItems.artifact_ids():
 					if RunItems.get_item_rarity(sid) == (1 if rare else 0):
@@ -320,7 +320,7 @@ func roll_lamia_stock(r: RandomNumberGenerator) -> Array:
 				id = pool[r.randi_range(0, pool.size() - 1)]
 		if id == "":
 			continue
-		offers.append({"id": id, "count": count, "price": roundi(float(RunItems.get_item_price(id) * count) * LAMIA_PRICE_MULT)})
+		offers.append({"id": id, "count": count, "price": roundi(float(RunItems.get_item_price(id) * count) * SESSILIA_PRICE_MULT)})
 	return offers
 
 func buy_ground_shop_item(slot_idx: int) -> String:
@@ -642,7 +642,7 @@ func _generate_room(i: int, room_count: int) -> RoomParams:
 		return r
 	if i == room_count - 2:
 		r.room_type = RoomParams.RoomType.EVENT
-		r.event_type = RoomParams.EventType.SHOP if rng.randf() < 0.5 else RoomParams.EventType.NURSE
+		r.event_type = RoomParams.EventType.SHOP if rng.randf() < 0.5 else RoomParams.EventType.NOCTRIS
 		_finalize_event_room(r)
 		return r
 	if _try_make_quest_room(r):
@@ -660,7 +660,7 @@ func _generate_room(i: int, room_count: int) -> RoomParams:
 		elif e_roll < 0.75:
 			r.event_type = RoomParams.EventType.SHOP
 		else:
-			r.event_type = RoomParams.EventType.NURSE
+			r.event_type = RoomParams.EventType.NOCTRIS
 		_finalize_event_room(r)
 		return r
 	var depth := i
@@ -680,8 +680,8 @@ func _try_make_quest_room(room: RoomParams) -> bool:
 	return false
 
 func _pick_shop_npc_id() -> String:
-	# Dungeon shops are always run by Lamia. Rabbit belongs only to the hub shop.
-	return "lamia"
+	# Dungeon shops are always run by Sessilia. Rikka belongs only to the hub shop.
+	return "sessilia"
 
 func _finalize_event_room(room: RoomParams) -> void:
 	match room.event_type:

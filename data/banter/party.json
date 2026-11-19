@@ -69,15 +69,15 @@
       ]
     },
     {
-      "id": "choice_nurse_offered_r",
-      "conditions": {"offered": "nurse", "seen_dialogue": "nurse_first_meeting"},
+      "id": "choice_noctris_offered_r",
+      "conditions": {"offered": "noctris", "seen_dialogue": "noctris_first_meeting"},
       "weight": 3,
       "chance": 0.6,
       "lines": [["warrior", "Медсестра рядом. Нам явно нужно к ней заглянуть... Хотя бы на осмотр..."]]
     },
     {
-      "id": "choice_nurse_offered_low",
-      "conditions": {"offered": "nurse", "hero_low_hp": true},
+      "id": "choice_noctris_offered_low",
+      "conditions": {"offered": "noctris", "hero_low_hp": true},
       "priority": 5,
       "lines": [["aki", "Ноктрис? Зачем она нам, если есть я~"]]
     },
@@ -314,8 +314,8 @@
       "lines": [["luisa", ["Сыро тут... приятно.", "Вот бы все проблемы решились сами.", "Столько времени потратила, а слизи всё столько же..."]]]
     },
     {
-      "id": "after_nurse_meeting",
-      "conditions": {"seen_dialogue": "nurse_first_meeting", "party_has": ["witch", "warrior"]},
+      "id": "after_noctris_meeting",
+      "conditions": {"seen_dialogue": "noctris_first_meeting", "party_has": ["witch", "warrior"]},
       "once": true,
       "priority": 8,
       "lines": [
@@ -325,8 +325,8 @@
       ]
     },
     {
-      "id": "after_lamia_meeting",
-      "conditions": {"seen_dialogue": "lamia_first_meeting", "party_has": ["witch", "warrior"]},
+      "id": "after_sessilia_meeting",
+      "conditions": {"seen_dialogue": "sessilia_first_meeting", "party_has": ["witch", "warrior"]},
       "once": true,
       "priority": 8,
       "lines": [

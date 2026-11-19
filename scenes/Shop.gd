@@ -28,10 +28,10 @@ func _ready() -> void:
 	# Рикка — отдельной картинкой поверх фона (на фоне её больше нет).
 	var bg := get_node_or_null("background")
 	if bg != null:
-		var npc := ShopUi.make_npc_sprite("rabbit_shop")
+		var npc := ShopUi.make_npc_sprite("rikka")
 		add_child(npc)
 		move_child(npc, bg.get_index() + 1)
-		_bubbles = NpcBubbles.attach(self, npc, "rabbit_shop")
+		_bubbles = NpcBubbles.attach(self, npc, "rikka")
 		_rikka = npc
 	home_button.pressed.connect(func(): SceneRouter_.go_to_hub())
 	if DungRun != null and not DungRun.changed.is_connected(_refresh):
@@ -42,7 +42,7 @@ func _ready() -> void:
 	_build_stock_grid()
 	_build_flower()
 	_refresh()
-	call_deferred("_show_rabbit_shop_greeting")
+	call_deferred("_show_rikka_greeting")
 
 func _exit_tree() -> void:
 	if DungRun != null and DungRun.changed.is_connected(_refresh):
@@ -50,19 +50,19 @@ func _exit_tree() -> void:
 	if Inventory_ != null and Inventory_.changed.is_connected(_refresh):
 		Inventory_.changed.disconnect(_refresh)
 
-func _show_rabbit_shop_greeting() -> void:
+func _show_rikka_greeting() -> void:
 	_pending_shop_dialogue = {}
 	if StoryDialogueDB_ == null or DialogueManager_ == null:
 		return
 	# Сюжетные диалоги (квесты, разовые сцены) — окном диалога (VN), всегда.
-	var d := StoryDialogueDB_.pick_npc_dialogue("rabbit_shop", "event")
+	var d := StoryDialogueDB_.pick_npc_dialogue("rikka", "event")
 	if d.is_empty():
-		d = StoryDialogueDB_.pick_npc_dialogue("rabbit_shop", "flag")
+		d = StoryDialogueDB_.pick_npc_dialogue("rikka", "flag")
 	if not d.is_empty() and not StoryDialogueDB_.is_routine(d):
 		var lines := StoryDialogueDB_.resolve_lines(d)
 		if not lines.is_empty():
 			_pending_shop_dialogue = d
-			DialogueManager_.show_sequence(lines, Callable(self, "_on_rabbit_shop_dialogue_finished"))
+			DialogueManager_.show_sequence(lines, Callable(self, "_on_rikka_dialogue_finished"))
 			return
 	# Обычное приветствие — пузырём у Рикки (при каждом заходе), без окна диалога.
 	if d.is_empty() or _bubbles == null:
@@ -78,7 +78,7 @@ func _show_rabbit_shop_greeting() -> void:
 		DungRun.ensure_lure_in_shop()
 		_refresh()
 
-func _on_rabbit_shop_dialogue_finished() -> void:
+func _on_rikka_dialogue_finished() -> void:
 	if not _pending_shop_dialogue.is_empty() and StoryDialogueDB_ != null:
 		var dialogue_id := String(_pending_shop_dialogue.get("id", ""))
 		if dialogue_id != "" and StoryState_ != null:
