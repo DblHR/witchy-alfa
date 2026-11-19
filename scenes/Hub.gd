@@ -20,6 +20,7 @@ func _ready() -> void:
 	_collect_routes()
 	_spawn_walkers()
 	_build_cauldron_bubbles()
+	_build_door_hint()
 	_refresh_badges()
 	if UnitRoster_ != null and not UnitRoster_.changed.is_connected(_refresh_badges):
 		UnitRoster_.changed.connect(_refresh_badges)
@@ -170,6 +171,41 @@ func _set_cauldron_hover(on: bool) -> void:
 	_cauldron_hover = on
 	_bubbles.emitting = on
 
+# --- Дверной проём: вход на ферму -----------------------------------------------------
+## Где дверной проём (клик — ферма). При наведении над ним всплывает значок фермы.
+const DOOR_RECT := Rect2(1462, 195, 290, 355)
+const FARM_ICON := "res://assets/ui/buttons/farmButton.png"
+var _door_hint: TextureRect
+var _door_hover := false
+var _door_tween: Tween
+
+func _build_door_hint() -> void:
+	_door_hint = TextureRect.new()
+	_door_hint.name = "DoorFarmHint"
+	_door_hint.texture = load(FARM_ICON) as Texture2D
+	_door_hint.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_door_hint.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	_door_hint.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_door_hint.size = Vector2(110, 110)
+	_door_hint.position = Vector2(DOOR_RECT.get_center().x - 55, DOOR_RECT.position.y + 40)
+	_door_hint.modulate.a = 0.0
+	add_child(_door_hint)
+	move_child(_door_hint, foreground.get_index() + 1)
+
+func _door_at(p: Vector2) -> bool:
+	return DOOR_RECT.has_point(p)
+
+func _set_door_hover(on: bool) -> void:
+	if on == _door_hover:
+		return
+	_door_hover = on
+	if _door_tween != null and _door_tween.is_valid():
+		_door_tween.kill()
+	_door_tween = create_tween().set_parallel(true)
+	_door_tween.tween_property(_door_hint, "modulate:a", 1.0 if on else 0.0, 0.15)
+	var y := DOOR_RECT.position.y + (20.0 if on else 40.0)
+	_door_tween.tween_property(_door_hint, "position:y", y, 0.15)
+
 # --- Мышь: наведение, клик, перетаскивание ----------------------------------------------
 const HUB_TALK_TYPE := "hub_talk"
 const DRAG_START_PX := 12.0
@@ -233,9 +269,11 @@ func _process(_delta: float) -> void:
 	var p := get_viewport().get_mouse_position()
 	var over: HomeWalker = null
 	var cauldron := false
+	var door := false
 	if not _world_locked() and not _dragging and not _ui_blocks():
 		over = _walker_at(p)
 		cauldron = over == null and not _opaque(foreground, p) and _cauldron_at(p)
+		door = over == null and not cauldron and _door_at(p)
 	if over != _hovered:
 		if _hovered != null and is_instance_valid(_hovered):
 			_hovered.set_hover(false)
@@ -243,7 +281,8 @@ func _process(_delta: float) -> void:
 		if over != null:
 			over.set_hover(true)
 	_set_cauldron_hover(cauldron)
-	var hand := over != null or cauldron or _dragging
+	_set_door_hover(door)
+	var hand := over != null or cauldron or door or _dragging
 	Input.set_default_cursor_shape(Input.CURSOR_DRAG if _dragging else (Input.CURSOR_POINTING_HAND if hand else Input.CURSOR_ARROW))
 
 func _input(event: InputEvent) -> void:
@@ -283,6 +322,9 @@ func _input(event: InputEvent) -> void:
 		elif not _opaque(foreground, p) and _cauldron_at(p):
 			get_viewport().set_input_as_handled()
 			SceneRouter_.go_to_alchemy()
+		elif _door_at(p):
+			get_viewport().set_input_as_handled()
+			SceneRouter_.go_to_farm()
 
 ## Клик по персонажу: с кем есть разговор — разговор (пока только Фуфу), остальные подпрыгивают
 ## (на кровати — нет), ведьмочка на миг становится «фазой 2».

@@ -47,9 +47,81 @@ func set_character(id: String, display_name: String, tex: Texture2D) -> void:
 	if not is_node_ready():
 		await ready
 	name_label.text = display_name
+	if chibi_mode:
+		_set_chibi(tex)
+		return
 	portrait.texture = tex
 	portrait.modulate = Color.WHITE if tex != null else Color(1, 1, 1, 0.0)
 	_update_class_icon()
+
+# --- Режим «чибик» (экран подготовки: отряд стоит на площадке) ----------------------
+## Вместо карточки — персонаж в полный рост (картинка из боя), смотрит вправо, покачивается
+## как в бою. Ноги — у нижнего края слота. Рост — CHIBI_HEIGHT × data/characters/sizes.json.
+const CHIBI_HEIGHT := 420.0
+const CHIBI_FEET_MARGIN := 34.0
+const IDLE_SWAY_X := 5.0       ## как в бою (CardActorFx)
+const IDLE_BOB_Y := 3.0
+var chibi_mode := false
+var _chibi: TextureRect
+var _chibi_base := Vector2.ZERO
+var _idle: Array[Tween] = []
+
+func set_chibi_mode(on: bool) -> void:
+	chibi_mode = on
+	if not is_node_ready():
+		await ready
+	for n in ["CardBg", "Clipper", "Shade", "Name"]:
+		var c := get_node_or_null(n) as CanvasItem
+		if c != null:
+			c.visible = not on
+	if _class_icon != null:
+		_class_icon.visible = false
+		_class_label.visible = false
+	_update_style()
+	if on and not mouse_entered.is_connected(_on_chibi_hover):
+		mouse_entered.connect(_on_chibi_hover.bind(true))
+		mouse_exited.connect(_on_chibi_hover.bind(false))
+
+func _on_chibi_hover(on: bool) -> void:
+	if _chibi != null and _chibi.visible:
+		HoverOutline.set_on(_chibi, on)
+
+func _set_chibi(tex: Texture2D) -> void:
+	if _chibi == null:
+		_chibi = TextureRect.new()
+		_chibi.name = "Chibi"
+		_chibi.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		_chibi.stretch_mode = TextureRect.STRETCH_SCALE
+		_chibi.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
+		_chibi.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_chibi.flip_h = true   ## картинки смотрят влево, на площадке — вправо (к врагам)
+		add_child(_chibi)
+	for t in _idle:
+		if t.is_valid():
+			t.kill()
+	_idle.clear()
+	_chibi.visible = tex != null
+	_chibi.texture = tex
+	if tex == null:
+		return
+	var r := CharSizes.used_rect(tex)
+	var k := CHIBI_HEIGHT * CharSizes.scale_of(character_id) / maxf(1.0, float(r.size.y))
+	_chibi.size = Vector2(tex.get_size()) * k
+	# По центру слота — середина фигуры (а не картинки), с учётом отражения.
+	var mid_x := (float(r.position.x) + float(r.size.x) * 0.5) * k
+	var mirrored_mid := _chibi.size.x - mid_x
+	_chibi_base = Vector2(size.x * 0.5 - mirrored_mid, size.y - CHIBI_FEET_MARGIN - float(r.position.y + r.size.y) * k)
+	_chibi.position = _chibi_base
+	# Idle как в бою: покачивание влево-вправо и лёгкие подпрыгивания, своя фаза у каждого.
+	var half := randf_range(0.95, 1.35)
+	var t := create_tween().set_loops()
+	t.tween_property(_chibi, "position:x", _chibi_base.x + IDLE_SWAY_X, half).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	t.tween_property(_chibi, "position:x", _chibi_base.x - IDLE_SWAY_X, half * 2.0).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	t.tween_property(_chibi, "position:x", _chibi_base.x, half).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	var b := create_tween().set_loops()
+	b.tween_property(_chibi, "position:y", _chibi_base.y - IDLE_BOB_Y, half * 0.5).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	b.tween_property(_chibi, "position:y", _chibi_base.y, half * 0.5).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+	_idle = [t, b]
 
 func _update_class_icon() -> void:
 	var data: CharacterData = CharDB.get_by_id(character_id) if character_id != "" and CharDB != null else null
@@ -107,6 +179,9 @@ func _gui_input(event: InputEvent) -> void:
 			drag_moved.emit(ui_index, get_global_mouse_position())
 
 func _update_style() -> void:
+	if chibi_mode:
+		add_theme_stylebox_override("panel", StyleBoxEmpty.new())
+		return
 	var sb := StyleBoxFlat.new()
 	sb.bg_color = Color(0, 0, 0, 0)
 	sb.border_width_left = 5

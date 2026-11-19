@@ -7,6 +7,7 @@ class_name HomeWalker
 ## Действие на кровати: "jump" — прыгает, "lie" — лежит (пока картинка смерти <id>_dead.png).
 const BED_ACTIONS := {"witch": "jump", "warrior": "jump", "aki": "jump", "fufu": "lie", "luisa": "lie"}
 ## Рост персонажа на экране, px (от макушки до пяток), одинаковый на обоих этажах.
+## Отдельно для каждого — множитель в data/characters/sizes.json (CharSizes).
 const HEIGHT_PX := 440.0
 const WALK_SPEED_MIN := 80.0
 const WALK_SPEED_MAX := 130.0
@@ -66,14 +67,14 @@ func setup(p_id: String, tex: Texture2D, p_home: Node) -> void:
 	add_child(body)
 	var feet := _feet_y(tex)
 	var top := _top_y(tex)
-	_scale = HEIGHT_PX / maxf(1.0, feet - top)
+	_scale = HEIGHT_PX * CharSizes.scale_of(p_id) / maxf(1.0, feet - top)
 	body.scale = Vector2(_scale, _scale)
 	body.offset = Vector2(-tex.get_width() * 0.5, -feet)
 	badge_anchor = Control.new()
 	badge_anchor.name = "BadgeAnchor"
 	badge_anchor.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	badge_anchor.size = Vector2(1, 1)
-	badge_anchor.position = Vector2(-20, -HEIGHT_PX - 50)
+	badge_anchor.position = Vector2(-20, -HEIGHT_PX * CharSizes.scale_of(p_id) - 50)
 	add_child(badge_anchor)
 	if String(BED_ACTIONS.get(p_id, "jump")) == "lie":
 		bed_tex = CharacterPhases.dead_texture(tex)

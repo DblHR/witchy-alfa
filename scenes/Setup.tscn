@@ -4,6 +4,10 @@
 [ext_resource type="PackedScene" uid="uid://c1k2g5xv2d3y0" path="res://ui/TeamSlot.tscn" id="2_8y2xk"]
 [ext_resource type="Texture2D" uid="uid://ci53sg2irig4u" path="res://assets/ui/setup/setupUI.png" id="2_17ay7"]
 [ext_resource type="PackedScene" uid="uid://d2g0v3e7p1p0t" path="res://ui/CharacterPickerPopup.tscn" id="3_7qv0c"]
+[ext_resource type="Texture2D" uid="uid://cqgtvmm33s138" path="res://assets/ui/setup/setupPanel.png" id="4_panel"]
+[ext_resource type="Texture2D" uid="uid://cgjwcac1mhx47" path="res://assets/ui/setup/setupGoButton.png" id="5_go"]
+[ext_resource type="Texture2D" uid="uid://dlqg5fpxvh5f3" path="res://assets/ui/buttons/goldStatus.png" id="6_gold"]
+[ext_resource type="Texture2D" uid="uid://bj4a57s2tmdnx" path="res://assets/ui/buttons/back.png" id="7_back"]
 
 [node name="Node2D" type="Node2D" unique_id=402716249]
 
@@ -27,6 +31,47 @@ texture = ExtResource("2_17ay7")
 expand_mode = 1
 stretch_mode = 6
 
+[node name="SetupPanel" type="TextureRect" parent="Control"]
+layout_mode = 0
+offset_right = 1920.0
+offset_bottom = 1080.0
+mouse_filter = 2
+texture = ExtResource("4_panel")
+expand_mode = 1
+stretch_mode = 6
+
+[node name="Stage" type="Control" parent="Control"]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 480.0
+offset_top = 500.0
+offset_right = 1440.0
+offset_bottom = 640.0
+mouse_filter = 2
+
+[node name="GoldStatus" type="TextureRect" parent="Control"]
+layout_mode = 0
+offset_left = 1650.0
+offset_top = 18.0
+offset_right = 1900.0
+offset_bottom = 108.0
+mouse_filter = 2
+texture = ExtResource("6_gold")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="GoldLabel" type="Label" parent="Control/GoldStatus"]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 82.0
+offset_top = 10.0
+offset_right = 232.0
+offset_bottom = 80.0
+theme_override_colors/font_color = Color(1, 0.95, 0.8, 1)
+theme_override_font_sizes/font_size = 34
+text = "0"
+vertical_alignment = 1
+
 [node name="TitleLabel" type="Label" parent="Control" unique_id=225510537]
 layout_mode = 0
 offset_left = 745.0
@@ -38,28 +83,32 @@ theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
 theme_override_constants/outline_size = 4
 theme_override_font_sizes/font_size = 30
 text = "Подготовка команды"
+visible = false
 horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="HomeButton" type="TextureButton" parent="Control" unique_id=255018888]
 unique_name_in_owner = true
 layout_mode = 0
-offset_left = 16.0
-offset_top = 16.0
-offset_right = 116.0
-offset_bottom = 116.0
+offset_left = 22.0
+offset_top = 14.0
+offset_right = 142.0
+offset_bottom = 129.0
+texture_normal = ExtResource("7_back")
 ignore_texture_size = true
-stretch_mode = 0
+stretch_mode = 5
 
 [node name="StartButton" type="TextureButton" parent="Control" unique_id=1665792570]
 unique_name_in_owner = true
 layout_mode = 0
-offset_left = 1710.0
-offset_top = 850.0
-offset_right = 1886.0
-offset_bottom = 1026.0
+offset_left = 1490.0
+offset_top = 200.0
+offset_right = 1680.0
+offset_bottom = 390.0
+pivot_offset = Vector2(95, 95)
+texture_normal = ExtResource("5_go")
 ignore_texture_size = true
-stretch_mode = 0
+stretch_mode = 5
 
 [node name="CardBattleToggle" type="CheckButton" parent="Control" unique_id=1928374650]
 unique_name_in_owner = true
@@ -78,10 +127,10 @@ text = "Карточный бой"
 [node name="TeamRow" type="Control" parent="Control" unique_id=2044642848]
 unique_name_in_owner = true
 anchors_preset = 0
-offset_left = 384.0
+offset_left = 570.0
 offset_top = 150.0
-offset_right = 1488.0
-offset_bottom = 636.0
+offset_right = 1350.0
+offset_bottom = 600.0
 
 [node name="TeamSlot0" parent="Control/TeamRow" unique_id=1073336196 instance=ExtResource("2_8y2xk")]
 unique_name_in_owner = true
@@ -113,10 +162,10 @@ offset_bottom = 486.0
 [node name="LoadoutPanel" type="Panel" parent="Control" unique_id=1333116083]
 unique_name_in_owner = true
 layout_mode = 0
-offset_left = 1580.0
-offset_top = 305.0
-offset_right = 1758.0
-offset_bottom = 760.0
+offset_left = 130.0
+offset_top = 120.0
+offset_right = 440.0
+offset_bottom = 640.0
 
 [node name="LoadoutBox" type="VBoxContainer" parent="Control/LoadoutPanel" unique_id=253540587]
 layout_mode = 1
@@ -150,10 +199,10 @@ layout_mode = 2
 [node name="RosterPanel" type="Panel" parent="Control" unique_id=1383950601]
 unique_name_in_owner = true
 layout_mode = 0
-offset_left = 96.0
-offset_top = 780.0
-offset_right = 1616.0
-offset_bottom = 960.0
+offset_left = 130.0
+offset_top = 660.0
+offset_right = 1730.0
+offset_bottom = 862.0
 
 [node name="RosterScroll" type="ScrollContainer" parent="Control/RosterPanel" unique_id=1457551781]
 layout_mode = 1
@@ -177,10 +226,10 @@ theme_override_constants/separation = 12
 unique_name_in_owner = true
 custom_minimum_size = Vector2(324, 270)
 layout_mode = 0
-offset_left = 96.0
-offset_top = 470.0
-offset_right = 420.0
-offset_bottom = 740.0
+offset_left = 1440.0
+offset_top = 960.0
+offset_right = 1764.0
+offset_bottom = 1022.0
 
 [node name="AdminRoot" type="VBoxContainer" parent="Control/AdminPanel" unique_id=1278341834]
 layout_mode = 1

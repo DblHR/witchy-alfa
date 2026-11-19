@@ -30,6 +30,13 @@ var _water_tween: Tween
 var _seed_base_modulate := Color(1, 1, 1, 1)
 var _plant_base_modulate := Color(1, 1, 1, 1)
 var _laid_out_for := -1
+## Нужен полив — над горшком катается вверх-вниз капелька (вместо серого цвета).
+const DROPLET_TEX := "res://assets/ui/buttons/droplet.png"
+const DROPLET_WIDTH := 58.0
+const DROPLET_BOB := 12.0
+var _droplet: TextureRect
+var _droplet_tween: Tween
+var _droplet_base_y := 0.0
 var _pot_scale := 1.0
 
 func _ready() -> void:
@@ -134,6 +141,22 @@ func _apply_layout() -> void:
 	click_button.position = Vector2(bbox_px.position.x, top)
 	click_button.size = Vector2(bbox_px.size.x, bbox_px.end.y - top)
 
+	# Капелька «полей меня» — над ростком (семечко/росток ниже верха кнопки).
+	if _droplet == null:
+		_droplet = TextureRect.new()
+		_droplet.name = "Droplet"
+		_droplet.texture = load(DROPLET_TEX) as Texture2D if ResourceLoader.exists(DROPLET_TEX) else null
+		_droplet.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		_droplet.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		_droplet.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_droplet.visible = false
+		add_child(_droplet)
+		move_child(_droplet, click_button.get_index())
+	var dh := DROPLET_WIDTH * 155.0 / 150.0
+	_droplet.size = Vector2(DROPLET_WIDTH, dh)
+	_droplet_base_y = anchor_local.y - 280.0 * s * SPROUT_MULT * 0.55 - dh
+	_droplet.position = Vector2(anchor_local.x - DROPLET_WIDTH * 0.5, _droplet_base_y)
+
 ## Нижняя точка стебля в пикселях текстуры (центр непрозрачных пикселей нижних строк).
 static func _stem_base(tex: Texture2D) -> Vector2:
 	var key := tex.resource_path
@@ -222,14 +245,28 @@ func refresh() -> void:
 				_place_plant(flower, 1.0)
 				plant_sprite.visible = true
 
-	_seed_base_modulate = Color(0.62, 0.62, 0.62, 1.0) if stage == FarmState.PlantStage.SEED and needs_water else Color(1, 1, 1, 1)
-	_plant_base_modulate = Color(0.62, 0.62, 0.62, 1.0) if stage == FarmState.PlantStage.SPROUT and needs_water else Color(1, 1, 1, 1)
+	_seed_base_modulate = Color(1, 1, 1, 1)
+	_plant_base_modulate = Color(1, 1, 1, 1)
+	_set_droplet(needs_water and (stage == FarmState.PlantStage.SEED or stage == FarmState.PlantStage.SPROUT))
 
 	var can_interact := FarmState_.can_interact(slot_index)
 	click_button.disabled = not can_interact
 	click_button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND if can_interact else Control.CURSOR_ARROW
 	click_button.tooltip_text = _build_tooltip(slot)
 	_apply_hover_visual()
+
+func _set_droplet(on: bool) -> void:
+	if _droplet == null or _droplet.visible == on:
+		return
+	_droplet.visible = on
+	if _droplet_tween != null and _droplet_tween.is_valid():
+		_droplet_tween.kill()
+	if not on:
+		return
+	_droplet.position.y = _droplet_base_y
+	_droplet_tween = create_tween().set_loops()
+	_droplet_tween.tween_property(_droplet, "position:y", _droplet_base_y - DROPLET_BOB, 0.55).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	_droplet_tween.tween_property(_droplet, "position:y", _droplet_base_y, 0.55).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 
 func _build_tooltip(slot: Dictionary) -> String:
 	var stage := int(slot.get("stage", FarmState.PlantStage.EMPTY))

@@ -4,9 +4,14 @@ const FRAME_GOLD := Color(0.96, 0.83, 0.22, 1.0)
 const FRAME_SILVER := Color(0.88, 0.80, 0.88, 0.92)
 const FRAME_EMPTY := Color(0.56, 0.44, 0.60, 0.72)
 const TEAM_SLOT_SCENE := preload("res://ui/TeamSlot.tscn")
-const SLOT_SIZE := Vector2(240, 486)
-const SLOT_GAP := 32.0
-const ROSTER_CARD_SIZE := Vector2(112, 152)
+## Отряд — чибики на площадке (TeamSlot в режиме chibi). Ширина слота = шаг между ними.
+const SLOT_SIZE := Vector2(260, 450)
+const SLOT_GAP := 0.0
+## Площадка под отрядом: центр, полуоси эллипса; кружки-места под каждым слотом.
+const STAGE_CENTER := Vector2(960, 572)
+const STAGE_RADII := Vector2(470, 62)
+const SPOT_RADII := Vector2(92, 20)
+const ROSTER_CARD_SIZE := Vector2(126, 172)
 
 @onready var team_slot0: TeamSlot = %TeamSlot0
 @onready var team_slot1: TeamSlot = %TeamSlot1
@@ -31,6 +36,8 @@ var _potion_slot := 0
 ## Приманка: взять/не брать в забег (одна на забег).
 var lure_button: Button
 @onready var admin_panel: Panel = %AdminPanel
+@onready var gold_label: Label = %GoldLabel
+@onready var stage: Control = %Stage
 @onready var admin_toggle_button: Button = %AdminToggleButton
 @onready var admin_content: Control = %AdminContent
 @onready var add_unit_in_roaster: OptionButton = %AddUnitInRoaster
@@ -63,9 +70,10 @@ var _popup_kind: String = ""
 var _admin_open := false
 var _empty_hint: Label = null
 ## Клик по героине (в отряде или в списке) — выбор её карт; кнопка «Колода» — вся стартовая колода.
-var _deck_editor: DeckEditorPopup
-var _deck_preview: CardPilePopup
-const DECK_BUTTON_RECT := Rect2(1480, 900, 210, 70)
+var _deck_menu: PartyDeckMenu
+var _deck_button: Button
+## Кнопка «Колода» — под кнопкой «В бой».
+const DECK_BUTTON_RECT := Rect2(1462, 420, 246, 96)
 
 ## Размер отряда и тестовый переключатель «ядра команды».
 ## CORE_LOCK=true возвращает старую привязку: ведьма/воин — золотой лидер, его нельзя убрать.
@@ -83,6 +91,7 @@ func _ready() -> void:
 	for i in range(_team_slots.size()):
 		var slot := _team_slots[i]
 		slot.ui_index = i
+		slot.set_chibi_mode(true)
 		slot.can_drag = true
 		slot.can_pick = true
 		if not slot.pressed.is_connected(_on_slot_pressed):
@@ -120,6 +129,7 @@ func _ready() -> void:
 	_refresh_loadout_ui()
 	_refresh_roster_strip()
 	_refresh_admin_panel()
+	_refresh_gold()
 
 	if DungRun != null and not DungRun.changed.is_connected(_on_external_state_changed):
 		DungRun.changed.connect(_on_external_state_changed)
@@ -147,7 +157,7 @@ func _setup_visual_shell() -> void:
 	var viewport_size := get_viewport_rect().size
 	var total_team_width := SLOT_SIZE.x * _team_slots.size() + SLOT_GAP * float(_team_slots.size() - 1)
 	var team_x = floor((viewport_size.x - total_team_width) * 0.5)
-	var team_y := 150.0
+	var team_y := STAGE_CENTER.y + 28.0 - SLOT_SIZE.y   ## ноги чибиков — на площадке
 	team_row.position = Vector2(team_x, team_y)
 	team_row.size = Vector2(total_team_width, SLOT_SIZE.y)
 
@@ -157,12 +167,42 @@ func _setup_visual_shell() -> void:
 		slot.position = Vector2(i * (SLOT_SIZE.x + SLOT_GAP), 0)
 		slot.custom_minimum_size = SLOT_SIZE
 
-	_prepare_transparent_click_button(hub)
-	_prepare_transparent_click_button(start_button)
+	for b in [hub, start_button]:
+		_add_hover_bounce(b)
+	if stage != null:
+		stage.draw.connect(_draw_stage)
+		stage.queue_redraw()
 
 	_style_panel(loadout_panel, Color(0.34, 0.21, 0.36, 0.36), 26, Color(1, 1, 1, 0.08), 2)
 	_style_panel(roster_panel, Color(0.56, 0.33, 0.60, 0.20), 18, Color(1, 1, 1, 0.08), 2)
 	_style_panel(admin_panel, Color(0.20, 0.11, 0.22, 0.88), 22, Color(1, 1, 1, 0.10), 2)
+
+## Кнопка чуть увеличивается при наведении.
+func _add_hover_bounce(b: Control) -> void:
+	if b == null:
+		return
+	b.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	b.pivot_offset = b.size * 0.5
+	b.mouse_entered.connect(func() -> void:
+		b.create_tween().tween_property(b, "scale", Vector2(1.07, 1.07), 0.1))
+	b.mouse_exited.connect(func() -> void:
+		b.create_tween().tween_property(b, "scale", Vector2.ONE, 0.1))
+
+## Площадка под отрядом: большой эллипс и кружки под каждым местом.
+func _draw_stage() -> void:
+	var o := STAGE_CENTER - stage.position
+	_draw_ellipse(stage, o, STAGE_RADII, Color(1, 1, 1, 0.10), Color(1, 1, 1, 0.30))
+	for i in range(_team_slots.size()):
+		var cx := team_row.position.x + (i + 0.5) * (SLOT_SIZE.x + SLOT_GAP) - stage.position.x
+		_draw_ellipse(stage, Vector2(cx, o.y + 6), SPOT_RADII, Color(1, 1, 1, 0.14), Color(1, 0.9, 1, 0.45))
+
+static func _draw_ellipse(ci: CanvasItem, c: Vector2, r: Vector2, fill: Color, line: Color) -> void:
+	var pts := PackedVector2Array()
+	for k in range(49):
+		var a := TAU * float(k) / 48.0
+		pts.append(c + Vector2(cos(a) * r.x, sin(a) * r.y))
+	ci.draw_colored_polygon(pts.slice(0, 48), fill)
+	ci.draw_polyline(pts, line, 2.0, true)
 
 ## Два слота зелий в одну строку вместо одной кнопки.
 func _build_potion_slots() -> void:
@@ -183,6 +223,23 @@ func _build_potion_slots() -> void:
 	lure_button.expand_icon = true
 	lure_button.toggle_mode = true
 	box.add_child(lure_button)
+	# Раскладка слева: посох + еда, два зелья (круглые), приманка.
+	var top := HBoxContainer.new()
+	top.add_theme_constant_override("separation", 14)
+	top.alignment = BoxContainer.ALIGNMENT_CENTER
+	box.add_child(top)
+	box.move_child(top, 0)
+	artifact_button.reparent(top)
+	food_button.reparent(top)
+	row.alignment = BoxContainer.ALIGNMENT_CENTER
+	row.add_theme_constant_override("separation", 14)
+	(box as BoxContainer).alignment = BoxContainer.ALIGNMENT_CENTER
+	box.add_theme_constant_override("separation", 22)
+	for b in [artifact_button, food_button, lure_button]:
+		b.custom_minimum_size = Vector2(118, 118)
+	for b in [potion_button, potion_button2]:
+		b.custom_minimum_size = Vector2(112, 112)
+	lure_button.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	lure_button.toggled.connect(func(on: bool) -> void:
 		DungRun.take_lure = on
 		_refresh_loadout_ui()
@@ -192,6 +249,13 @@ func _setup_scene_widgets() -> void:
 	_build_potion_slots()
 	for button in [food_button, artifact_button, potion_button, potion_button2, lure_button]:
 		_style_loadout_button(button)
+	for button in [potion_button, potion_button2]:   ## зелья — круглые
+		for st in ["normal", "hover", "pressed", "disabled"]:
+			var sb := (button.get_theme_stylebox(st) as StyleBoxFlat)
+			if sb != null:
+				sb = sb.duplicate()
+				sb.set_corner_radius_all(56)
+				button.add_theme_stylebox_override(st, sb)
 	food_button.pressed.connect(func() -> void:
 		_open_item_popup("food")
 	)
@@ -634,7 +698,7 @@ func _update_empty_hint() -> void:
 		_empty_hint.add_theme_constant_override("outline_size", 6)
 		_empty_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		_empty_hint.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		_empty_hint.position = Vector2(560, 650)
+		_empty_hint.position = Vector2(560, 330)
 		_empty_hint.size = Vector2(800, 40)
 		team_row.get_parent().add_child(_empty_hint)
 	_empty_hint.visible = _party_is_empty()
@@ -656,7 +720,7 @@ func _refresh_team_ui(reset_layout: bool = true) -> void:
 			var label := id
 			if data != null:
 				label = data.display_name
-				tex = data.card_portrait if data.card_portrait != null else (data.icon if data.icon != null else data.battle_texture)
+				tex = data.battle_texture   ## чибик на площадке — картинка из боя
 			slot.set_character(id, label, tex)
 	if reset_layout:
 		_reset_slot_layout_instant()
@@ -703,13 +767,15 @@ func _on_roster_card_drag_started(_slot_index: int, pointer_offset: Vector2, car
 	add_child(_drag_preview)
 	_drag_preview.size = SLOT_SIZE
 	_drag_preview.custom_minimum_size = SLOT_SIZE
+	_drag_preview.set_chibi_mode(true)   ## тащим из ростера уже чибика
+	_roster_drag_pointer_offset = Vector2(SLOT_SIZE.x * 0.5, SLOT_SIZE.y * 0.62)
 	_drag_preview.can_drag = false
 	_drag_preview.can_pick = false
 	_drag_preview.z_index = 200
 	var data: CharacterData = CharDB.get_by_id(_roster_drag_id)
 	var tex: Texture2D = null
 	if data != null:
-		tex = data.card_portrait if data.card_portrait != null else (data.icon if data.icon != null else data.battle_texture)
+		tex = data.battle_texture
 	_drag_preview.set_character(_roster_drag_id, _get_character_display_name(_roster_drag_id), tex)
 	_drag_preview.set_frame_color(FRAME_SILVER)
 	_drag_preview.modulate = Color(1, 1, 1, 0.95)
@@ -751,35 +817,29 @@ func _drop_roster_into_slot(unit_id: String, target_index: int) -> void:
 
 func _build_deck_ui() -> void:
 	var ui_root := team_row.get_parent()
-	var deck_button := Button.new()
-	deck_button.text = "Колода"
-	deck_button.focus_mode = Control.FOCUS_NONE
-	deck_button.position = DECK_BUTTON_RECT.position
-	deck_button.size = DECK_BUTTON_RECT.size
-	deck_button.add_theme_font_size_override("font_size", 28)
-	deck_button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-	_style_primary_button(deck_button, Color(0.42, 0.22, 0.46, 0.98), Color(0.18, 0.08, 0.20, 1.0), 20)
-	deck_button.tooltip_text = "Посмотреть, с какой колодой начнётся забег"
-	deck_button.pressed.connect(_open_deck_preview)
-	ui_root.add_child(deck_button)
-	_deck_editor = DeckEditorPopup.new()
-	ui_root.add_child(_deck_editor)
-	_deck_preview = CardPilePopup.new()
-	ui_root.add_child(_deck_preview)
+	_deck_button = Button.new()
+	_deck_button.text = "Колода"
+	_deck_button.focus_mode = Control.FOCUS_NONE
+	_deck_button.position = DECK_BUTTON_RECT.position
+	_deck_button.size = DECK_BUTTON_RECT.size
+	_deck_button.add_theme_font_size_override("font_size", 30)
+	_style_primary_button(_deck_button, Color(0.42, 0.22, 0.46, 0.98), Color(0.18, 0.08, 0.20, 1.0), 22)
+	_deck_button.pressed.connect(_open_deck_preview)
+	ui_root.add_child(_deck_button)
+	_add_hover_bounce(_deck_button)
+	_deck_menu = PartyDeckMenu.new()
+	ui_root.add_child(_deck_menu)
 
+## Клик по персонажу — то же меню колоды, его столбик подсвечен.
 func _open_deck_editor(unit_id: String) -> void:
-	if unit_id == "" or _deck_editor == null:
+	if unit_id == "" or _deck_menu == null:
 		return
-	_deck_editor.open_for(unit_id)
+	_deck_menu.open(unit_id)
 
-## Стартовая колода отряда: выбранные карты героинь + общие карты.
+## Меню колоды: столбики персонажей отряда и общие карты, там же выбор карт на бой.
 func _open_deck_preview() -> void:
-	var heroes: Array[Unit] = []
-	for id in DungRun.party_ids:
-		var data: CharacterData = CharDB.get_by_id(id) if id != "" else null
-		if data != null:
-			heroes.append(Unit.new(data, maxi(1, int(DungRun.party_level))))
-	_deck_preview.open("Стартовая колода", CardLibrary.base_deck(heroes))
+	if _deck_menu != null:
+		_deck_menu.open()
 
 func _refresh_admin_panel() -> void:
 	if add_unit_in_roaster == null or delete_unit_in_roaster == null:
@@ -894,6 +954,8 @@ func _sync_admin_panel_visuals(_immediate: bool = false) -> void:
 	admin_content.visible = _admin_open
 	admin_panel.custom_minimum_size.y = 270 if _admin_open else 62
 	admin_panel.size.y = admin_panel.custom_minimum_size.y
+	# Нижний край на месте: раскрывается вверх.
+	admin_panel.position.y = 1022.0 - admin_panel.size.y
 	admin_toggle_button.text = "Админ ▾" if _admin_open else "Админ ▸"
 
 func _open_item_popup(kind: String) -> void:
@@ -1095,6 +1157,11 @@ func _make_placeholder_icon(color: Color) -> Texture2D:
 func _on_external_state_changed() -> void:
 	_refresh_team_ui()
 	_refresh_loadout_ui()
+	_refresh_gold()
+
+func _refresh_gold() -> void:
+	if gold_label != null:
+		gold_label.text = "%d" % DungRun.gold
 
 func _on_roster_changed() -> void:
 	_refresh_team_ui()
