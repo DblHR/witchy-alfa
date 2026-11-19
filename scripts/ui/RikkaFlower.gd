@@ -52,6 +52,7 @@ func _init() -> void:
 
 func _ready() -> void:
 	refresh_badge()
+	GalleryData.mark_seen(TEXTURE)   ## в галерее — в разделе Рикки
 
 func refresh_badge() -> void:
 	var news := StoryDialogueDB_ != null and StoryDialogueDB_.npc_has_news(NPC_ID)

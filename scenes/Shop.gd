@@ -7,7 +7,6 @@ const GREETED_FLAG := "rikka_greeted_today"
 @onready var gold_label: Label = %GoldLabel
 @onready var seed_label: Label = %SeedLabel
 @onready var info_label: Label = %InfoLabel
-@onready var home_button: TextureButton = %HomeButton
 @onready var stock_grid: GridContainer = %StockGrid
 
 var _pending_shop_dialogue: Dictionary = {}
@@ -33,7 +32,7 @@ func _ready() -> void:
 		move_child(npc, bg.get_index() + 1)
 		_bubbles = NpcBubbles.attach(self, npc, "rikka")
 		_rikka = npc
-	home_button.pressed.connect(func(): SceneRouter_.go_to_hub())
+	HubMenu.attach(self)   ## меню комнат сверху справа (Лавка, Ферма, Алхимия, Дом) вместо «назад»
 	if DungRun != null and not DungRun.changed.is_connected(_refresh):
 		DungRun.changed.connect(_refresh)
 	if Inventory_ != null and not Inventory_.changed.is_connected(_refresh):

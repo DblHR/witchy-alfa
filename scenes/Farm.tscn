@@ -2,9 +2,6 @@
 
 [ext_resource type="Script" uid="uid://d10t0s6328mbk" path="res://scenes/farm_room.gd" id="1_1t45w"]
 [ext_resource type="Texture2D" uid="uid://muo6um5j18ux" path="res://assets/backgrounds/rooms/farmBG.png" id="1_mbp2a"]
-[ext_resource type="Texture2D" uid="uid://klsl5qwne66a" path="res://assets/ui/buttons/alchemyButton.png" id="2_1t45w"]
-[ext_resource type="Texture2D" uid="uid://dj3aaaw5qjbp1" path="res://assets/ui/buttons/homeButton.png" id="3_1ckk7"]
-[ext_resource type="Texture2D" uid="uid://bsueyseydns2j" path="res://assets/ui/buttons/shopButton.png" id="4_m66ec"]
 [ext_resource type="Texture2D" uid="uid://r6mi4odvmydo" path="res://assets/farm/furniture/table.png" id="4_o7qkg"]
 [ext_resource type="Texture2D" uid="uid://cwcidm8ocahx1" path="res://assets/farm/furniture/chair.png" id="5_o7qkg"]
 [ext_resource type="PackedScene" uid="uid://cu1a3uu65x45s" path="res://scenes/FarmSlot.tscn" id="5_slot"]
@@ -127,36 +124,3 @@ offset_top = 277.0
 offset_right = 1661.0
 offset_bottom = 557.0
 slot_index = 7
-
-[node name="HubButton" type="TextureButton" parent="." unique_id=1770107202]
-unique_name_in_owner = true
-layout_mode = 0
-offset_left = 1755.0
-offset_top = 8.0
-offset_right = 1904.0
-offset_bottom = 157.0
-texture_normal = ExtResource("3_1ckk7")
-
-[node name="ShopButton" type="TextureButton" parent="." unique_id=827244984]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(150, 150)
-layout_mode = 0
-offset_left = 1432.0
-offset_top = 11.0
-offset_right = 1582.0
-offset_bottom = 161.0
-texture_normal = ExtResource("4_m66ec")
-ignore_texture_size = true
-stretch_mode = 5
-
-[node name="AlchemyButton" type="TextureButton" parent="." unique_id=770893363]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(150, 150)
-layout_mode = 0
-offset_left = 1592.0
-offset_top = 10.0
-offset_right = 1742.0
-offset_bottom = 160.0
-texture_normal = ExtResource("2_1t45w")
-ignore_texture_size = true
-stretch_mode = 5

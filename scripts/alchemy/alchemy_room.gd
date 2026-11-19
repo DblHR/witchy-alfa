@@ -12,13 +12,10 @@ const _StirScript := preload("res://scripts/alchemy/stirring_minigame.gd")
 
 const BG_PATH := "res://assets/backgrounds/rooms/alchemyBG.png"
 const CAULDRON_PATH := "res://assets/alchemy/cauldron.png"
-const HOME_ICON := "res://assets/ui/buttons/homeButton.png"
-const FARM_ICON := "res://assets/ui/buttons/farmButton.png"
-const SHOP_ICON := "res://assets/ui/buttons/shopButton.png"
 
 # --- Раскладка (доли экрана: x, y, w, h) ---
 const R_RECIPE_BTN := Rect2(0.02, 0.025, 0.30, 0.10)
-const R_REPEAT_BTN := Rect2(0.33, 0.025, 0.34, 0.10)
+const R_REPEAT_BTN := Rect2(0.33, 0.025, 0.235, 0.10)   ## справа — меню комнат (HubMenu)
 const R_HINT := Rect2(0.02, 0.145, 0.60, 0.05)
 const R_CHECKLIST := Rect2(0.02, 0.21, 0.27, 0.20)
 const R_RESET := Rect2(0.30, 0.215, 0.105, 0.045)
@@ -490,24 +487,9 @@ func _build_checklist() -> void:
 	add_child(_reset_button)
 	_place(_reset_button, R_RESET)
 
+## Меню комнат сверху справа (Лавка, Ферма, Алхимия, Дом) — общее, scenes/ui/HubMenu.tscn.
 func _build_nav() -> void:
-	var defs := [
-		[HOME_ICON, Rect2(1755, 8, 149, 149), func() -> void: SceneRouter_.go_to_hub()],
-		[FARM_ICON, Rect2(1577, 10, 150, 150), func() -> void: SceneRouter_.go_to_farm()],
-		[SHOP_ICON, Rect2(1411, 10, 150, 150), func() -> void: SceneRouter_.go_to_shop()],
-	]
-	for d in defs:
-		var b := TextureButton.new()
-		b.texture_normal = load(d[0])
-		b.ignore_texture_size = true
-		b.stretch_mode = TextureButton.STRETCH_KEEP_ASPECT_CENTERED
-		b.focus_mode = Control.FOCUS_NONE
-		add_child(b)
-		b.position = (d[1] as Rect2).position
-		b.size = (d[1] as Rect2).size
-		b.pressed.connect(d[2])
-		if d[0] == SHOP_ICON:
-			NotifyBadge.attach(b, StoryDialogueDB_ != null and StoryDialogueDB_.npc_has_news("rikka"))
+	HubMenu.attach(self)
 
 func _build_result_panel() -> void:
 	_result_panel = PanelContainer.new()

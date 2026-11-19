@@ -131,7 +131,8 @@
       },
       "hint": "Откроется после знакомства.",
       "images": [
-        "res://assets/npc/rikka/rikka.png"
+        "res://assets/npc/rikka/rikka.png",
+        "res://assets/npc/rikka/igor_the_plant.png"
       ]
     },
     {

@@ -61,6 +61,9 @@ static func set_on(ci: CanvasItem, on: bool) -> void:
 		var ts := tr.texture.get_size()
 		var k := minf(tr.size.x / ts.x, tr.size.y / ts.y)
 		m.set_shader_parameter("width_tex", WIDTH_PX / maxf(k, 0.01))
+	var sp := ci as Sprite2D
+	if sp != null:
+		m.set_shader_parameter("width_tex", WIDTH_PX / maxf(absf(sp.global_scale.x), 0.01))
 	var old = ci.get_meta("hover_outline_tween") if ci.has_meta("hover_outline_tween") else null
 	if old is Tween and (old as Tween).is_valid():
 		(old as Tween).kill()

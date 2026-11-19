@@ -2,27 +2,97 @@
 
 [ext_resource type="Script" uid="uid://y0lb4ydr6ms6" path="res://scenes/Hub.gd" id="1_6grgh"]
 [ext_resource type="Texture2D" uid="uid://c65oqg3ajp68q" path="res://assets/backgrounds/rooms/homeBG.png" id="1_hnc56"]
+[ext_resource type="Texture2D" uid="uid://b3bmjh4oqhnr6" path="res://assets/backgrounds/rooms/homeBG_L2.png" id="2_l2"]
+[ext_resource type="Texture2D" uid="uid://dlvqn22g5hlwg" path="res://assets/backgrounds/rooms/homeBG_L3.png" id="3_l3"]
 [ext_resource type="Texture2D" uid="uid://cniy2vvgjr5h7" path="res://assets/ui/buttons/startRunButton.png" id="2_6grgh"]
-[ext_resource type="Texture2D" uid="uid://djbr8wah3ntpc" path="res://assets/ui/buttons/farmButton.png" id="3_48iqm"]
-[ext_resource type="Texture2D" uid="uid://klsl5qwne66a" path="res://assets/ui/buttons/alchemyButton.png" id="4_oj3ng"]
-[ext_resource type="Texture2D" uid="uid://bsueyseydns2j" path="res://assets/ui/buttons/shopButton.png" id="5_o7rky"]
 [ext_resource type="Texture2D" uid="uid://ngcxb0tkqr48" path="res://assets/ui/buttons/inventoryButton.png" id="6_shn0c"]
-[ext_resource type="Texture2D" uid="uid://bocfuam6rgell" path="res://assets/characters/witch/witch_battle.png" id="7_p8ka2"]
+[ext_resource type="Script" path="res://scripts/home/HomeRoute.gd" id="7_route"]
+[ext_resource type="PackedScene" path="res://scenes/ui/HubMenu.tscn" id="8_menu"]
 
 [node name="Control" type="Control" unique_id=391545454]
 custom_minimum_size = Vector2(1920, 1080)
 layout_mode = 3
 anchors_preset = 0
-offset_right = 40.0
-offset_bottom = 40.0
+offset_right = 1920.0
+offset_bottom = 1080.0
 script = ExtResource("1_6grgh")
 
 [node name="BackGround" type="TextureRect" parent="." unique_id=19846586]
 layout_mode = 0
-offset_right = 40.0
-offset_bottom = 40.0
+offset_right = 1920.0
+offset_bottom = 1080.0
+mouse_filter = 2
 texture = ExtResource("1_hnc56")
+expand_mode = 1
 stretch_mode = 5
+
+[node name="WalkersBack" type="Node2D" parent="."]
+y_sort_enabled = true
+
+[node name="CauldronLayer" type="TextureRect" parent="."]
+layout_mode = 0
+offset_right = 1920.0
+offset_bottom = 1080.0
+mouse_filter = 2
+texture = ExtResource("2_l2")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="WalkersFront" type="Node2D" parent="."]
+y_sort_enabled = true
+
+[node name="Foreground" type="TextureRect" parent="."]
+layout_mode = 0
+offset_right = 1920.0
+offset_bottom = 1080.0
+mouse_filter = 2
+texture = ExtResource("3_l3")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="DragLayer" type="Node2D" parent="."]
+
+[node name="Routes" type="Node2D" parent="."]
+
+[node name="LeftFireplace" type="Line2D" parent="Routes"]
+points = PackedVector2Array(300, 985, 505, 990)
+width = 6.0
+default_color = Color(0.2, 1, 0.4, 0.8)
+script = ExtResource("7_route")
+
+[node name="CauldronBack" type="Line2D" parent="Routes"]
+points = PackedVector2Array(505, 990, 560, 962, 650, 942, 760, 931, 887, 927, 1010, 930, 1120, 940, 1210, 958, 1265, 990)
+width = 6.0
+default_color = Color(0.2, 1, 0.4, 0.8)
+script = ExtResource("7_route")
+layer = 0
+
+[node name="CauldronFront" type="Line2D" parent="Routes"]
+points = PackedVector2Array(505, 990, 560, 1015, 660, 1032, 760, 1040, 887, 1043, 1010, 1040, 1120, 1032, 1210, 1015, 1265, 990)
+width = 6.0
+default_color = Color(0.2, 1, 0.4, 0.8)
+script = ExtResource("7_route")
+
+[node name="Stairs" type="Line2D" parent="Routes"]
+points = PackedVector2Array(1265, 990, 1360, 955, 1450, 918, 1545, 740, 1665, 553)
+width = 6.0
+default_color = Color(0.2, 1, 0.4, 0.8)
+script = ExtResource("7_route")
+
+[node name="Upstairs" type="Line2D" parent="Routes"]
+points = PackedVector2Array(1665, 553, 1200, 549, 655, 549)
+width = 6.0
+default_color = Color(0.2, 1, 0.4, 0.8)
+script = ExtResource("7_route")
+layer = 0
+
+[node name="Bed" type="Line2D" parent="Routes"]
+points = PackedVector2Array(655, 549, 515, 470)
+width = 6.0
+default_color = Color(0.3, 0.5, 1, 0.9)
+script = ExtResource("7_route")
+layer = 0
+action = "bed"
 
 [node name="StartRunButton" type="TextureButton" parent="." unique_id=841560713]
 unique_name_in_owner = true
@@ -32,42 +102,6 @@ offset_top = 801.0
 offset_right = 1917.0
 offset_bottom = 1079.0
 texture_normal = ExtResource("2_6grgh")
-ignore_texture_size = true
-stretch_mode = 5
-
-[node name="FarmButton" type="TextureButton" parent="." unique_id=1209902725]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(150, 150)
-layout_mode = 0
-offset_left = 1594.0
-offset_top = 12.0
-offset_right = 1744.0
-offset_bottom = 162.0
-texture_normal = ExtResource("3_48iqm")
-ignore_texture_size = true
-stretch_mode = 5
-
-[node name="AlchemyButton" type="TextureButton" parent="." unique_id=1762017035]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(150, 150)
-layout_mode = 0
-offset_left = 1756.0
-offset_top = 10.0
-offset_right = 1906.0
-offset_bottom = 160.0
-texture_normal = ExtResource("4_oj3ng")
-ignore_texture_size = true
-stretch_mode = 5
-
-[node name="ShopButton" type="TextureButton" parent="." unique_id=2070449742]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(150, 150)
-layout_mode = 0
-offset_left = 1427.0
-offset_top = 16.0
-offset_right = 1577.0
-offset_bottom = 166.0
-texture_normal = ExtResource("5_o7rky")
 ignore_texture_size = true
 stretch_mode = 5
 
@@ -83,13 +117,4 @@ texture_normal = ExtResource("6_shn0c")
 ignore_texture_size = true
 stretch_mode = 5
 
-[node name="TextureRect" type="TextureRect" parent="." unique_id=2064499719]
-layout_mode = 0
-offset_left = 226.0
-offset_top = 396.0
-offset_right = 782.0
-offset_bottom = 1024.0
-texture = ExtResource("7_p8ka2")
-expand_mode = 1
-stretch_mode = 5
-flip_h = true
+[node name="HubMenu" parent="." instance=ExtResource("8_menu")]

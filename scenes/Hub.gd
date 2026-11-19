@@ -1,20 +1,25 @@
 extends Control
+## Дом (хаб): фон из трёх слоёв (стены — котёл — передний план, все в Hub.tscn), персонажи ростера
+## гуляют по маршрутам (Hub.tscn → Routes, линии HomeRoute; в игре их не видно), меню комнат сверху
+## справа (HubMenu), котёл — вход в алхимию.
 
 @onready var start_run: TextureButton = %StartRunButton
-@onready var farm: TextureButton = %FarmButton
-@onready var alchemy: TextureButton = %AlchemyButton
-@onready var shop: TextureButton = %ShopButton
 @onready var inv: TextureButton = %InventoryButton
+@onready var walkers_back: Node2D = $WalkersBack
+@onready var walkers_front: Node2D = $WalkersFront
+@onready var drag_layer: Node2D = $DragLayer
+@onready var routes_root: Node2D = $Routes
+@onready var cauldron_layer: TextureRect = $CauldronLayer
+@onready var foreground: TextureRect = $Foreground
+@onready var menu: HubMenu = $HubMenu
 
 func _ready() -> void:
 	get_tree().paused = false
-
 	start_run.pressed.connect(_on_start_run)
-	farm.pressed.connect(func(): SceneRouter_.go_to_farm())
-	alchemy.pressed.connect(func(): SceneRouter_.go_to_alchemy())
-	shop.pressed.connect(func(): SceneRouter_.go_to_shop())
 	inv.pressed.connect(func(): SceneRouter_.go_to_inventory())
-	_start_wanderers()
+	_collect_routes()
+	_spawn_walkers()
+	_build_cauldron_bubbles()
 	_refresh_badges()
 	if UnitRoster_ != null and not UnitRoster_.changed.is_connected(_refresh_badges):
 		UnitRoster_.changed.connect(_refresh_badges)
@@ -22,142 +27,279 @@ func _ready() -> void:
 		StoryState_.changed.connect(_refresh_badges)
 	call_deferred("_play_pending_story_dialogue")
 
-## «!» на кнопке лавки, когда Рикка может выдать квест.
+## «!» на инвентаре (новые очки улучшения карт) и над героиней с новой сценой. «!» лавки — в HubMenu.
 func _refresh_badges() -> void:
 	if not is_inside_tree():
 		return
-	# ...и когда в лавке появился цветок Рикки, а знакомства с ним ещё не было.
-	NotifyBadge.attach(shop, StoryDialogueDB_ != null and (StoryDialogueDB_.npc_has_news("rikka") \
-		or StoryDialogueDB_.npc_has_news(RikkaFlower.NPC_ID)))
-	# «!» на инвентаре: новые очки улучшения карт, а в инвентарь после этого ещё не заходили.
 	NotifyBadge.attach(inv, UnitRoster_ != null and UnitRoster_.upgrade_news(UnitRoster_.UPGRADE_SEEN_INVENTORY))
-	# «!» над героиней дома, если у неё есть новая разовая сцена (например, по уровню доверия).
-	for id in _guests:
-		var gw: HubWanderer = _guests[id]
-		if not is_instance_valid(gw) or gw._body == null:
+	for id in walkers:
+		var w: HomeWalker = walkers[id]
+		if not is_instance_valid(w):
 			continue
 		var has_news := StoryDialogueDB_ != null and StoryDialogueDB_.npc_has_news(String(id), [HUB_TALK_TYPE])
-		NotifyBadge.attach(gw._body, has_news, Vector2(gw._body.size.x * GUEST_BADGE_POS.x, gw._body.size.y * GUEST_BADGE_POS.y))
+		NotifyBadge.attach(w.badge_anchor, has_news, Vector2(-20, 0))
+	if menu != null:
+		menu.refresh_badges()
 
-## Ведьмочка бродит по дому. Границы — левый край её картинки (координаты 1920×1080),
-## чтобы не заходить под кнопки инвентаря и портала.
-const WITCH_MIN_X := 90.0
-const WITCH_MAX_X := 1150.0
+# --- Маршруты -------------------------------------------------------------------------
+var routes: Array[HomeRoute] = []
 
-## Кто ещё гуляет по дому, когда есть в ростере: id героини -> её спрайт. Чтобы добавить
-## новую — строка сюда (картинка того же формата, что witch.png: 1000×1240, смотрит влево).
-const HUB_GUESTS := {
-	"fufu": "res://assets/characters/fufu/fufu_battle.png",
-}
+func _collect_routes() -> void:
+	routes.clear()
+	for c in routes_root.get_children():
+		var r := c as HomeRoute
+		if r != null and r.points.size() >= 2:
+			r.rebuild()
+			routes.append(r)
 
-func _start_wanderers() -> void:
-	var witch := get_node_or_null("TextureRect") as TextureRect
-	if witch == null:
+## Линии, которые стыкуются с концом линии route (at_end) или с её началом: [[линия, входим_с_начала], ...].
+func connections_at(route: HomeRoute, at_end: bool) -> Array:
+	var p := route.end_point() if at_end else route.start_point()
+	var out: Array = []
+	for r in routes:
+		if r == route:
+			continue
+		if r.start_point().distance_to(p) <= HomeRoute.JOIN_DIST:
+			out.append([r, true])
+		elif r.end_point().distance_to(p) <= HomeRoute.JOIN_DIST:
+			out.append([r, false])
+	return out
+
+## Ближайшее к точке место маршрута: [линия, расстояние вдоль неё].
+func nearest_spot(p: Vector2) -> Array:
+	var best: HomeRoute = null
+	var best_d := 0.0
+	var best_dist := INF
+	for r in routes:
+		var n := r.nearest(p)
+		if float(n["dist"]) < best_dist:
+			best_dist = float(n["dist"])
+			best = r
+			best_d = float(n["d"])
+	return [best, best_d]
+
+# --- Персонажи ------------------------------------------------------------------------
+## Кто живёт дома (если есть в ростере; ведьмочка — всегда). Картинка — <id>_battle.png.
+const HOME_UNITS := ["witch", "warrior", "aki", "luisa", "fufu"]
+const SPRITE_PATH := "res://assets/characters/%s/%s_battle.png"
+## Где персонажи появляются (линии без кровати, случайно).
+var walkers: Dictionary = {}   ## id -> HomeWalker
+
+func _spawn_walkers() -> void:
+	var walk_routes := routes.filter(func(r: HomeRoute) -> bool: return r.action == "")
+	if walk_routes.is_empty():
 		return
-	var w := HubWanderer.new()
-	w.name = "WitchWanderer"
-	w.setup(witch, WITCH_MIN_X, WITCH_MAX_X)
-	add_child(w)
-	_witch_wanderer = w
-	# Гости: такая же картинка, как у ведьмочки (размер, слой), со своим маршрутом.
-	var k := 0
-	for id in HUB_GUESTS:
-		if UnitRoster_ == null or not UnitRoster_.has_unit(String(id)):
+	var bodies: Array = []
+	for id in HOME_UNITS:
+		if id != "witch" and (UnitRoster_ == null or not UnitRoster_.has_unit(id)):
 			continue
-		var tex := load(String(HUB_GUESTS[id])) as Texture2D
-		if tex == null:
+		var path := SPRITE_PATH % [id, id]
+		if not ResourceLoader.exists(path):
 			continue
-		var guest := TextureRect.new()
-		guest.name = "Guest_" + String(id)
-		guest.texture = tex
-		guest.expand_mode = witch.expand_mode
-		guest.stretch_mode = witch.stretch_mode
-		guest.flip_h = k % 2 == 0
-		guest.size = witch.size
-		guest.position = Vector2(lerpf(WITCH_MAX_X, WITCH_MIN_X, 0.25 + 0.3 * float(k)), witch.position.y)
-		add_child(guest)
-		move_child(guest, witch.get_index())   ## за ведьмочкой, перед фоном
-		var gw := HubWanderer.new()
-		gw.name = "Wanderer_" + String(id)
-		gw.setup(guest, WITCH_MIN_X, WITCH_MAX_X)
-		add_child(gw)
-		_guests[String(id)] = gw
-		k += 1
+		var w := HomeWalker.new()
+		w.setup(id, load(path) as Texture2D, self)
+		w.route_changed.connect(func(x: HomeWalker) -> void: _sync_layer.call_deferred(x))
+		walkers_front.add_child(w)
+		var r: HomeRoute = walk_routes[randi() % walk_routes.size()]
+		w.place(r, randf_range(0.1, 0.9) * r.length())
+		w.body.flip_h = randf() < 0.5
+		walkers[id] = w
+		bodies.append(w)
 	# Пока открыт диалог (VN), гуляющие по дому прячутся — на экране только портреты из диалога.
-	var bodies: Array = [witch]
-	for id in _guests:
-		bodies.append((_guests[id] as HubWanderer)._body)
 	VnSpriteHider.attach(self, bodies)
 
-# --- Разговоры в доме -----------------------------------------------------------
-## Гостью можно позвать: при наведении она подсвечивается, по клику — диалог.
-## Диалог выбирается как у NPC: npc = id героини, type = "hub_talk" (data/dialogues/hub/*.json),
-## поэтому потом легко добавить разговоры по уровню отношений (conditions + priority).
+## Персонаж на линии «за котлом» — под слоем котла, иначе — над ним; пока тащим — поверх всего.
+func _sync_layer(w: HomeWalker) -> void:
+	if not is_instance_valid(w):
+		return
+	var target: Node2D = walkers_front
+	if w.state == HomeWalker.State.DRAG:
+		target = drag_layer
+	elif w.route != null and w.route.layer == 0:
+		target = walkers_back
+	if w.get_parent() != target:
+		w.reparent(target, true)
+
+# --- Котёл: вход в алхимию -----------------------------------------------------------
+## Где котёл (клик — алхимия). Дно с ковриком не считается.
+const CAULDRON_RECT := Rect2(780, 755, 260, 235)
+var _bubbles: CPUParticles2D
+var _cauldron_hover := false
+
+func _build_cauldron_bubbles() -> void:
+	_bubbles = CPUParticles2D.new()
+	_bubbles.name = "CauldronBubbles"
+	_bubbles.position = Vector2(910, 785)
+	_bubbles.emitting = false
+	_bubbles.amount = 14
+	_bubbles.lifetime = 1.1
+	_bubbles.emission_shape = CPUParticles2D.EMISSION_SHAPE_RECTANGLE
+	_bubbles.emission_rect_extents = Vector2(70, 6)
+	_bubbles.direction = Vector2(0, -1)
+	_bubbles.spread = 18.0
+	_bubbles.gravity = Vector2.ZERO
+	_bubbles.initial_velocity_min = 40.0
+	_bubbles.initial_velocity_max = 90.0
+	_bubbles.scale_amount_min = 0.35
+	_bubbles.scale_amount_max = 0.8
+	var grad := Gradient.new()
+	grad.set_color(0, Color(1.0, 0.55, 1.0, 0.95))
+	grad.set_color(1, Color(0.85, 0.3, 1.0, 0.0))
+	_bubbles.color_ramp = grad
+	var gt := GradientTexture2D.new()
+	gt.width = 24
+	gt.height = 24
+	gt.fill = GradientTexture2D.FILL_RADIAL
+	gt.fill_from = Vector2(0.5, 0.5)
+	gt.fill_to = Vector2(1.0, 0.5)
+	var g2 := Gradient.new()
+	g2.set_color(0, Color(1, 1, 1, 1))
+	g2.add_point(0.6, Color(1, 1, 1, 0.9))
+	g2.set_color(g2.get_point_count() - 1, Color(1, 1, 1, 0))
+	gt.gradient = g2
+	_bubbles.texture = gt
+	add_child(_bubbles)
+	move_child(_bubbles, cauldron_layer.get_index() + 1)
+
+func _cauldron_at(p: Vector2) -> bool:
+	return CAULDRON_RECT.has_point(p) and _opaque(cauldron_layer, p)
+
+func _set_cauldron_hover(on: bool) -> void:
+	if on == _cauldron_hover:
+		return
+	_cauldron_hover = on
+	_bubbles.emitting = on
+
+# --- Мышь: наведение, клик, перетаскивание ----------------------------------------------
 const HUB_TALK_TYPE := "hub_talk"
-## Где над героиней висит «!» (доли ширины и высоты её картинки).
-const GUEST_BADGE_POS := Vector2(0.5, 0.0)
-var _guests: Dictionary = {}          ## id -> HubWanderer
-var _hovered_guest := ""
+const DRAG_START_PX := 12.0
+var _hovered: HomeWalker
+var _pressed: HomeWalker
+var _press_pos := Vector2.ZERO
+var _dragging := false
 var _talking := ""
 
-func _process(_delta: float) -> void:
-	var over := ""
-	if _talking == "" and not DialogueManager_.is_showing() and not _over_button():
-		var m := get_viewport().get_mouse_position()
-		# Сверху та, что нарисована последней.
-		var ids := _guests.keys()
-		ids.reverse()
-		for id in ids:
-			var w: HubWanderer = _guests[id]
-			if is_instance_valid(w) and w.is_over(m) and _can_talk(String(id)):
-				over = String(id)
-				break
-	if over == _hovered_guest:
-		return
-	if _hovered_guest != "" and _guests.has(_hovered_guest):
-		(_guests[_hovered_guest] as HubWanderer).set_glow(false)
-	_hovered_guest = over
-	if over != "":
-		(_guests[over] as HubWanderer).set_glow(true)
-	Input.set_default_cursor_shape(Input.CURSOR_POINTING_HAND if over != "" else Input.CURSOR_ARROW)
+## Картинка слоя (во весь экран) непрозрачна в точке p?
+static var _layer_images: Dictionary = {}
+func _opaque(layer: TextureRect, p: Vector2) -> bool:
+	if layer == null or layer.texture == null:
+		return false
+	var img: Image = _layer_images.get(layer.texture, null)
+	if img == null:
+		img = layer.texture.get_image()
+		if img == null:
+			return false
+		if img.is_compressed():
+			img.decompress()
+		_layer_images[layer.texture] = img
+	var lp := layer.get_global_transform().affine_inverse() * p
+	var k := Vector2(img.get_width() / maxf(1.0, layer.size.x), img.get_height() / maxf(1.0, layer.size.y))
+	var px := Vector2i(int(lp.x * k.x), int(lp.y * k.y))
+	if px.x < 0 or px.y < 0 or px.x >= img.get_width() or px.y >= img.get_height():
+		return false
+	return img.get_pixelv(px).a > 0.5
 
-## Кнопки дома (магазин, ферма, выход...) важнее гостьи под ними.
-func _over_button() -> bool:
+## Кто под курсором (сверху — тот, кого видно): перетаскиваемый, передний план (никого),
+## перед котлом, котёл (никого), за котлом.
+func _walker_at(p: Vector2) -> HomeWalker:
+	for w in drag_layer.get_children():
+		if w is HomeWalker and w.is_over(p):
+			return w
+	if _opaque(foreground, p):
+		return null
+	var front := walkers_front.get_children()
+	front.sort_custom(func(a: Node, b: Node) -> bool: return (a as Node2D).position.y > (b as Node2D).position.y)
+	for w in front:
+		if w is HomeWalker and w.is_over(p):
+			return w
+	if _cauldron_at(p):
+		return null
+	var back := walkers_back.get_children()
+	back.sort_custom(func(a: Node, b: Node) -> bool: return (a as Node2D).position.y > (b as Node2D).position.y)
+	for w in back:
+		if w is HomeWalker and w.is_over(p):
+			return w
+	return null
+
+## Курсор над кнопкой или окном (они важнее дома под ними).
+func _ui_blocks() -> bool:
 	var hc := get_viewport().gui_get_hovered_control()
-	while hc != null:
-		if hc is BaseButton:
-			return true
-		hc = hc.get_parent() as Control
-	return false
+	return hc != null and hc != self
+
+func _world_locked() -> bool:
+	return _talking != "" or (DialogueManager_ != null and DialogueManager_.is_showing()) or get_tree().paused
+
+func _process(_delta: float) -> void:
+	var p := get_viewport().get_mouse_position()
+	var over: HomeWalker = null
+	var cauldron := false
+	if not _world_locked() and not _dragging and not _ui_blocks():
+		over = _walker_at(p)
+		cauldron = over == null and not _opaque(foreground, p) and _cauldron_at(p)
+	if over != _hovered:
+		if _hovered != null and is_instance_valid(_hovered):
+			_hovered.set_hover(false)
+		_hovered = over
+		if over != null:
+			over.set_hover(true)
+	_set_cauldron_hover(cauldron)
+	var hand := over != null or cauldron or _dragging
+	Input.set_default_cursor_shape(Input.CURSOR_DRAG if _dragging else (Input.CURSOR_POINTING_HAND if hand else Input.CURSOR_ARROW))
+
+func _input(event: InputEvent) -> void:
+	# Отпускание / перетаскивание доводим до конца, даже если курсор над кнопкой.
+	if _pressed != null:
+		if event is InputEventMouseMotion:
+			var p: Vector2 = event.position
+			if not _dragging and p.distance_to(_press_pos) > DRAG_START_PX:
+				_dragging = true
+				_pressed.set_hover(false)
+				_pressed.begin_drag(_press_pos)
+				_sync_layer(_pressed)
+			if _dragging:
+				_pressed.drag_to(p)
+			return
+		if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and not event.pressed:
+			var w := _pressed
+			_pressed = null
+			get_viewport().set_input_as_handled()
+			if _dragging:
+				_dragging = false
+				var spot := nearest_spot(w.position)
+				if spot[0] != null:
+					w.drop(spot[0], float(spot[1]))
+			else:
+				_click(w)
+			return
+	if _world_locked() or _ui_blocks():
+		return
+	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+		var p: Vector2 = event.position
+		var w := _walker_at(p)
+		if w != null:
+			_pressed = w
+			_press_pos = p
+			get_viewport().set_input_as_handled()
+		elif not _opaque(foreground, p) and _cauldron_at(p):
+			get_viewport().set_input_as_handled()
+			SceneRouter_.go_to_alchemy()
+
+## Клик по персонажу: с кем есть разговор — разговор (пока только Фуфу), остальные подпрыгивают
+## (на кровати — нет), ведьмочка на миг становится «фазой 2».
+func _click(w: HomeWalker) -> void:
+	if _can_talk(w.unit_id):
+		talk_to(w.unit_id)
+		return
+	if w.on_bed():
+		return
+	if w.unit_id == "witch":
+		var alt := CharacterPhases.texture(w.base_tex, 2)
+		w.poke(alt if alt != w.base_tex else null)
+	else:
+		w.poke()
 
 func _can_talk(id: String) -> bool:
 	return StoryDialogueDB_ != null and not StoryDialogueDB_.pick_npc_dialogue(id, HUB_TALK_TYPE).is_empty()
-
-## Ведьмочка дома: по клику на миг становится «фазой 2» и подпрыгивает — просто так.
-var _witch_wanderer: HubWanderer
-
-func _poke_witch(event: InputEvent) -> bool:
-	if _witch_wanderer == null or not is_instance_valid(_witch_wanderer) or _talking != "" or DialogueManager_.is_showing():
-		return false
-	if not (event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT):
-		return false
-	if _over_button() or not _witch_wanderer.is_over(get_viewport().get_mouse_position()):
-		return false
-	var body := get_node_or_null("TextureRect") as TextureRect
-	var base: Texture2D = body.texture if body != null else null
-	var alt := CharacterPhases.texture(base, 2) if base != null else null
-	_witch_wanderer.poke(alt if alt != base else null)
-	get_viewport().set_input_as_handled()
-	return true
-
-func _input(event: InputEvent) -> void:
-	if _hovered_guest == "" and _poke_witch(event):
-		return
-	if _hovered_guest == "" or _talking != "" or DialogueManager_.is_showing():
-		return
-	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
-		get_viewport().set_input_as_handled()
-		talk_to(_hovered_guest)
 
 func talk_to(id: String) -> void:
 	var d := StoryDialogueDB_.pick_npc_dialogue(id, HUB_TALK_TYPE)
@@ -167,16 +309,16 @@ func talk_to(id: String) -> void:
 	if lines.is_empty():
 		return
 	_talking = id
-	var w: HubWanderer = _guests.get(id, null)
+	var w: HomeWalker = walkers.get(id, null)
 	if w != null:
-		w.set_glow(false)
+		w.set_hover(false)
 		w.set_frozen(true)   ## стоит на месте, пока говорим
-	_hovered_guest = ""
+	_hovered = null
 	Input.set_default_cursor_shape(Input.CURSOR_ARROW)
 	DialogueManager_.show_sequence(lines, Callable(self, "_on_talk_finished").bind(d))
 
 func _on_talk_finished(dialogue: Dictionary) -> void:
-	var w: HubWanderer = _guests.get(_talking, null)
+	var w: HomeWalker = walkers.get(_talking, null)
 	if w != null and is_instance_valid(w):
 		w.set_frozen(false)
 	_talking = ""

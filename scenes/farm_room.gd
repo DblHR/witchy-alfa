@@ -2,9 +2,6 @@ extends Control
 
 @onready var background: TextureRect = %Background
 @onready var farm_slots: Control = %FarmSlots
-@onready var hub_button: TextureButton = %HubButton
-@onready var shop_button: TextureButton = %ShopButton
-@onready var alchemy_button: TextureButton = %AlchemyButton
 
 var pots: Array[FarmPot] = []
 var _seed_popup: Control
@@ -16,11 +13,10 @@ func _ready() -> void:
 	get_tree().paused = false
 	UIThemeHelper.apply_pink_theme(self)
 	_apply_catalog_assets()
-	_connect_nav_buttons()
+	HubMenu.attach(self)   ## меню комнат сверху справа (Лавка, Ферма, Алхимия, Дом)
 	_collect_pots()
 	_build_seed_popup()
 	_refresh_all()
-	NotifyBadge.attach(shop_button, StoryDialogueDB_ != null and StoryDialogueDB_.npc_has_news("rikka"))
 	if FarmState_.state_changed.is_connected(_refresh_all) == false:
 		FarmState_.state_changed.connect(_refresh_all)
 	if Inventory_ != null and not Inventory_.changed.is_connected(_refresh_all):
@@ -38,15 +34,6 @@ func _apply_catalog_assets() -> void:
 	var bg := AssetCatalog_.get_ui_texture("farm_bg")
 	if bg != null:
 		background.texture = bg
-	var home_tex := AssetCatalog_.get_ui_texture("farm_btn_home")
-	if home_tex != null:
-		hub_button.texture_normal = home_tex
-	var shop_tex := AssetCatalog_.get_ui_texture("farm_btn_shop")
-	if shop_tex != null:
-		shop_button.texture_normal = shop_tex
-	var alchemy_tex := AssetCatalog_.get_ui_texture("farm_btn_alchemy")
-	if alchemy_tex != null:
-		alchemy_button.texture_normal = alchemy_tex
 
 func _collect_pots() -> void:
 	# Индекс горшка берём из сцены (slot_index), а не из порядка нод: порядок задаёт только слои
@@ -61,11 +48,6 @@ func _collect_pots() -> void:
 		if not pot.pressed.is_connected(_on_pot_pressed):
 			pot.pressed.connect(_on_pot_pressed)
 		pots.append(pot)
-
-func _connect_nav_buttons() -> void:
-	hub_button.pressed.connect(func(): SceneRouter_.go_to_hub())
-	shop_button.pressed.connect(func(): SceneRouter_.go_to_shop())
-	alchemy_button.pressed.connect(func(): SceneRouter_.go_to_alchemy())
 
 func _build_seed_popup() -> void:
 	if _seed_popup != null:
