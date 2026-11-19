@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://d3kxcj74rxrhr"
-path="res://.godot/imported/ult_glow.png-716e7d21771bff37e90858c6494d1c0f.ctex"
+uid="uid://cqgtvmm33s138"
+path="res://.godot/imported/setupPanel.png-5949d001b06adf123b05ad9958f800b7.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/ui/battle/ult_glow.png"
-dest_files=["res://.godot/imported/ult_glow.png-716e7d21771bff37e90858c6494d1c0f.ctex"]
+source_file="res://assets/ui/setup/setupPanel.png"
+dest_files=["res://.godot/imported/setupPanel.png-5949d001b06adf123b05ad9958f800b7.ctex"]
 
 [params]
 
