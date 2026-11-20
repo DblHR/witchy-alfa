@@ -96,6 +96,10 @@ func _set_chibi(tex: Texture2D) -> void:
 		_chibi.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
 		_chibi.flip_h = true   ## картинки смотрят влево, на площадке — вправо (к врагам)
 		add_child(_chibi)
+	# Тот же персонаж на том же месте — не перезапускаем покачивание (иначе при каждом
+	# перетаскивании все начинали анимацию заново).
+	if tex != null and _chibi.texture == tex and _chibi.visible and _idle.size() == 2 and _idle[0].is_valid():
+		return
 	for t in _idle:
 		if t.is_valid():
 			t.kill()

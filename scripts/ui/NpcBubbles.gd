@@ -8,14 +8,20 @@ class_name NpcBubbles
 ##   nb.say(lines)            ## показать реплики по очереди
 ##   nb.say_random_bark()     ## случайная дежурная фраза этого NPC
 
-## Где у NPC появляется пузырь: точка под нижним краем пузыря, экран 1920×1080.
-## Пузыри ниже лица — на уровне пояса/подола. Подвинуть — здесь.
+## Где у NPC нижний край пузыря (y, экран 1920×1080) — ниже лица, на уровне пояса/подола.
+## По x пузырь — посередине фигуры NPC. Подвинуть — здесь.
 const BUBBLE_POS := {
 	"sessilia": Vector2(1330, 905),
 	"noctris": Vector2(1340, 905),
 	"rikka": Vector2(1330, 905),
 }
 const DEFAULT_POS := Vector2(1340, 905)
+## Пузыри NPC крупнее боевых: ширина текста примерно в ширину персонажа, шрифт побольше.
+const BUBBLE_MIN_WIDTH := 380.0
+const BUBBLE_MAX_WIDTH := 520.0
+const BUBBLE_FONT_PX := 28
+## Реакция на клик: лёгкое «жмых» (у цветка — сильнее).
+const POKE_SQUASH := Vector2(1.035, 0.965)
 ## Пауза между репликами одной фразы, если в ней несколько строк, сек.
 const LINE_GAP := 3.2
 
@@ -45,6 +51,9 @@ static func attach(host: Control, sprite: TextureRect, p_npc_id: String) -> NpcB
 	nb._layer = BattleSpeechLayer.new()
 	nb._layer.name = "NpcBubbleLayer"
 	nb._layer.bubble_offset = Vector2.ZERO
+	nb._layer.bubble_min_width = BUBBLE_MIN_WIDTH
+	nb._layer.bubble_max_width = BUBBLE_MAX_WIDTH
+	nb._layer.bubble_font_px = BUBBLE_FONT_PX
 	nb._layer.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	nb._layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	host.add_child(nb._layer)
@@ -82,7 +91,11 @@ func say(lines: Array) -> void:
 		return
 	_token += 1
 	var token := _token
-	_anchor.global_position = BUBBLE_POS.get(npc_id, DEFAULT_POS)
+	var pos: Vector2 = BUBBLE_POS.get(npc_id, DEFAULT_POS)
+	var cx := _figure_center_x()
+	if not is_nan(cx):
+		pos.x = cx
+	_anchor.global_position = pos
 	_layer.clear_lines()
 	for l in lines:
 		if token != _token or not is_inside_tree():
@@ -105,6 +118,34 @@ func say_random_bark() -> void:
 	var d: Dictionary = pool[randi() % pool.size()]
 	_last_bark_id = String(d.get("id", ""))
 	say(StoryDialogueDB_.resolve_lines(d))
+
+## Середина фигуры NPC по x на экране (по непрозрачным пикселям картинки). NAN — не знаем.
+func _figure_center_x() -> float:
+	if _sprite == null or _sprite.texture == null:
+		return NAN
+	var tex := _sprite.texture
+	var r := CharSizes.used_rect(tex)
+	var ts := tex.get_size()
+	var k := minf(_sprite.size.x / ts.x, _sprite.size.y / ts.y)
+	var off_x := (_sprite.size.x - ts.x * k) * 0.5
+	var mid := float(r.position.x) + float(r.size.x) * 0.5
+	if _sprite.flip_h:
+		mid = ts.x - mid
+	return (_sprite.get_global_transform() * Vector2(off_x + mid * k, 0)).x
+
+## Клик по NPC: чуть сжаться и распрямиться.
+var _poke_tween: Tween
+func poke() -> void:
+	if _sprite == null:
+		return
+	if _poke_tween != null and _poke_tween.is_valid():
+		_poke_tween.kill()
+	_sprite.pivot_offset = Vector2(_sprite.size.x * 0.5, _sprite.size.y)
+	_sprite.scale = Vector2.ONE
+	_poke_tween = _sprite.create_tween()
+	_poke_tween.tween_property(_sprite, "scale", POKE_SQUASH, 0.07)
+	_poke_tween.tween_property(_sprite, "scale", Vector2(1.0 - (POKE_SQUASH.x - 1.0) * 0.6, 1.0 - (POKE_SQUASH.y - 1.0) * 0.6), 0.09)
+	_poke_tween.tween_property(_sprite, "scale", Vector2.ONE, 0.14).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 
 func clear() -> void:
 	_token += 1
@@ -164,6 +205,7 @@ func pointer_at(global_pos: Vector2, click: bool = false) -> void:
 	var hit := Rect2(Vector2.ZERO, _sprite.size).has_point(local) and pixel_hit(local)
 	_set_hover(hit)
 	if click and hit:
+		poke()
 		say_random_bark()
 
 func _on_sprite_gui_input(event: InputEvent) -> void:
@@ -175,4 +217,5 @@ func _on_sprite_gui_input(event: InputEvent) -> void:
 	elif event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
 		if pixel_hit(event.position):
 			_sprite.accept_event()
+			poke()
 			say_random_bark()

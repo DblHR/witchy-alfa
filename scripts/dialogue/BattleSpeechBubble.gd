@@ -18,6 +18,10 @@ const DISPLAY_TIME := 3.0
 const FADE_TIME := 1.5
 
 var _is_fading := false
+## Можно задать снаружи (BattleSpeechLayer): ширина текста и размер шрифта (0 — как в теме).
+var min_text_width := MIN_TEXT_WIDTH
+var max_text_width := MAX_TEXT_WIDTH
+var font_px := 0
 
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -47,7 +51,7 @@ func _ready() -> void:
 	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	label.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	label.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	label.custom_minimum_size = Vector2(MIN_TEXT_WIDTH, 0)
+	label.custom_minimum_size = Vector2(min_text_width, 0)
 
 func popup_text(text: String) -> void:
 	await show_text(text)
@@ -86,17 +90,19 @@ func show_text(text: String) -> void:
 		queue_free()
 
 func _resize_to_text(text: String) -> void:
-	var max_text_width := minf(MAX_TEXT_WIDTH, get_viewport_rect().size.x - SCREEN_MARGIN * 2.0 - 36.0)
-	max_text_width = maxf(max_text_width, MIN_TEXT_WIDTH)
+	if font_px > 0:
+		label.add_theme_font_size_override("font_size", font_px)
+	var max_w := minf(max_text_width, get_viewport_rect().size.x - SCREEN_MARGIN * 2.0 - 36.0)
+	max_w = maxf(max_w, min_text_width)
 
 	var font: Font = label.get_theme_font("font")
 	var font_size := label.get_theme_font_size("font_size")
-	var text_size := Vector2(MIN_TEXT_WIDTH, 28)
+	var text_size := Vector2(min_text_width, 28)
 
 	if font != null:
-		text_size = font.get_multiline_string_size(text, HORIZONTAL_ALIGNMENT_CENTER, max_text_width, font_size)
+		text_size = font.get_multiline_string_size(text, HORIZONTAL_ALIGNMENT_CENTER, max_w, font_size)
 
-	text_size.x = clampf(ceilf(text_size.x), MIN_TEXT_WIDTH, max_text_width)
+	text_size.x = clampf(ceilf(text_size.x), min_text_width, max_w)
 	text_size.y = maxf(ceilf(text_size.y), 28.0)
 
 	label.custom_minimum_size = text_size

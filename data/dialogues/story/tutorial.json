@@ -36,7 +36,21 @@
           "speaker": "rikka",
           "speaker_name": "Девушка-кролик",
           "emotion": "",
-          "text": "О, ты, наконец, очнулась? Вот это тебя сделал этот слизень. Я как раз собирала ингредиенты на продажу, когда увидела как тебя прямо там... В общем, тебя и слизня.",
+          "text": "О, ты, наконец, очнулась? Вот это тебя сделал этот слизень.",
+          "characters": [{"id": "rikka"}, {"id": "witch"}]
+        },
+		{
+          "speaker": "rikka",
+          "speaker_name": "Девушка-кролик",
+          "emotion": "smile",
+          "text": "Я как раз собирала ингредиенты на продажу, когда увидела как тебя прямо там...",
+          "characters": [{"id": "rikka"}, {"id": "witch"}]
+        },
+		{
+          "speaker": "rikka",
+          "speaker_name": "Девушка-кролик",
+          "emotion": "wise",
+          "text": "В общем, тебя и слизня.",
           "characters": [{"id": "rikka"}, {"id": "witch"}]
         },
         {
@@ -49,7 +63,7 @@
         {
           "speaker": "rikka",
           "speaker_name": "Девушка-кролик",
-          "emotion": "",
+          "emotion": "wise",
           "text": "Да, слизней тут много... И зачем ты к нему полезла?",
           "characters": [{"id": "rikka"}, {"id": "witch"}]
         },
@@ -70,7 +84,7 @@
 		{
           "speaker": "rikka",
           "speaker_name": "Девушка-кролик",
-          "emotion": "",
+          "emotion": "epiphany",
           "text": "Так ты искательница приключений!",
           "characters": [{"id": "rikka"}, {"id": "witch"}]
         },
@@ -84,8 +98,15 @@
         {
           "speaker": "rikka",
           "speaker_name": "",
-          "emotion": "",
-          "text": "А сейчас редко кто заходит. И мой магазинчик терпит убытки... Слушай, если тебе нужно будет что-то прикупить - приходи ко мне! Меня, кстати, зовут Рикка!",
+          "emotion": "grumpy",
+          "text": "А сейчас редко кто заходит. И мой магазинчик терпит убытки...",
+          "characters": [{"id": "rikka"}, {"id": "witch"}]
+        },
+		{
+          "speaker": "rikka",
+          "speaker_name": "Девушка-кролик",
+          "emotion": "smile",
+          "text": "Слушай, если тебе нужно будет что-то прикупить - приходи ко мне! Меня, кстати, зовут Рикка!",
           "characters": [{"id": "rikka"}, {"id": "witch"}]
         },
         {
@@ -98,7 +119,7 @@
         {
           "speaker": "rikka",
           "speaker_name": "",
-          "emotion": "",
+          "emotion": "wise",
           "text": "Правда, он так долго лежал и пылился... Надеюсь, барахлить он не будет.",
           "give_item": "return_stone",
           "characters": [{"id": "rikka"}, {"id": "witch"}]
@@ -113,7 +134,7 @@
         {
           "speaker": "rikka",
           "speaker_name": "",
-          "emotion": "",
+          "emotion": "smile",
           "text": "Всё-всё, тебе пора отдыхать! Можешь разместиться вон в том домике. Он, кажется, пустует.",
           "characters": [{"id": "rikka"}, {"id": "witch"}]
         }

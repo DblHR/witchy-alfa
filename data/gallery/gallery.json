@@ -23,7 +23,8 @@
         "res://assets/characters/witch/cards/witch_heat.png",
         "res://assets/characters/witch/cards/witch_rain.png",
         "res://assets/characters/witch/cards/witch_spark.png",
-        "res://assets/characters/witch/cards/witch_wall.png"
+        "res://assets/characters/witch/cards/witch_wall.png",
+		"res://assets/characters/witch/witch_ult.png"
       ]
     },
     {
@@ -41,7 +42,8 @@
         "res://assets/characters/warrior/cards/warrior_lunge.png",
         "res://assets/characters/warrior/cards/warrior_press.png",
         "res://assets/characters/warrior/cards/warrior_release.png",
-        "res://assets/characters/warrior/cards/warrior_thrusts.png"
+        "res://assets/characters/warrior/cards/warrior_thrusts.png",
+		"res://assets/characters/warrior/warrior_ult.png"
       ]
     },
     {
@@ -58,7 +60,8 @@
         "res://assets/characters/aki/cards/aki_cheer_slap.png",
         "res://assets/characters/aki/cards/aki_kiss.png",
         "res://assets/characters/aki/cards/aki_lube.png",
-        "res://assets/characters/aki/cards/aki_squeeze.png"
+        "res://assets/characters/aki/cards/aki_squeeze.png",
+		"res://assets/characters/aki/aki_ult.png"
       ]
     },
     {
@@ -74,7 +77,8 @@
         "res://assets/characters/luisa/cards/luisa_deep.png",
         "res://assets/characters/luisa/cards/luisa_loosen.png",
         "res://assets/characters/luisa/cards/luisa_spank.png",
-        "res://assets/characters/luisa/cards/luisa_tentacle.png"
+        "res://assets/characters/luisa/cards/luisa_tentacle.png",
+		"res://assets/characters/luisa/luisa_ult.png"
       ]
     },
     {
@@ -93,6 +97,7 @@
         "res://assets/characters/fufu/cards/fufu_lube.png",
         "res://assets/characters/fufu/cards/fufu_present.png",
         "res://assets/characters/fufu/cards/fufu_trick.png",
+		"res://assets/characters/fufu/fufu_ult.png",
         {
           "path": "res://assets/characters/fufu/love/fufu_hug_witch.png",
           "unlock": {

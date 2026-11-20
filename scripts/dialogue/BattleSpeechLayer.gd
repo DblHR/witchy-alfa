@@ -4,6 +4,10 @@ class_name BattleSpeechLayer
 const BUBBLE_SCENE := preload("res://scenes/ui/BattleSpeechBubble.tscn")
 
 @export var bubble_offset: Vector2 = Vector2(0, -360)
+## Ширина текста пузыря и размер шрифта (0 — по умолчанию, как в бою).
+@export var bubble_min_width := 0.0
+@export var bubble_max_width := 0.0
+@export var bubble_font_px := 0
 
 var _active_bubble: Control = null
 var _pending_request: Dictionary = {}
@@ -50,6 +54,12 @@ func _spawn_bubble(actor: Node, text: String) -> void:
 	if bubble == null:
 		return
 
+	if bubble_min_width > 0.0:
+		bubble.set("min_text_width", bubble_min_width)
+	if bubble_max_width > 0.0:
+		bubble.set("max_text_width", bubble_max_width)
+	if bubble_font_px > 0:
+		bubble.set("font_px", bubble_font_px)
 	add_child(bubble)
 	_active_bubble = bubble
 	bubble.z_index = 200
