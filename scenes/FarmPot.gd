@@ -34,6 +34,8 @@ var _laid_out_for := -1
 const DROPLET_TEX := "res://assets/ui/buttons/droplet.png"
 const DROPLET_WIDTH := 58.0
 const DROPLET_BOB := 12.0
+## Насколько капелька над ободком (в её высотах): 1.0 — нижний край капельки на ободке.
+const DROPLET_LIFT := 1.35
 var _droplet: TextureRect
 var _droplet_tween: Tween
 var _droplet_base_y := 0.0
@@ -154,7 +156,7 @@ func _apply_layout() -> void:
 		move_child(_droplet, click_button.get_index())
 	var dh := DROPLET_WIDTH * 155.0 / 150.0
 	_droplet.size = Vector2(DROPLET_WIDTH, dh)
-	_droplet_base_y = anchor_local.y - 280.0 * s * SPROUT_MULT * 0.55 - dh
+	_droplet_base_y = anchor_local.y - dh * DROPLET_LIFT   ## чуть выше ободка горшка
 	_droplet.position = Vector2(anchor_local.x - DROPLET_WIDTH * 0.5, _droplet_base_y)
 
 ## Нижняя точка стебля в пикселях текстуры (центр непрозрачных пикселей нижних строк).

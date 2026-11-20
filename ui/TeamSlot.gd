@@ -62,7 +62,9 @@ const CHIBI_FEET_MARGIN := 34.0
 const IDLE_SWAY_X := 5.0       ## как в бою (CardActorFx)
 const IDLE_BOB_Y := 3.0
 var chibi_mode := false
-var _chibi: TextureRect
+## Sprite2D, а не TextureRect: Control-ы прилипают к целым пикселям (snap_controls_to_pixels),
+## и медленное покачивание шло рывками. Node2D двигается плавно.
+var _chibi: Sprite2D
 var _chibi_base := Vector2.ZERO
 var _idle: Array[Tween] = []
 
@@ -88,12 +90,10 @@ func _on_chibi_hover(on: bool) -> void:
 
 func _set_chibi(tex: Texture2D) -> void:
 	if _chibi == null:
-		_chibi = TextureRect.new()
+		_chibi = Sprite2D.new()
 		_chibi.name = "Chibi"
-		_chibi.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		_chibi.stretch_mode = TextureRect.STRETCH_SCALE
+		_chibi.centered = false
 		_chibi.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
-		_chibi.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		_chibi.flip_h = true   ## картинки смотрят влево, на площадке — вправо (к врагам)
 		add_child(_chibi)
 	for t in _idle:
@@ -106,11 +106,12 @@ func _set_chibi(tex: Texture2D) -> void:
 		return
 	var r := CharSizes.used_rect(tex)
 	var k := CHIBI_HEIGHT * CharSizes.scale_of(character_id) / maxf(1.0, float(r.size.y))
-	_chibi.size = Vector2(tex.get_size()) * k
-	# По центру слота — середина фигуры (а не картинки), с учётом отражения.
-	var mid_x := (float(r.position.x) + float(r.size.x) * 0.5) * k
-	var mirrored_mid := _chibi.size.x - mid_x
-	_chibi_base = Vector2(size.x * 0.5 - mirrored_mid, size.y - CHIBI_FEET_MARGIN - float(r.position.y + r.size.y) * k)
+	_chibi.scale = Vector2(k, k)
+	# Начало координат спрайта — ноги посередине фигуры (с учётом отражения).
+	var mid_x := float(r.position.x) + float(r.size.x) * 0.5
+	var mirrored_mid := float(tex.get_width()) - mid_x
+	_chibi.offset = Vector2(-mirrored_mid, -float(r.position.y + r.size.y))
+	_chibi_base = Vector2(size.x * 0.5, size.y - CHIBI_FEET_MARGIN)
 	_chibi.position = _chibi_base
 	# Idle как в бою: покачивание влево-вправо и лёгкие подпрыгивания, своя фаза у каждого.
 	var half := randf_range(0.95, 1.35)
