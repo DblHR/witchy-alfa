@@ -269,20 +269,35 @@ func pick_quest_room_dialogue(quest_id: String) -> Dictionary:
 func resolve_lines(dialogue: Dictionary) -> Array:
 	var out: Array = []
 	var cast := _dialogue_cast(dialogue)
+	## Эмоции на сцене: у говорящего — "emotion" реплики, у остальных — последняя их эмоция
+	## (своя реплика или поле "emotions": {"rikka": "grumpy", "hero": "smile"}); держится, пока не сменят.
+	var faces := {}
 	for raw_line in dialogue.get("lines", []):
 		if raw_line is String:
 			out.append({"speaker_name": "", "text": String(raw_line)})
 		elif raw_line is Dictionary:
 			var line: Dictionary = raw_line
+			var sp := _cast_key(String(line.get("speaker", line.get("speaker_id", ""))))
+			if sp != "":
+				faces[sp] = String(line.get("emotion", ""))
+			if line.get("emotions") is Dictionary:
+				for k in line["emotions"]:
+					faces[_cast_key(String(k))] = String(line["emotions"][k])
 			# Без "characters" на сцене все, кто говорит в этом диалоге (а не только говорящий сейчас).
 			if cast.size() > 1 and not line.has("characters"):
 				line = line.duplicate(true)
 				var chars: Array = []
 				for cid in cast:
-					chars.append({"id": cid})
+					chars.append({"id": cid, "emotion": String(faces.get(cid, ""))})
 				line["characters"] = chars
 			out.append(_resolve_line(line))
 	return out
+
+## id персонажа на сцене: главный герой (witch/warrior/hero) -> "hero", остальные как есть.
+func _cast_key(sid: String) -> String:
+	if sid == "" or sid == "narrator":
+		return ""
+	return HERO_ALIAS if _hero_id(sid) == get_main_hero_id() else sid
 
 ## Кто говорит в диалоге (по порядку появления, главный герой — последним, как в остальных сценах:
 ## NPC слева, герой справа).
@@ -365,6 +380,10 @@ func _resolve_line(raw: Dictionary) -> Dictionary:
 			var c_emotion := String(rc.get("emotion", ""))
 			if c_emotion == "" and cid == speaker_id:
 				c_emotion = emotion
+			if c_emotion == "" and line.get("emotions") is Dictionary:
+				for k in line["emotions"]:
+					if _hero_id(String(k)) == cid:
+						c_emotion = String(line["emotions"][k])
 			if not (rc.get("portrait") is Texture2D):
 				rc["portrait"] = get_character_portrait(cid, c_emotion)
 			resolved_chars.append(rc)

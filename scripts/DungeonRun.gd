@@ -242,6 +242,9 @@ func ensure_ground_shop_stock() -> void:
 ## неоткрытых рецептов и ингредиентов для еды. Обновляется после каждого забега.
 const RIKKA_SEEDS: Array[String] = ["slimeflower_seed", "witchflower_seed", "meatflower_seed", "vegetableflower_seed", "sweetflower_seed", "fruitflower_seed"]
 const RIKKA_FOOD_INGREDIENTS: Array[String] = ["meat_fruit", "vegetable_fruit", "sweet_fruit", "fruit_fruit"]
+## Шанс, что у Рикки после забега на полке горшок / котёл получше.
+const RIKKA_POT_CHANCE := 0.5
+const RIKKA_CAULDRON_CHANCE := 0.35
 
 func refresh_ground_shop(force_emit: bool = false) -> void:
 	sync_legacy_owned_artifacts_to_inventory()
@@ -251,6 +254,11 @@ func refresh_ground_shop(force_emit: bool = false) -> void:
 	# Приманка появляется у Рикки только после её рассказа (data/dialogues/npc/rikka.json).
 	if lure_unlocked():
 		ground_shop_item_ids.append(LURE_ITEM)
+	# Улучшения дома: горшок и котёл — иногда (пока не куплены все).
+	if FarmState_ != null and not FarmState_.pots_maxed() and rng.randf() < RIKKA_POT_CHANCE:
+		ground_shop_item_ids.append("farm_pot")
+	if not AlchemyDB.cauldron_maxed() and rng.randf() < RIKKA_CAULDRON_CHANCE:
+		ground_shop_item_ids.append("cauldron_upgrade")
 	var pools: Array = [RunItems.food_ids(), _common_staffs_not_owned(), AlchemyDB.unknown_recipe_items(), RIKKA_FOOD_INGREDIENTS]
 	var guard := 0
 	while ground_shop_item_ids.size() < GROUND_SHOP_SLOT_COUNT and guard < 50:
@@ -332,6 +340,11 @@ func buy_ground_shop_item(slot_idx: int) -> String:
 	var price := RunItems.get_item_price(item_id)
 	if not spend_gold(price):
 		return ""
+	if RunItems.is_home_upgrade(item_id):
+		RunItems.apply_home_upgrade(item_id)
+		ground_shop_item_ids[slot_idx] = ""
+		emit_changed()
+		return item_id
 	if RunItems.is_unique_item(item_id) and Inventory_ != null and Inventory_.has_item(item_id):
 		gain_gold(price)
 		return ""

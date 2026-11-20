@@ -85,8 +85,10 @@ func _on_vn_changed(on: bool) -> void:
 		clear()
 		_set_hover(false)
 
-## Показать реплики пузырями по очереди (берётся только текст).
-func say(lines: Array) -> void:
+## Показать реплики пузырями по очереди. У реплики может быть "emotion" — на время фразы картинка
+## NPC меняется на assets/npc/<id>/emotions/<id>_<emotion>.png. random_emotion — если у реплики
+## эмоции нет, взять случайную (клик по NPC).
+func say(lines: Array, random_emotion: bool = false) -> void:
 	if _layer == null:
 		return
 	_token += 1
@@ -103,8 +105,16 @@ func say(lines: Array) -> void:
 		var text := String(l.get("text", "")).strip_edges()
 		if text == "":
 			continue
+		var emo := String(l.get("emotion", ""))
+		if emo == "" and random_emotion:
+			emo = _random_emotion()
+		_set_emotion(emo)
 		_layer.show_line_for_actor(_anchor, text)
 		await get_tree().create_timer(LINE_GAP).timeout
+	# Фраза договорена — через пару секунд обычное лицо.
+	await get_tree().create_timer(EMOTION_HOLD).timeout
+	if token == _token and is_inside_tree():
+		_set_emotion("")
 
 ## Ещё одна случайная дежурная фраза этого NPC (не та же, что в прошлый раз).
 func say_random_bark() -> void:
@@ -117,7 +127,52 @@ func say_random_bark() -> void:
 		return
 	var d: Dictionary = pool[randi() % pool.size()]
 	_last_bark_id = String(d.get("id", ""))
-	say(StoryDialogueDB_.resolve_lines(d))
+	say(StoryDialogueDB_.resolve_lines(d), true)
+
+# --- Эмоции на дежурных фразах ---------------------------------------------------------
+## Сколько держится эмоция после последней фразы, сек.
+const EMOTION_HOLD := 1.5
+var _base_tex: Texture2D
+var _emotion := ""
+
+## Какие эмоции есть у NPC (файлы <id>_<эмоция>.png в assets/npc/<id>/emotions/).
+func _emotion_names() -> Array[String]:
+	var out: Array[String] = []
+	var dir := "res://assets/npc/%s/emotions/" % npc_id
+	if not DirAccess.dir_exists_absolute(dir):
+		return out
+	var prefix := npc_id + "_"
+	for f in ResourceLoader.list_directory(dir):
+		var fn := String(f)
+		if fn.ends_with(".png") and fn.begins_with(prefix):
+			out.append(fn.trim_prefix(prefix).trim_suffix(".png"))
+	return out
+
+func _random_emotion() -> String:
+	var names := _emotion_names()
+	if names.size() > 1:
+		names.erase(_emotion)
+	return "" if names.is_empty() else names[randi() % names.size()]
+
+## Сменить лицо ("" — обычное). Только если картинка эмоции того же размера, что обычная.
+func _set_emotion(emo: String) -> void:
+	if _sprite == null:
+		return
+	if emo == "default":   ## "default" — обычное лицо
+		emo = ""
+	if _emotion == "":
+		_base_tex = _sprite.texture
+	if _base_tex == null:
+		return
+	var tex: Texture2D = _base_tex
+	if emo != "":
+		var path := "res://assets/npc/%s/emotions/%s_%s.png" % [npc_id, npc_id, emo]
+		var t := load(path) as Texture2D if ResourceLoader.exists(path) else null
+		if t == null or t.get_size() != _base_tex.get_size():
+			return
+		tex = t
+	_emotion = emo
+	_sprite.texture = tex
 
 ## Середина фигуры NPC по x на экране (по непрозрачным пикселям картинки). NAN — не знаем.
 func _figure_center_x() -> float:
@@ -151,6 +206,8 @@ func clear() -> void:
 	_token += 1
 	if _layer != null:
 		_layer.clear_lines()
+	if _emotion != "":
+		_set_emotion("")
 
 func has_bubble() -> bool:
 	return _layer != null and _layer._active_bubble != null and is_instance_valid(_layer._active_bubble)

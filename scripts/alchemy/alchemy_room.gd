@@ -1013,11 +1013,12 @@ func _complete() -> void:
 	for id in _accepted_items.keys():
 		Inventory_.remove_item(String(id), int(_accepted_items[id]))
 	var result_id := AlchemyDB.roll_result(_recipe_id, _rng)
-	Inventory_.add_item(result_id, 1)
+	var count := AlchemyDB.cauldron_count(result_id, _rng)
+	Inventory_.add_item(result_id, count)
 	_last_brewed = _recipe_id
 	_set_stage(Stage.DONE)
 	_result_icon.texture = Inventory_.get_item_icon(result_id)
-	_result_label.text = "Готово: %s\nКачество варки: %s" % [RunItems.get_item_name(result_id), _quality_label()]
+	_result_label.text = "Готово: %s%s\nКачество варки: %s" % [RunItems.get_item_name(result_id), " ×2 — котёл постарался!" if count > 1 else "", _quality_label()]
 	_result_panel.visible = true
 
 func _on_result_closed() -> void:

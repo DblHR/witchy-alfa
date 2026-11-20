@@ -35,6 +35,30 @@ const ITEM_ALIASES := {
 }
 
 const ITEM_DEFS := {
+	# Улучшения дома — товары Рикки: не попадают в сумку, сразу срабатывают при покупке.
+	# Цена и название меняются по уровню (FarmState.POT_PRICES, AlchemyDB.CAULDRON_*).
+	"farm_pot": {
+		"name": "Горшок",
+		"desc": "Ещё один горшок на ферму — больше грядок.",
+		"kind": "upgrade",
+		"equippable": false,
+		"unique": true,
+		"stackable": false,
+		"sellable": false,
+		"price": 40,
+		"rarity": 0,
+	},
+	"cauldron_upgrade": {
+		"name": "Котёл получше",
+		"desc": "Зелья и еда иногда получаются вдвое.",
+		"kind": "upgrade",
+		"equippable": false,
+		"unique": true,
+		"stackable": false,
+		"sellable": false,
+		"price": 120,
+		"rarity": 0,
+	},
 	"return_stone": {
 		"name": "Камень возвращения",
 		"desc": "Подарок Рикки. В опасности возвращает туда, где вы спали в последний раз. Долго пылился — может барахлить.",
@@ -288,7 +312,7 @@ const ITEM_DEFS := {
 		"unique": false,
 		"stackable": true,
 		"sellable": true,
-		"price": 20,
+		"price": 30,
 		"effect_id": "heal_potion",
 	},
 	"energy_tonic": {
@@ -299,7 +323,7 @@ const ITEM_DEFS := {
 		"unique": false,
 		"stackable": true,
 		"sellable": true,
-		"price": 22,
+		"price": 32,
 		"effect_id": "energy_potion",
 	},
 	"rage_phial": {
@@ -310,7 +334,7 @@ const ITEM_DEFS := {
 		"unique": false,
 		"stackable": true,
 		"sellable": true,
-		"price": 22,
+		"price": 32,
 		"effect_id": "battle_potion",
 	},
 	"kebab": {
@@ -598,14 +622,41 @@ static func get_item_def(id: String) -> Dictionary:
 
 static func get_item_name(id: String) -> String:
 	var normalized := normalize_item_id(id)
+	if normalized == "cauldron_upgrade":
+		return AlchemyDB.CAULDRON_NAMES[clampi(AlchemyDB.cauldron_level(), 0, AlchemyDB.CAULDRON_NAMES.size() - 1)]
 	var d := get_item_def(normalized)
 	return String(d.get("name", normalized))
 
 static func get_item_desc(id: String) -> String:
+	match normalize_item_id(id):
+		"cauldron_upgrade":
+			var lv := clampi(AlchemyDB.cauldron_level() + 1, 0, AlchemyDB.CAULDRON_DOUBLE_CHANCE.size() - 1)
+			return "Зелья и еда с шансом %d%% получаются вдвое." % roundi(AlchemyDB.CAULDRON_DOUBLE_CHANCE[lv] * 100.0)
+		"farm_pot":
+			if FarmState_ != null:
+				return "Ещё один горшок на ферму (будет %d из %d)." % [FarmState_.unlocked_pots() + 1, FarmState.SLOT_COUNT]
 	return String(get_item_def(id).get("desc", ""))
 
 static func get_item_price(id: String) -> int:
+	match normalize_item_id(id):
+		"farm_pot":
+			return FarmState_.next_pot_price() if FarmState_ != null else 40
+		"cauldron_upgrade":
+			return AlchemyDB.CAULDRON_PRICES[clampi(AlchemyDB.cauldron_level(), 0, AlchemyDB.CAULDRON_PRICES.size() - 1)]
 	return int(get_item_def(id).get("price", 0))
+
+## Улучшение дома (горшок, котёл): покупается у Рикки, в сумку не кладётся.
+static func is_home_upgrade(id: String) -> bool:
+	return get_item_kind(id) == "upgrade"
+
+static func apply_home_upgrade(id: String) -> void:
+	match normalize_item_id(id):
+		"farm_pot":
+			if FarmState_ != null:
+				FarmState_.buy_pot()
+		"cauldron_upgrade":
+			if StoryState_ != null and not AlchemyDB.cauldron_maxed():
+				StoryState_.add_counter(AlchemyDB.CAULDRON_LEVEL_COUNTER, 1)
 
 static func get_item_sell_price(id: String) -> int:
 	return int(floor(get_item_price(id) * SELL_PRICE_RATIO))
@@ -629,6 +680,8 @@ static func get_item_kind_label(id: String) -> String:
 			return "Квест"
 		"recipe":
 			return "Рецепт"
+		"upgrade":
+			return "Для дома"
 		"lure":
 			return "Приманка"
 		_:
@@ -670,7 +723,7 @@ static func is_stackable(id: String) -> bool:
 ## Можно ли скормить цветку Рикки: не квестовое, не рецепт (их не продают).
 static func can_feed_flower(id: String) -> bool:
 	var kind := get_item_kind(id)
-	return kind != "" and kind != "quest" and kind != "recipe" and is_sellable(id)
+	return kind != "" and kind != "quest" and kind != "recipe" and kind != "upgrade" and is_sellable(id)
 
 static func get_flower_pay(id: String) -> int:
 	if not can_feed_flower(id):

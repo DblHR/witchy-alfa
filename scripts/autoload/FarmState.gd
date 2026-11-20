@@ -30,6 +30,42 @@ const HARVEST_BY_PLANT := {
 	"fruitflower": "fruit_fruit",
 }
 
+## Горшки: сначала BASE_POTS, остальные (до SLOT_COUNT) покупаются у Рикки — счётчик StoryState_
+## "farm_pots_bought". Цена следующего горшка — POT_PRICES.
+const BASE_POTS := 4
+const POTS_BOUGHT_COUNTER := "farm_pots_bought"
+const POT_PRICES: Array[int] = [40, 60, 80, 100]
+
+## Сколько горшков доступно (в старых сохранениях — не меньше, чем уже занято).
+func unlocked_pots() -> int:
+	var n := BASE_POTS + (StoryState_.get_counter(POTS_BOUGHT_COUNTER) if StoryState_ != null else 0)
+	for i in range(slots.size() - 1, -1, -1):
+		if int(slots[i].get("stage", PlantStage.EMPTY)) != PlantStage.EMPTY:
+			n = maxi(n, i + 1)
+			break
+	return clampi(n, 0, SLOT_COUNT)
+
+func pots_maxed() -> bool:
+	return unlocked_pots() >= SLOT_COUNT
+
+func next_pot_price() -> int:
+	var bought := unlocked_pots() - BASE_POTS
+	return POT_PRICES[clampi(bought, 0, POT_PRICES.size() - 1)]
+
+func buy_pot() -> void:
+	if StoryState_ != null and not pots_maxed():
+		StoryState_.add_counter(POTS_BOUGHT_COUNTER, unlocked_pots() - BASE_POTS + 1 - StoryState_.get_counter(POTS_BOUGHT_COUNTER))
+		state_changed.emit()
+
+func is_pot_unlocked(slot_index: int) -> bool:
+	return slot_index >= 0 and slot_index < unlocked_pots()
+
+## Урожай с горшка: 1 всегда, 50% — 2, из них 20% — 3 (P(3)=20%, P(2)=30%, P(1)=50%).
+const HARVEST_CHANCE_2 := 0.5
+const HARVEST_CHANCE_3 := 0.2
+## Шанс, что вместе с урожаем вернётся одно семечко того же растения.
+const SEED_BACK_CHANCE := 0.2
+
 var slots: Array[Dictionary] = []
 
 func _ready() -> void:
@@ -101,7 +137,7 @@ func choose_seed_for_planting(slot_index: int = -1) -> String:
 	return ""
 
 func can_plant_seed(slot_index: int) -> bool:
-	if not _is_valid_slot(slot_index):
+	if not _is_valid_slot(slot_index) or not is_pot_unlocked(slot_index):
 		return false
 	var slot := slots[slot_index]
 	return int(slot.get("stage", PlantStage.EMPTY)) == PlantStage.EMPTY and choose_seed_for_planting(slot_index) != ""
@@ -123,7 +159,7 @@ func can_interact(slot_index: int) -> bool:
 	return can_plant_seed(slot_index) or can_water_slot(slot_index) or can_harvest_slot(slot_index)
 
 func plant_seed(slot_index: int, seed_item_id: String = "") -> bool:
-	if not _is_valid_slot(slot_index):
+	if not _is_valid_slot(slot_index) or not is_pot_unlocked(slot_index):
 		return false
 	var chosen_seed := RunItems.normalize_item_id(seed_item_id)
 	if chosen_seed == "":
@@ -158,6 +194,17 @@ func water_slot(slot_index: int) -> bool:
 
 func reset_to_defaults() -> void:
 	_reset_slots()
+
+## Сколько собрать с горшка: {"item": id урожая, "count": 1..3, "seed": id семечка или ""}.
+func roll_harvest(slot_data: Dictionary) -> Dictionary:
+	var r := randf()
+	var count := 3 if r < HARVEST_CHANCE_3 else (2 if r < HARVEST_CHANCE_2 else 1)
+	var seed_id := String(slot_data.get("seed_item_id", ""))
+	return {
+		"item": get_harvest_item_id(slot_data),
+		"count": count,
+		"seed": seed_id if seed_id != "" and randf() < SEED_BACK_CHANCE else "",
+	}
 
 func harvest(slot_index: int) -> bool:
 	return harvest_slot(slot_index)

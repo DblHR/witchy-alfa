@@ -17,6 +17,8 @@ var _flower: RikkaFlower
 var _feed_panel: FlowerFeedPanel
 ## Рикка с панелькой в руках (на ней окно кормления) — поверх обычной Рикки, плавная смена.
 const RIKKA_WITH_FLOWER := "res://assets/npc/rikka/rikka_with_flower.png"
+## Где Рикка с панелькой на экране (картинка 988×1280 — рамка своя, не как у обычной Рикки).
+const RIKKA_WITH_FLOWER_RECT := Rect2(1016, 40, 909, 1178)
 const SWAP_TIME := 0.35
 var _rikka: TextureRect
 var _rikka_alt: TextureRect
@@ -108,7 +110,8 @@ func _build_flower() -> void:
 		_rikka_alt.expand_mode = _rikka.expand_mode
 		_rikka_alt.stretch_mode = _rikka.stretch_mode
 		_rikka_alt.texture_filter = _rikka.texture_filter
-		_rikka_alt.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		_rikka_alt.position = RIKKA_WITH_FLOWER_RECT.position - _rikka.position
+		_rikka_alt.size = RIKKA_WITH_FLOWER_RECT.size
 		_rikka_alt.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		_rikka_alt.modulate.a = 0.0
 		_rikka_alt.visible = false
@@ -203,11 +206,15 @@ func _build_stock_grid() -> void:
 	stock_grid.add_theme_constant_override("v_separation", ShopUi.CARD_GAP)
 
 func _on_stock_pressed(slot_idx: int) -> void:
+	# Имя заранее: у котла название меняется после покупки (следующий уровень).
+	var bought_name := ""
+	if slot_idx >= 0 and slot_idx < DungRun.ground_shop_item_ids.size():
+		bought_name = RunItems.get_item_name(DungRun.ground_shop_item_ids[slot_idx])
 	var item_id := DungRun.buy_ground_shop_item(slot_idx)
 	if item_id == "":
 		_refresh("Не удалось купить предмет.")
 		return
-	_refresh("Куплено: %s" % RunItems.get_item_name(item_id))
+	_refresh("Куплено: %s" % bought_name)
 
 func _refresh(message: String = "") -> void:
 	gold_label.text = "%d" % DungRun.gold

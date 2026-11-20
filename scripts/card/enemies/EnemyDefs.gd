@@ -53,7 +53,7 @@ static func _register_all() -> void:
 ## Шлёпыш: обычно просто шлёпает, иногда плюётся липкой слизью (5 новых стаков — оглушение).
 static func _shlep(id: String, title: String, hp_min: int, hp_max: int, size: float, k: float) -> EnemyDef:
 	var d := EnemyDef.new(id, title, "B")
-	d.texture_path = SPRITES + "slime_green.png"
+	d.texture_path = SPRITES + "slime_blue.png"   ## цвет — как у слизнедевочки-«пары»
 	d.hp_min = hp_min
 	d.hp_max = hp_max
 	d.visual_scale = size
@@ -69,7 +69,7 @@ static func _shlep(id: String, title: String, hp_min: int, hp_max: int, size: fl
 ## Пузырь: прикрывает и подлечивает соседей, сам бьёт слабо.
 static func _bubble(id: String, title: String, hp_min: int, hp_max: int, size: float, k: float) -> EnemyDef:
 	var d := EnemyDef.new(id, title, "B")
-	d.texture_path = SPRITES + "slime_blue.png"
+	d.texture_path = SPRITES + "slime_pink.png"   ## цвет — как у слизнедевочки-«пары»
 	d.hp_min = hp_min
 	d.hp_max = hp_max
 	d.visual_scale = size
@@ -117,7 +117,7 @@ static func _acid(id: String, title: String, hp_min: int, hp_max: int, size: flo
 ## Большая блёба: крупная и толстая, на половине HP делится на две маленькие (EnemyBlob).
 static func _blob() -> EnemyDef:
 	var d := EnemyBlob.new("blob", "Большая блёба", "B")
-	d.texture_path = SPRITES + "slime_pink.png"
+	d.texture_path = SPRITES + "slime_green.png"   ## цвет — как у слизнедевочки-«пары»
 	d.hp_min = 150
 	d.hp_max = 166
 	d.visual_scale = 1.65
@@ -130,7 +130,7 @@ static func _blob() -> EnemyDef:
 
 static func _blob_mini() -> EnemyDef:
 	var d := EnemyDef.new("blob_mini", "Маленькая блёба", "B")
-	d.texture_path = SPRITES + "slime_pink.png"
+	d.texture_path = SPRITES + "slime_green.png"   ## цвет — как у слизнедевочки-«пары»
 	d.hp_min = 30
 	d.hp_max = 36
 	d.visual_scale = 0.75

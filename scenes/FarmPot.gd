@@ -247,15 +247,52 @@ func refresh() -> void:
 				_place_plant(flower, 1.0)
 				plant_sprite.visible = true
 
+	# Не полито: горшок, мешочек с семенами и росток серые + капелька сверху.
 	_seed_base_modulate = Color(1, 1, 1, 1)
 	_plant_base_modulate = Color(1, 1, 1, 1)
-	_set_droplet(needs_water and (stage == FarmState.PlantStage.SEED or stage == FarmState.PlantStage.SPROUT))
+	var dry := needs_water and (stage == FarmState.PlantStage.SEED or stage == FarmState.PlantStage.SPROUT)
+	_set_droplet(dry)
+	_set_gray(dry)
 
 	var can_interact := FarmState_.can_interact(slot_index)
 	click_button.disabled = not can_interact
 	click_button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND if can_interact else Control.CURSOR_ARROW
 	click_button.tooltip_text = _build_tooltip(slot)
 	_apply_hover_visual()
+
+## Серый цвет «не полито»: обесцвечивание + чуть темнее (GRAY_DARKEN).
+const GRAY_DARKEN := 0.72
+const GRAY_SHADER := """
+shader_type canvas_item;
+uniform float gray : hint_range(0.0, 1.0) = 0.0;
+uniform float darken = 0.72;
+varying vec4 v_mod;
+void vertex() { v_mod = COLOR; }
+void fragment() {
+	vec4 c = texture(TEXTURE, UV);
+	float l = dot(c.rgb, vec3(0.299, 0.587, 0.114)) * darken;
+	c.rgb = mix(c.rgb, vec3(l), gray);
+	COLOR = c * v_mod;
+}
+"""
+static var _gray_shader: Shader
+var _gray_on := false
+
+func _set_gray(on: bool) -> void:
+	if _gray_shader == null:
+		_gray_shader = Shader.new()
+		_gray_shader.code = GRAY_SHADER
+	_gray_on = on
+	for spr: TextureRect in [pot_sprite, seed_bag_sprite, plant_sprite]:
+		if spr == null:
+			continue
+		var m := spr.material as ShaderMaterial
+		if m == null or m.shader != _gray_shader:
+			m = ShaderMaterial.new()
+			m.shader = _gray_shader
+			m.set_shader_parameter("darken", GRAY_DARKEN)
+			spr.material = m
+		m.set_shader_parameter("gray", 1.0 if on else 0.0)
 
 func _set_droplet(on: bool) -> void:
 	if _droplet == null or _droplet.visible == on:

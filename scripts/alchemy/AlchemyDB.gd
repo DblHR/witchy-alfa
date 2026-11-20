@@ -17,17 +17,17 @@ const RECIPES := {
 	"slime_potion_recipe": {
 		"name": "Зелье слаймов",
 		"result_item_id": "slime_potion",
-		"ingredients": {"slime_goop": 4, "slimeflower": 2, "quartz": 1},
+		"ingredients": {"slime_goop": 3, "slimeflower": 1, "quartz": 1},
 	},
 	"energy_tonic_recipe": {
 		"name": "Тоник энергии",
 		"result_item_id": "energy_tonic",
-		"ingredients": {"witchflower": 2, "quartz": 3},
+		"ingredients": {"witchflower": 1, "quartz": 2},
 	},
 	"rage_phial_recipe": {
 		"name": "Фиал ярости",
 		"result_item_id": "rage_phial",
-		"ingredients": {"witchflower": 3, "quartz": 2},
+		"ingredients": {"witchflower": 2, "quartz": 1},
 	},
 	"kebab_recipe": {
 		"name": "Шашлык",
@@ -52,12 +52,12 @@ const RECIPES := {
 	"staff_upgrade_common": {
 		"name": "Посох → редкий",
 		"result_item_id": "mace_staff_rare",
-		"ingredients": {"staff_r0": 3, "quartz": 10},
+		"ingredients": {"staff_r0": 3, "quartz": 5},
 	},
 	"staff_upgrade_rare": {
 		"name": "Посох → легендарный",
 		"result_item_id": "mace_staff_legendary",
-		"ingredients": {"staff_r1": 3, "quartz": 10},
+		"ingredients": {"staff_r1": 3, "quartz": 5},
 	},
 }
 
@@ -206,7 +206,8 @@ static func craft(recipe_id: String) -> bool:
 			Inventory_.remove_item(key, left)
 	var rng := RandomNumberGenerator.new()
 	rng.randomize()
-	Inventory_.add_item(roll_result(recipe_id, rng), 1)
+	var result_id := roll_result(recipe_id, rng)
+	Inventory_.add_item(result_id, cauldron_count(result_id, rng))
 	return true
 
 static func get_recipe_summary(recipe_id: String) -> String:
@@ -215,3 +216,25 @@ static func get_recipe_summary(recipe_id: String) -> String:
 		parts.append("%d × %s" % [int(get_ingredients(recipe_id)[item_id]), ingredient_name(String(item_id))])
 	parts.sort()
 	return ", ".join(parts)
+
+# --- Котёл (покупается у Рикки): шанс, что зелье или еда получатся в двойном количестве ---------
+## Уровень котла хранится счётчиком StoryState_ "cauldron_level". Шанс ×2 по уровням, цена следующего.
+const CAULDRON_LEVEL_COUNTER := "cauldron_level"
+const CAULDRON_DOUBLE_CHANCE: Array[float] = [0.0, 0.25, 0.5]
+const CAULDRON_PRICES: Array[int] = [120, 240]
+const CAULDRON_NAMES: Array[String] = ["Котёл получше", "Котёл мастера"]
+
+static func cauldron_level() -> int:
+	return StoryState_.get_counter(CAULDRON_LEVEL_COUNTER) if StoryState_ != null else 0
+
+static func cauldron_maxed() -> bool:
+	return cauldron_level() >= CAULDRON_PRICES.size()
+
+## Сколько штук выдать: зелья и еда — с шансом котла ×2, остальное (посохи) — 1.
+static func cauldron_count(result_id: String, rng: RandomNumberGenerator = null) -> int:
+	var kind := RunItems.get_item_kind(result_id)
+	if kind != "potion" and kind != "food":
+		return 1
+	var ch: float = CAULDRON_DOUBLE_CHANCE[clampi(cauldron_level(), 0, CAULDRON_DOUBLE_CHANCE.size() - 1)]
+	var roll := rng.randf() if rng != null else randf()
+	return 2 if roll < ch else 1

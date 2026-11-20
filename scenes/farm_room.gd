@@ -113,8 +113,11 @@ func _unhandled_input(event: InputEvent) -> void:
 		_hide_seed_popup()
 
 func _refresh_all() -> void:
-	for pot in pots:
+	for i in range(pots.size()):
+		var pot := pots[i]
 		if is_instance_valid(pot):
+			# Купленных у Рикки горшков ещё нет — горшка не видно.
+			pot.visible = FarmState_.is_pot_unlocked(i)
 			pot.refresh()
 	_rebuild_seed_popup_buttons()
 
@@ -157,6 +160,8 @@ func _rebuild_seed_popup_buttons() -> void:
 		_seed_grid.add_child(button)
 
 func _on_pot_pressed(slot_index: int) -> void:
+	if not FarmState_.is_pot_unlocked(slot_index):
+		return
 	var slot := FarmState_.get_slot(slot_index)
 	match int(slot.get("stage", FarmState.PlantStage.EMPTY)):
 		FarmState.PlantStage.EMPTY:
@@ -175,10 +180,36 @@ func _on_pot_pressed(slot_index: int) -> void:
 				if slot_index >= 0 and slot_index < pots.size():
 					pots[slot_index].play_water_flash()
 		FarmState.PlantStage.FLOWER:
-			var harvested_item_id := FarmState_.get_harvest_item_id(slot)
+			var got := FarmState_.roll_harvest(slot)
 			if FarmState_.harvest_slot(slot_index):
-				Inventory_.add_item(harvested_item_id, 1)
+				Inventory_.add_item(String(got["item"]), int(got["count"]))
+				var msg := "+%d %s" % [int(got["count"]), RunItems.get_item_name(String(got["item"]))]
+				if String(got["seed"]) != "":
+					Inventory_.add_item(String(got["seed"]), 1)
+					msg += "\n+1 %s" % RunItems.get_item_name(String(got["seed"]))
+				if slot_index >= 0 and slot_index < pots.size():
+					_float_text(pots[slot_index], msg)
 	_refresh_all()
+
+## Всплывающая надпись над горшком (что собрали).
+func _float_text(pot: Control, msg: String) -> void:
+	var l := Label.new()
+	l.text = msg
+	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	l.add_theme_font_size_override("font_size", 30)
+	l.add_theme_color_override("font_color", Color(1.0, 0.97, 0.85))
+	l.add_theme_color_override("font_outline_color", Color(0.25, 0.12, 0.22))
+	l.add_theme_constant_override("outline_size", 10)
+	l.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	l.size = Vector2(360, 90)
+	l.z_index = 40
+	add_child(l)
+	var r := pot.get_global_rect()
+	l.global_position = Vector2(r.get_center().x - 180, r.position.y - 20)
+	var tw := l.create_tween().set_parallel(true)
+	tw.tween_property(l, "global_position:y", l.global_position.y - 80, 1.4)
+	tw.tween_property(l, "modulate:a", 0.0, 0.6).set_delay(0.9)
+	tw.chain().tween_callback(l.queue_free)
 
 func _on_seed_chosen(seed_id: String) -> void:
 	if _selected_slot_for_planting >= 0:

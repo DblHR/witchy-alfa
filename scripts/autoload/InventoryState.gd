@@ -5,6 +5,8 @@ signal changed
 
 const ICON_PATHS := {
 	"return_stone": "res://assets/items/quest/return_stone.png",
+	"farm_pot": "res://assets/farm/pots/pot1.png",
+	"cauldron_upgrade": "res://assets/ui/buttons/alchemyButton.png",
 	"slime_potion": "res://assets/items/potions/slime_potion.png",
 	"energy_tonic": "res://assets/items/potions/energy_tonic.png",
 	"rage_phial": "res://assets/items/potions/rage_phial.png",
@@ -54,6 +56,12 @@ func add_item(item_id: String, amount: int = 1) -> bool:
 	# Рецепт не лежит в инвентаре — он сразу изучается.
 	if RunItems.is_recipe_item(item_id):
 		AlchemyDB.learn(RunItems.get_recipe_id(item_id))
+		changed.emit()
+		return true
+	# Улучшение дома (горшок, котёл) тоже не лежит в сумке — сразу срабатывает.
+	if RunItems.is_home_upgrade(item_id):
+		for i in range(amount):
+			RunItems.apply_home_upgrade(item_id)
 		changed.emit()
 		return true
 	if RunItems.is_unique_item(item_id):
