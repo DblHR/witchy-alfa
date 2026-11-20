@@ -36,6 +36,8 @@ func go_to_farm() -> void:
 	get_tree().change_scene_to_file(FARM)
 
 func go_to_alchemy() -> void:
+	if not AlchemyDB.has_cauldron():
+		return   ## котла ещё нет — покупается у Рикки
 	get_tree().paused = false
 	get_tree().change_scene_to_file(ALCHEMY)
 

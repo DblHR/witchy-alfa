@@ -45,14 +45,28 @@ func _ready() -> void:
 			var method := String(TARGETS[String(b.name)])
 			b.pressed.connect(_go.bind(method))
 	toggle.pressed.connect(_on_toggle)
+	_refresh_locks()
 	_apply(expanded, false)
 	refresh_badges()
 	if StoryState_ != null and StoryState_.has_signal("changed"):
 		StoryState_.changed.connect(refresh_badges)
+		StoryState_.changed.connect(_refresh_locks)
 
 func _exit_tree() -> void:
 	if StoryState_ != null and StoryState_.has_signal("changed") and StoryState_.changed.is_connected(refresh_badges):
 		StoryState_.changed.disconnect(refresh_badges)
+	if StoryState_ != null and StoryState_.has_signal("changed") and StoryState_.changed.is_connected(_refresh_locks):
+		StoryState_.changed.disconnect(_refresh_locks)
+
+## Котла нет — кнопка «Алхимия» потускневшая и не нажимается.
+func _refresh_locks() -> void:
+	var alch := button("AlchemyButton")
+	if alch == null:
+		return
+	var ok := AlchemyDB.has_cauldron()
+	alch.disabled = not ok
+	alch.self_modulate = Color.WHITE if ok else Color(0.45, 0.42, 0.48, 0.85)
+	alch.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND if ok else Control.CURSOR_ARROW
 
 func button(btn_name: String) -> TextureButton:
 	return get_node_or_null(btn_name) as TextureButton

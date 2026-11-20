@@ -217,12 +217,18 @@ static func get_recipe_summary(recipe_id: String) -> String:
 	parts.sort()
 	return ", ".join(parts)
 
-# --- Котёл (покупается у Рикки): шанс, что зелье или еда получатся в двойном количестве ---------
-## Уровень котла хранится счётчиком StoryState_ "cauldron_level". Шанс ×2 по уровням, цена следующего.
+# --- Котёл (покупается у Рикки) -----------------------------------------------------------------
+## Уровень котла — счётчик StoryState_ "cauldron_level": 0 — котла нет (алхимия закрыта),
+## 1 — котёл, 2 — получше, 3 — мастера. Улучшенный котёл: шанс, что зелье или еда выйдут вдвое.
+## CAULDRON_PRICES[i] / CAULDRON_NAMES[i] — цена и название покупки на уровне i.
 const CAULDRON_LEVEL_COUNTER := "cauldron_level"
-const CAULDRON_DOUBLE_CHANCE: Array[float] = [0.0, 0.25, 0.5]
-const CAULDRON_PRICES: Array[int] = [120, 240]
-const CAULDRON_NAMES: Array[String] = ["Котёл получше", "Котёл мастера"]
+const CAULDRON_DOUBLE_CHANCE: Array[float] = [0.0, 0.0, 0.25, 0.5]
+const CAULDRON_PRICES: Array[int] = [60, 120, 240]
+const CAULDRON_NAMES: Array[String] = ["Котёл", "Котёл получше", "Котёл мастера"]
+
+## Есть ли котёл (без него в алхимию не попасть).
+static func has_cauldron() -> bool:
+	return cauldron_level() >= 1
 
 static func cauldron_level() -> int:
 	return StoryState_.get_counter(CAULDRON_LEVEL_COUNTER) if StoryState_ != null else 0

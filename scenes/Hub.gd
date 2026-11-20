@@ -19,6 +19,8 @@ func _ready() -> void:
 	inv.pressed.connect(func(): SceneRouter_.go_to_inventory())
 	_collect_routes()
 	_spawn_walkers()
+	# Котла ещё нет (покупается у Рикки) — слоя с котлом (котёл и коврик) не видно, клика нет.
+	cauldron_layer.visible = AlchemyDB.has_cauldron()
 	_build_cauldron_bubbles()
 	_build_door_hint()
 	_refresh_badges()
@@ -163,7 +165,7 @@ func _build_cauldron_bubbles() -> void:
 	move_child(_bubbles, cauldron_layer.get_index() + 1)
 
 func _cauldron_at(p: Vector2) -> bool:
-	return CAULDRON_RECT.has_point(p) and _opaque(cauldron_layer, p)
+	return cauldron_layer.visible and CAULDRON_RECT.has_point(p) and _opaque(cauldron_layer, p)
 
 func _set_cauldron_hover(on: bool) -> void:
 	if on == _cauldron_hover:

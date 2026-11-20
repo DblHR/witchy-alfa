@@ -257,7 +257,8 @@ func refresh_ground_shop(force_emit: bool = false) -> void:
 	# Улучшения дома: горшок и котёл — иногда (пока не куплены все).
 	if FarmState_ != null and not FarmState_.pots_maxed() and rng.randf() < RIKKA_POT_CHANCE:
 		ground_shop_item_ids.append("farm_pot")
-	if not AlchemyDB.cauldron_maxed() and rng.randf() < RIKKA_CAULDRON_CHANCE:
+	# Пока котла нет совсем — он на полке всегда.
+	if not AlchemyDB.has_cauldron() or (not AlchemyDB.cauldron_maxed() and rng.randf() < RIKKA_CAULDRON_CHANCE):
 		ground_shop_item_ids.append("cauldron_upgrade")
 	var pools: Array = [RunItems.food_ids(), _common_staffs_not_owned(), AlchemyDB.unknown_recipe_items(), RIKKA_FOOD_INGREDIENTS]
 	var guard := 0

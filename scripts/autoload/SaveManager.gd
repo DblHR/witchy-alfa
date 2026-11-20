@@ -4,7 +4,7 @@ class_name SaveManager
 const SAVE_PATH := "user://savegame.json"
 const SAVE_BACKUP_PATH := "user://savegame.bak.json"
 const SAVE_TMP_PATH := "user://savegame.tmp.json"
-const SAVE_VERSION := 2
+const SAVE_VERSION := 3
 ## Сохранения версии 1: персонажи-NPC по старым кодовым id -> по именам (step65).
 const LEGACY_IDS := [["rabbit_shop", "rikka"], ["nurse", "noctris"], ["lamia", "sessilia"]]
 
@@ -83,9 +83,24 @@ func _read_save_file(path: String) -> Dictionary:
 		for pair in LEGACY_IDS:
 			text = text.replace(pair[0], pair[1])
 		parsed = JSON.parse_string(text)
+	if parsed is Dictionary and int(parsed.get("version", 1)) < 3:
+		_migrate_v3(parsed)
 	if parsed is Dictionary:
 		return parsed
 	return {}
+
+## v3: в новой игре нет котла и 2 горшка. Старым сохранениям — котёл (уровни сдвинулись на 1:
+## 0 — нет котла) и те же горшки, что были (раньше давали 4 сразу).
+func _migrate_v3(data: Dictionary) -> void:
+	var story = data.get("story", {})
+	if not story is Dictionary:
+		return
+	var counters = story.get("counters", {})
+	if not counters is Dictionary:
+		counters = {}
+	counters[AlchemyDB.CAULDRON_LEVEL_COUNTER] = int(counters.get(AlchemyDB.CAULDRON_LEVEL_COUNTER, 0)) + 1
+	counters[FarmState.POTS_BOUGHT_COUNTER] = int(counters.get(FarmState.POTS_BOUGHT_COUNTER, 0)) + 2
+	story["counters"] = counters
 
 func load_game() -> bool:
 	var data := _read_save_file(SAVE_PATH)

@@ -198,8 +198,7 @@ func _build_stock_grid() -> void:
 	seed_label.size = ShopUi.NOTE_RECT.size
 	ShopUi.style_text(seed_label, 22)
 	seed_label.vertical_alignment = VERTICAL_ALIGNMENT_BOTTOM
-	gold_label.global_position = ShopUi.COIN_TEXT_POS
-	ShopUi.style_gold(gold_label)
+	# Золото — плашка goldStatus в правом верхнем углу бежевой подложки (Shop.tscn → Panel/GoldStatus).
 	stock_grid.global_position = ShopUi.GRID_POS
 	stock_grid.columns = 3
 	stock_grid.add_theme_constant_override("h_separation", ShopUi.CARD_GAP)

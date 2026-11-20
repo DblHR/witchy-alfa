@@ -2,6 +2,7 @@
 
 [ext_resource type="Texture2D" uid="uid://cd7ouptpn7shi" path="res://assets/backgrounds/rooms/ShopBG.png" id="1_rgcs7"]
 [ext_resource type="Script" uid="uid://dukrop4adpe2s" path="res://scenes/Shop.gd" id="1_yltc6"]
+[ext_resource type="Texture2D" uid="uid://dlqg5fpxvh5f3" path="res://assets/ui/buttons/goldStatus.png" id="2_gold"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_yltc6"]
 content_margin_left = 0.0
@@ -51,16 +52,28 @@ text = "МАГАЗИН"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="GoldLabel" type="Label" parent="Panel" unique_id=299523858]
+[node name="GoldStatus" type="TextureRect" parent="Panel" unique_id=1588203417]
+layout_mode = 0
+offset_left = 843.0
+offset_top = -21.0
+offset_right = 1093.0
+offset_bottom = 69.0
+mouse_filter = 2
+texture = ExtResource("2_gold")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="GoldLabel" type="Label" parent="Panel/GoldStatus" unique_id=299523858]
 unique_name_in_owner = true
 layout_mode = 0
-offset_left = 1560.0
-offset_top = -91.0
-offset_right = 1683.0
-offset_bottom = -49.0
-theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
-theme_override_constants/outline_size = 6
-theme_override_font_sizes/font_size = 24
+offset_left = 82.0
+offset_top = 10.0
+offset_right = 232.0
+offset_bottom = 80.0
+theme_override_colors/font_color = Color(1, 0.95, 0.8, 1)
+theme_override_font_sizes/font_size = 34
+text = "0"
+vertical_alignment = 1
 
 [node name="SeedLabel" type="Label" parent="Panel" unique_id=322466491]
 unique_name_in_owner = true

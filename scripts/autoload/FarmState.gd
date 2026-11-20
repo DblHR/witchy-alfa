@@ -32,9 +32,9 @@ const HARVEST_BY_PLANT := {
 
 ## Горшки: сначала BASE_POTS, остальные (до SLOT_COUNT) покупаются у Рикки — счётчик StoryState_
 ## "farm_pots_bought". Цена следующего горшка — POT_PRICES.
-const BASE_POTS := 4
+const BASE_POTS := 2
 const POTS_BOUGHT_COUNTER := "farm_pots_bought"
-const POT_PRICES: Array[int] = [40, 60, 80, 100]
+const POT_PRICES: Array[int] = [20, 30, 40, 60, 80, 100]
 
 ## Сколько горшков доступно (в старых сохранениях — не меньше, чем уже занято).
 func unlocked_pots() -> int:

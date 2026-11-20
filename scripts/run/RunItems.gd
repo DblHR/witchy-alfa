@@ -49,14 +49,14 @@ const ITEM_DEFS := {
 		"rarity": 0,
 	},
 	"cauldron_upgrade": {
-		"name": "Котёл получше",
-		"desc": "Зелья и еда иногда получаются вдвое.",
+		"name": "Котёл",
+		"desc": "Свой котёл: можно варить зелья и еду.",
 		"kind": "upgrade",
 		"equippable": false,
 		"unique": true,
 		"stackable": false,
 		"sellable": false,
-		"price": 120,
+		"price": 60,
 		"rarity": 0,
 	},
 	"return_stone": {
@@ -630,6 +630,8 @@ static func get_item_name(id: String) -> String:
 static func get_item_desc(id: String) -> String:
 	match normalize_item_id(id):
 		"cauldron_upgrade":
+			if not AlchemyDB.has_cauldron():
+				return "Свой котёл: можно варить зелья и еду."
 			var lv := clampi(AlchemyDB.cauldron_level() + 1, 0, AlchemyDB.CAULDRON_DOUBLE_CHANCE.size() - 1)
 			return "Зелья и еда с шансом %d%% получаются вдвое." % roundi(AlchemyDB.CAULDRON_DOUBLE_CHANCE[lv] * 100.0)
 		"farm_pot":
