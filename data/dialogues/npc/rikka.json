@@ -1,6 +1,83 @@
 {
   "dialogues": [
     {
+      "id": "rikka_first_visit",
+      "type": "event",
+      "npc": "rikka",
+      "once": true,
+      "priority": 100,
+      "tour": "rikka_tour",
+      "lines": [
+        {
+          "speaker": "rikka",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "Привет!"
+        },
+        {
+          "speaker": "rikka",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "Всё-таки надумала зайти ко мне?"
+        },
+        {
+          "speaker": "rikka",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "Давай я проведу тебе экскурсию!"
+        }
+      ]
+    },
+    {
+      "id": "rikka_tour",
+      "type": "tour",
+      "npc": "rikka",
+      "lines": [
+        {
+          "speaker": "rikka",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "На этой витрине я выкладываю самые ходовые товары.",
+          "anim": "fe1"
+        },
+        {
+          "speaker": "rikka",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "Можешь осмотреть товары отсюда!",
+          "anim": "fe2"
+        },
+        {
+          "speaker": "rikka",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "Или отсюда!",
+          "anim": "fe3"
+        },
+        {
+          "speaker": "rikka",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "И... Отсюда~",
+          "anim": "fe4"
+        },
+        {
+          "speaker": "rikka",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "И этот товар тоже!..",
+          "anim": "fall"
+        },
+        {
+          "speaker": "rikka",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "Ну, выбирай!",
+          "anim": "back"
+        }
+      ]
+    },
+    {
       "id": "rikka_default_01",
       "type": "flag",
       "npc": "rikka",

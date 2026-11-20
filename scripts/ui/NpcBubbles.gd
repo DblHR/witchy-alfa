@@ -116,6 +116,18 @@ func say(lines: Array, random_emotion: bool = false) -> void:
 	if token == _token and is_inside_tree():
 		_set_emotion("")
 
+## Одна реплика пузырём в заданной точке экрана (низ пузыря), без смены лица; "" — убрать пузырь.
+## Для сцен, где NPC двигается (экскурсия Рикки).
+func say_at(text: String, at: Vector2) -> void:
+	if _layer == null:
+		return
+	_token += 1
+	_layer.clear_lines()
+	if text.strip_edges() == "":
+		return
+	_anchor.global_position = at
+	_layer.show_line_for_actor(_anchor, text)
+
 ## Ещё одна случайная дежурная фраза этого NPC (не та же, что в прошлый раз).
 func say_random_bark() -> void:
 	if StoryDialogueDB_ == null or npc_id == "":

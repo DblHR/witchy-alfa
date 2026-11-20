@@ -23,6 +23,12 @@ const SWAP_TIME := 0.35
 var _rikka: TextureRect
 var _rikka_alt: TextureRect
 var _swap: Tween
+## Экскурсия при первом заходе (scenes/npc/RikkaTour.tscn): пока идёт — лавка закрыта.
+const TOUR_SCENE := "res://scenes/npc/RikkaTour.tscn"
+const TOUR_FADE := 0.25
+var _tour: RikkaTour
+var _tour_blocker: Control
+var _tour_glow: Dictionary = {}   ## индекс ячейки -> Tween подсветки
 
 func _ready() -> void:
 	UIThemeHelper.apply_pink_theme(self)
@@ -63,6 +69,8 @@ func _show_rikka_greeting() -> void:
 		var lines := StoryDialogueDB_.resolve_lines(d)
 		if not lines.is_empty():
 			_pending_shop_dialogue = d
+			if String(d.get("tour", "")) != "":
+				_lock_shop(true)   ## сразу: между VN и экскурсией тоже ничего не нажать
 			DialogueManager_.show_sequence(lines, Callable(self, "_on_rikka_dialogue_finished"))
 			return
 	# Обычное приветствие — пузырём у Рикки (при каждом заходе), без окна диалога.
@@ -80,6 +88,10 @@ func _show_rikka_greeting() -> void:
 		_refresh()
 
 func _on_rikka_dialogue_finished() -> void:
+	# После VN — экскурсия по лавке ("tour": id диалога с репликами и анимациями).
+	var tour_id := String(_pending_shop_dialogue.get("tour", ""))
+	if tour_id != "":
+		await _run_tour(tour_id)
 	if not _pending_shop_dialogue.is_empty() and StoryDialogueDB_ != null:
 		var dialogue_id := String(_pending_shop_dialogue.get("id", ""))
 		if dialogue_id != "" and StoryState_ != null:
@@ -88,6 +100,83 @@ func _on_rikka_dialogue_finished() -> void:
 	_pending_shop_dialogue = {}
 	DungRun.ensure_lure_in_shop()
 	_refresh()
+
+# --- Экскурсия Рикки (первый заход) -------------------------------------------
+
+## Невидимая заглушка поверх всей лавки: ни купить, ни уйти (меню), ни тыкнуть Рикку/цветок.
+## Клик по ней — «дочитал, дальше».
+func _lock_shop(on: bool) -> void:
+	if on:
+		if _tour_blocker != null:
+			return
+		_tour_blocker = Control.new()
+		_tour_blocker.name = "TourBlocker"
+		_tour_blocker.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		_tour_blocker.mouse_filter = Control.MOUSE_FILTER_STOP
+		_tour_blocker.z_index = 100
+		_tour_blocker.gui_input.connect(func(e: InputEvent) -> void:
+			if e is InputEventMouseButton and e.pressed and e.button_index == MOUSE_BUTTON_LEFT and _tour != null:
+				_tour.skip_reading())
+		add_child(_tour_blocker)
+	elif _tour_blocker != null:
+		_tour_blocker.queue_free()
+		_tour_blocker = null
+
+func is_tour_running() -> bool:
+	return _tour_blocker != null
+
+func _run_tour(tour_id: String) -> void:
+	var d := StoryDialogueDB_.get_dialogue(tour_id) if StoryDialogueDB_ != null else {}
+	var lines: Array = StoryDialogueDB_.resolve_lines(d) if not d.is_empty() else []
+	if lines.is_empty() or not ResourceLoader.exists(TOUR_SCENE) or _rikka == null:
+		_lock_shop(false)
+		return
+	_lock_shop(true)
+	if _bubbles != null:
+		_bubbles.clear()
+	_tour = (load(TOUR_SCENE) as PackedScene).instantiate() as RikkaTour
+	add_child(_tour)
+	move_child(_tour, $Panel.get_index() + 1)   ## над витриной (руки поверх неё), под меню и пузырями
+	_tour.highlight_requested.connect(_tour_highlight)
+	_tour.line_requested.connect(func(text: String, at: Vector2) -> void:
+		if _bubbles != null:
+			_bubbles.say_at(text, at))
+	# Обычная Рикка прячется, вместо неё — Рикка экскурсии (та же картинка на том же месте).
+	_rikka.visible = false
+	_tour.modulate.a = 0.0
+	var tw := _tour.create_tween()
+	tw.tween_property(_tour, "modulate:a", 1.0, TOUR_FADE)
+	await _tour.play(lines)
+	_tour_highlight([])
+	_rikka.visible = true
+	_tour.queue_free()
+	_tour = null
+	_lock_shop(false)
+
+## Подсветить ячейки витрины (мягко мигают), остальные — обычные.
+func _tour_highlight(slots: Array) -> void:
+	var cards := stock_grid.get_children()
+	for i in _tour_glow.keys():
+		var t: Tween = _tour_glow[i]
+		if t != null and t.is_valid():
+			t.kill()
+		if int(i) < cards.size():
+			var c := cards[int(i)] as Control
+			c.self_modulate = Color.WHITE
+			c.scale = Vector2.ONE
+	_tour_glow.clear()
+	for s in slots:
+		var i := int(s)
+		if i < 0 or i >= cards.size():
+			continue
+		var c := cards[i] as Control
+		c.pivot_offset = c.size * 0.5
+		var t := c.create_tween().set_loops()
+		t.tween_property(c, "self_modulate", Color(1.35, 1.2, 1.35), 0.35).set_trans(Tween.TRANS_SINE)
+		t.parallel().tween_property(c, "scale", Vector2(1.05, 1.05), 0.35).set_trans(Tween.TRANS_SINE)
+		t.tween_property(c, "self_modulate", Color.WHITE, 0.35).set_trans(Tween.TRANS_SINE)
+		t.parallel().tween_property(c, "scale", Vector2.ONE, 0.35).set_trans(Tween.TRANS_SINE)
+		_tour_glow[i] = t
 
 # --- Цветок Рикки -------------------------------------------------------------
 
