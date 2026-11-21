@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://r6mi4odvmydo"
-path="res://.godot/imported/table.png-937dff293fbc49785a4d6393bfc480dd.ctex"
+path="res://.godot/imported/table.png-cf1134895ff95e8dcee9d54cee55bf52.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/farm/furniture/table.png"
-dest_files=["res://.godot/imported/table.png-937dff293fbc49785a4d6393bfc480dd.ctex"]
+source_file="res://assets/farm/background/table.png"
+dest_files=["res://.godot/imported/table.png-cf1134895ff95e8dcee9d54cee55bf52.ctex"]
 
 [params]
 

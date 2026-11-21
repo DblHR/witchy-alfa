@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://muo6um5j18ux"
-path="res://.godot/imported/farmBG.png-a52cd58ea0a41d2c1fc69c94634f5c6d.ctex"
+uid="uid://b6ff7x2hr84rb"
+path="res://.godot/imported/warrior_smile.png-50682b171415148c46ac27a015cecaf2.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/backgrounds/rooms/farmBG.png"
-dest_files=["res://.godot/imported/farmBG.png-a52cd58ea0a41d2c1fc69c94634f5c6d.ctex"]
+source_file="res://assets/characters/warrior/emotions/warrior_smile.png"
+dest_files=["res://.godot/imported/warrior_smile.png-50682b171415148c46ac27a015cecaf2.ctex"]
 
 [params]
 
