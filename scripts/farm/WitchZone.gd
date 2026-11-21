@@ -9,7 +9,7 @@ class_name WitchZone
 
 @export_enum("witch_face", "witch_breasts", "witch_butt") var sprite: String = "witch_face"
 ## Сколько секунд держать спрайт.
-@export var duration: float = 2.0
+@export var duration: float = 0.5
 
 func _ready() -> void:
 	if not Engine.is_editor_hint():

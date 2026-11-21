@@ -57,12 +57,14 @@ unique_name_in_owner = true
 color = Color(1, 0.3, 0.6, 0.35)
 polygon = PackedVector2Array(593, 27, 687, 0, 1293, 0, 1307, 120, 1627, 407, 1300, 407, 1113, 347, 1007, 400, 900, 413, 833, 360, 833, 267, 687, 240, 600, 120)
 script = ExtResource("3_zone")
+duration = 0.5
 
 [node name="Breasts" type="Polygon2D" parent="World/WitchZones" unique_id=1731500005]
 color = Color(1, 0.6, 0.2, 0.35)
 polygon = PackedVector2Array(900, 413, 1007, 400, 1113, 347, 1127, 427, 1100, 560, 1113, 747, 1060, 767, 940, 760, 900, 707, 807, 707, 760, 667, 773, 600, 840, 480)
 script = ExtResource("3_zone")
 sprite = "witch_breasts"
+duration = 0.5
 
 [node name="Butt" type="Polygon2D" parent="World/WitchZones" unique_id=1731500006]
 color = Color(0.6, 0.3, 1, 0.35)

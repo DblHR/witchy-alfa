@@ -8,10 +8,10 @@ const TEAM_SLOT_SCENE := preload("res://ui/TeamSlot.tscn")
 const SLOT_SIZE := Vector2(260, 450)
 const SLOT_GAP := 0.0
 ## Площадка под отрядом: центр, полуоси эллипса; кружки-места под каждым слотом.
-const STAGE_CENTER := Vector2(960, 572)
+const STAGE_CENTER := Vector2(960, 532)
 const STAGE_RADII := Vector2(470, 62)
 const SPOT_RADII := Vector2(92, 20)
-const ROSTER_CARD_SIZE := Vector2(156, 212)
+const ROSTER_CARD_SIZE := Vector2(203, 276)
 
 @onready var team_slot0: TeamSlot = %TeamSlot0
 @onready var team_slot1: TeamSlot = %TeamSlot1

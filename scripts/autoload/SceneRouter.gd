@@ -45,6 +45,19 @@ func go_to_shop() -> void:
 	get_tree().paused = false
 	get_tree().change_scene_to_file(SHOP_SCENE)
 
+## Экран отношений с персонажем: scenes/love/<id>_love.tscn.
+const LOVE_DIR := "res://scenes/love/"
+
+static func love_scene(unit_id: String) -> String:
+	return LOVE_DIR + unit_id + "_love.tscn"
+
+func go_to_love(unit_id: String) -> void:
+	var path := love_scene(unit_id)
+	if not ResourceLoader.exists(path):
+		return
+	get_tree().paused = false
+	get_tree().change_scene_to_file(path)
+
 ## Откуда открыли инвентарь — туда «Назад» и вернёт (дом, алхимия…).
 var inventory_return := HUB
 

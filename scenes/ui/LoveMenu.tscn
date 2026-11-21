@@ -11,12 +11,12 @@ offset_bottom = 1080.0
 mouse_filter = 2
 script = ExtResource("1_love")
 
-[node name="Row" type="Control" parent="."]
+[node name="Column" type="Control" parent="."]
 layout_mode = 0
-offset_left = 176.0
-offset_top = 760.0
-offset_right = 816.0
-offset_bottom = 872.0
+offset_left = 31.0
+offset_top = 151.0
+offset_right = 167.0
+offset_bottom = 751.0
 mouse_filter = 2
 
 [node name="HeartButton" type="TextureButton" parent="."]

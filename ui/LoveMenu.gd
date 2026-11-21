@@ -1,11 +1,13 @@
 extends Control
 class_name LoveMenu
-## Сердечко в доме (над кнопкой инвентаря): нажали — вправо выезжает ряд кнопок персонажей,
+## Сердечко в доме (над кнопкой инвентаря): нажали — вверх выезжает столбик кнопок персонажей,
 ## с которыми есть отношения; ещё раз — прячутся (как меню «…» сверху справа).
+## Нажатие на персонажа — его экран отношений (SceneRouter_.go_to_love → scenes/love/<id>_love.tscn).
 ## Кнопки персонажей берутся из папки BUTTONS_DIR: картинка <id>Button.png — кнопка персонажа
 ## <id> (например fufuButton.png → Фуфу). Кнопка видна, только когда персонаж уже в отряде.
 ## Новый персонаж с отношениями — просто положить его кнопку в эту папку.
-## Двигать сердечко и начало ряда — в scenes/ui/LoveMenu.tscn (HeartButton, Row).
+## Двигать сердечко и столбик — в scenes/ui/LoveMenu.tscn (HeartButton, Column: первая кнопка — у
+## нижнего края Column, следующие — выше).
 
 signal character_pressed(unit_id: String)
 
@@ -21,7 +23,7 @@ const STAGGER := 0.035
 static var expanded := false
 
 @onready var heart: TextureButton = $HeartButton
-@onready var row: Control = $Row
+@onready var column: Control = $Column
 var _buttons: Array[TextureButton] = []
 var _open_pos: Dictionary = {}
 var _tween: Tween
@@ -55,7 +57,7 @@ func _build() -> void:
 		b.queue_free()
 	_buttons.clear()
 	_open_pos.clear()
-	var x := 0.0
+	var y := 0.0
 	for c in love_characters():
 		var b := TextureButton.new()
 		b.name = "%sButton" % String(c["id"])
@@ -69,11 +71,14 @@ func _build() -> void:
 		var id := String(c["id"])
 		var data: CharacterData = CharDB.get_by_id(id) if CharDB != null else null
 		b.tooltip_text = data.display_name if data != null else ""
-		b.pressed.connect(func() -> void: character_pressed.emit(id))
+		b.pressed.connect(func() -> void:
+			character_pressed.emit(id)
+			SceneRouter_.go_to_love(id))
 		add_child(b)
 		_buttons.append(b)
-		_open_pos[b] = row.position + Vector2(x, (row.size.y - BUTTON_SIZE.y) * 0.5)
-		x += BUTTON_SIZE.x + GAP
+		_open_pos[b] = Vector2(column.position.x + (column.size.x - BUTTON_SIZE.x) * 0.5,
+			column.position.y + column.size.y - BUTTON_SIZE.y - y)
+		y += BUTTON_SIZE.y + GAP
 	heart.visible = true
 
 func character_ids() -> Array[String]:

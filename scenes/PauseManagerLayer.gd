@@ -39,7 +39,7 @@ func _ready() -> void:
 		pause_menu.connect("quit_requested", Callable(self, "_on_quit"))
 
 ## Сцены, где пауза по ESC не нужна (там своё меню / заставка).
-const NO_PAUSE_SCENES := ["res://scenes/MainMenu.tscn", "res://scenes/Prologue.tscn"]
+const NO_PAUSE_SCENES := ["res://scenes/MainMenu.tscn", "res://scenes/Prologue.tscn", "res://scenes/love/fufu_love.tscn"]
 ## Сцены, где кнопки паузы на экране нет (на её месте другое), но Esc паузу открывает.
 const NO_PAUSE_BUTTON_SCENES := ["res://scripts/alchemy/Alchemy.tscn"]   ## там слева снизу инвентарь
 
