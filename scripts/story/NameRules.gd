@@ -46,7 +46,7 @@ static func current_rule(key: String) -> Dictionary:
 ## Картинка для имени (или "" — обычная).
 static func texture_for(key: String) -> String:
 	var p := String(current_rule(key).get("texture", ""))
-	return p if p != "" and ResourceLoader.exists(p) else ""
+	return p if p != "" and (ResourceLoader.exists(p) or FileAccess.file_exists(p)) else ""
 
 ## Диалог, который играет сразу после того, как дали имя ("" — нет).
 static func dialogue_for(key: String, name: String) -> String:

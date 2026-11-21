@@ -39,6 +39,8 @@ func _ready() -> void:
 		pause_menu.connect("quit_requested", Callable(self, "_on_quit"))
 
 ## Сцены, где пауза по ESC не нужна (там своё меню / заставка).
+## Пауза пока выключена целиком (нет кнопки, Esc не открывает). Вернуть — true.
+const ENABLED := false
 const NO_PAUSE_SCENES := ["res://scenes/MainMenu.tscn", "res://scenes/Prologue.tscn", "res://scenes/love/fufu_love.tscn"]
 ## Сцены, где кнопки паузы на экране нет (на её месте другое), но Esc паузу открывает.
 const NO_PAUSE_BUTTON_SCENES := ["res://scripts/alchemy/Alchemy.tscn"]   ## там слева снизу инвентарь
@@ -121,6 +123,8 @@ func _attach_glow(node) -> void:   ## без типа: узел мог уже у
 	ButtonGlow.attach(node as TextureButton)
 
 func _pause_allowed() -> bool:
+	if not ENABLED:
+		return false
 	var scene := get_tree().current_scene
 	if scene == null:
 		return false

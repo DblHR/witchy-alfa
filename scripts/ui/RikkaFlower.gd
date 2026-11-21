@@ -75,12 +75,24 @@ func _ready() -> void:
 	refresh_badge()
 	GalleryData.mark_seen(TEXTURE)   ## в галерее — в разделе Рикки
 
+## Загрузить картинку; если Godot её не импортировал (битый .import) — прочитать файл напрямую.
+static func _load_texture(path: String) -> Texture2D:
+	if ResourceLoader.exists(path):
+		var t := ResourceLoader.load(path, "Texture2D", ResourceLoader.CACHE_MODE_REUSE) as Texture2D
+		if t != null:
+			return t
+	if FileAccess.file_exists(path):
+		var img := Image.load_from_file(path)
+		if img != null and not img.is_empty():
+			return ImageTexture.create_from_image(img)
+	return null
+
 ## Картинка по имени (особое имя — своя картинка, см. NameRules) и место на табуретке.
 func refresh_texture() -> void:
 	var path := NameRules.texture_for(NPC_ID)
 	if path == "":
 		path = TEXTURE
-	texture = load(path) as Texture2D if ResourceLoader.exists(path) else null
+	texture = _load_texture(path)
 	_image = null
 	if texture == null:
 		position = RECT.position

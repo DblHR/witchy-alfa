@@ -13,19 +13,19 @@ script = ExtResource("1_love")
 
 [node name="Column" type="Control" parent="."]
 layout_mode = 0
-offset_left = 31.0
-offset_top = 151.0
-offset_right = 167.0
-offset_bottom = 751.0
+offset_left = 0.0
+offset_top = 120.0
+offset_right = 136.0
+offset_bottom = 720.0
 mouse_filter = 2
 
 [node name="HeartButton" type="TextureButton" parent="."]
 layout_mode = 0
-offset_left = 46.0
-offset_top = 763.0
-offset_right = 152.0
-offset_bottom = 869.0
-pivot_offset = Vector2(53, 53)
+offset_left = 18.0
+offset_top = 8.0
+offset_right = 118.0
+offset_bottom = 108.0
+pivot_offset = Vector2(50, 50)
 focus_mode = 0
 mouse_default_cursor_shape = 2
 texture_normal = ExtResource("2_heart")

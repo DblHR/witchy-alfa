@@ -20,13 +20,19 @@
         {
           "speaker": "rikka",
           "speaker_name": "",
-          "emotion": "",
-          "text": "Это цветочек! Я его с одного этажа своро... Ну, взяла себе на воспитание."
+          "emotion": "smile",
+          "text": "Это цветочек! Я его с одного этажа своро..."
+        },
+		{
+          "speaker": "rikka",
+          "speaker_name": "",
+          "emotion": "epiphany",
+          "text": "Ну, взяла себе на воспитание."
         },
         {
           "speaker": "rikka",
           "speaker_name": "",
-          "emotion": "",
+          "emotion": "smile",
           "text": "Правда он миленький?"
         },
         {
@@ -44,19 +50,19 @@
         {
           "speaker": "rikka",
           "speaker_name": "",
-          "emotion": "",
+          "emotion": "wise",
           "text": "Я пока не решила."
         },
         {
           "speaker": "rikka",
           "speaker_name": "",
-          "emotion": "",
+          "emotion": "grumpy",
           "text": "Он такой обжора! Уже половину моего прилавка съел."
         },
         {
           "speaker": "rikka",
           "speaker_name": "",
-          "emotion": "worried",
+          "emotion": "fear",
           "text": "Я так скоро разорюсь."
         },
         {
@@ -68,49 +74,49 @@
         {
           "speaker": "rikka",
           "speaker_name": "",
-          "emotion": "",
+          "emotion": "epiphany",
           "text": "Всё. Ну типа... Вообще всё!!!"
         },
         {
           "speaker": "rikka",
           "speaker_name": "",
-          "emotion": "",
+          "emotion": "grumpy",
           "text": "Сначала я кормила его удобрениями, но ему поплохело."
         },
         {
           "speaker": "rikka",
           "speaker_name": "",
-          "emotion": "",
+          "emotion": "wise",
           "text": "Потом попробовала скормить насекомых — так он мне чуть руку не оттяпал!"
         },
         {
           "speaker": "rikka",
           "speaker_name": "",
-          "emotion": "",
+          "emotion": "fear",
           "text": "А когда я отвернулась, он зажевал мой хвостик..."
         },
         {
           "speaker": "rikka",
           "speaker_name": "",
-          "emotion": "",
+          "emotion": "grumpy",
           "text": "Я так злилась, что кинула в него первое, что попало под руку!"
         },
         {
           "speaker": "rikka",
           "speaker_name": "",
-          "emotion": "",
+          "emotion": "fear",
           "text": "А он и ту книгу зажевал..."
         },
         {
           "speaker": "rikka",
           "speaker_name": "",
-          "emotion": "",
+          "emotion": "wise",
           "text": "Я тогда немного увлеклась и..."
         },
         {
           "speaker": "rikka",
           "speaker_name": "",
-          "emotion": "",
+          "emotion": "fear",
           "text": "Скормила ему половину прилавка..."
         },
         {
@@ -122,13 +128,13 @@
         {
           "speaker": "rikka",
           "speaker_name": "",
-          "emotion": "",
+          "emotion": "grumpy",
           "text": "В общем, мне бы найти, чем его кормить..."
         },
         {
           "speaker": "rikka",
           "speaker_name": "",
-          "emotion": "",
+          "emotion": "wise",
           "text": "Слушай, а ты же много всего из подземелья вытаскиваешь?"
         },
         {
@@ -140,13 +146,13 @@
         {
           "speaker": "rikka",
           "speaker_name": "",
-          "emotion": "",
+          "emotion": "smile",
           "text": "А приноси это мне, а?"
         },
         {
           "speaker": "rikka",
           "speaker_name": "",
-          "emotion": "",
+          "emotion": "intellect",
           "text": "Я ему скормлю. И раз не потеряю свой товар, то даже доплачу тебе за корм для него!"
         },
         {
@@ -158,7 +164,7 @@
         {
           "speaker": "rikka",
           "speaker_name": "",
-          "emotion": "",
+          "emotion": "wise",
           "text": "Вроде бы нет... В него помещается очень много!"
         },
         {
@@ -170,42 +176,42 @@
         {
           "speaker": "rikka",
           "speaker_name": "",
-          "emotion": "",
+          "emotion": "epiphany",
           "text": "..."
         },
         {
           "speaker": "rikka",
           "speaker_name": "",
-          "emotion": "",
+          "emotion": "wise",
           "text": "Раз уж мы партнёры, я доверяю тебе дать ему имя!"
         },
         {
           "speaker": "hero",
           "speaker_name": "",
-          "emotion": "",
+          "emotion": "confusion",
           "text": "Тебе ведь просто лень?"
         },
         {
           "speaker": "rikka",
           "speaker_name": "",
-          "emotion": "",
+          "emotion": "smile",
           "text": "Е-хе-хе~"
         },
         {
           "speaker": "rikka",
           "speaker_name": "",
-          "emotion": "",
+          "emotion": "intellect",
           "text": "Давай-давай, ты наверняка придумаешь что-то интересное!",
           "ask_name": {
             "key": "rikka_flower",
             "title": "Как назовём цветок?",
-            "default": "Игорь"
+            "default": "Цветочек"
           }
         },
         {
           "speaker": "rikka",
           "speaker_name": "",
-          "emotion": "",
+          "emotion": "wise",
           "text": "Мда, ну у тебя и фантазия..."
         }
       ]
@@ -224,25 +230,25 @@
         {
           "speaker": "rikka",
           "speaker_name": "",
-          "emotion": "",
+          "emotion": "wise",
           "text": "Какой же он..."
         },
         {
           "speaker": "hero",
           "speaker_name": "",
-          "emotion": "",
+          "emotion": "confusion",
           "text": "Мерзкий!"
         },
         {
           "speaker": "rikka",
           "speaker_name": "",
-          "emotion": "",
+          "emotion": "cry",
           "text": "ПОЧЕМУ???"
         },
         {
           "speaker": "rikka",
           "speaker_name": "",
-          "emotion": "",
+          "emotion": "cry",
           "text": "ОН ЖЕ МИЛЕНЬКИЙ!!!"
         }
       ]

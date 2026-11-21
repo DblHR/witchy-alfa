@@ -7,6 +7,8 @@ class_name EnemyFufu
 ##         героиня получает DIGEST_SHARE от своего макс. HP (щит не спасает) и выходит наружу;
 ##   25% — зовёт на помощь Аки и Луису.
 ## Убить Фуфу = победа: все призванные исчезают, добивать их не нужно.
+## Босс-Фуфу в маске (MASK_TEXTURE); на третьей фазе (25%) маска слетает — обычная картинка.
+## Фуфу в отряде игрока — без маски (это другая картинка: CharDB).
 
 const PHASES: Array[float] = [0.75, 0.5, 0.25]
 const PHASE_MOVES: Array[String] = ["summon_minis", "swallow", "summon_girls"]
@@ -14,6 +16,10 @@ const MINI_POOL: Array[String] = ["mini_shlep", "mini_bubble", "mini_acid", "blo
 const GIRLS: Array[String] = ["aki_enemy", "luisa_enemy"]
 const SPIT_DAMAGE_SHARE := 0.10
 const DIGEST_SHARE := 0.60
+const MASK_TEXTURE := "res://assets/characters/fufu/fufu_mask.png"
+const FACE_TEXTURE := "res://assets/characters/fufu/fufu_battle.png"
+## На какой фазе (номер в PHASES, с нуля) слетает маска: 2 — третья фаза, 25% HP.
+const UNMASK_PHASE := 2
 
 var _phase_moves: Dictionary = {}
 var _digest: EnemyMove
@@ -48,6 +54,23 @@ func _init() -> void:
 	_digest = EnemyMove.new("digest", "Переварить", EnemyMove.Kind.DIGEST)
 	_digest.custom = func(api: EnemyApi, me: Unit, _mv: EnemyMove) -> void:
 		digest(api, me)
+
+## Босс в маске (и в карточке комнаты, и в бою).
+func char_data() -> CharacterData:
+	var d := super.char_data()
+	if ResourceLoader.exists(MASK_TEXTURE) and (d.battle_texture == null or d.battle_texture.resource_path != MASK_TEXTURE):
+		d.battle_texture = load(MASK_TEXTURE) as Texture2D
+	return d
+
+## Своя копия данных у каждой Фуфу в бою — маску снимаем только с неё.
+func make_unit(floor_no: int, rng: RandomNumberGenerator, hp_override: int = 0) -> Unit:
+	var u := super.make_unit(floor_no, rng, hp_override)
+	u.data = u.data.duplicate() as CharacterData
+	return u
+
+static func unmask(me: Unit) -> void:
+	if me != null and me.data != null and ResourceLoader.exists(FACE_TEXTURE):
+		me.data.battle_texture = load(FACE_TEXTURE) as Texture2D
 
 ## Урон «переваривания» по героине.
 static func digest_damage(hero: Unit) -> int:
@@ -89,6 +112,8 @@ func on_hurt(api: EnemyApi, me: Unit, amount: int) -> void:
 		done.append(i)
 		pending.append(PHASE_MOVES[i])
 		added = true
+		if i == UNMASK_PHASE:
+			unmask(me)
 	me.ai["phases_done"] = done
 	me.ai["pending"] = pending
 	# Новая фаза — намерение меняется сразу (если она сейчас не глотает/не переваривает).
@@ -102,6 +127,7 @@ func on_status(api: EnemyApi, me: Unit, status_id: String) -> void:
 		spit(api, me)
 
 func on_death(api: EnemyApi, me: Unit) -> void:
+	unmask(me)   ## картинка поражения — без маски
 	if me.ai.get("swallowed") != null:
 		spit(api, me)
 	for u in api.allies_of(me):

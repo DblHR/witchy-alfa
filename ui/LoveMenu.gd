@@ -1,13 +1,13 @@
 extends Control
 class_name LoveMenu
-## Сердечко в доме (над кнопкой инвентаря): нажали — вверх выезжает столбик кнопок персонажей,
+## Сердечко в доме (слева сверху): нажали — вниз выезжает столбик кнопок персонажей,
 ## с которыми есть отношения; ещё раз — прячутся (как меню «…» сверху справа).
 ## Нажатие на персонажа — его экран отношений (SceneRouter_.go_to_love → scenes/love/<id>_love.tscn).
 ## Кнопки персонажей берутся из папки BUTTONS_DIR: картинка <id>Button.png — кнопка персонажа
 ## <id> (например fufuButton.png → Фуфу). Кнопка видна, только когда персонаж уже в отряде.
 ## Новый персонаж с отношениями — просто положить его кнопку в эту папку.
 ## Двигать сердечко и столбик — в scenes/ui/LoveMenu.tscn (HeartButton, Column: первая кнопка — у
-## нижнего края Column, следующие — выше).
+## верхнего края Column, следующие — ниже).
 
 signal character_pressed(unit_id: String)
 
@@ -79,7 +79,7 @@ func _build() -> void:
 		add_child(b)
 		_buttons.append(b)
 		_open_pos[b] = Vector2(column.position.x + (column.size.x - BUTTON_SIZE.x) * 0.5,
-			column.position.y + column.size.y - BUTTON_SIZE.y - y)
+			column.position.y + y)
 		y += BUTTON_SIZE.y + GAP
 	heart.visible = true
 
