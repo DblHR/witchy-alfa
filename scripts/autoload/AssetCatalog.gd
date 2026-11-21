@@ -5,7 +5,7 @@ class_name AssetCatalog
 # Replace these strings with your actual imported asset paths.
 
 const UI_TEXTURE_PATHS := {
-	"farm_bg": "res://assets/backgrounds/rooms/farmBG.png",
+	"farm_bg": "res://assets/farm/background/farm_BCG.png",
 	"event_bg_default": "",   ## пусто — фон этажа слоями (FloorBackdrop)
 	"event_bg_shop": "res://assets/backgrounds/rooms/eventroomShopBG.png",
 	"event_bg_noctris": "res://assets/backgrounds/rooms/noctrisBG.png",

@@ -130,37 +130,7 @@ var _bubbles: CPUParticles2D
 var _cauldron_hover := false
 
 func _build_cauldron_bubbles() -> void:
-	_bubbles = CPUParticles2D.new()
-	_bubbles.name = "CauldronBubbles"
-	_bubbles.position = Vector2(910, 785)
-	_bubbles.emitting = false
-	_bubbles.amount = 14
-	_bubbles.lifetime = 1.1
-	_bubbles.emission_shape = CPUParticles2D.EMISSION_SHAPE_RECTANGLE
-	_bubbles.emission_rect_extents = Vector2(70, 6)
-	_bubbles.direction = Vector2(0, -1)
-	_bubbles.spread = 18.0
-	_bubbles.gravity = Vector2.ZERO
-	_bubbles.initial_velocity_min = 40.0
-	_bubbles.initial_velocity_max = 90.0
-	_bubbles.scale_amount_min = 0.35
-	_bubbles.scale_amount_max = 0.8
-	var grad := Gradient.new()
-	grad.set_color(0, Color(1.0, 0.55, 1.0, 0.95))
-	grad.set_color(1, Color(0.85, 0.3, 1.0, 0.0))
-	_bubbles.color_ramp = grad
-	var gt := GradientTexture2D.new()
-	gt.width = 24
-	gt.height = 24
-	gt.fill = GradientTexture2D.FILL_RADIAL
-	gt.fill_from = Vector2(0.5, 0.5)
-	gt.fill_to = Vector2(1.0, 0.5)
-	var g2 := Gradient.new()
-	g2.set_color(0, Color(1, 1, 1, 1))
-	g2.add_point(0.6, Color(1, 1, 1, 0.9))
-	g2.set_color(g2.get_point_count() - 1, Color(1, 1, 1, 0))
-	gt.gradient = g2
-	_bubbles.texture = gt
+	_bubbles = CauldronBubbles.make(Vector2(910, 785), Vector2(70, 6))
 	add_child(_bubbles)
 	move_child(_bubbles, cauldron_layer.get_index() + 1)
 

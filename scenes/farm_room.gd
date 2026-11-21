@@ -2,6 +2,21 @@ extends Control
 
 @onready var background: TextureRect = %Background
 @onready var farm_slots: Control = %FarmSlots
+## Всё, что на ферме нарисовано (фон, ведьмочка, стол, горшки), лежит в World — он чуть больше
+## экрана и плавно катается за курсором: чем дальше курсор от центра, тем сильнее сдвиг.
+@onready var world: Control = %World
+@onready var witch: TextureRect = %Witch
+@onready var witch_zones: Node2D = %WitchZones
+
+## Скорость, с которой фон догоняет курсор (больше — резче).
+const PAN_SMOOTH := 5.0
+const WITCH_DIR := "res://assets/farm/background/"
+const WITCH_BASE := "witch"
+
+var _pan_base := Vector2.ZERO   ## положение World при курсоре в центре (как в сцене)
+var _pan_max := Vector2.ZERO    ## на сколько можно сдвинуть (сколько фона за краями экрана)
+var _pan := Vector2.ZERO
+var _witch_token := 0
 
 var pots: Array[FarmPot] = []
 var _seed_popup: Control
@@ -15,6 +30,7 @@ func _ready() -> void:
 	_apply_catalog_assets()
 	HubMenu.attach(self)   ## меню комнат сверху справа (Лавка, Ферма, Алхимия, Дом)
 	_collect_pots()
+	_setup_pan()
 	_build_seed_popup()
 	_refresh_all()
 	if FarmState_.state_changed.is_connected(_refresh_all) == false:
@@ -34,6 +50,62 @@ func _apply_catalog_assets() -> void:
 	var bg := AssetCatalog_.get_ui_texture("farm_bg")
 	if bg != null:
 		background.texture = bg
+
+# --- Фон за курсором ---------------------------------------------------------
+
+func _setup_pan() -> void:
+	_pan_base = world.position
+	var vs := get_viewport_rect().size
+	var left := -_pan_base
+	var right := world.size + _pan_base - vs
+	_pan_max = Vector2(maxf(0.0, minf(left.x, right.x)), maxf(0.0, minf(left.y, right.y)))
+	_pan = _pan_base
+
+func _process(delta: float) -> void:
+	if world == null:
+		return
+	var vs := get_viewport_rect().size
+	var c := vs * 0.5
+	var k := ((get_viewport().get_mouse_position() - c) / c).clamp(Vector2(-1, -1), Vector2(1, 1))
+	var target := _pan_base - k * _pan_max
+	_pan = _pan.lerp(target, 1.0 - exp(-PAN_SMOOTH * delta))
+	world.position = _pan.round()
+
+# --- Ведьмочка: клик по зонам (World/WitchZones) -----------------------------
+
+func _witch_zone_at(global_p: Vector2) -> WitchZone:
+	if witch_zones == null:
+		return null
+	for z in witch_zones.get_children():
+		if z is WitchZone and (z as WitchZone).has_global_point(global_p):
+			return z as WitchZone
+	return null
+
+func _gui_input(event: InputEvent) -> void:
+	if event is InputEventMouseMotion:
+		var hot := _witch_zone_at((event as InputEventMouseMotion).global_position) != null
+		mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND if hot else Control.CURSOR_ARROW
+	elif event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+		var z := _witch_zone_at((event as InputEventMouseButton).global_position)
+		if z != null:
+			accept_event()
+			witch_react(z.sprite, z.duration)
+
+## Сменить спрайт ведьмочки на duration секунд (новая реакция прерывает прошлую).
+func witch_react(sprite: String, duration: float) -> void:
+	var tex := _witch_tex(sprite)
+	if tex == null:
+		return
+	_witch_token += 1
+	var token := _witch_token
+	witch.texture = tex
+	await get_tree().create_timer(maxf(0.1, duration)).timeout
+	if token == _witch_token and is_instance_valid(witch):
+		witch.texture = _witch_tex(WITCH_BASE)
+
+func _witch_tex(sprite: String) -> Texture2D:
+	var path := WITCH_DIR + sprite + ".png"
+	return load(path) as Texture2D if ResourceLoader.exists(path) else null
 
 func _collect_pots() -> void:
 	# Индекс горшка берём из сцены (slot_index), а не из порядка нод: порядок задаёт только слои

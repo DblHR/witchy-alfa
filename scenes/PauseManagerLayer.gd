@@ -40,6 +40,8 @@ func _ready() -> void:
 
 ## Сцены, где пауза по ESC не нужна (там своё меню / заставка).
 const NO_PAUSE_SCENES := ["res://scenes/MainMenu.tscn", "res://scenes/Prologue.tscn"]
+## Сцены, где кнопки паузы на экране нет (на её месте другое), но Esc паузу открывает.
+const NO_PAUSE_BUTTON_SCENES := ["res://scripts/alchemy/Alchemy.tscn"]   ## там слева снизу инвентарь
 
 ## ESC ловим в _unhandled_input: сначала его получают сцены (закрыть просмотр картинки
 ## в галерее, окно семян на ферме и т.п.), и только если никто не забрал — открывается пауза.
@@ -65,7 +67,6 @@ const PAUSE_BUTTON_SIZE := Vector2(72, 72)
 const PAUSE_BUTTON_DEFAULT_POS := Vector2(16, 16)
 const PAUSE_BUTTON_POS := {
 	"res://scenes/card/CardBattle.tscn": Vector2(1809, 40),   ## на месте бывшей «Выйти»
-	"res://scripts/alchemy/Alchemy.tscn": Vector2(16, 992),   ## сверху слева там кнопка рецептов
 	"res://scenes/Setup.tscn": Vector2(16, 992),              ## сверху слева заголовок отряда
 }
 ## Сцены, где своё меню «Главное меню» со своими светящимися кнопками — их не трогаем.
@@ -105,7 +106,7 @@ func _process(_delta: float) -> void:
 			_pause_button.position = PAUSE_BUTTON_TUTORIAL_POS
 	# В диалогах кнопку прячем (там свои кнопки сверху); ESC по-прежнему работает.
 	var in_dialogue := DialogueManager_ != null and DialogueManager_.is_showing()
-	_pause_button.visible = not _is_open and _pause_allowed() and not in_dialogue
+	_pause_button.visible = not _is_open and _pause_allowed() and not in_dialogue and not NO_PAUSE_BUTTON_SCENES.has(path)
 
 func _on_node_added(node: Node) -> void:
 	if node is TextureButton and node != _pause_button:

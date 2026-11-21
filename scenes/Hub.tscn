@@ -8,6 +8,7 @@
 [ext_resource type="Texture2D" uid="uid://ngcxb0tkqr48" path="res://assets/ui/buttons/inventoryButton.png" id="6_shn0c"]
 [ext_resource type="Script" path="res://scripts/home/HomeRoute.gd" id="7_route"]
 [ext_resource type="PackedScene" path="res://scenes/ui/HubMenu.tscn" id="8_menu"]
+[ext_resource type="PackedScene" path="res://scenes/ui/LoveMenu.tscn" id="9_love"]
 
 [node name="Control" type="Control" unique_id=391545454]
 custom_minimum_size = Vector2(1920, 1080)
@@ -107,14 +108,17 @@ stretch_mode = 5
 
 [node name="InventoryButton" type="TextureButton" parent="." unique_id=1612743931]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(150, 150)
+custom_minimum_size = Vector2(180, 180)
 layout_mode = 0
 offset_left = 9.0
-offset_top = 911.0
-offset_right = 159.0
+offset_top = 881.0
+offset_right = 189.0
 offset_bottom = 1061.0
 texture_normal = ExtResource("6_shn0c")
 ignore_texture_size = true
 stretch_mode = 5
+
+[node name="LoveMenu" parent="." instance=ExtResource("9_love")]
+unique_name_in_owner = true
 
 [node name="HubMenu" parent="." instance=ExtResource("8_menu")]

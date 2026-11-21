@@ -200,9 +200,9 @@ layout_mode = 2
 unique_name_in_owner = true
 layout_mode = 0
 offset_left = 130.0
-offset_top = 660.0
+offset_top = 640.0
 offset_right = 1730.0
-offset_bottom = 862.0
+offset_bottom = 880.0
 
 [node name="RosterScroll" type="ScrollContainer" parent="Control/RosterPanel" unique_id=1457551781]
 layout_mode = 1

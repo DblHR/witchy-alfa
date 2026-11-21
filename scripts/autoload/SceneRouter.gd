@@ -45,9 +45,20 @@ func go_to_shop() -> void:
 	get_tree().paused = false
 	get_tree().change_scene_to_file(SHOP_SCENE)
 
+## Откуда открыли инвентарь — туда «Назад» и вернёт (дом, алхимия…).
+var inventory_return := HUB
+
 func go_to_inventory() -> void:
 	get_tree().paused = false
+	var cur := get_tree().current_scene
+	var from := cur.scene_file_path if cur != null else ""
+	inventory_return = from if from != "" and from != INVENTORY else HUB
 	get_tree().change_scene_to_file(INVENTORY)
+
+## «Назад» из инвентаря.
+func leave_inventory() -> void:
+	get_tree().paused = false
+	get_tree().change_scene_to_file(inventory_return if ResourceLoader.exists(inventory_return) else HUB)
 
 func go_to_prologue() -> void:
 	get_tree().paused = false

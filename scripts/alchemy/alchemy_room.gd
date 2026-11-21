@@ -33,6 +33,17 @@ const R_POT_MOUTH := Rect2(0.09, 0.70, 0.465, 0.30)
 
 const DEBUG_WALLS := false
 
+## Пузырьки при наведении на котёл: откуда поднимаются (экран 1920×1080).
+const BUBBLES_CENTER := Vector2(600, 790)
+const BUBBLES_EXTENTS := Vector2(360, 60)
+var _bubbles: CPUParticles2D
+var _cauldron_mask: Image   ## уменьшенная альфа котла — понять, что курсор на нём
+const MASK_STEP := 8.0
+
+## Инвентарь слева снизу (вместо кнопки паузы; пауза — по Esc).
+const INVENTORY_BTN_RECT := Rect2(9, 881, 180, 180)
+const INVENTORY_BTN_TEXTURE := "res://assets/ui/buttons/inventoryButton.png"
+
 enum Stage { PICK, ADD, STIR, PENDULUM, DONE }
 
 var _stage: int = Stage.PICK
@@ -89,6 +100,7 @@ func _ready() -> void:
 	_build_top_ui()
 	_build_checklist()
 	_build_nav()
+	_build_inventory_button()
 	_build_result_panel()
 	_build_toast()
 	if Inventory_ != null and not Inventory_.changed.is_connected(_on_inventory_changed):
@@ -129,6 +141,10 @@ func _build_backdrop() -> void:
 	_cauldron_art.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_cauldron_art)
 	_cauldron_art.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	# Пузырьки над варевом, когда курсор на котле (как у котла в доме).
+	_bubbles = CauldronBubbles.make(BUBBLES_CENTER, BUBBLES_EXTENTS, 40, 3.0)
+	add_child(_bubbles)
+	_build_cauldron_mask()
 
 func _build_shelf_panel() -> void:
 	var panel := PanelContainer.new()
@@ -865,6 +881,47 @@ func _pulse_cauldron() -> void:
 	t.tween_property(_cauldron_art, "modulate", Color.WHITE, 0.25)
 
 # --- Перетаскивание ---------------------------------------------------------
+
+func _build_cauldron_mask() -> void:
+	var tex := _cauldron_art.texture
+	if tex == null:
+		return
+	var img := tex.get_image()
+	if img == null:
+		return
+	if img.is_compressed():
+		img.decompress()
+	img.resize(int(_size.x / MASK_STEP), int(_size.y / MASK_STEP), Image.INTERPOLATE_BILINEAR)
+	_cauldron_mask = img
+
+func _over_cauldron(p: Vector2) -> bool:
+	if _cauldron_mask == null:
+		return false
+	var x := int(p.x / MASK_STEP)
+	var y := int(p.y / MASK_STEP)
+	if x < 0 or y < 0 or x >= _cauldron_mask.get_width() or y >= _cauldron_mask.get_height():
+		return false
+	return _cauldron_mask.get_pixel(x, y).a > 0.5
+
+func _process(_delta: float) -> void:
+	if _bubbles == null:
+		return
+	var hc := get_viewport().gui_get_hovered_control()
+	var on := hc == null and _over_cauldron(get_viewport().get_mouse_position()) and not get_tree().paused
+	if _bubbles.emitting != on:
+		_bubbles.emitting = on
+
+func _build_inventory_button() -> void:
+	var b := TextureButton.new()
+	b.name = "InventoryButton"
+	b.texture_normal = load(INVENTORY_BTN_TEXTURE) as Texture2D
+	b.ignore_texture_size = true
+	b.stretch_mode = TextureButton.STRETCH_KEEP_ASPECT_CENTERED
+	b.focus_mode = Control.FOCUS_NONE
+	b.position = INVENTORY_BTN_RECT.position
+	b.size = INVENTORY_BTN_RECT.size
+	b.pressed.connect(func() -> void: SceneRouter_.go_to_inventory())
+	add_child(b)
 
 func _input(event: InputEvent) -> void:
 	if event is InputEventMouse:

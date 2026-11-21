@@ -1,0 +1,33 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://ui/LoveMenu.gd" id="1_love"]
+[ext_resource type="Texture2D" path="res://assets/ui/buttons/loveButton.png" id="2_heart"]
+
+[node name="LoveMenu" type="Control"]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 1920.0
+offset_bottom = 1080.0
+mouse_filter = 2
+script = ExtResource("1_love")
+
+[node name="Row" type="Control" parent="."]
+layout_mode = 0
+offset_left = 176.0
+offset_top = 760.0
+offset_right = 816.0
+offset_bottom = 872.0
+mouse_filter = 2
+
+[node name="HeartButton" type="TextureButton" parent="."]
+layout_mode = 0
+offset_left = 46.0
+offset_top = 763.0
+offset_right = 152.0
+offset_bottom = 869.0
+pivot_offset = Vector2(53, 53)
+focus_mode = 0
+mouse_default_cursor_shape = 2
+texture_normal = ExtResource("2_heart")
+ignore_texture_size = true
+stretch_mode = 5

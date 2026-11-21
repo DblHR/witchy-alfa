@@ -34,7 +34,7 @@ func set_frame_color(c: Color) -> void:
 ## воин -> fighter, маг -> mage, саппорт -> support, танк -> tank. Нет картинки — подпись словом.
 const CLASS_ICON_DIR := "res://assets/ui/classes/"
 const CLASS_ICON_FILES := {"воин": "fighter", "маг": "mage", "саппорт": "support", "танк": "tank"}
-const CLASS_ICON_SIZE := 0.24   ## доля ширины карточки
+const CLASS_ICON_SIZE := 0.34   ## доля ширины карточки
 
 var _class_icon: TextureRect
 var _class_label: Label

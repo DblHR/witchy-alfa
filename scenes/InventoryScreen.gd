@@ -87,7 +87,7 @@ func _save_button_connections() -> void:
 	save_button.disabled = true
 	_build_level_box()
 	back_button.pressed.connect(func() -> void:
-		SceneRouter_.go_to_hub()
+		SceneRouter_.leave_inventory()   ## туда, откуда открыли (дом / алхимия)
 	)
 	general_button.pressed.connect(func() -> void: _select_section(Section.ITEMS))
 	alchemy_button.pressed.connect(func() -> void: _select_section(Section.RECIPES))

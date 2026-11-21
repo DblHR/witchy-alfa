@@ -11,7 +11,7 @@ const SLOT_GAP := 0.0
 const STAGE_CENTER := Vector2(960, 572)
 const STAGE_RADII := Vector2(470, 62)
 const SPOT_RADII := Vector2(92, 20)
-const ROSTER_CARD_SIZE := Vector2(126, 172)
+const ROSTER_CARD_SIZE := Vector2(156, 212)
 
 @onready var team_slot0: TeamSlot = %TeamSlot0
 @onready var team_slot1: TeamSlot = %TeamSlot1
@@ -1105,15 +1105,15 @@ func _match_popup_selection(kind: String, id: String) -> void:
 func _refresh_loadout_ui() -> void:
 	if potion_button == null or artifact_button == null or food_button == null:
 		return
-	potion_button.icon = _get_potion_icon(DungRun.selected_potion_ids[0])
-	potion_button2.icon = _get_potion_icon(DungRun.selected_potion_ids[1])
 	for i in range(2):
 		var pid := DungRun.selected_potion_ids[i]
 		var pt := _loadout_item_text("potion", pid)
 		(potion_button if i == 0 else potion_button2).tooltip_text = "Зелье %d: %s%s" % [i + 1, pt[0] if pid != "" else "пусто", ("\n" + pt[1]) if pt[1] != "" else ""]
-	# Пустой слот посоха/еды — без иконки (раньше там был цветной квадрат-заглушка).
-	artifact_button.icon = _get_item_icon_or_null(DungRun.selected_artifact_id)
-	food_button.icon = _get_item_icon_or_null(DungRun.selected_food_id)
+	# Пустой слот — полупрозрачная картинка того, что в него кладётся (посох / еда / зелье).
+	_set_slot_icon(potion_button, _get_potion_icon(DungRun.selected_potion_ids[0]), SLOT_HINT_ICONS["potion"])
+	_set_slot_icon(potion_button2, _get_potion_icon(DungRun.selected_potion_ids[1]), SLOT_HINT_ICONS["potion"])
+	_set_slot_icon(artifact_button, _get_item_icon_or_null(DungRun.selected_artifact_id), SLOT_HINT_ICONS["artifact"])
+	_set_slot_icon(food_button, _get_item_icon_or_null(DungRun.selected_food_id), SLOT_HINT_ICONS["food"])
 	# Подсказка при наведении на слот — сразу эффект, без похода в инвентарь.
 	for pair in [[artifact_button, "artifact", DungRun.selected_artifact_id, "Посох"], [food_button, "food", DungRun.selected_food_id, "Еда"]]:
 		var t := _loadout_item_text(String(pair[1]), String(pair[2]))
@@ -1128,6 +1128,22 @@ func _refresh_loadout_ui() -> void:
 	lure_button.tooltip_text = ("Приманка: берём в забег (в сумке %d)" % lures) if lure_button.button_pressed else ("Приманка: не берём (в сумке %d). Нажмите, чтобы взять." % lures if lures > 0 else "Приманок нет — их продаёт Рикка")
 	artifact_button.disabled = false
 	food_button.disabled = false
+
+## Картинки-подсказки в пустых слотах снаряжения (полупрозрачные).
+const SLOT_HINT_ICONS := {
+	"artifact": "res://assets/items/staffs/stick_staff.png",
+	"food": "res://assets/items/food/steak.png",
+	"potion": "res://assets/items/potions/slime_potion.png",
+}
+const SLOT_HINT_ALPHA := 0.3
+
+func _set_slot_icon(b: Button, tex: Texture2D, hint_path: String) -> void:
+	var empty := tex == null
+	b.icon = tex if not empty else (load(hint_path) as Texture2D if ResourceLoader.exists(hint_path) else null)
+	var c := Color(1, 1, 1, SLOT_HINT_ALPHA) if empty else Color.WHITE
+	for k in ["icon_normal_color", "icon_hover_color", "icon_pressed_color", "icon_hover_pressed_color", "icon_focus_color"]:
+		b.add_theme_color_override(k, c)
+	b.add_theme_color_override("icon_disabled_color", Color(1, 1, 1, SLOT_HINT_ALPHA * 0.6) if empty else Color(1, 1, 1, 0.5))
 
 func _get_item_icon_or_null(item_id: String) -> Texture2D:
 	if item_id != "" and Inventory_ != null:

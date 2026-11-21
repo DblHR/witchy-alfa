@@ -4,6 +4,8 @@ class_name ButtonGlow
 ## контур её формы, сама кнопка чуть светлеет; при нажатии — слегка «вдавливается».
 ## Вешается сама на все TextureButton игры (PauseManagerLayer следит за новыми узлами).
 ## Не нужна подсветка — button.set_meta("no_glow", true) до добавления в сцену.
+## Кнопка в покое не белая (например, потускневшая недоступная) — button.set_meta("rest_tint", цвет):
+## подсветка вернёт к нему, а не к белому.
 
 const GLOW_COLOR := Color(1.0, 0.55, 0.88)     ## мягкое свечение вокруг
 const GLOW_SCALE := 1.16                        ## насколько свечение шире кнопки
@@ -78,8 +80,11 @@ static func attach(button: TextureButton) -> void:
 			button.self_modulate = PRESS_TINT
 	)
 	button.button_up.connect(func() -> void:
-		button.self_modulate = HOVER_TINT if button.is_hovered() and not button.disabled else Color.WHITE
+		button.self_modulate = HOVER_TINT if button.is_hovered() and not button.disabled else rest_tint(button)
 	)
+
+static func rest_tint(button: TextureButton) -> Color:
+	return button.get_meta("rest_tint") if button.has_meta("rest_tint") else Color.WHITE
 
 static func _fit(button: TextureButton, glow: Control) -> void:
 	glow.position = Vector2.ZERO
@@ -100,4 +105,4 @@ static func _hover(button: TextureButton, glow: Control, on: bool) -> void:
 	var tw := glow.create_tween()
 	tw.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
 	tw.tween_property(glow, "modulate:a", 1.0 if on else 0.0, FADE)
-	button.self_modulate = HOVER_TINT if on else Color.WHITE
+	button.self_modulate = HOVER_TINT if on else rest_tint(button)

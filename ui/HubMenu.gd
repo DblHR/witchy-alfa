@@ -65,7 +65,9 @@ func _refresh_locks() -> void:
 		return
 	var ok := AlchemyDB.has_cauldron()
 	alch.disabled = not ok
-	alch.self_modulate = Color.WHITE if ok else Color(0.45, 0.42, 0.48, 0.85)
+	var tint := Color.WHITE if ok else Color(0.45, 0.42, 0.48, 0.85)
+	alch.set_meta("rest_tint", tint)   ## подсветка (ButtonGlow) не «отбеливает» потускневшую кнопку
+	alch.self_modulate = tint
 	alch.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND if ok else Control.CURSOR_ARROW
 
 func button(btn_name: String) -> TextureButton:
