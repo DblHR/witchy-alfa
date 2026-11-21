@@ -63,6 +63,7 @@ static func show_notice(parent: Node, title: String, text: String, icon: Texture
 	return n
 
 func _build(title: String, text: String, icon: Texture2D) -> void:
+	EscClose.register_modal(self)
 	name = "ItemNotice"
 	position = Vector2.ZERO
 	size = SCREEN

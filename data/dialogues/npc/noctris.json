@@ -69,7 +69,7 @@
 		{
           "speaker": "noctris",
           "speaker_name": "",
-          "emotion": "",
+          "emotion": "irritation",
           "text": "Ну, много лет. Лечу всех, кто нуждается в обмен на жизненную энергию.",
           "characters": [{"id": "witch"}, {"id": "warrior"}, {"id": "noctris"}]
         },
@@ -78,7 +78,7 @@
           "speaker_name": "",
           "emotion": "",
           "text": "Жизненную энергию? То есть забираешь годы жизни за лечение?",
-          "characters": [{"id": "witch"}, {"id": "warrior"}, {"id": "noctris"}]
+          "characters": [{"id": "witch"}, {"id": "warrior"}, {"id": "noctris", "emotion": "irritation"}]
         },
         {
           "speaker": "noctris",
@@ -111,7 +111,7 @@
         {
           "speaker": "warrior",
           "speaker_name": "",
-          "emotion": "",
+          "emotion": "blush",
           "text": "Как-то меня смущает, что ты смотришь только ниже пояса...",
           "characters": [{"id": "witch"}, {"id": "warrior"}, {"id": "noctris"}]
         }
@@ -127,14 +127,14 @@
         {
           "speaker": "noctris",
           "speaker_name": "",
-          "emotion": "",
+          "emotion": "confusion",
           "text": "Готово. В следующий раз будьте аккуратнее и не добавляйте мне работы.",
           "characters": [{"id": "witch"}, {"id": "warrior"}, {"id": "noctris"}]
         },
         {
           "speaker": "warrior",
           "speaker_name": "",
-          "emotion": "",
+          "emotion": "blush",
           "text": "Странная у неё магия.",
           "characters": [{"id": "witch"}, {"id": "warrior"}, {"id": "noctris"}]
         },

@@ -22,6 +22,7 @@ func _ready() -> void:
 	# When hidden, it must NOT block clicks.
 	if background != null:
 		background.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_apply_style()
 
 	# Connect buttons in code (avoids relying on editor connections).
 	if resume_btn != null:
@@ -41,6 +42,19 @@ func _ready() -> void:
 	add_child(_settings)
 
 	visible = false
+
+## Вид как у остальных окон игры (GameUi): кремовая панель, розовый заголовок, сливовые кнопки.
+func _apply_style() -> void:
+	GameUi.style_panel(panel)
+	var title := get_node_or_null("Panel/MenuLabel") as Label
+	if title != null:
+		GameUi.style_title(title, 60)
+	var box := get_node_or_null("Panel/VBoxContainer") as VBoxContainer
+	if box != null:
+		box.add_theme_constant_override("separation", 14)
+		for b in box.get_children():
+			if b is Button:
+				GameUi.style_button(b as Button, 30)
 
 ## «Сохранить» (раньше была в инвентаре). Сохранять нечего (главное меню без загруженной игры) — кнопка серая.
 func _on_save_pressed() -> void:

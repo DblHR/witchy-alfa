@@ -548,6 +548,7 @@ func _build_cards_ui() -> void:
 	_cards_overlay.visible = false
 	_cards_overlay.z_index = 50
 	add_child(_cards_overlay)
+	EscClose.register(_cards_overlay, func() -> void: _cards_overlay.visible = false)
 	var dim := ColorRect.new()
 	dim.color = Color(0, 0, 0, 0.75)
 	dim.set_anchors_preset(Control.PRESET_FULL_RECT)

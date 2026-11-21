@@ -18,23 +18,23 @@
         {
           "speaker": "fufu",
           "speaker_name": "Зелёная девушка-слизень",
-          "emotion": "",
+          "emotion": "mask",
           "text": "Оо, смотри-ка, мальчик, тут ещё один человечек пришёл! Кажется, становится всё интереснее и интереснее!",
           "characters": [{"id": "witch"}, {"id": "warrior"}, {"id": "fufu"}]
         },
         {
           "speaker": "warrior",
           "speaker_name": "",
-          "emotion": "",
+          "emotion": "confusion",
           "text": "Беги отсюда! Она очень сильна!",
-          "characters": [{"id": "witch"}, {"id": "warrior"}, {"id": "fufu"}]
+          "characters": [{"id": "witch"}, {"id": "warrior"}, {"id": "fufu", "emotion": "mask"}]
         },
         {
           "speaker": "witch",
           "speaker_name": "",
           "emotion": "horny",
           "text": "И УПУСТИТЬ ВОЗМОЖНОСТЬ ИССЛЕДОВАТЬ ТАКОЙ ОБРАЗЕЦ? НУ УЖ НЕТ!",
-          "characters": [{"id": "witch"}, {"id": "warrior"}, {"id": "fufu"}]
+          "characters": [{"id": "witch"}, {"id": "warrior"}, {"id": "fufu", "emotion": "mask"}]
         }
       ]
     },
@@ -54,7 +54,7 @@
           "speaker_name": "",
           "emotion": "",
           "text": "Фух, спаслись! Правда, ты, кажется, не спешила убегать...",
-          "characters": [{"id": "witch"}, {"id": "warrior"}]
+          "characters": [{"id": "witch", "emotion": "confusion"}, {"id": "warrior"}]
         },
         {
           "speaker": "witch",
@@ -66,9 +66,9 @@
 		{
           "speaker": "warrior",
           "speaker_name": "",
-          "emotion": "",
+          "emotion": "confusion",
           "text": "Упустили? Мы бы там погибли, если бы не твой камешек.",
-          "characters": [{"id": "witch"}, {"id": "warrior"}]
+          "characters": [{"id": "witch", "emotion": "confusion"}, {"id": "warrior"}]
         },
 		{
           "speaker": "witch",

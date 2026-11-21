@@ -228,6 +228,7 @@ func _ready() -> void:
 
 	_pile_popup = CardPilePopup.new()
 	hud.add_child(_pile_popup)
+	EscClose.register(_pile_popup, _pile_popup.close)
 
 	_sleeve = CardSleeve.new()
 	hud.add_child(_sleeve)

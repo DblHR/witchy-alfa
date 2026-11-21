@@ -375,7 +375,11 @@ func _build_item_popup() -> void:
 	popup_panel_style.border_width_right = 3
 	popup_panel_style.border_width_top = 3
 	popup_panel_style.border_width_bottom = 3
-	popup_panel_style.border_color = Color(1, 1, 1, 0.10)
+	popup_panel_style.border_color = Color(0.56, 0.44, 0.60, 1.0)   ## как у меню колоды
+	popup_panel_style.border_width_left = 4
+	popup_panel_style.border_width_right = 4
+	popup_panel_style.border_width_top = 4
+	popup_panel_style.border_width_bottom = 4
 	_item_popup.add_theme_stylebox_override("panel", popup_panel_style)
 
 	var root := MarginContainer.new()
@@ -396,9 +400,9 @@ func _build_item_popup() -> void:
 	_item_popup_title.text = "Выбор"
 	_item_popup_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_item_popup_title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_item_popup_title.custom_minimum_size = Vector2(0, 32)
-	_item_popup_title.add_theme_font_size_override("font_size", 24)
-	_item_popup_title.add_theme_color_override("font_color", Color.WHITE)
+	_item_popup_title.custom_minimum_size = Vector2(0, 48)
+	_item_popup_title.add_theme_font_size_override("font_size", 36)
+	_item_popup_title.add_theme_color_override("font_color", Color(1.0, 0.82, 0.94))
 	outer.add_child(_item_popup_title)
 
 	var scroll := ScrollContainer.new()
@@ -409,7 +413,7 @@ func _build_item_popup() -> void:
 	outer.add_child(scroll)
 
 	_item_popup_grid = GridContainer.new()
-	_item_popup_grid.columns = 3
+	_item_popup_grid.columns = 5
 	_item_popup_grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_item_popup_grid.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_item_popup_grid.add_theme_constant_override("h_separation", 12)
@@ -420,10 +424,10 @@ func _build_item_popup() -> void:
 	_item_popup_info.bbcode_enabled = true
 	_item_popup_info.fit_content = true
 	_item_popup_info.scroll_active = false
-	_item_popup_info.custom_minimum_size = Vector2(0, 110)
+	_item_popup_info.custom_minimum_size = Vector2(0, 130)
 	_item_popup_info.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_item_popup_info.add_theme_font_size_override("normal_font_size", 18)
-	_item_popup_info.add_theme_font_size_override("bold_font_size", 21)
+	_item_popup_info.add_theme_font_size_override("normal_font_size", 22)
+	_item_popup_info.add_theme_font_size_override("bold_font_size", 26)
 	var info_sb := StyleBoxFlat.new()
 	info_sb.bg_color = Color(0.10, 0.05, 0.12, 0.85)
 	info_sb.set_corner_radius_all(14)
@@ -433,14 +437,15 @@ func _build_item_popup() -> void:
 
 	var close_button := Button.new()
 	close_button.text = "Закрыть"
-	close_button.custom_minimum_size = Vector2(0, 42)
-	close_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	close_button.custom_minimum_size = Vector2(320, 56)
+	close_button.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	_style_primary_button(
 		close_button,
 		Color(0.42, 0.22, 0.46, 0.98),
 		Color(0.18, 0.08, 0.20, 1.0),
 		18
 	)
+	close_button.add_theme_font_size_override("font_size", 26)
 	close_button.pressed.connect(func() -> void:
 		if _item_popup != null:
 			_item_popup.hide()
@@ -829,6 +834,7 @@ func _build_deck_ui() -> void:
 	_add_hover_bounce(_deck_button)
 	_deck_menu = PartyDeckMenu.new()
 	ui_root.add_child(_deck_menu)
+	EscClose.register(_deck_menu, _deck_menu.close)
 
 ## Клик по персонажу — то же меню колоды, его столбик подсвечен.
 func _open_deck_editor(unit_id: String) -> void:
@@ -973,7 +979,7 @@ func _open_item_popup(kind: String) -> void:
 			_item_popup_title.text = "Выбор зелья"
 	_rebuild_item_popup_grid()
 	_show_popup_info(_current_popup_id())
-	_item_popup.popup_centered(Vector2i(560, 520))
+	_item_popup.popup_centered(Vector2i(780, 640))
 
 func _rebuild_item_popup_grid() -> void:
 	if _item_popup_grid == null:
@@ -985,7 +991,7 @@ func _rebuild_item_popup_grid() -> void:
 	var entries := _get_popup_entries(_popup_kind)
 	for entry in entries:
 		var btn := Button.new()
-		btn.custom_minimum_size = Vector2(104, 104)
+		btn.custom_minimum_size = Vector2(126, 126)
 		btn.expand_icon = true
 		btn.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		btn.text = ""

@@ -368,6 +368,7 @@ func _build_recipe_popup() -> void:
 	_recipe_popup.z_index = 40
 	_recipe_popup.mouse_filter = Control.MOUSE_FILTER_STOP
 	add_child(_recipe_popup)
+	EscClose.register(_recipe_popup, func() -> void: _recipe_popup.visible = false)
 	_recipe_popup.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_recipe_popup.gui_input.connect(func(ev: InputEvent) -> void:
 		if ev is InputEventMouseButton and ev.pressed and ev.button_index == MOUSE_BUTTON_LEFT:

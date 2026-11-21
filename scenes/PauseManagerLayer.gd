@@ -38,27 +38,50 @@ func _ready() -> void:
 	if pause_menu.has_signal("quit_requested"):
 		pause_menu.connect("quit_requested", Callable(self, "_on_quit"))
 
-## Сцены, где пауза по ESC не нужна (там своё меню / заставка).
-## Пауза пока выключена целиком (нет кнопки, Esc не открывает). Вернуть — true.
-const ENABLED := false
-const NO_PAUSE_SCENES := ["res://scenes/MainMenu.tscn", "res://scenes/Prologue.tscn", "res://scenes/love/fufu_love.tscn"]
-## Сцены, где кнопки паузы на экране нет (на её месте другое), но Esc паузу открывает.
-const NO_PAUSE_BUTTON_SCENES := ["res://scripts/alchemy/Alchemy.tscn"]   ## там слева снизу инвентарь
+## Что делает Esc:
+##   1) открыта пауза — закрывает настройки / паузу;
+##   2) открыто дополнительное окно (EscClose: меню колоды, просмотр карт, окно кормления…) — закрывает его;
+##   3) дом и забег (PAUSE_SCENES) — открывает паузу;
+##   4) инвентарь, алхимия, ферма, лавка, подготовка (HOME_ON_ESC_SCENES) — домой.
+## Сцена может временно запретить уход по Esc: метод esc_blocked() -> true (экскурсия Рикки).
+const PAUSE_SCENES := ["res://scenes/Hub.tscn", "res://scenes/card/CardBattle.tscn"]
+const HOME_ON_ESC_SCENES := [
+	"res://scenes/Inventory.tscn", "res://scripts/alchemy/Alchemy.tscn", "res://scenes/Farm.tscn",
+	"res://scenes/Shop.tscn", "res://scenes/Setup.tscn",
+]
+## Где на экране кнопка паузы (в доме на её месте сердечко — там только Esc).
+const PAUSE_BUTTON_SCENES := ["res://scenes/card/CardBattle.tscn"]
 
-## ESC ловим в _unhandled_input: сначала его получают сцены (закрыть просмотр картинки
-## в галерее, окно семян на ферме и т.п.), и только если никто не забрал — открывается пауза.
+## ESC ловим в _unhandled_input: сначала его получают сцены (свои окна закрывают сами), и только
+## если никто не забрал — EscClose / пауза / домой.
 func _unhandled_input(event: InputEvent) -> void:
-	# Ловим физический ESC напрямую (не через action), чтобы исключить любые проблемы InputMap
-	if event is InputEventKey and event.pressed and not event.echo:
-		if event.physical_keycode == KEY_ESCAPE:
-			if not _is_open and not _pause_allowed():
-				return
-			get_viewport().set_input_as_handled()
-			# Открыты настройки — ESC возвращает в меню паузы, а не закрывает всё.
-			if _is_open and pause_menu.has_method("is_settings_open") and pause_menu.call("is_settings_open"):
-				pause_menu.call("close_settings")
-				return
-			toggle()
+	if not (event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_ESCAPE):
+		return
+	if _is_open:
+		get_viewport().set_input_as_handled()
+		# Открыты настройки — ESC возвращает в меню паузы, а не закрывает всё.
+		if pause_menu.has_method("is_settings_open") and pause_menu.call("is_settings_open"):
+			pause_menu.call("close_settings")
+			return
+		close()
+		return
+	if EscClose.modal_open(get_tree()):
+		return
+	if EscClose.close_top(get_tree()):
+		get_viewport().set_input_as_handled()
+		return
+	var scene := get_tree().current_scene
+	var path := scene.scene_file_path if scene != null else ""
+	if PAUSE_SCENES.has(path):
+		get_viewport().set_input_as_handled()
+		open()
+	elif HOME_ON_ESC_SCENES.has(path):
+		if DialogueManager_ != null and DialogueManager_.is_showing():
+			return   ## посреди диалога домой не уходим
+		if scene.has_method("esc_blocked") and bool(scene.call("esc_blocked")):
+			return
+		get_viewport().set_input_as_handled()
+		SceneRouter_.go_to_hub()
 
 # --- Кнопка паузы на экране и подсветка кнопок ----------------------------------
 
@@ -69,7 +92,6 @@ const PAUSE_BUTTON_SIZE := Vector2(72, 72)
 const PAUSE_BUTTON_DEFAULT_POS := Vector2(16, 16)
 const PAUSE_BUTTON_POS := {
 	"res://scenes/card/CardBattle.tscn": Vector2(1809, 40),   ## на месте бывшей «Выйти»
-	"res://scenes/Setup.tscn": Vector2(16, 992),              ## сверху слева заголовок отряда
 }
 ## Сцены, где своё меню «Главное меню» со своими светящимися кнопками — их не трогаем.
 const PAUSE_BUTTON_TUTORIAL_POS := Vector2(1505, 44)
@@ -108,7 +130,7 @@ func _process(_delta: float) -> void:
 			_pause_button.position = PAUSE_BUTTON_TUTORIAL_POS
 	# В диалогах кнопку прячем (там свои кнопки сверху); ESC по-прежнему работает.
 	var in_dialogue := DialogueManager_ != null and DialogueManager_.is_showing()
-	_pause_button.visible = not _is_open and _pause_allowed() and not in_dialogue and not NO_PAUSE_BUTTON_SCENES.has(path)
+	_pause_button.visible = not _is_open and PAUSE_BUTTON_SCENES.has(path) and not in_dialogue
 
 func _on_node_added(node: Node) -> void:
 	if node is TextureButton and node != _pause_button:
@@ -123,12 +145,8 @@ func _attach_glow(node) -> void:   ## без типа: узел мог уже у
 	ButtonGlow.attach(node as TextureButton)
 
 func _pause_allowed() -> bool:
-	if not ENABLED:
-		return false
 	var scene := get_tree().current_scene
-	if scene == null:
-		return false
-	return not NO_PAUSE_SCENES.has(scene.scene_file_path)
+	return scene != null and PAUSE_SCENES.has(scene.scene_file_path)
 
 func toggle() -> void:
 	if _is_open:

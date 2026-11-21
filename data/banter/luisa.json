@@ -93,12 +93,6 @@
       "conditions": {"card": "luisa_tentacle"}
     },
     {
-      "id": "luisa_ult",
-      "speaker": "luisa",
-      "trigger": "ult",
-      "text": ["До краёв!", "Больше не влезет? Проверим~"]
-    },
-    {
       "id": "luisa_status_sticky",
       "speaker": "luisa",
       "trigger": "status_applied",
@@ -118,14 +112,6 @@
       "trigger": "status_applied",
       "text": "Открылась. Удобно~",
       "conditions": {"status": "vuln"}
-    },
-    {
-      "id": "luisa_status_charmed",
-      "speaker": "luisa",
-      "trigger": "status_applied",
-      "text": "М-м? Это я тут соблазняю, вообще-то!",
-      "about": "target",
-      "conditions": {"status": "charm"}
     },
     {
       "id": "luisa_status_swallowed",

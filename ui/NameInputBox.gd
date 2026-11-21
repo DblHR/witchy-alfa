@@ -34,6 +34,7 @@ static func ask(parent: Node, p_key: String, title: String, p_default: String = 
 
 func _build(title: String) -> void:
 	name = "NameInputBox"
+	EscClose.register_modal(self)   ## имя надо ввести — Esc это окно не закрывает
 	position = Vector2.ZERO
 	size = SCREEN
 	z_index = 100

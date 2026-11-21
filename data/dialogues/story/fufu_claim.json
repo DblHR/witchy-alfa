@@ -41,28 +41,28 @@
         {
           "speaker": "witch",
           "speaker_name": "",
-          "emotion": "",
+          "emotion": "horny",
           "text": "Отлично! Воин, мни её сиськи!",
           "characters": [{"id": "witch"}, {"id": "fufu"}, {"id": "warrior"}]
         },
         {
           "speaker": "warrior",
           "speaker_name": "",
-          "emotion": "",
+          "emotion": "confusion",
           "text": "Отлично... Что?",
-          "characters": [{"id": "witch"}, {"id": "fufu"}, {"id": "warrior"}]
+          "characters": [{"id": "witch", "emotion": "horny"}, {"id": "fufu"}, {"id": "warrior"}]
         },
         {
           "speaker": "fufu",
           "speaker_name": "",
           "emotion": "",
           "text": "Что?",
-          "characters": [{"id": "witch"}, {"id": "fufu"}, {"id": "warrior"}]
+          "characters": [{"id": "witch", "emotion": "horny"}, {"id": "fufu"}, {"id": "warrior"}]
         },
         {
           "speaker": "witch",
           "speaker_name": "",
-          "emotion": "",
+          "emotion": "horny",
           "text": "Что?..",
           "characters": [{"id": "witch"}, {"id": "fufu"}, {"id": "warrior"}]
         },
@@ -83,21 +83,21 @@
         {
           "speaker": "warrior",
           "speaker_name": "",
-          "emotion": "",
+          "emotion": "blush",
           "text": "Тогда почему я должен мять её сиськи?",
           "characters": [{"id": "witch"}, {"id": "fufu"}, {"id": "warrior"}]
         },
         {
           "speaker": "witch",
           "speaker_name": "",
-          "emotion": "",
+          "emotion": "confusion",
           "text": "А вдруг она растворит мои руки?",
           "characters": [{"id": "witch"}, {"id": "fufu"}, {"id": "warrior"}]
         },
         {
           "speaker": "warrior",
           "speaker_name": "",
-          "emotion": "",
+          "emotion": "confusion",
           "text": "А вдруг мои?",
           "characters": [{"id": "witch"}, {"id": "fufu"}, {"id": "warrior"}]
         },
@@ -111,30 +111,30 @@
         {
           "speaker": "fufu",
           "speaker_name": "",
-          "emotion": "",
+          "emotion": "shy",
           "text": "Хи-хи~",
           "characters": [{"id": "witch"}, {"id": "fufu"}, {"id": "warrior"}]
         },
         {
           "speaker": "fufu",
           "speaker_name": "",
-          "emotion": "",
+          "emotion": "shy",
           "text": "Я могу не растворять, если захочу.",
           "characters": [{"id": "witch"}, {"id": "fufu"}, {"id": "warrior"}]
         },
         {
           "speaker": "witch",
           "speaker_name": "",
-          "emotion": "",
+          "emotion": "horny",
           "text": "Правда?! Тогда мне срочно нужно тебя потрогать.",
-          "characters": [{"id": "witch"}, {"id": "fufu"}, {"id": "warrior"}]
+          "characters": [{"id": "witch"}, {"id": "fufu", "emotion": "shy"}, {"id": "warrior"}]
         },
         {
           "speaker": "witch",
           "speaker_name": "",
           "emotion": "",
           "text": "Раздевайся.",
-          "characters": [{"id": "witch"}, {"id": "fufu"}, {"id": "warrior"}]
+          "characters": [{"id": "witch", "emotion": "horny"}, {"id": "fufu"}, {"id": "warrior"}]
         },
         {
           "speaker": "fufu",
@@ -153,7 +153,7 @@
         {
           "speaker": "warrior",
           "speaker_name": "",
-          "emotion": "",
+          "emotion": "confusion",
           "text": "Я?!",
           "characters": [{"id": "witch"}, {"id": "fufu"}, {"id": "warrior"}]
         },
@@ -167,7 +167,7 @@
         {
           "speaker": "warrior",
           "speaker_name": "",
-          "emotion": "",
+          "emotion": "shy",
           "text": "Ну...",
           "characters": [{"id": "witch"}, {"id": "fufu"}, {"id": "warrior"}]
         },
@@ -181,21 +181,21 @@
         {
           "speaker": "fufu",
           "speaker_name": "",
-          "emotion": "",
+          "emotion": "shy",
           "text": "Ну-ну, не нужно пугать этого мальчика... Он, наверное, и женщину никогда не трогал...",
           "characters": [{"id": "witch"}, {"id": "fufu"}, {"id": "warrior"}]
         },
         {
           "speaker": "warrior",
           "speaker_name": "",
-          "emotion": "",
+          "emotion": "confusion",
           "text": "Ах ты... Ведьмочка, доставай блокнот.",
           "characters": [{"id": "witch"}, {"id": "fufu"}, {"id": "warrior"}]
         },
         {
           "speaker": "witch",
           "speaker_name": "",
-          "emotion": "",
+          "emotion": "horny",
           "text": "Чувствую, дипломная работа будет на славу.",
           "characters": [{"id": "witch"}, {"id": "fufu"}, {"id": "warrior"}]
         }

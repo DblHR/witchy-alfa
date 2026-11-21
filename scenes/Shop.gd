@@ -125,6 +125,10 @@ func _lock_shop(on: bool) -> void:
 func is_tour_running() -> bool:
 	return _tour_blocker != null
 
+## Esc не уводит домой, пока идёт экскурсия.
+func esc_blocked() -> bool:
+	return is_tour_running()
+
 func _run_tour(tour_id: String) -> void:
 	var d := StoryDialogueDB_.get_dialogue(tour_id) if StoryDialogueDB_ != null else {}
 	var lines: Array = StoryDialogueDB_.resolve_lines(d) if not d.is_empty() else []
@@ -192,6 +196,7 @@ func _build_flower() -> void:
 	add_child(_feed_panel)
 	_feed_panel.fed.connect(_on_flower_fed)
 	_feed_panel.close_requested.connect(_close_feed_panel)
+	EscClose.register(_feed_panel, _close_feed_panel)
 	_feed_panel.flower_renamed.connect(_on_flower_renamed)
 	# Рикка с панелькой: дочерний узел обычной Рикки (прячется вместе с ней на время диалогов).
 	if _rikka != null and ResourceLoader.exists(RIKKA_WITH_FLOWER):

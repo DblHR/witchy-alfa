@@ -17,7 +17,7 @@
         {
           "speaker": "rikka",
           "speaker_name": "",
-          "emotion": "",
+          "emotion": "smile",
           "text": "Всё-таки надумала зайти ко мне?"
         },
         {
@@ -101,7 +101,7 @@
           "speaker": "rikka",
           "speaker_name": "",
           "emotion": "",
-          "text": "Если опять собираешься в подземелье — сначала проверь сумку. Потом уже геройствуй."
+          "text": "Если опять собираешься в подземелье — сначала проверь сумку. Вдруг чего забылось..."
         }
       ]
     },
@@ -153,28 +153,28 @@
         {
           "speaker": "rikka",
           "speaker_name": "",
-          "emotion": "",
+          "emotion": "wise",
           "text": "Шляпка, привет! Я тут подумала, ты же хотела сделать монстров в подземелье добрее?",
           "characters": [{"id": "rikka"}, {"id": "witch"}]
         },
         {
           "speaker": "witch",
           "speaker_name": "",
-          "emotion": "",
+          "emotion": "confusion",
           "text": "Ну да, но заклинание, кажется, не очень сработало.",
           "characters": [{"id": "rikka"}, {"id": "witch"}]
         },
         {
           "speaker": "rikka",
           "speaker_name": "",
-          "emotion": "",
+          "emotion": "intellect",
           "text": "Думаю, заклинание сработало, просто они слишком уж долго были одинокие.",
           "characters": [{"id": "rikka"}, {"id": "witch"}]
         },
         {
           "speaker": "rikka",
           "speaker_name": "",
-          "emotion": "",
+          "emotion": "smile",
           "text": "Попробуй подарить им это. Это точно сделает их счастливее.",
           "characters": [{"id": "rikka"}, {"id": "witch"}],
           "give_item": "gift"
@@ -189,7 +189,7 @@
         {
           "speaker": "rikka",
           "speaker_name": "",
-          "emotion": "",
+          "emotion": "intellect",
           "text": "Ну да. Какая одинокая женщина от такого откажется?",
           "characters": [{"id": "rikka"}, {"id": "witch"}]
         }
@@ -214,14 +214,14 @@
         {
           "speaker": "rikka",
           "speaker_name": "",
-          "emotion": "serious",
+          "emotion": "wise",
           "text": "Слушай, Шляпка... Один воин ушёл в подземелье уже давно.",
           "characters": [{"id": "rikka"}, {"id": "witch"}]
         },
         {
           "speaker": "rikka",
           "speaker_name": "",
-          "emotion": "worried",
+          "emotion": "wise",
           "text": "Обычно такие возвращаются быстро. Или не возвращаются вовсе.",
           "characters": [{"id": "rikka"}, {"id": "witch"}]
         },
@@ -235,7 +235,7 @@
         {
           "speaker": "rikka",
           "speaker_name": "",
-          "emotion": "",
+          "emotion": "smile",
           "text": "Я уже поняла, что ты бойкая. Но будь аккуратнее. А если что-нибудь о нём узнаешь - дай мне знать.",
           "characters": [{"id": "rikka"}, {"id": "witch"}]
         }
