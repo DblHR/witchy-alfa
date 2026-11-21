@@ -1,5 +1,5 @@
 {
-  "_comment": "Цветок в лавке Рикки (появляется с 3-го уровня отряда, Shop.gd / RikkaFlower.gd). Первый клик по цветку — rikka_flower_intro (имя цветку — поле ask_name), дальше клик открывает окно кормления. Имя в тексте: {name:rikka_flower}.",
+  "_comment": "Цветок в лавке Рикки (появляется с 3-го уровня отряда, Shop.gd / RikkaFlower.gd). Первый клик по цветку — rikka_flower_intro (имя цветку — поле ask_name), дальше клик открывает окно кормления. Имя в тексте: {name:rikka_flower}. Особые имена (Бингус) — data/names/name_rules.json: после такого имени вместо реплик, что идут за выбором имени, играет диалог из правила (rikka_flower_bingus, type name_reaction — сам по себе не играет).",
   "dialogues": [
     {
       "id": "rikka_flower_intro",
@@ -207,6 +207,43 @@
           "speaker_name": "",
           "emotion": "",
           "text": "Мда, ну у тебя и фантазия..."
+        }
+      ]
+    },
+    {
+      "id": "rikka_flower_bingus",
+      "type": "name_reaction",
+      "npc": "rikka_flower",
+      "lines": [
+        {
+          "speaker": "rikka",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "Ого, это же Б******!"
+        },
+        {
+          "speaker": "rikka",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "Какой же он..."
+        },
+        {
+          "speaker": "hero",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "Мерзкий!"
+        },
+        {
+          "speaker": "rikka",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "ПОЧЕМУ???"
+        },
+        {
+          "speaker": "rikka",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "ОН ЖЕ МИЛЕНЬКИЙ!!!"
         }
       ]
     }

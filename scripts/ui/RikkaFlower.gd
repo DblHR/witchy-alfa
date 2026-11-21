@@ -7,8 +7,15 @@ class_name RikkaFlower
 signal clicked
 
 const TEXTURE := "res://assets/npc/rikka/igor_the_plant.png"
-## Где стоит цветок (экран 1920×1080): слева от Рикки, табуретка уходит под нижний край.
-const RECT := Rect2(818, 632, 320, 460)
+const STOOL_TEXTURE := "res://assets/npc/rikka/stool.png"
+## Где стоит (экран 1920×1080): цветок — на табуретке слева от Рикки, ножки табуретки уходят
+## под нижний край. FOOT — точка, где низ цветка (горшка) стоит на табуретке; картинка цветка
+## вписывается в MAX_SIZE и ставится низом на FOOT (так встаёт и другая картинка — Бингус).
+const FOOT := Vector2(978, 1007)
+const MAX_SIZE := Vector2(320, 460)
+const STOOL_RECT := Rect2(811, 948, 335, 152)
+## Старое — прямоугольник цветка по умолчанию (для тестов и пузырей).
+const RECT := Rect2(818, 576, 320, 460)
 ## Где «!» над цветком (доля размера картинки).
 const BADGE_POS := Vector2(0.80, 0.06)
 const NPC_ID := "rikka_flower"
@@ -34,15 +41,29 @@ static func intro_seen() -> bool:
 static func flower_name() -> String:
 	return StoryState_.get_custom_name(NPC_ID, "Цветочек") if StoryState_ != null else "Цветочек"
 
+## Имя для меню (окно кормления): особые имена показываются по таблице display (name_rules.json).
+static func display_name() -> String:
+	return NameRules.display_name(NPC_ID, flower_name())
+
+## Табуретка под цветком (отдельная картинка, ставится перед цветком).
+static func make_stool() -> TextureRect:
+	var t := TextureRect.new()
+	t.name = "FlowerStool"
+	t.texture = load(STOOL_TEXTURE) as Texture2D if ResourceLoader.exists(STOOL_TEXTURE) else null
+	t.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	t.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	t.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
+	t.position = STOOL_RECT.position
+	t.size = STOOL_RECT.size
+	t.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	return t
+
 func _init() -> void:
 	name = "RikkaFlower"
-	texture = load(TEXTURE) as Texture2D if ResourceLoader.exists(TEXTURE) else null
 	expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
-	position = RECT.position
-	size = RECT.size
-	pivot_offset = Vector2(RECT.size.x * 0.5, RECT.size.y)
+	refresh_texture()
 	mouse_filter = Control.MOUSE_FILTER_PASS
 	gui_input.connect(_on_gui_input)
 	mouse_exited.connect(func() -> void:
@@ -53,6 +74,33 @@ func _init() -> void:
 func _ready() -> void:
 	refresh_badge()
 	GalleryData.mark_seen(TEXTURE)   ## в галерее — в разделе Рикки
+
+## Картинка по имени (особое имя — своя картинка, см. NameRules) и место на табуретке.
+func refresh_texture() -> void:
+	var path := NameRules.texture_for(NPC_ID)
+	if path == "":
+		path = TEXTURE
+	texture = load(path) as Texture2D if ResourceLoader.exists(path) else null
+	_image = null
+	if texture == null:
+		position = RECT.position
+		size = RECT.size
+	else:
+		var ts := texture.get_size()
+		var k := minf(MAX_SIZE.x / ts.x, MAX_SIZE.y / ts.y)
+		var img := texture.get_image()
+		if img != null and img.is_compressed():
+			img.decompress()
+		var bottom := ts.y
+		if img != null:
+			var used := img.get_used_rect()
+			if used.size.y > 0:
+				bottom = float(used.end.y)
+		size = ts * k
+		position = Vector2(FOOT.x - size.x * 0.5, FOOT.y - bottom * k)
+	pivot_offset = Vector2(size.x * 0.5, size.y)
+	if is_inside_tree():
+		refresh_badge()
 
 func refresh_badge() -> void:
 	var news := StoryDialogueDB_ != null and StoryDialogueDB_.npc_has_news(NPC_ID)

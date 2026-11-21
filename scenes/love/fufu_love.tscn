@@ -3,6 +3,7 @@
 [ext_resource type="Script" path="res://scenes/love/love_room.gd" id="1_room"]
 [ext_resource type="Texture2D" uid="uid://qp5s8po5tdl2" path="res://assets/characters/fufu/interactive/fufu_interactivebcg.png" id="2_card"]
 [ext_resource type="Texture2D" uid="uid://bj4a57s2tmdnx" path="res://assets/ui/buttons/back.png" id="3_back"]
+[ext_resource type="Texture2D" path="res://assets/ui/buttons/love/sexButton.png" id="4_sex"]
 
 [node name="FufuLove" type="Control"]
 layout_mode = 3
@@ -38,3 +39,22 @@ mouse_default_cursor_shape = 2
 texture_normal = ExtResource("3_back")
 ignore_texture_size = true
 stretch_mode = 5
+
+[node name="SexButton" type="TextureButton" parent="."]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 40.0
+offset_top = 440.0
+offset_right = 260.0
+offset_bottom = 640.0
+focus_mode = 0
+mouse_default_cursor_shape = 2
+texture_normal = ExtResource("4_sex")
+ignore_texture_size = true
+stretch_mode = 5
+
+[node name="HeartFrom" type="Marker2D" parent="."]
+position = Vector2(990, 430)
+
+[node name="BubbleAt" type="Marker2D" parent="."]
+position = Vector2(1340, 300)

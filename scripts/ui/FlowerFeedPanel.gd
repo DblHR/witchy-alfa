@@ -7,6 +7,8 @@ class_name FlowerFeedPanel
 
 signal fed(item_id: String, amount: int, gold: int)
 signal close_requested
+## Цветок переименовали (кнопка ✎ у заголовка).
+signal flower_renamed(new_name: String)
 
 ## Тёмная панелька на картинке Рикки (экран 1920×1080: x 1183-1801, y 415-1000), с отступом внутрь.
 const RECT := Rect2(1198, 426, 590, 562)
@@ -25,6 +27,7 @@ var _scroll: ScrollContainer
 var _status: Label
 var _undo_btn: Button
 var _close_btn: Button
+var _rename_btn: Button
 var _fade: Tween
 ## Что скормлено за этот заход в лавку: [{id, n, gold}] — для «Откатить».
 var _history: Array = []
@@ -43,11 +46,21 @@ func _init() -> void:
 	mouse_filter = Control.MOUSE_FILTER_STOP
 
 	_title = _light_label(36, TITLE_COLOR)
-	_title.position = Vector2(8, 0)
-	_title.size = Vector2(RECT.size.x - 16, 48)
+	_title.position = Vector2(60, 0)
+	_title.size = Vector2(RECT.size.x - 120, 48)
 	_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_title.clip_text = true
 	add_child(_title)
+
+	# Переименовать цветок (особые имена меняют его картинку — data/names/name_rules.json).
+	_rename_btn = Button.new()
+	_rename_btn.text = "✎"
+	_rename_btn.tooltip_text = "Переименовать"
+	_rename_btn.position = Vector2(RECT.size.x - 8 - 50, 0)
+	_rename_btn.size = Vector2(50, 46)
+	ShopUi.style_button(_rename_btn, 26)
+	_rename_btn.pressed.connect(_ask_rename)
+	add_child(_rename_btn)
 
 	_hint = _light_label(17, Color(TEXT_COLOR, 0.75))
 	_hint.position = Vector2(8, 48)
@@ -135,12 +148,19 @@ func open_after(delay: float) -> void:
 	visible = true
 	_fade_to(true, delay)
 
+func _ask_rename() -> void:
+	var host := get_parent() if get_parent() != null else self
+	NameInputBox.ask(host, RikkaFlower.NPC_ID, "Как назовём цветок?", RikkaFlower.flower_name(),
+		func(chosen: String) -> void:
+			refresh()
+			flower_renamed.emit(chosen))
+
 func _on_inventory_changed() -> void:
 	if visible:
 		refresh()
 
 func refresh() -> void:
-	_title.text = "Покормить: %s" % RikkaFlower.flower_name()
+	_title.text = "Покормить: %s" % RikkaFlower.display_name()
 	for c in _grid.get_children():
 		_grid.remove_child(c)
 		c.queue_free()
@@ -220,7 +240,7 @@ func feed(id: String, n: int) -> void:
 	DungRun.gain_gold(gold)
 	DungRun.sync_legacy_owned_artifacts_to_inventory()
 	_history.append({"id": id, "n": n, "gold": gold})
-	_status.text = "%s съел: %s ×%d  (+%d зол.)" % [RikkaFlower.flower_name(), RunItems.get_item_name(id), n, gold]
+	_status.text = "%s съел: %s ×%d  (+%d зол.)" % [RikkaFlower.display_name(), RunItems.get_item_name(id), n, gold]
 	fed.emit(id, n, gold)
 	refresh()
 

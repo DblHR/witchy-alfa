@@ -183,6 +183,7 @@ func _tour_highlight(slots: Array) -> void:
 func _build_flower() -> void:
 	if not RikkaFlower.is_unlocked():
 		return
+	add_child(RikkaFlower.make_stool())   ## табуретка, на ней цветок
 	_flower = RikkaFlower.new()
 	add_child(_flower)   ## поверх панели лавки (табуретка заходит на её угол)
 	_flower.clicked.connect(_on_flower_clicked)
@@ -191,6 +192,7 @@ func _build_flower() -> void:
 	add_child(_feed_panel)
 	_feed_panel.fed.connect(_on_flower_fed)
 	_feed_panel.close_requested.connect(_close_feed_panel)
+	_feed_panel.flower_renamed.connect(_on_flower_renamed)
 	# Рикка с панелькой: дочерний узел обычной Рикки (прячется вместе с ней на время диалогов).
 	if _rikka != null and ResourceLoader.exists(RIKKA_WITH_FLOWER):
 		_rikka_alt = TextureRect.new()
@@ -254,8 +256,21 @@ func _swap_rikka(with_board: bool) -> void:
 func _on_flower_intro_finished() -> void:
 	if StoryState_ != null:
 		StoryState_.mark_dialogue_seen(RikkaFlower.INTRO_ID)
+	_flower.refresh_texture()
 	_flower.refresh_badge()
 	_open_feed_panel()
+
+## Цветок переименовали в окне кормления: другая картинка и (у особых имён) диалог.
+func _on_flower_renamed(new_name: String) -> void:
+	_flower.refresh_texture()
+	var did := NameRules.dialogue_for(RikkaFlower.NPC_ID, new_name)
+	var d := StoryDialogueDB_.get_dialogue(did) if did != "" and StoryDialogueDB_ != null else {}
+	if d.is_empty() or DialogueManager_ == null:
+		return
+	_close_feed_panel()
+	if _bubbles != null:
+		_bubbles.clear()
+	DialogueManager_.show_sequence(StoryDialogueDB_.resolve_lines(d), func() -> void: _open_feed_panel())
 
 func _on_flower_fed(_id: String, _n: int, gold: int) -> void:
 	_flower.chomp()

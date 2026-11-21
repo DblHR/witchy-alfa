@@ -755,6 +755,8 @@ func _build_admin_ui() -> void:
 	toggle.size = Vector2(200, 56)
 	toggle.add_theme_font_size_override("font_size", 22)
 	add_child(toggle)
+	# Админ-панели закрыты, пока нет доступа (AdminAccess) — не видно и не нажать.
+	toggle.visible = AdminAccess.unlocked()
 
 	_admin_panel = PanelContainer.new()
 	_admin_panel.visible = false

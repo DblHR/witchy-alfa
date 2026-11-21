@@ -130,7 +130,8 @@ func get_item_icon(item_id: String) -> Texture2D:
 	if RunItems.is_artifact(item_id):
 		texture = _build_staff_icon(item_id)
 	if RunItems.is_recipe_item(item_id):
-		texture = get_item_icon(AlchemyDB.get_result_item_id(RunItems.get_recipe_id(item_id)))
+		var result_icon := get_item_icon(AlchemyDB.get_result_item_id(RunItems.get_recipe_id(item_id)))
+		texture = _build_recipe_icon(result_icon)
 	if texture == null:
 		var path := String(ICON_PATHS.get(item_id, ""))
 		if path != "" and ResourceLoader.exists(path):
@@ -139,6 +140,41 @@ func get_item_icon(item_id: String) -> Texture2D:
 		texture = _build_fallback_icon(item_id)
 	_icon_cache[item_id] = texture
 	return texture
+
+## Рецепт: подложка-листок (RECIPE_UNDERLAY), сверху — картинка того, что по нему варится.
+const RECIPE_UNDERLAY := "res://assets/items/food/recept.png"
+## Куда на листке ставится предмет: доля размера листка (центр и сторона квадрата).
+const RECIPE_ITEM_CENTER := Vector2(0.49, 0.47)
+const RECIPE_ITEM_SIZE := 0.72
+
+func _build_recipe_icon(item_icon: Texture2D) -> Texture2D:
+	if not ResourceLoader.exists(RECIPE_UNDERLAY):
+		return item_icon
+	var base_tex := load(RECIPE_UNDERLAY) as Texture2D
+	var base := base_tex.get_image() if base_tex != null else null
+	if base == null:
+		return item_icon
+	base = base.duplicate() as Image
+	if base.is_compressed():
+		base.decompress()
+	base.clear_mipmaps()
+	base.convert(Image.FORMAT_RGBA8)
+	if item_icon != null:
+		var it := item_icon.get_image()
+		if it != null:
+			it = it.duplicate() as Image
+			if it.is_compressed():
+				it.decompress()
+			it.clear_mipmaps()
+			it.convert(Image.FORMAT_RGBA8)
+			var side := RECIPE_ITEM_SIZE * float(base.get_width())
+			var k := side / float(maxi(it.get_width(), it.get_height()))
+			var w := maxi(1, int(it.get_width() * k))
+			var h := maxi(1, int(it.get_height() * k))
+			it.resize(w, h, Image.INTERPOLATE_LANCZOS)
+			var c := Vector2(base.get_width(), base.get_height()) * RECIPE_ITEM_CENTER
+			base.blend_rect(it, Rect2i(0, 0, w, h), Vector2i(int(c.x - w * 0.5), int(c.y - h * 0.5)))
+	return ImageTexture.create_from_image(base)
 
 func _build_staff_icon(item_id: String) -> Texture2D:
 	var staff_type := RunItems.get_staff_type(item_id)

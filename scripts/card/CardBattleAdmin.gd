@@ -23,6 +23,8 @@ func _init() -> void:
 
 func setup(battle: CardBattle) -> void:
 	_battle = battle
+	# Админ-панели закрыты, пока нет доступа (AdminAccess) — не видно и не нажать.
+	visible = AdminAccess.unlocked()
 	_toggle = _make_button("Админ ▸", func() -> void: _set_open(not _box.visible))
 	add_child(_toggle)
 	_box = VBoxContainer.new()

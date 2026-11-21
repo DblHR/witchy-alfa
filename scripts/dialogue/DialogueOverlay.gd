@@ -418,6 +418,8 @@ func _advance() -> void:
 ##       такое же окно со своим текстом (ничего не выдаёт);
 ##   "ask_name": {"key": "rikka_flower", "title": "Как назовём цветок?", "default": "Игорь"} —
 ##       после реплики окно ввода имени (NameInputBox); имя -> StoryState_.custom_names[key].
+##       Если имя особое (data/names/name_rules.json, поле "dialogue") — реплики после этой
+##       заменяются диалогом из правила.
 ## Если диалог пропустили кнопкой — предметы всё равно выдаются, окна показываются подряд.
 var _rewarded: Dictionary = {}     ## номер реплики -> уже показано/выдано
 var _notice: ItemNotice
@@ -442,8 +444,11 @@ func _show_reward(i: int, then: Callable) -> void:
 	var line: Dictionary = _lines[i]
 	if line.get("ask_name") is Dictionary:
 		var a: Dictionary = line["ask_name"]
-		_name_box = NameInputBox.ask(_frame, String(a.get("key", "")), String(a.get("title", "Как назовём?")),
-			String(a.get("default", "")), func(_chosen: String) -> void: then.call())
+		var key := String(a.get("key", ""))
+		_name_box = NameInputBox.ask(_frame, key, String(a.get("title", "Как назовём?")),
+			String(a.get("default", "")), func(chosen: String) -> void:
+				_apply_name_reaction(i, key, chosen)
+				then.call())
 		return
 	var item_id := String(line.get("give_item", ""))
 	if item_id != "":
@@ -456,6 +461,19 @@ func _show_reward(i: int, then: Callable) -> void:
 		var icon_path := String(n.get("icon", ""))
 		var icon: Texture2D = load(icon_path) as Texture2D if icon_path != "" and ResourceLoader.exists(icon_path) else null
 		_notice = ItemNotice.show_notice(_frame, String(n.get("title", "")), String(n.get("text", "")), icon, then)
+
+## Особое имя: остаток диалога после реплики i заменяется диалогом из NameRules.
+func _apply_name_reaction(i: int, key: String, chosen: String) -> void:
+	var did := NameRules.dialogue_for(key, chosen)
+	if did == "" or StoryDialogueDB_ == null:
+		return
+	var d := StoryDialogueDB_.get_dialogue(did)
+	if d.is_empty():
+		return
+	var extra: Array = StoryDialogueDB_.resolve_lines(d)
+	if extra.is_empty():
+		return
+	_lines = _lines.slice(0, i + 1) + extra
 
 func _notice_open() -> bool:
 	return (_notice != null and is_instance_valid(_notice)) or (_name_box != null and is_instance_valid(_name_box))

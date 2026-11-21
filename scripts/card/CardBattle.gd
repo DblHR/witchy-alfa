@@ -1439,6 +1439,9 @@ func _finish_run(victory: bool, is_draw: bool) -> void:
 		await _play_boss_victory_dialogue()
 	var level_before := maxi(1, DungRun.party_level)
 	var xp_before := int(DungRun.xp)
+	# Поражение без опыта — в копилку доступа к админ-панелям (AdminAccess).
+	if not victory and not is_draw and _tutorial == null:
+		AdminAccess.note_loss(int(_run.xp_gained))
 	var summary := _apply_run_progress()
 	# В хабе после забега могут сыграть сцены типа "after_run" (например, утро с Фуфу на 10 доверия).
 	if StoryState_ != null and _tutorial == null:

@@ -951,6 +951,8 @@ func _toggle_admin_panel() -> void:
 func _sync_admin_panel_visuals(_immediate: bool = false) -> void:
 	if admin_panel == null or admin_content == null or admin_toggle_button == null:
 		return
+	# Админ-панели закрыты, пока нет доступа (AdminAccess) — не видно и не нажать.
+	admin_panel.visible = AdminAccess.unlocked()
 	admin_content.visible = _admin_open
 	admin_panel.custom_minimum_size.y = 270 if _admin_open else 62
 	admin_panel.size.y = admin_panel.custom_minimum_size.y

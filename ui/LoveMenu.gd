@@ -45,6 +45,8 @@ static func love_characters() -> Array[Dictionary]:
 			ids.append(f.trim_suffix(BUTTON_SUFFIX))
 	ids.sort()
 	for id in ids:
+		if CharDB != null and CharDB.get_by_id(id) == null:
+			continue   ## в папке не только кнопки персонажей (например sexButton.png)
 		if UnitRoster_ != null and not UnitRoster_.has_unit(id):
 			continue
 		var tex := load(BUTTONS_DIR + id + BUTTON_SUFFIX) as Texture2D
