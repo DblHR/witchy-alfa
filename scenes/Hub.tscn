@@ -1,9 +1,19 @@
 [gd_scene format=3 uid="uid://4e3na5jprilj"]
 
 [ext_resource type="Script" uid="uid://y0lb4ydr6ms6" path="res://scenes/Hub.gd" id="1_6grgh"]
-[ext_resource type="Texture2D" uid="uid://c65oqg3ajp68q" path="res://assets/backgrounds/rooms/homeBG.png" id="1_hnc56"]
-[ext_resource type="Texture2D" uid="uid://b3bmjh4oqhnr6" path="res://assets/backgrounds/rooms/homeBG_L2.png" id="2_l2"]
-[ext_resource type="Texture2D" uid="uid://dlvqn22g5hlwg" path="res://assets/backgrounds/rooms/homeBG_L3.png" id="3_l3"]
+[ext_resource type="Texture2D" path="res://assets/hub/homeBG.png" id="1_hnc56"]
+[ext_resource type="Texture2D" path="res://assets/hub/homeBG_L2.png" id="2_l2"]
+[ext_resource type="Texture2D" path="res://assets/hub/homeBG_L3.png" id="3_l3"]
+[ext_resource type="Texture2D" path="res://assets/hub/homeFireplace.png" id="10_fire"]
+[ext_resource type="Texture2D" path="res://assets/hub/homeMagickEffect.png" id="11_magic"]
+[ext_resource type="Texture2D" path="res://assets/hub/homePumpkinOn.png" id="12_pon"]
+[ext_resource type="Texture2D" path="res://assets/hub/homePumpkinOff.png.png" id="13_poff"]
+[ext_resource type="Texture2D" path="res://assets/hub/homeStar1.png" id="14_s1"]
+[ext_resource type="Texture2D" path="res://assets/hub/homeStar2.png" id="15_s2"]
+[ext_resource type="Texture2D" path="res://assets/hub/homeStar3.png" id="16_s3"]
+[ext_resource type="Script" path="res://scripts/home/HubToggle.gd" id="17_toggle"]
+[ext_resource type="Script" path="res://scripts/home/HubStars.gd" id="18_stars"]
+[ext_resource type="Script" path="res://scripts/home/HubStar.gd" id="19_star"]
 [ext_resource type="Texture2D" uid="uid://cniy2vvgjr5h7" path="res://assets/ui/buttons/startRunButton.png" id="2_6grgh"]
 [ext_resource type="Texture2D" uid="uid://ngcxb0tkqr48" path="res://assets/ui/buttons/inventoryButton.png" id="6_shn0c"]
 [ext_resource type="Script" path="res://scripts/home/HomeRoute.gd" id="7_route"]
@@ -27,13 +37,85 @@ texture = ExtResource("1_hnc56")
 expand_mode = 1
 stretch_mode = 5
 
+[node name="Fireplace" type="Control" parent="."]
+layout_mode = 0
+offset_left = -7.0
+offset_top = 624.0
+offset_right = 563.0
+offset_bottom = 1084.0
+mouse_filter = 2
+script = ExtResource("17_toggle")
+
+[node name="On" type="TextureRect" parent="Fireplace"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("10_fire")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Hit" type="Polygon2D" parent="Fireplace"]
+color = Color(1, 0.5, 0.1, 0.35)
+polygon = PackedVector2Array(110, -20, 215, -20, 290, 30, 330, 110, 330, 285, 20, 285, 20, 110, 50, 30)
+
+[node name="Pumpkin" type="Control" parent="."]
+layout_mode = 0
+offset_left = 1732.0
+offset_top = 324.0
+offset_right = 1927.0
+offset_bottom = 534.0
+mouse_filter = 2
+script = ExtResource("17_toggle")
+
+[node name="Off" type="TextureRect" parent="Pumpkin"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("13_poff")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="On" type="TextureRect" parent="Pumpkin"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("12_pon")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="MagicEffect" type="TextureRect" parent="."]
+modulate = Color(1, 1, 1, 0)
+layout_mode = 0
+offset_left = 270.0
+offset_top = 650.0
+offset_right = 1540.0
+offset_bottom = 1090.0
+mouse_filter = 2
+texture = ExtResource("11_magic")
+expand_mode = 1
+stretch_mode = 5
+
 [node name="WalkersBack" type="Node2D" parent="."]
 y_sort_enabled = true
 
 [node name="CauldronLayer" type="TextureRect" parent="."]
 layout_mode = 0
-offset_right = 1920.0
-offset_bottom = 1080.0
+offset_left = 581.0
+offset_top = 755.0
+offset_right = 1221.0
+offset_bottom = 1045.0
 mouse_filter = 2
 texture = ExtResource("2_l2")
 expand_mode = 1
@@ -50,6 +132,30 @@ mouse_filter = 2
 texture = ExtResource("3_l3")
 expand_mode = 1
 stretch_mode = 5
+
+[node name="Stars" type="Node2D" parent="."]
+script = ExtResource("18_stars")
+
+[node name="Star1" type="Node2D" parent="Stars"]
+position = Vector2(894, -10)
+script = ExtResource("19_star")
+texture = ExtResource("14_s1")
+rope_length = 164.0
+radius = 40.0
+
+[node name="Star3" type="Node2D" parent="Stars"]
+position = Vector2(939, -10)
+script = ExtResource("19_star")
+texture = ExtResource("16_s3")
+rope_length = 55.0
+radius = 34.0
+
+[node name="Star2" type="Node2D" parent="Stars"]
+position = Vector2(1012, -10)
+script = ExtResource("19_star")
+texture = ExtResource("15_s2")
+rope_length = 155.0
+radius = 32.0
 
 [node name="DragLayer" type="Node2D" parent="."]
 

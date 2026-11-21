@@ -2,6 +2,9 @@ extends Control
 ## Дом (хаб): фон из трёх слоёв (стены — котёл — передний план, все в Hub.tscn), персонажи ростера
 ## гуляют по маршрутам (Hub.tscn → Routes, линии HomeRoute; в игре их не видно), меню комнат сверху
 ## справа (HubMenu), котёл — вход в алхимию.
+## Живые мелочи (все узлами в Hub.tscn — двигайте там): звёздочки на ниточках (Stars, HubStars),
+## тыква-котик и камин — клик вкл/выкл (Pumpkin, Fireplace, HubToggle), магический круг у котла
+## (MagicEffect) — проявляется, если держать курсор на котле.
 
 @onready var start_run: TextureButton = %StartRunButton
 @onready var inv: TextureButton = %InventoryButton
@@ -12,6 +15,17 @@ extends Control
 @onready var cauldron_layer: TextureRect = $CauldronLayer
 @onready var foreground: TextureRect = $Foreground
 @onready var menu: HubMenu = $HubMenu
+@onready var stars: HubStars = $Stars
+@onready var pumpkin: HubToggle = $Pumpkin
+@onready var fireplace: HubToggle = $Fireplace
+@onready var magic_effect: TextureRect = $MagicEffect
+
+## Магический круг: через сколько секунд на котле начинает проявляться, за сколько проявляется
+## полностью и за сколько гаснет, когда курсор ушёл.
+const MAGIC_DELAY := 2.0
+const MAGIC_FADE_IN := 5.0
+const MAGIC_FADE_OUT := 1.2
+var _magic_hold := 0.0
 
 func _ready() -> void:
 	get_tree().paused = false
@@ -21,6 +35,8 @@ func _ready() -> void:
 	_spawn_walkers()
 	# Котла ещё нет (покупается у Рикки) — слоя с котлом (котёл и коврик) не видно, клика нет.
 	cauldron_layer.visible = AlchemyDB.has_cauldron()
+	magic_effect.visible = cauldron_layer.visible
+	magic_effect.modulate.a = 0.0
 	_build_cauldron_bubbles()
 	_build_door_hint()
 	_refresh_badges()
@@ -130,7 +146,7 @@ var _bubbles: CPUParticles2D
 var _cauldron_hover := false
 
 func _build_cauldron_bubbles() -> void:
-	_bubbles = CauldronBubbles.make(Vector2(910, 785), Vector2(70, 6))
+	_bubbles = CauldronBubbles.make(Vector2(905, 782), Vector2(70, 6))
 	add_child(_bubbles)
 	move_child(_bubbles, cauldron_layer.get_index() + 1)
 
@@ -237,15 +253,32 @@ func _ui_blocks() -> bool:
 func _world_locked() -> bool:
 	return _talking != "" or (DialogueManager_ != null and DialogueManager_.is_showing()) or get_tree().paused
 
-func _process(_delta: float) -> void:
+## Тыква / камин под курсором (если не закрыты передним планом).
+func _toggle_at(p: Vector2) -> HubToggle:
+	if _opaque(foreground, p):
+		return null
+	for t: HubToggle in [pumpkin, fireplace]:
+		if t != null and t.hit(p):
+			return t
+	return null
+
+func _process(delta: float) -> void:
 	var p := get_viewport().get_mouse_position()
 	var over: HomeWalker = null
 	var cauldron := false
 	var door := false
-	if not _world_locked() and not _dragging and not _ui_blocks():
-		over = _walker_at(p)
-		cauldron = over == null and not _opaque(foreground, p) and _cauldron_at(p)
-		door = over == null and not cauldron and _door_at(p)
+	var star := false
+	var toggle_hot := false
+	if not _world_locked() and not _dragging and not _ui_blocks() and not stars.is_grabbing():
+		star = stars.star_at(p) != null
+		over = null if star else _walker_at(p)
+		cauldron = not star and over == null and not _opaque(foreground, p) and _cauldron_at(p)
+		toggle_hot = not star and over == null and not cauldron and _toggle_at(p) != null
+		door = not star and over == null and not cauldron and not toggle_hot and _door_at(p)
+	# Круг считает курсор на котле, даже если перед котлом прошёл персонаж.
+	var on_cauldron := not _world_locked() and not _ui_blocks() and not stars.is_grabbing() \
+		and not _opaque(foreground, p) and _cauldron_at(p)
+	_update_magic(on_cauldron, delta)
 	if over != _hovered:
 		if _hovered != null and is_instance_valid(_hovered):
 			_hovered.set_hover(false)
@@ -254,10 +287,31 @@ func _process(_delta: float) -> void:
 			over.set_hover(true)
 	_set_cauldron_hover(cauldron)
 	_set_door_hover(door)
-	var hand := over != null or cauldron or door or _dragging
-	Input.set_default_cursor_shape(Input.CURSOR_DRAG if _dragging else (Input.CURSOR_POINTING_HAND if hand else Input.CURSOR_ARROW))
+	var hand := over != null or cauldron or door or _dragging or star or toggle_hot
+	var drag := _dragging or stars.is_grabbing()
+	Input.set_default_cursor_shape(Input.CURSOR_DRAG if drag else (Input.CURSOR_POINTING_HAND if hand else Input.CURSOR_ARROW))
+
+## Магический круг у котла: курсор на котле дольше MAGIC_DELAY — проявляется за MAGIC_FADE_IN.
+func _update_magic(on_cauldron: bool, delta: float) -> void:
+	if not magic_effect.visible:
+		return
+	if on_cauldron:
+		_magic_hold += delta
+		var target := clampf((_magic_hold - MAGIC_DELAY) / MAGIC_FADE_IN, 0.0, 1.0)
+		magic_effect.modulate.a = maxf(magic_effect.modulate.a, target)
+	else:
+		_magic_hold = 0.0
+		magic_effect.modulate.a = move_toward(magic_effect.modulate.a, 0.0, delta / MAGIC_FADE_OUT)
 
 func _input(event: InputEvent) -> void:
+	# Звёздочку тянут — ведём её, пока не отпустят (даже над кнопками).
+	if stars.is_grabbing():
+		if event is InputEventMouseMotion:
+			stars.drag_to((event as InputEventMouseMotion).position)
+		elif event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and not event.pressed:
+			stars.release()
+			get_viewport().set_input_as_handled()
+		return
 	# Отпускание / перетаскивание доводим до конца, даже если курсор над кнопкой.
 	if _pressed != null:
 		if event is InputEventMouseMotion:
@@ -286,6 +340,11 @@ func _input(event: InputEvent) -> void:
 		return
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
 		var p: Vector2 = event.position
+		var st := stars.star_at(p)
+		if st != null:
+			stars.grab(st, p)
+			get_viewport().set_input_as_handled()
+			return
 		var w := _walker_at(p)
 		if w != null:
 			_pressed = w
@@ -294,6 +353,9 @@ func _input(event: InputEvent) -> void:
 		elif not _opaque(foreground, p) and _cauldron_at(p):
 			get_viewport().set_input_as_handled()
 			SceneRouter_.go_to_alchemy()
+		elif _toggle_at(p) != null:
+			get_viewport().set_input_as_handled()
+			_toggle_at(p).toggle()
 		elif _door_at(p):
 			get_viewport().set_input_as_handled()
 			SceneRouter_.go_to_farm()
