@@ -1,10 +1,7 @@
 [gd_scene format=3 uid="uid://7ts2e40ecexi"]
 
 [ext_resource type="Script" uid="uid://bppce7y23erno" path="res://scenes/MainMenu.gd" id="1_script"]
-[ext_resource type="Texture2D" path="res://assets/ui/menu/mainmenu_background.png" id="2_menu_bg"]
-[ext_resource type="Texture2D" path="res://assets/ui/menu/mainmenu_witch.png" id="10_witch"]
-[ext_resource type="Texture2D" path="res://assets/ui/menu/mainmenu_panel.png" id="11_panel"]
-[ext_resource type="Script" path="res://scripts/farm/WitchZone.gd" id="12_zone"]
+[ext_resource type="Texture2D" uid="uid://cffpko2p3ekun" path="res://assets/ui/menu/mainmenu_background.png" id="2_menu_bg"]
 [ext_resource type="Texture2D" uid="uid://cnnrw0xddb22l" path="res://assets/backgrounds/menu/pre_mainmenu_BG.png" id="3_pre_bg"]
 [ext_resource type="Texture2D" uid="uid://dogvcsu1d5gvw" path="res://assets/ui/menu/heart.png" id="4_heart"]
 [ext_resource type="Texture2D" uid="uid://18yifof4frno" path="res://assets/ui/buttons/pre_mainmenu_clickbutton.png" id="5_click"]
@@ -12,6 +9,9 @@
 [ext_resource type="Texture2D" uid="uid://ugbub80exsfn" path="res://assets/ui/buttons/loadGameButton.png" id="7_load"]
 [ext_resource type="Texture2D" uid="uid://jc8oy8at6b04" path="res://assets/ui/buttons/optionsMainmenuButton.png" id="8_options"]
 [ext_resource type="Texture2D" uid="uid://b20tcsehsqgcj" path="res://assets/ui/buttons/quitGameButton.png" id="9_quit"]
+[ext_resource type="Texture2D" uid="uid://h0dp1b75kw7i" path="res://assets/ui/menu/mainmenu_witch.png" id="10_witch"]
+[ext_resource type="Texture2D" uid="uid://djwphjk563lmi" path="res://assets/ui/menu/mainmenu_panel.png" id="11_panel"]
+[ext_resource type="Script" uid="uid://djs8lrqv0wkbg" path="res://scripts/farm/WitchZone.gd" id="12_zone"]
 
 [node name="MainMenu" type="Control" unique_id=1885197433]
 layout_mode = 3
@@ -42,12 +42,16 @@ scale = Vector2(1.025, 1.025)
 position = Vector2(-960, -540)
 
 [node name="Sprite" type="Sprite2D" parent="Witch/Canvas" unique_id=1730800003]
+position = Vector2(-7.8048773, -22.926832)
+scale = Vector2(0.9106167, 0.91061676)
 texture = ExtResource("10_witch")
 centered = false
 
 [node name="Zones" type="Node2D" parent="Witch/Canvas" unique_id=1730800004]
 
 [node name="Face" type="Polygon2D" parent="Witch/Canvas/Zones" unique_id=1730800005]
+position = Vector2(-33.9392, -2.9711885)
+scale = Vector2(1.0495195, 1.0495195)
 color = Color(1, 0.3, 0.6, 0.35)
 polygon = PackedVector2Array(1060, 120, 1230, 60, 1380, 150, 1420, 280, 1300, 370, 1180, 390, 1100, 340, 1040, 240)
 script = ExtResource("12_zone")
