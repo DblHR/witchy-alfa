@@ -1,4 +1,8 @@
 extends Control
+## Главное меню. Слои (MainMenu.tscn): фон → ведьмочка (Witch: чуть парит сама по себе; зоны
+## клика Witch/Canvas/Zones — как на ферме, картинки assets/ui/menu/<sprite>.png; рука — сердечко
+## на ладошке, точка Witch/Canvas/HeartAt) → панель → кнопки. Новая игра / загрузка — через выбор
+## слота (SaveSlotMenu), настройки — то же окно, что в паузе (SettingsPanel).
 
 const NORMAL_COLOR := Color(1.0, 1.0, 1.0, 0.94)
 const HOVER_COLOR := Color(1.0, 0.72, 0.9, 1.0)
@@ -25,7 +29,34 @@ const HEART_TINT_BRIGHT := Color(1.0, 0.72, 0.9, 1.0)
 @onready var load_button: TextureButton = %LoadButton
 @onready var options_button: TextureButton = %OptionsButton
 @onready var quit_button: TextureButton = %QuitButton
-@onready var options_dialog: AcceptDialog = $MenuLayer/OptionsDialog
+@onready var witch: Node2D = $Witch
+@onready var witch_sprite: Sprite2D = $Witch/Canvas/Sprite
+@onready var witch_zones: Node2D = $Witch/Canvas/Zones
+@onready var heart_at: Marker2D = $Witch/Canvas/HeartAt
+
+## Ведьмочка парит: насколько (px) и как быстро (рад/с) по x и y, и лёгкий наклон.
+const FLOAT_AMP := Vector2(20.0, 20.0)
+const FLOAT_SPEED := Vector2(0.8, 0.8)
+const FLOAT_TILT := 0.02
+const WITCH_DIR := "res://assets/ui/menu/"
+## Сердечко на ладошке: сколько висит, размер, как высоко подпрыгивает и как быстро крутится.
+const PALM_HEART_TIME := 5.0
+const PALM_HEART_SIZE := 80.0
+const PALM_HEART_REGION := Rect2(582, 142, 742, 705)
+const PALM_HEART_HOP := 22.0
+const PALM_HEART_HOP_SPEED := 2.4
+const PALM_HEART_SPIN := 2.6
+
+var _witch_base := Vector2.ZERO
+var _witch_tex: Texture2D
+var _witch_token := 0
+var _float_t := 0.0
+var _palm_heart: Sprite2D
+var _palm_heart_t := 0.0
+var _palm_heart_left := 0.0
+var _slot_menu: SaveSlotMenu
+var _settings_overlay: Control
+var _settings: SettingsPanel
 
 var _button_glows: Dictionary = {}
 var _hovered_buttons: Dictionary = {}
@@ -42,6 +73,9 @@ func _ready() -> void:
 	_setup_button_map()
 	_setup_menu_buttons()
 	_setup_click_prompt()
+	_setup_witch()
+	_setup_slot_menu()
+	_setup_settings()
 	set_process(true)
 	_start_pre_menu_sequence()
 
@@ -52,6 +86,118 @@ func _process(delta: float) -> void:
 	_pre_menu_time += delta
 	_animate_heart(delta)
 	_animate_click_prompt(delta)
+	_animate_witch(delta)
+
+# --- Ведьмочка -----------------------------------------------------------------
+
+func _setup_witch() -> void:
+	_witch_base = witch.position
+	_witch_tex = witch_sprite.texture
+	_palm_heart = Sprite2D.new()
+	_palm_heart.name = "PalmHeart"
+	_palm_heart.texture = heart.texture
+	# heart.png — полноэкранный холст; берём только само сердечко
+	_palm_heart.region_enabled = true
+	_palm_heart.region_rect = PALM_HEART_REGION
+	_palm_heart.visible = false
+	heart_at.get_parent().add_child(_palm_heart)
+
+func _animate_witch(delta: float) -> void:
+	_float_t += delta
+	witch.position = _witch_base + Vector2(sin(_float_t * FLOAT_SPEED.x) * FLOAT_AMP.x, sin(_float_t * FLOAT_SPEED.y) * FLOAT_AMP.y)
+	witch.rotation = sin(_float_t * 0.29) * FLOAT_TILT
+	if _palm_heart_left > 0.0:
+		_palm_heart_left -= delta
+		_palm_heart_t += delta
+		var base := PALM_HEART_SIZE / maxf(1.0, _palm_heart.region_rect.size.x)
+		var pop := minf(1.0, _palm_heart_t / 0.2)
+		var hop := absf(sin(_palm_heart_t * PALM_HEART_HOP_SPEED)) * PALM_HEART_HOP
+		_palm_heart.position = heart_at.position + Vector2(0, -hop)
+		_palm_heart.scale = Vector2(cos(_palm_heart_t * PALM_HEART_SPIN), 1.0) * base * pop
+		_palm_heart.modulate.a = clampf(_palm_heart_left / 0.4, 0.0, 1.0)
+		if _palm_heart_left <= 0.0:
+			_palm_heart.visible = false
+
+func _witch_zone_at(p: Vector2) -> WitchZone:
+	if pre_layer.visible or not menu_layer.visible or _overlay_open():
+		return null
+	for z in witch_zones.get_children():
+		if z is WitchZone and (z as WitchZone).has_global_point(p):
+			return z as WitchZone
+	return null
+
+func _gui_input(event: InputEvent) -> void:
+	if event is InputEventMouseMotion:
+		var hot := _witch_zone_at((event as InputEventMouseMotion).global_position) != null
+		mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND if hot else Control.CURSOR_ARROW
+	elif event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+		var z := _witch_zone_at((event as InputEventMouseButton).global_position)
+		if z != null:
+			accept_event()
+			witch_react(z)
+
+## Клик по зоне: картинка зоны на duration секунд (если она уже есть в assets/ui/menu/) и действие.
+func witch_react(z: WitchZone) -> void:
+	if z.action == "heart":
+		show_palm_heart()
+	var path := WITCH_DIR + z.sprite + ".png"
+	if not ResourceLoader.exists(path):
+		return
+	_witch_token += 1
+	var token := _witch_token
+	witch_sprite.texture = load(path) as Texture2D
+	await get_tree().create_timer(maxf(0.1, z.duration)).timeout
+	if token == _witch_token and is_instance_valid(witch_sprite):
+		witch_sprite.texture = _witch_tex
+
+## Сердечко на ладошке (крутится и подпрыгивает, двигается вместе с ведьмочкой).
+func show_palm_heart() -> void:
+	_palm_heart_t = 0.0
+	_palm_heart_left = PALM_HEART_TIME
+	_palm_heart.visible = true
+
+func palm_heart_visible() -> bool:
+	return _palm_heart != null and _palm_heart.visible
+
+# --- Слоты и настройки -----------------------------------------------------------
+
+func _setup_slot_menu() -> void:
+	_slot_menu = SaveSlotMenu.new()
+	add_child(_slot_menu)
+	move_child(_slot_menu, pre_layer.get_index())
+	_slot_menu.slot_chosen.connect(_on_slot_chosen)
+
+func _setup_settings() -> void:
+	_settings_overlay = Control.new()
+	_settings_overlay.name = "SettingsOverlay"
+	_settings_overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_settings_overlay.mouse_filter = Control.MOUSE_FILTER_STOP
+	_settings_overlay.visible = false
+	_settings_overlay.z_index = 20
+	var dim := ColorRect.new()
+	dim.color = GameUi.DIM_COLOR
+	dim.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_settings_overlay.add_child(dim)
+	_settings = SettingsPanel.new()
+	_settings_overlay.add_child(_settings)
+	_settings.back_requested.connect(func() -> void: _settings_overlay.visible = false)
+	add_child(_settings_overlay)
+	_settings.process_mode = Node.PROCESS_MODE_ALWAYS   ## в паузе — WHEN_PAUSED, здесь игра не на паузе
+	move_child(_settings_overlay, pre_layer.get_index())
+	EscClose.register(_settings_overlay, func() -> void: _settings_overlay.visible = false)
+
+func _overlay_open() -> bool:
+	return (_slot_menu != null and _slot_menu.visible) or (_settings_overlay != null and _settings_overlay.visible)
+
+func _on_slot_chosen(slot: int, new_game: bool) -> void:
+	if new_game:
+		SaveManager_.start_new_game(slot)
+		if StoryState_ != null:
+			StoryState_.reset_to_defaults()
+		SceneRouter_.go_to_prologue()
+	else:
+		SaveManager_.continue_game(slot)
+		SceneRouter_.go_to_hub()
 
 
 
@@ -219,21 +365,16 @@ func _on_click_to_start_pressed() -> void:
 
 
 func _on_continue_pressed() -> void:
-	if SaveManager_.continue_game():
-		SceneRouter_.go_to_hub()
-	else:
-		SceneRouter_.go_to_hub()
+	_slot_menu.open(false)
 
 
 func _on_new_game_pressed() -> void:
-	SaveManager_.start_new_game()
-	if StoryState_ != null:
-		StoryState_.reset_to_defaults()
-	SceneRouter_.go_to_prologue()
+	_slot_menu.open(true)
 
 
 func _on_options_pressed() -> void:
-	options_dialog.popup_centered()
+	_settings.refresh()
+	_settings_overlay.visible = true
 
 
 func _on_quit_pressed() -> void:

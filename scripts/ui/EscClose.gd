@@ -48,6 +48,10 @@ static func close_top(tree: SceneTree) -> bool:
 
 ## a выше b на экране: больший z_index, а при равном — позже в дереве.
 static func _above(a: Node, b: Node) -> bool:
+	if b.is_ancestor_of(a):
+		return true   ## окно внутри окна (вопрос внутри выбора слота) — выше
+	if a.is_ancestor_of(b):
+		return false
 	var za := (a as CanvasItem).z_index
 	var zb := (b as CanvasItem).z_index
 	if za != zb:
