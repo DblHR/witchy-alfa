@@ -1,9 +1,9 @@
 [gd_scene format=3 uid="uid://dlt8t4201g1gx"]
 
 [ext_resource type="Script" uid="uid://d10t0s6328mbk" path="res://scenes/farm_room.gd" id="1_1t45w"]
-[ext_resource type="Texture2D" path="res://assets/farm/background/farm_BCG.png" id="1_mbp2a"]
-[ext_resource type="Texture2D" path="res://assets/farm/background/witch.png" id="2_witch"]
-[ext_resource type="Script" path="res://scripts/farm/WitchZone.gd" id="3_zone"]
+[ext_resource type="Texture2D" uid="uid://de7bgs3h4xxal" path="res://assets/farm/background/farm_BCG.png" id="1_mbp2a"]
+[ext_resource type="Texture2D" uid="uid://bxv5jqf3ny6us" path="res://assets/farm/background/witch.png" id="2_witch"]
+[ext_resource type="Script" uid="uid://djs8lrqv0wkbg" path="res://scripts/farm/WitchZone.gd" id="3_zone"]
 [ext_resource type="Texture2D" uid="uid://r6mi4odvmydo" path="res://assets/farm/background/table.png" id="4_o7qkg"]
 [ext_resource type="Texture2D" uid="uid://cwcidm8ocahx1" path="res://assets/farm/background/chair.png" id="5_o7qkg"]
 [ext_resource type="PackedScene" uid="uid://cu1a3uu65x45s" path="res://scenes/FarmSlot.tscn" id="5_slot"]
@@ -19,7 +19,7 @@ script = ExtResource("1_1t45w")
 
 [node name="World" type="Control" parent="." unique_id=1731500001]
 unique_name_in_owner = true
-layout_mode = 0
+anchors_preset = 0
 offset_left = -100.0
 offset_top = -100.0
 offset_right = 2020.0
@@ -57,14 +57,12 @@ unique_name_in_owner = true
 color = Color(1, 0.3, 0.6, 0.35)
 polygon = PackedVector2Array(593, 27, 687, 0, 1293, 0, 1307, 120, 1627, 407, 1300, 407, 1113, 347, 1007, 400, 900, 413, 833, 360, 833, 267, 687, 240, 600, 120)
 script = ExtResource("3_zone")
-duration = 0.5
 
 [node name="Breasts" type="Polygon2D" parent="World/WitchZones" unique_id=1731500005]
 color = Color(1, 0.6, 0.2, 0.35)
 polygon = PackedVector2Array(900, 413, 1007, 400, 1113, 347, 1127, 427, 1100, 560, 1113, 747, 1060, 767, 940, 760, 900, 707, 807, 707, 760, 667, 773, 600, 840, 480)
 script = ExtResource("3_zone")
 sprite = "witch_breasts"
-duration = 0.5
 
 [node name="Butt" type="Polygon2D" parent="World/WitchZones" unique_id=1731500006]
 color = Color(0.6, 0.3, 1, 0.35)
@@ -75,7 +73,7 @@ duration = 10.0
 
 [node name="FarmSlots" type="Control" parent="World" unique_id=1579208696]
 unique_name_in_owner = true
-layout_mode = 0
+anchors_preset = 0
 offset_left = 100.0
 offset_top = 100.0
 offset_right = 2020.0
@@ -101,10 +99,10 @@ slot_index = 1
 
 [node name="table" type="TextureRect" parent="World/FarmSlots" unique_id=1536719768]
 layout_mode = 0
-offset_left = 1.0
+offset_left = -100.0
 offset_top = 161.0
-offset_right = 1033.0
-offset_bottom = 1080.0
+offset_right = 1032.0
+offset_bottom = 1179.0
 mouse_filter = 2
 texture = ExtResource("4_o7qkg")
 
