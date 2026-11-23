@@ -37,7 +37,7 @@ var take_lure := false
 var known_recipes: Array[String] = []
 var selected_artifact_id: String = ""
 var selected_food_id: String = ""
-var owned_artifacts: Array[String] = ["mace_staff_common", "dango_staff_common"]
+var owned_artifacts: Array[String] = ["mace_staff_common"]   ## данго-посох находится в камине дома (Hub)
 var unlocked_potion_ids: Array[String] = ["heal_potion", "energy_potion", "battle_potion"]
 var white_statue_rooms: int = 0
 var black_statue_rooms: int = 0
@@ -102,7 +102,7 @@ func reset_to_defaults() -> void:
 	_artifacts_migrated = false
 	selected_artifact_id = ""
 	selected_food_id = ""
-	owned_artifacts = ["mace_staff_common", "dango_staff_common"]
+	owned_artifacts = ["mace_staff_common"]
 	unlocked_potion_ids = ["heal_potion", "energy_potion", "battle_potion"]
 	white_statue_rooms = 0
 	black_statue_rooms = 0

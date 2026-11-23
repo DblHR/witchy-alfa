@@ -372,10 +372,29 @@ func _input(event: InputEvent) -> void:
 			SceneRouter_.go_to_alchemy()
 		elif _toggle_at(p) != null:
 			get_viewport().set_input_as_handled()
-			_toggle_at(p).toggle()
+			var t := _toggle_at(p)
+			t.toggle()
+			if t == fireplace:
+				_fireplace_first_click()
 		elif _door_at(p):
 			get_viewport().set_input_as_handled()
 			SceneRouter_.go_to_farm()
+
+## Первый клик по камину: главный герой находит данго-посох (диалог data/dialogues/hub/home_events.json,
+## "fireplace_dango": реплика с give_item — посох выдаётся и показывается «Получено»). Один раз.
+const FIREPLACE_FLAG := "fireplace_dango_found"
+const FIREPLACE_DIALOGUE := "fireplace_dango"
+
+func _fireplace_first_click() -> void:
+	if StoryState_ == null or StoryDialogueDB_ == null or StoryState_.has_flag(FIREPLACE_FLAG):
+		return
+	if DialogueManager_.is_showing():
+		return
+	var d := StoryDialogueDB_.get_dialogue(FIREPLACE_DIALOGUE)
+	if d.is_empty():
+		return
+	StoryState_.set_flag(FIREPLACE_FLAG, true)   ## сразу: второй клик посреди сцены посох не дублирует
+	DialogueManager_.show_sequence(StoryDialogueDB_.resolve_lines(d), Callable(self, "_on_pending_story_dialogue_finished").bind(d))
 
 ## Клик по персонажу: с кем есть разговор — разговор (пока только Фуфу), остальные подпрыгивают
 ## (на кровати — нет), ведьмочка на миг становится «фазой 2».

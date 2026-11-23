@@ -1,0 +1,27 @@
+{
+  "dialogues": [
+    {
+      "id": "fireplace_dango",
+      "type": "story",
+      "on_finish": {
+        "set_flags": [
+          "fireplace_dango_found"
+        ]
+      },
+      "lines": [
+        {
+          "speaker": "hero",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "Ого, что это?",
+          "characters": [
+            {
+              "id": "hero"
+            }
+          ],
+          "give_item": "dango_staff_common"
+        }
+      ]
+    }
+  ]
+}

@@ -39,6 +39,16 @@ const POT_MOUTH := Rect2(250, 720, 880, 480)
 ## Стенки котла (ломаные по краю картинки cauldron.png, координаты World). Сверху котёл открыт.
 const POT_WALL_LEFT: Array[Vector2] = [Vector2(330, 700), Vector2(230, 800), Vector2(150, 920), Vector2(110, 1010), Vector2(130, 1240)]
 const POT_WALL_RIGHT: Array[Vector2] = [Vector2(1050, 700), Vector2(1160, 820), Vector2(1240, 940), Vector2(1270, 1040), Vector2(1240, 1240)]
+## Картинки мини-игры с маятником и видимая часть дуги на картинке (градусы).
+const MINIGAME_ARC := "res://assets/alchemy/alchemy_minigame.png"
+const MINIGAME_ZONE := "res://assets/alchemy/alchemy_minigame_zone.png"
+const MINIGAME_CURSOR := "res://assets/alchemy/alchemy_minigame_cursor.png"
+const MINIGAME_FROM_DEG := 237.0
+const MINIGAME_TO_DEG := 302.0
+
+static func _tex_or_null(path: String) -> Texture2D:
+	return load(path) as Texture2D if ResourceLoader.exists(path) else null
+
 ## Промахов маятником — и вместо зелья алхимический шлак (ингредиенты всё равно тратятся).
 const SLAG_AFTER_MISSES := 2
 const SLAG_ITEM := "alchemy_slag"
@@ -303,6 +313,14 @@ func _build_stage_overlays() -> void:
 	_pendulum.arc_center = Vector2(607.0, 1024.0) * k
 	_pendulum.arc_radius = 690.0 * k
 	_pendulum.arc_width = 52.0 * k
+	# Картинки мини-игры: дуга, оранжевая зона, сердечко-курсор (assets/alchemy/alchemy_minigame*.png).
+	_pendulum.arc_texture = _tex_or_null(MINIGAME_ARC)
+	_pendulum.zone_texture = _tex_or_null(MINIGAME_ZONE)
+	_pendulum.cursor_texture = _tex_or_null(MINIGAME_CURSOR)
+	if _pendulum.arc_texture != null:
+		# Дуга картинки короче (концы растворяются) — сердечко бегает только по видимой части.
+		_pendulum.from_angle_deg = MINIGAME_FROM_DEG
+		_pendulum.to_angle_deg = MINIGAME_TO_DEG
 	_pendulum.stopped.connect(_on_pendulum_stopped)
 
 func _panel_style(alpha: float = 0.72) -> StyleBoxFlat:
@@ -637,7 +655,7 @@ func _set_stage(stage: int) -> void:
 		Stage.STIR:
 			_hint_label.text = "Зажмите левую кнопку мыши и мешайте по кругу."
 		Stage.PENDULUM:
-			_hint_label.text = "Нажмите (клик / пробел), когда маятник на зелёном."
+			_hint_label.text = "Нажмите (клик / пробел), когда сердечко на оранжевой зоне." if _pendulum.arc_texture != null else "Нажмите (клик / пробел), когда маятник на зелёном."
 		Stage.DONE:
 			_hint_label.text = ""
 	_refresh_checklist()

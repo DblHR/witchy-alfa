@@ -115,7 +115,7 @@ var _potions: Array[String] = []
 ## Баффы забега (под золотом) и слоты зелий (внизу слева, над колодой).
 var _buff_bar: CardBuffBar
 var _potion_bar: CardBuffBar
-const POTION_BAR_POS := Vector2(24, 890)
+const POTION_BAR_POS := Vector2(8, 834)   ## над колодой добора (она в левом нижнем углу)
 ## Зелья забега: сила (числа — тут, описание — RunItems.POTION_DEFS).
 const POTION_HEAL := 0.40
 const POTION_ENERGY := 2

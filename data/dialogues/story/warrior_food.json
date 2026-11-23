@@ -1,0 +1,58 @@
+{
+  "dialogues": [
+    {
+      "id": "warrior_empty_stomach",
+      "type": "story",
+      "on_finish": {
+        "set_flags": [
+          "warrior_food_talk_done"
+        ]
+      },
+      "lines": [
+        {
+          "speaker": "warrior",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "Ты хочешь идти на пустой желудок?",
+          "characters": [
+            {
+              "id": "witch"
+            },
+            {
+              "id": "warrior"
+            }
+          ]
+        },
+        {
+          "speaker": "witch",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "Нам нужно спешить, некогда есть!",
+          "characters": [
+            {
+              "id": "witch"
+            },
+            {
+              "id": "warrior"
+            }
+          ]
+        },
+        {
+          "speaker": "warrior",
+          "speaker_name": "",
+          "emotion": "",
+          "text": "Нет уж, я никуда не пойду, пока не поем!",
+          "characters": [
+            {
+              "id": "witch"
+            },
+            {
+              "id": "warrior"
+            }
+          ],
+          "give_item": "jelly"
+        }
+      ]
+    }
+  ]
+}

@@ -1137,6 +1137,32 @@ func _refresh_loadout_ui() -> void:
 	artifact_button.disabled = false
 	food_button.disabled = false
 
+## Воин уже в ростере, а в слоте еды пусто: один раз — сценка «на пустой желудок не пойду»
+## (data/dialogues/story/warrior_food.json, "warrior_empty_stomach"): выдаётся желе и сразу кладётся
+## в слот еды. Потом можно жать «В бой» снова. true — сценка запущена, в бой пока не идём.
+const WARRIOR_FOOD_FLAG := "warrior_food_talk_done"
+const WARRIOR_FOOD_DIALOGUE := "warrior_empty_stomach"
+const WARRIOR_FOOD_ITEM := "jelly"
+
+func _warrior_food_talk() -> bool:
+	if StoryState_ == null or StoryDialogueDB_ == null or StoryState_.has_flag(WARRIOR_FOOD_FLAG):
+		return false
+	if UnitRoster_ == null or not UnitRoster_.has_unit("warrior") or DungRun.selected_food_id != "":
+		return false
+	var d := StoryDialogueDB_.get_dialogue(WARRIOR_FOOD_DIALOGUE)
+	if d.is_empty():
+		return false
+	StoryState_.set_flag(WARRIOR_FOOD_FLAG, true)
+	DialogueManager_.show_sequence(StoryDialogueDB_.resolve_lines(d), func() -> void:
+		StoryState_.mark_dialogue_seen(WARRIOR_FOOD_DIALOGUE)
+		# Желе выдано репликой (give_item) — сразу в слот еды.
+		if Inventory_ != null and Inventory_.get_item_count(WARRIOR_FOOD_ITEM) <= 0:
+			Inventory_.add_item(WARRIOR_FOOD_ITEM, 1)
+		DungRun.selected_food_id = WARRIOR_FOOD_ITEM
+		_refresh_loadout_ui()
+	)
+	return true
+
 ## Картинки-подсказки в пустых слотах снаряжения (полупрозрачные).
 const SLOT_HINT_ICONS := {
 	"artifact": "res://assets/items/staffs/stick_staff.png",
@@ -1201,6 +1227,8 @@ func _party_is_empty() -> bool:
 func _on_start_button_pressed() -> void:
 	if _party_is_empty():
 		_update_empty_hint()
+		return
+	if _warrior_food_talk():
 		return
 	_ensure_default_leader()
 	DungRun.party_level = int(party_level.value)
