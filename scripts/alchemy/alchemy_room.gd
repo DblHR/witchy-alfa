@@ -417,7 +417,14 @@ func _open_recipe_popup() -> void:
 	_rebuild_recipe_cards()
 	_recipe_popup.visible = true
 
-## Карточки рецептов: сначала открытые, потом закрытые. На карточке — что нужно и сколько есть.
+## Порядок в окне рецептов: 0 — можно сварить сейчас, 1 — рецепт есть, но не хватает ингредиентов,
+## 2 — рецепт не открыт.
+static func _recipe_rank(recipe_id: String) -> int:
+	if not AlchemyDB.is_known(recipe_id):
+		return 2
+	return 0 if AlchemyDB.can_craft(recipe_id) else 1
+
+## Карточки рецептов: сначала те, что можно сварить, потом открытые без ингредиентов, потом закрытые. На карточке — что нужно и сколько есть.
 func _rebuild_recipe_cards() -> void:
 	for c in _recipe_grid.get_children():
 		_recipe_grid.remove_child(c)
@@ -425,8 +432,10 @@ func _rebuild_recipe_cards() -> void:
 	_recipe_buttons.clear()
 	var ids := AlchemyDB.get_recipe_ids()
 	ids.sort_custom(func(a: String, b: String) -> bool:
-		if AlchemyDB.is_known(a) != AlchemyDB.is_known(b):
-			return AlchemyDB.is_known(a)
+		var ra := _recipe_rank(a)
+		var rb := _recipe_rank(b)
+		if ra != rb:
+			return ra < rb
 		return AlchemyDB.get_recipe_name(a) < AlchemyDB.get_recipe_name(b)
 	)
 	for recipe_id in ids:

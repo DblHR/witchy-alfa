@@ -4,11 +4,12 @@ class_name SettingsPanel
 ## Окно «Настройки» в меню паузы:
 ##  - главный герой для диалогов и катсцен (StoryState_.main_hero, хранится в сохранении);
 ##    воин выбирается, только когда он уже есть в ростере;
-##  - частота реплик в бою и между комнатами (GameSettings, общая для всех сохранений).
+##  - частота реплик в бою и между комнатами (GameSettings, общая для всех сохранений);
+##  - экран: окно / полный экран (ещё F11 или Alt+Enter) и размер окна (тоже GameSettings).
 
 signal back_requested
 
-const PANEL_SIZE := Vector2(560, 520)
+const PANEL_SIZE := Vector2(600, 720)
 const SELECTED_COLOR := Color(1.0, 0.62, 0.86)
 const HERO_LABELS := {"witch": "Ведьмочка", "warrior": "Воин"}
 
@@ -17,6 +18,10 @@ var _hint: Label
 var _back_btn: Button
 var _banter_slider: HSlider
 var _banter_caption: Label
+var _screen_buttons: Dictionary = {}   ## false -> «Окно», true -> «Полный экран»
+var _size_label: Label
+var _size_prev: Button
+var _size_next: Button
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_WHEN_PAUSED
@@ -86,6 +91,48 @@ func _build() -> void:
 	)
 	box.add_child(_banter_slider)
 
+	box.add_child(GameUi.separator())
+	var screen_row := HBoxContainer.new()
+	screen_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	screen_row.add_theme_constant_override("separation", 16)
+	box.add_child(screen_row)
+	var screen_group := ButtonGroup.new()
+	for full in [false, true]:
+		var sb := Button.new()
+		sb.toggle_mode = true
+		sb.button_group = screen_group
+		sb.custom_minimum_size = Vector2(230, 56)
+		GameUi.style_toggle(sb, 24)
+		sb.pressed.connect(func() -> void:
+			GameSettings.set_fullscreen(full)
+			refresh()
+		)
+		screen_row.add_child(sb)
+		_screen_buttons[full] = sb
+
+	var size_row := HBoxContainer.new()
+	size_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	size_row.add_theme_constant_override("separation", 12)
+	box.add_child(size_row)
+	_size_prev = Button.new()
+	_size_prev.text = "◀"
+	_size_prev.custom_minimum_size = Vector2(56, 50)
+	GameUi.style_button(_size_prev, 24)
+	_size_prev.pressed.connect(_step_window_size.bind(-1))
+	size_row.add_child(_size_prev)
+	_size_label = Label.new()
+	_size_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_size_label.custom_minimum_size = Vector2(300, 50)
+	_size_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	GameUi.style_text(_size_label, 24)
+	size_row.add_child(_size_label)
+	_size_next = Button.new()
+	_size_next.text = "▶"
+	_size_next.custom_minimum_size = Vector2(56, 50)
+	GameUi.style_button(_size_next, 24)
+	_size_next.pressed.connect(_step_window_size.bind(1))
+	size_row.add_child(_size_next)
+
 	_back_btn = Button.new()
 	_back_btn.text = "Назад"
 	_back_btn.custom_minimum_size = Vector2(0, 60)
@@ -112,6 +159,40 @@ func refresh() -> void:
 		_hint.text = "Выбор откроется, когда к вам присоединится Воин."
 	_banter_slider.set_value_no_signal(GameSettings.banter_percent())
 	_refresh_banter_caption()
+	_refresh_screen()
+
+func _refresh_screen() -> void:
+	var full := GameSettings.is_fullscreen()
+	for k in _screen_buttons.keys():
+		var b: Button = _screen_buttons[k]
+		var on: bool = k == full
+		b.set_pressed_no_signal(on)
+		b.text = ("✓ " if on else "") + ("Полный экран" if k else "Окно")
+	var sz := GameSettings.current_window_size()
+	_size_label.text = "Окно: %d × %d" % [sz.x, sz.y]
+	_size_label.modulate.a = 0.45 if full else 1.0
+	_size_prev.disabled = full
+	_size_next.disabled = full
+
+## Следующий / предыдущий размер окна из тех, что помещаются на экран.
+func _step_window_size(dir: int) -> void:
+	var sizes := GameSettings.available_window_sizes()
+	var cur := GameSettings.current_window_size()
+	var idx := -1
+	for i in range(sizes.size()):
+		if sizes[i] == cur:
+			idx = i
+	if idx < 0:
+		# Окно растянули мышкой — ближайший размер в нужную сторону.
+		idx = 0
+		for i in range(sizes.size()):
+			if sizes[i].x <= cur.x:
+				idx = i
+		if dir < 0 and sizes[idx].x < cur.x:
+			dir = 0
+	idx = clampi(idx + dir, 0, sizes.size() - 1)
+	GameSettings.set_window_size(sizes[idx])
+	refresh()
 
 func _refresh_banter_caption() -> void:
 	var p := GameSettings.banter_percent()

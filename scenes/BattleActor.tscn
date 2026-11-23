@@ -37,19 +37,25 @@ offset = Vector2(0, -30)
 
 [node name="HPBar" type="ProgressBar" parent="." unique_id=382992035]
 unique_name_in_owner = true
-offset_left = -45.0
-offset_top = -279.0
-offset_right = 45.0
+offset_left = -75.0
+offset_top = -284.0
+offset_right = 75.0
 offset_bottom = -252.0
 theme_override_styles/fill = SubResource("StyleBoxFlat_nsd75")
 show_percentage = false
 
 [node name="HPLabel" type="Label" parent="." unique_id=44069842]
 unique_name_in_owner = true
-offset_left = -20.0
-offset_top = -279.0
-offset_right = 20.0
-offset_bottom = -256.0
+offset_left = -75.0
+offset_top = -284.0
+offset_right = 75.0
+offset_bottom = -252.0
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 5
+theme_override_font_sizes/font_size = 21
+horizontal_alignment = 1
+vertical_alignment = 1
 
 [node name="ENBar" type="ProgressBar" parent="." unique_id=244640497]
 unique_name_in_owner = true

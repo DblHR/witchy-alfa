@@ -27,6 +27,8 @@ func _ready() -> void:
 	catcher.grab_focus()
 
 	_build_pause_button()
+	# Окно / полный экран и размер окна из настроек (user://settings.cfg).
+	GameSettings.apply_display()
 	# Свечение при наведении — на все кнопки-картинки игры (ButtonGlow), по мере их появления.
 	get_tree().node_added.connect(_on_node_added)
 
@@ -51,6 +53,15 @@ const HOME_ON_ESC_SCENES := [
 ]
 ## Где на экране кнопка паузы (в доме на её месте сердечко — там только Esc).
 const PAUSE_BUTTON_SCENES := ["res://scenes/card/CardBattle.tscn"]
+
+## F11 и Alt+Enter — полный экран / окно (везде, в том числе в паузе и в диалогах).
+func _input(event: InputEvent) -> void:
+	if not (event is InputEventKey and event.pressed and not event.echo):
+		return
+	var k := event as InputEventKey
+	if k.physical_keycode == KEY_F11 or ((k.physical_keycode == KEY_ENTER or k.physical_keycode == KEY_KP_ENTER) and k.alt_pressed):
+		GameSettings.toggle_fullscreen()
+		get_viewport().set_input_as_handled()
 
 ## ESC ловим в _unhandled_input: сначала его получают сцены (свои окна закрывают сами), и только
 ## если никто не забрал — EscClose / пауза / домой.

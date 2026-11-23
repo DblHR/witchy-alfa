@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://d1vti11ov584h"
-path="res://.godot/imported/cauldron_dungeona_thumb.jpg-4d0f8a120088c1ea5988d42702543422.ctex"
+uid="uid://ce7lupfayylvl"
+path="res://.godot/imported/cauldron_potion.png-fbb0ef09bc2ca3033f6f918797ba6f31.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/alchemy/cauldron_dungeona_thumb.jpg"
-dest_files=["res://.godot/imported/cauldron_dungeona_thumb.jpg-4d0f8a120088c1ea5988d42702543422.ctex"]
+source_file="res://assets/alchemy/cauldron_potion.png"
+dest_files=["res://.godot/imported/cauldron_potion.png-fbb0ef09bc2ca3033f6f918797ba6f31.ctex"]
 
 [params]
 

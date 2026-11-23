@@ -111,6 +111,7 @@ func _add_cards(cards: Array[CardInstance]) -> void:
 	for card in sorted:
 		var view := CardView.new()
 		view.setup(card, false)
+		view.enable_keyword_tips()
 		_flow.add_child(view)
 
 static func _make_label(text: String, font_size: int) -> Label:

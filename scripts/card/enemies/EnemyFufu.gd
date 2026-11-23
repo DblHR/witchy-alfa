@@ -20,6 +20,13 @@ const MASK_TEXTURE := "res://assets/characters/fufu/fufu_mask.png"
 const FACE_TEXTURE := "res://assets/characters/fufu/fufu_battle.png"
 ## На какой фазе (номер в PHASES, с нуля) слетает маска: 2 — третья фаза, 25% HP.
 const UNMASK_PHASE := 2
+## Недокачанный отряд: на каждый уровень отряда ниже RECOMMENDED_LEVEL Фуфу крепче и бьёт сильнее,
+## а на каждой новой фазе получает щит (доля макс. HP за каждый недостающий уровень).
+## Без надписей и значков — просто бой тяжелее. На RECOMMENDED_LEVEL и выше ничего не меняется.
+const RECOMMENDED_LEVEL := 6
+const UNDERLEVEL_HP := 0.15       ## +15% HP за уровень
+const UNDERLEVEL_POWER := 0.05    ## +5% к урону и щитам за уровень
+const UNDERLEVEL_PHASE_SHIELD := 0.03   ## щит на новой фазе: 3% макс. HP за уровень
 
 var _phase_moves: Dictionary = {}
 var _digest: EnemyMove
@@ -41,6 +48,7 @@ func _init() -> void:
 	_phase_moves["summon_minis"] = m
 
 	m = EnemyMove.new("swallow", "Проглотить", EnemyMove.Kind.SWALLOW)
+	m.tip = "Выплюнет, если её оглушить или нанести ей %d%% от её здоровья. Иначе на следующем ходу переварит." % roundi(SPIT_DAMAGE_SHARE * 100.0)
 	m.custom = func(api: EnemyApi, me: Unit, _mv: EnemyMove) -> void:
 		swallow(api, me)
 	_phase_moves["swallow"] = m
@@ -66,7 +74,20 @@ func char_data() -> CharacterData:
 func make_unit(floor_no: int, rng: RandomNumberGenerator, hp_override: int = 0) -> Unit:
 	var u := super.make_unit(floor_no, rng, hp_override)
 	u.data = u.data.duplicate() as CharacterData
+	var gap := underlevel_gap()
+	if gap > 0 and hp_override <= 0:
+		u.max_hp = roundi(float(u.max_hp) * (1.0 + UNDERLEVEL_HP * gap))
+		u.hp = u.max_hp
+		u.ai["pow"] = float(u.ai.get("pow", 1.0)) * (1.0 + UNDERLEVEL_POWER * gap)
+	u.ai["underlevel"] = gap
 	return u
+
+## На сколько уровней отряд не дотягивает до RECOMMENDED_LEVEL (0 — дотягивает).
+static func underlevel_gap() -> int:
+	var lvl := 1
+	if DungRun != null:
+		lvl = maxi(1, int(DungRun.party_level))
+	return maxi(0, RECOMMENDED_LEVEL - lvl)
 
 static func unmask(me: Unit) -> void:
 	if me != null and me.data != null and ResourceLoader.exists(FACE_TEXTURE):
@@ -114,6 +135,9 @@ func on_hurt(api: EnemyApi, me: Unit, amount: int) -> void:
 		added = true
 		if i == UNMASK_PHASE:
 			unmask(me)
+		var gap := int(me.ai.get("underlevel", 0))
+		if gap > 0:
+			api.combat.add_shield(me, roundi(float(me.max_hp) * UNDERLEVEL_PHASE_SHIELD * gap))
 	me.ai["phases_done"] = done
 	me.ai["pending"] = pending
 	# Новая фаза — намерение меняется сразу (если она сейчас не глотает/не переваривает).

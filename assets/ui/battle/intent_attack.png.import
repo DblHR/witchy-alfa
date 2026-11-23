@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bah4hq6q86qff"
-path="res://.godot/imported/алхимия4.png-0598669fe1286bd6d467406ea8483141.ctex"
+uid="uid://brabl1n4v8c3o"
+path="res://.godot/imported/intent_attack.png-cae24f49fc14a418a8c4c33c7a7d887a.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/backgrounds/rooms/алхимия4.png"
-dest_files=["res://.godot/imported/алхимия4.png-0598669fe1286bd6d467406ea8483141.ctex"]
+source_file="res://assets/ui/battle/intent_attack.png"
+dest_files=["res://.godot/imported/intent_attack.png-cae24f49fc14a418a8c4c33c7a7d887a.ctex"]
 
 [params]
 

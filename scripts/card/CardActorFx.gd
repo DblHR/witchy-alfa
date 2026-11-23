@@ -11,7 +11,7 @@ const HOP_HEIGHT := 24.0          ## прыжок героя при розыгр
 
 const COL_INTENT := Color(1.0, 0.55, 0.45, 1.0)
 
-# --- Подписи над актёром (щит, намерение, статусы) ---------------------------
+# --- Подписи у актёра (намерение, статусы) -------------------------------------
 
 static func _make_label(label_name: String, pos: Vector2, label_size: Vector2, font_size: int, color: Color) -> Label:
 	var label := Label.new()
@@ -28,24 +28,77 @@ static func _make_label(label_name: String, pos: Vector2, label_size: Vector2, f
 	label.visible = false
 	return label
 
-static func shield_label(actor: BattleActor) -> Label:
-	var label := actor.get_node_or_null("ShieldLabel") as Label
-	if label == null:
-		label = _make_label("ShieldLabel", Vector2(-45, -308), Vector2(90, 26), 18, CardCombat.COL_SHIELD)
-		actor.add_child(label)
-	return label
+## Намерение врага — ряд значков с числами над полоской HP (EnemyIntent). Пересобирается в refresh_intent.
+const INTENT_ICON_SIZE := 54.0
+const INTENT_ROW_W := 320.0
 
-static func intent_label(actor: BattleActor) -> Label:
-	var label := actor.get_node_or_null("IntentLabel") as Label
-	if label == null:
-		label = _make_label("IntentLabel", Vector2(-130, -350), Vector2(260, 34), 22, COL_INTENT)
-		label.add_theme_constant_override("outline_size", 6)
-		actor.add_child(label)
-	return label
+static func intent_row(actor: BattleActor) -> HBoxContainer:
+	var row := actor.get_node_or_null("IntentRow") as HBoxContainer
+	if row == null:
+		row = HBoxContainer.new()
+		row.name = "IntentRow"
+		row.alignment = BoxContainer.ALIGNMENT_CENTER
+		row.add_theme_constant_override("separation", 4)
+		row.position = Vector2(-INTENT_ROW_W * 0.5, -350)
+		row.size = Vector2(INTENT_ROW_W, INTENT_ICON_SIZE)
+		row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		row.visible = false
+		actor.add_child(row)
+	return row
 
-## Ряд значков статусов над юнитом (по центру). Пересобирается в refresh_status_icons.
+## parts — из EnemyIntent.parts. Каждый значок помнит свою часть (meta "intent") для подсказки.
+static func refresh_intent(actor: BattleActor, parts: Array, visible: bool) -> void:
+	var row := intent_row(actor)
+	for c in row.get_children():
+		row.remove_child(c)
+		c.queue_free()
+	row.visible = visible and not parts.is_empty()
+	if not row.visible:
+		return
+	for part in parts:
+		var cell := HBoxContainer.new()
+		cell.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		cell.add_theme_constant_override("separation", 0)
+		cell.set_meta("intent", part)
+		var tex := _icon(String(part.get("icon", "")))
+		if tex != null:
+			var r := TextureRect.new()
+			r.texture = tex
+			r.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+			r.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+			r.custom_minimum_size = Vector2(INTENT_ICON_SIZE, INTENT_ICON_SIZE)
+			r.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			cell.add_child(r)
+		elif String(part.get("label", "")) != "":
+			var chip := _make_label("Chip", Vector2.ZERO, Vector2.ZERO, 22, COL_INTENT)
+			chip.text = String(part["label"])
+			chip.visible = true
+			chip.custom_minimum_size = Vector2(chip.get_combined_minimum_size().x + 6.0, INTENT_ICON_SIZE)
+			cell.add_child(chip)
+		var num := String(part.get("text", ""))
+		if num != "":
+			var lab := _make_label("Num", Vector2.ZERO, Vector2.ZERO, 28, part.get("color", Color.WHITE))
+			lab.text = num
+			lab.visible = true
+			lab.add_theme_constant_override("outline_size", 7)
+			lab.custom_minimum_size = Vector2(lab.get_combined_minimum_size().x + 4.0, INTENT_ICON_SIZE)
+			cell.add_child(lab)
+		row.add_child(cell)
+
+static func _icon(path: String) -> Texture2D:
+	if path == "" or not ResourceLoader.exists(path):
+		return null
+	if not _status_icons.has(path):
+		_status_icons[path] = load(path) as Texture2D
+	return _status_icons[path]
+
+## Ряд значков статусов под юнитом (по центру). Пересобирается в refresh_status_icons.
+## Наведение на значок — подсказка про этот статус (CardBattle), каждый значок помнит id (meta "status_id").
 const STATUS_ICON_SIZE := 44.0
 const STATUS_ROW_W := 300.0
+## Насколько ниже ног (у врагов — ещё ниже, под именем).
+const STATUS_ROW_Y_HERO := 16.0
+const STATUS_ROW_Y_ENEMY := 42.0
 static var _status_icons: Dictionary = {}
 
 static func status_row(actor: BattleActor) -> HBoxContainer:
@@ -55,7 +108,7 @@ static func status_row(actor: BattleActor) -> HBoxContainer:
 		row.name = "StatusRow"
 		row.alignment = BoxContainer.ALIGNMENT_CENTER
 		row.add_theme_constant_override("separation", 3)
-		row.position = Vector2(-STATUS_ROW_W * 0.5, -404)
+		row.position = Vector2(-STATUS_ROW_W * 0.5, STATUS_ROW_Y_HERO)
 		row.size = Vector2(STATUS_ROW_W, STATUS_ICON_SIZE)
 		row.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		actor.add_child(row)
@@ -65,6 +118,7 @@ static func status_row(actor: BattleActor) -> HBoxContainer:
 static func refresh_status_icons(actor: BattleActor, pairs: Array, visible: bool) -> void:
 	var row := status_row(actor)
 	for c in row.get_children():
+		row.remove_child(c)
 		c.queue_free()
 	row.visible = visible and not pairs.is_empty()
 	if not row.visible:
@@ -73,13 +127,10 @@ static func refresh_status_icons(actor: BattleActor, pairs: Array, visible: bool
 		var st: CardStatus = pair[0]
 		var data: Dictionary = pair[1]
 		var n := st.badge_count(data)
-		var tex: Texture2D = null
-		if st.icon_path != "":
-			if not _status_icons.has(st.icon_path):
-				_status_icons[st.icon_path] = load(st.icon_path) as Texture2D
-			tex = _status_icons[st.icon_path]
+		var tex := _icon(st.icon_path)
 		var cell := Control.new()
 		cell.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		cell.set_meta("status_id", st.id)
 		if tex != null:
 			cell.custom_minimum_size = Vector2(STATUS_ICON_SIZE, STATUS_ICON_SIZE)
 			var r := TextureRect.new()
@@ -142,23 +193,20 @@ static func fit_bars_to_sprite(actor: BattleActor) -> void:
 	actor.hp_bar.position.y += delta
 	actor.hp_label.position.y += delta
 
-## Убираем с актёра то, что относится к старому бою (APS, энергия), и добавляем подписи.
-## Раскладка — от полоски HP (у разных персонажей она на разной высоте), снизу вверх:
-## щит, намерение (только у врагов), статусы.
+## Убираем с актёра то, что относится к старому бою (APS, энергия), и добавляем подписи:
+## намерение (только у врагов) — над полоской HP, статусы — под ногами (у врагов — под именем).
+## Щит показывается на самой полоске HP (BattleActor.set_shield).
 static func setup_overlays(actor: BattleActor, is_enemy: bool) -> void:
 	actor.aps_label.visible = false
 	actor.en_bar.visible = false
 	actor.en_label.visible = false
+	actor.effects_row.visible = false
 	var y := actor.hp_bar.position.y if actor.hp_bar != null else -280.0
-	var shield := shield_label(actor)
-	y -= shield.size.y + 2.0
-	shield.position.y = y
 	if is_enemy:
-		var intent := intent_label(actor)
-		y -= intent.size.y
-		intent.position.y = y
+		var intent := intent_row(actor)
+		intent.position.y = y - INTENT_ICON_SIZE - 6.0
 	var row := status_row(actor)
-	row.position.y = y - STATUS_ICON_SIZE - 4.0
+	row.position.y = STATUS_ROW_Y_ENEMY if is_enemy else STATUS_ROW_Y_HERO
 
 # --- Всплывающий текст -------------------------------------------------------
 

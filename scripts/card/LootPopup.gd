@@ -11,6 +11,8 @@ const ROW_H := 54
 const HEAD_H := 104.0
 const FOOT_H := 86.0
 
+## Значок золота (тот же, что в лавке Сессилии).
+const COIN_ICON := "res://assets/items/loot/coin.png"
 ## loot: {gold: int, xp: int, items: {item_id: count}}
 func setup(loot: Dictionary, title_text: String = "Добыча") -> void:
 	set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -36,7 +38,8 @@ func setup(loot: Dictionary, title_text: String = "Добыча") -> void:
 	col.add_theme_constant_override("separation", 6)
 	panel.add_child(col)
 
-	col.add_child(_row(null, "Золото", "+%d" % int(loot.get("gold", 0)), Color(1.0, 0.88, 0.4)))
+	var coin: Texture2D = load(COIN_ICON) as Texture2D if ResourceLoader.exists(COIN_ICON) else null
+	col.add_child(_row(coin, "Золото", "+%d" % int(loot.get("gold", 0)), Color(1.0, 0.88, 0.4)))
 	col.add_child(_row(null, "Опыт (в конце забега)", "+%d" % int(loot.get("xp", 0)), Color(0.6, 0.85, 1.0)))
 	for id in items.keys():
 		var icon: Texture2D = null

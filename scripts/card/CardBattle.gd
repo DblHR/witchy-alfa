@@ -388,33 +388,17 @@ func _refresh_actor(actor: BattleActor) -> void:
 	actor.update_visual()
 	CardActorFx.set_charm_aura(actor, not unit.is_dead and _combat.is_charmed(unit))
 
-	var shield := _combat.shield_of(unit)
-	var shield_label := CardActorFx.shield_label(actor)
-	shield_label.text = "Щит: %d" % shield
-	shield_label.visible = shield > 0 and not unit.is_dead
+	actor.set_shield(0 if unit.is_dead else _combat.shield_of(unit))
 
-	var intent_label := actor.get_node_or_null("IntentLabel") as Label
-	if intent_label != null:
-		var has_intent := _combat.intents.has(unit) and not unit.is_dead and not _ended
-		intent_label.visible = has_intent
-		if has_intent:
-			var move: EnemyMove = _combat.intents[unit]
-			if _combat.skips_turn(unit):
-				intent_label.text = "Оглушён"
-				intent_label.add_theme_color_override("font_color", CardCombat.COL_STATUS)
-			elif _combat.is_charmed(unit):
-				intent_label.text = ("Бьёт своих: %d" % _api.shown_damage(unit, move)) if move.damage > 0 else "Очарован"
-				intent_label.add_theme_color_override("font_color", Color(1.0, 0.55, 0.85))
-			else:
-				intent_label.text = move.intent_text(_api.shown_damage(unit, move))
-				var col := move.intent_color()
-				if move.damage > 0 and _api.shown_damage(unit, move) < EnemyApi.scaled(unit, move.damage):
-					col = CardCombat.COL_SHIELD   # ослаблен — удар меньше обычного
-				intent_label.add_theme_color_override("font_color", col)
+	var has_intent := _combat.intents.has(unit) and not unit.is_dead and not _ended
+	if right_team.has(unit) or actor.has_node("IntentRow"):
+		var parts: Array = EnemyIntent.parts(_api, unit, _combat.intents[unit]) if has_intent else []
+		CardActorFx.refresh_intent(actor, parts, has_intent)
 
 	CardActorFx.refresh_status_icons(actor, _combat.status_pairs(unit), not unit.is_dead)
-	if _status_tip_actor == actor:
-		_update_status_tip()
+	if not _hover_tip_dirty:
+		_hover_tip_dirty = true
+		_hover_status_tip.call_deferred()   ## значки пересобраны — подсказка к новому значку под курсором
 
 func _refresh_all_actors() -> void:
 	for a in left_actors + right_actors:
@@ -839,85 +823,78 @@ func _process(_delta: float) -> void:
 	if _dragging != null and not Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
 		_finish_drag()
 
-# --- Подсказка по статусам при наведении на юнита --------------------------------
+# --- Подсказки при наведении на значки статусов и намерений (HoverTips) ------------------
 
-var _status_tip: PanelContainer
-var _status_tip_label: RichTextLabel
-var _status_tip_actor: BattleActor
+## Значок под курсором: статус под юнитом или часть намерения над врагом.
+var _tip_cell: Control
+var _hover_tip_dirty := false
 
 func _hover_status_tip() -> void:
-	var actor: BattleActor = null
+	var cell: Control = null
 	if _dragging == null and not _ended and not DialogueManager_.is_showing():
-		var m := _mouse_pos()
-		var hc := get_viewport().gui_get_hovered_control()
-		if hc == null or not (hc is BaseButton or hc is CardView):
-			var u := _unit_at(right_actors, m)
-			if u == null:
-				u = _unit_at(left_actors, m)
-			if u != null and not _combat.status_pairs(u).is_empty():
-				actor = _find_actor(u)
-	if actor == _status_tip_actor:
-		if actor != null:
-			_place_status_tip()
+		cell = _tip_cell_at(_mouse_pos())
+	if cell == _tip_cell and not _hover_tip_dirty:
 		return
-	_status_tip_actor = actor
-	_update_status_tip()
+	_hover_tip_dirty = false
+	if is_instance_valid(_tip_cell):
+		HoverTips.hide_tips(_tip_cell)
+	_tip_cell = cell
+	if cell == null:
+		return
+	var boxes: Array = []
+	var related := ""
+	if cell.has_meta("status_id"):
+		var actor := _actor_of_cell(cell)
+		var id := String(cell.get_meta("status_id"))
+		var st := CardStatuses.get_status(id)
+		if st == null or actor == null:
+			return
+		var data: Dictionary = {}
+		for pair in _combat.status_pairs(actor.unit):
+			if (pair[0] as CardStatus).id == id:
+				data = pair[1]
+		if data.is_empty():
+			return
+		var lines := st.describe(data).split("\n", false, 1)
+		boxes.append(HoverTips.box(lines[0], lines[1] if lines.size() > 1 else "", st.color, st.icon_path))
+		boxes.append_array(CardKeywords.related_boxes(st.info, [id]))
+	elif cell.has_meta("intent"):
+		var part: Dictionary = cell.get_meta("intent")
+		boxes.append(HoverTips.box("", String(part.get("tip", ""))))
+		related = String(part.get("status", ""))
+		if related != "":
+			var kb := CardKeywords.box_for(related)
+			if not kb.is_empty():
+				boxes.append(kb)
+				boxes.append_array(CardKeywords.related_boxes(CardStatuses.get_status(related).info, [related]))
+	HoverTips.show_tips(cell, HoverTips.screen_rect.bind(cell), boxes)
 
-func _update_status_tip() -> void:
-	if _status_tip == null:
-		_status_tip = PanelContainer.new()
-		_status_tip.name = "StatusTip"
-		_status_tip.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		_status_tip.z_index = 80
-		var sb := StyleBoxFlat.new()
-		sb.bg_color = Color(0.07, 0.04, 0.12, 0.94)
-		sb.border_color = Color(1, 1, 1, 0.22)
-		sb.set_border_width_all(2)
-		sb.set_corner_radius_all(12)
-		sb.content_margin_left = 14
-		sb.content_margin_right = 14
-		sb.content_margin_top = 10
-		sb.content_margin_bottom = 10
-		_status_tip.add_theme_stylebox_override("panel", sb)
-		_status_tip_label = RichTextLabel.new()
-		_status_tip_label.bbcode_enabled = true
-		_status_tip_label.fit_content = true
-		_status_tip_label.scroll_active = false
-		_status_tip_label.custom_minimum_size = Vector2(380, 0)
-		_status_tip_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		_status_tip_label.add_theme_font_size_override("normal_font_size", 18)
-		_status_tip_label.add_theme_font_size_override("bold_font_size", 19)
-		_status_tip.add_child(_status_tip_label)
-		_ui_add(_status_tip)
-	var actor := _status_tip_actor
-	if actor == null or actor.unit == null or actor.unit.is_dead:
-		_status_tip.visible = false
-		return
-	var parts := PackedStringArray()
-	for pair in _combat.status_pairs(actor.unit):
-		var st: CardStatus = pair[0]
-		var lines := st.describe(pair[1]).split("\n", false, 1)
-		var head := "[b][color=#%s]%s[/color][/b]" % [st.color.to_html(false), lines[0]]
-		if st.icon_path != "":
-			head = "[img=26x26]%s[/img] " % st.icon_path + head
-		parts.append(head + ("\n" + lines[1] if lines.size() > 1 else ""))
-	_status_tip_label.text = "\n\n".join(parts)
-	_status_tip.visible = not parts.is_empty()
-	_status_tip.reset_size()
-	_place_status_tip()
+func _tip_cell_at(m: Vector2) -> Control:
+	var hc := get_viewport().gui_get_hovered_control()
+	if hc != null and (hc is BaseButton or hc is CardView):
+		return null
+	for a in left_actors + right_actors:
+		if not is_instance_valid(a) or a.unit == null or a.unit.is_dead:
+			continue
+		for row_name in ["StatusRow", "IntentRow"]:
+			var row := a.get_node_or_null(row_name) as Control
+			if row == null or not row.is_visible_in_tree():
+				continue
+			for c in row.get_children():
+				if c is Control and not (c as Control).is_queued_for_deletion() and HoverTips.screen_rect(c).has_point(m):
+					return c as Control
+	return null
 
-## Подсказка — рядом с курсором, не вылезая за экран.
-func _place_status_tip() -> void:
-	if _status_tip == null or not _status_tip.visible:
-		return
-	var m := _mouse_pos()
-	var sz := _status_tip.get_combined_minimum_size()
-	var pos := m + Vector2(24, 24)
-	if pos.x + sz.x > 1900.0:
-		pos.x = m.x - sz.x - 24.0
-	if pos.y + sz.y > 1060.0:
-		pos.y = 1060.0 - sz.y
-	_status_tip.position = pos
+func _actor_of_cell(cell: Control) -> BattleActor:
+	var n: Node = cell
+	while n != null and not (n is BattleActor):
+		n = n.get_parent()
+	return n as BattleActor
+
+## Совместимость со старыми тестами: подсказка, показанная сейчас (или null).
+var _status_tip: Control:
+	get:
+		return _tip_cell if is_instance_valid(_tip_cell) and HoverTips.is_shown_for(_tip_cell) else null
 
 ## Цели карт без выбора цели.
 func _zone_targets(card: CardInstance) -> Array[Unit]:

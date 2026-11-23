@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dg6d0kkqcvbyn"
-path="res://.godot/imported/alchemyBG.png-34ffe7ba3361f1b9ae7ed830db15887b.ctex"
+uid="uid://drifgh58otm62"
+path="res://.godot/imported/alchemyBG.png-0f78bdb1158d22138bd0e757482eef6b.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/backgrounds/rooms/alchemyBG.png"
-dest_files=["res://.godot/imported/alchemyBG.png-34ffe7ba3361f1b9ae7ed830db15887b.ctex"]
+source_file="res://assets/alchemy/alchemyBG.png"
+dest_files=["res://.godot/imported/alchemyBG.png-0f78bdb1158d22138bd0e757482eef6b.ctex"]
 
 [params]
 

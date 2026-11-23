@@ -68,7 +68,24 @@ func describe(s: Dictionary) -> String:
 			head += " x%d — %s" % [int(s["stacks"]), left_text(s)]
 		_:
 			head += " x%d" % int(s["stacks"])
-	return head + ("\n" + info if info != "" else "")
+	var rest := full_info()
+	return head + ("\n" + rest if rest != "" else "")
+
+## Ограничение по стакам («Не больше 5 стаков.»). Нет ограничения — пусто.
+func limit_text() -> String:
+	if kind == Kind.DURATION or max_stacks >= 99 or max_stacks <= 1:
+		return ""
+	return "Не больше %d стаков." % max_stacks
+
+## Что делает статус + ограничение по стакам (для подсказок).
+func full_info() -> String:
+	var parts := PackedStringArray()
+	if info != "":
+		parts.append(info)
+	var lim := limit_text()
+	if lim != "":
+		parts.append(lim)
+	return " ".join(parts)
 
 ## Сколько продержится статус — без двусмысленного «ещё 1 ход»: ходы считаются после хода врагов.
 static func left_text(s: Dictionary) -> String:

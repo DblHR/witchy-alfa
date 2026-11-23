@@ -700,12 +700,36 @@ func _on_mouse_entered() -> void:
 	_hover = true
 	_animate_hover(true)
 	_set_desc_visible(true)
+	show_keyword_tips()
 
 func _on_mouse_exited() -> void:
 	_hover = false
 	_animate_hover(false)
+	hide_keyword_tips()
 	if not dragging and DESC_ON_HOVER_ONLY:
 		_set_desc_visible(false)
+
+# --- Расшифровка ключевых слов рядом с картой (CardKeywords + HoverTips) -----------------
+
+## Плашки «что значит Нажим / Липкая слизь…» справа от карты (не влезают — слева).
+func show_keyword_tips() -> void:
+	if card == null:
+		return
+	var boxes := CardKeywords.boxes_for_card(card)
+	if boxes.is_empty():
+		return
+	HoverTips.show_tips(self, HoverTips.screen_rect.bind(self), boxes)
+
+func hide_keyword_tips() -> void:
+	HoverTips.hide_tips(self)
+
+## Для карт-превью (окна колоды, инвентарь): подсказки при наведении на host (саму карту или её рамку).
+func enable_keyword_tips(host: Control = null) -> void:
+	var h := host if host != null else self
+	if h.mouse_filter == Control.MOUSE_FILTER_IGNORE:
+		h.mouse_filter = Control.MOUSE_FILTER_PASS
+	h.mouse_entered.connect(show_keyword_tips)
+	h.mouse_exited.connect(hide_keyword_tips)
 
 ## Наведение: карта подрастает и поднимается поверх соседних, чтобы текст было удобно читать.
 func _animate_hover(on: bool) -> void:
@@ -771,6 +795,7 @@ func appear() -> void:
 func begin_drag() -> void:
 	_kill_move()
 	_stop_hover()
+	hide_keyword_tips()
 	dragging = true
 	z_index = 100
 	scale = Vector2(1.08, 1.08)

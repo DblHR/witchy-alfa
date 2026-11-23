@@ -15,6 +15,15 @@ class_name BattleActor
 @onready var marker: TextureRect = $ENBar/EnergyThresholdMarker
 
 @export var is_boss: bool = false
+## Полоска HP: ширина у обычных и у босса (босс ещё и сам крупнее, × 1.35).
+const HP_WIDTH := 150.0
+const BOSS_HP_WIDTH := 210.0
+## Пока на юните щит: полоска серая, на ней «HP/макс + щит», слева значок щита.
+const SHIELD_FILL := Color(0.50, 0.55, 0.64, 1.0)
+const SHIELD_ICON := "res://assets/ui/battle/intent_apply_shield.png"
+const SHIELD_ICON_SIZE := 40.0
+var shield := 0
+var _shield_icon: TextureRect
 var unit: Unit
 var is_left := true
 var show_hp_overhead := true
@@ -40,19 +49,18 @@ func _apply_visual_profile() -> void:
 		_base_actor_scale = Vector2(1.35, 1.35)
 		scale = _base_actor_scale
 
-		# 2) увеличить HP bar
-		# Если HPBar = Control (ProgressBar), у него есть size.
-		if hp_bar is Control:
-			var bar := hp_bar as Control
-			bar.custom_minimum_size = Vector2(220, 18)  # можно подогнать
-		else:
-			# если вдруг не Control — просто чуть увеличим scale
-			hp_bar.scale = Vector2(1.4, 1.4)
+		# 2) полоска HP босса шире (по центру над ним)
+		_set_hp_width(BOSS_HP_WIDTH)
+	else:
+		_set_hp_width(HP_WIDTH)
 
-		# 3) опционально: увеличить шрифт/лейбл
-		if hp_label is Label:
-			# в Godot лучше менять theme/шрифт, но на старте можно scale
-			hp_label.scale = Vector2(1.1, 1.1)
+## Ширина полоски HP (и подписи на ней), по центру актёра.
+func _set_hp_width(w: float) -> void:
+	for c in [hp_bar, hp_label]:
+		if c is Control:
+			(c as Control).offset_left = -w * 0.5
+			(c as Control).offset_right = w * 0.5
+	_place_shield_icon()
 
 func flash_red() -> void:
 	if unit != null and unit.is_dead:
@@ -150,7 +158,7 @@ func update_visual() -> void:
 			sprite.modulate = Color(1, 1, 1, 1)
 
 	# текст и полоска
-	hp_label.text = "%d/%d" % [unit.hp, unit.max_hp]
+	hp_label.text = ("%d/%d + %d" % [unit.hp, unit.max_hp, shield]) if shield > 0 else ("%d/%d" % [unit.hp, unit.max_hp])
 	hp_bar.max_value = unit.max_hp
 	hp_bar.value = unit.hp
 	_apply_hp_bar_state()
@@ -169,6 +177,7 @@ func update_visual() -> void:
 	var should_show := show_hp_overhead and not unit.is_dead
 	hp_label.visible = should_show
 	hp_bar.visible = should_show
+	_place_shield_icon()
 
 	# Иконки эффектов (для отладки читаемости)
 	sync_effect_icons(unit)
@@ -180,12 +189,40 @@ func _apply_hp_bar_state() -> void:
 	if unit.is_dead:
 		_set_progress_fill_color(hp_bar, Color(0.45, 0.45, 0.45, 0.95))
 		hp_label.modulate = Color(0.8, 0.8, 0.8, 1.0)
+	elif shield > 0:
+		_set_progress_fill_color(hp_bar, SHIELD_FILL)
+		hp_label.modulate = Color(1, 1, 1, 1)
 	elif ratio <= 0.30:
 		_set_progress_fill_color(hp_bar, Color(0.92, 0.18, 0.18, 0.95))
 		hp_label.modulate = Color(1.0, 0.85, 0.85, 1.0)
 	else:
 		_set_progress_fill_color(hp_bar, Color(0.18, 0.82, 0.32, 0.95))
 		hp_label.modulate = Color(1, 1, 1, 1)
+
+## Щит на юните (CardBattle обновляет при каждом изменении).
+func set_shield(amount: int) -> void:
+	shield = maxi(0, amount)
+	if unit != null:
+		update_visual()
+
+## Значок щита у левого края полоски HP (виден, пока есть щит).
+func _place_shield_icon() -> void:
+	if hp_bar == null:
+		return
+	if _shield_icon == null:
+		if shield <= 0 or not ResourceLoader.exists(SHIELD_ICON):
+			return
+		_shield_icon = TextureRect.new()
+		_shield_icon.name = "ShieldIcon"
+		_shield_icon.texture = load(SHIELD_ICON) as Texture2D
+		_shield_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		_shield_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		_shield_icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_shield_icon.size = Vector2(SHIELD_ICON_SIZE, SHIELD_ICON_SIZE)
+		add_child(_shield_icon)
+	var bar_h := hp_bar.offset_bottom - hp_bar.offset_top
+	_shield_icon.position = Vector2(hp_bar.offset_left - SHIELD_ICON_SIZE * 0.6, hp_bar.offset_top + (bar_h - SHIELD_ICON_SIZE) * 0.5)
+	_shield_icon.visible = shield > 0 and hp_bar.visible
 
 func sync_effect_icons(unit: Unit) -> void:
 	for c in effects_row.get_children():

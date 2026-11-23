@@ -92,11 +92,12 @@ static func card_tag(text: String, zoom: float = 1.0, color: Color = Color(0.35,
 static func card_preview(card: CardInstance, zoom: float = 1.3) -> Control:
 	var holder := Control.new()
 	holder.custom_minimum_size = CardView.CARD_SIZE * zoom
-	holder.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	holder.mouse_filter = Control.MOUSE_FILTER_PASS   ## наведение — расшифровка ключевых слов рядом
 	holder.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	var v := CardView.new()
 	v.setup(card, false)
 	v.pivot_offset = Vector2.ZERO
 	v.scale = Vector2.ONE * zoom
 	holder.add_child(v)
+	v.enable_keyword_tips(holder)
 	return holder

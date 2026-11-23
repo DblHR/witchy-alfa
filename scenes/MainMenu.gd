@@ -122,7 +122,7 @@ func _witch_zone_at(p: Vector2) -> WitchZone:
 	if pre_layer.visible or not menu_layer.visible or _overlay_open():
 		return null
 	for z in witch_zones.get_children():
-		if z is WitchZone and (z as WitchZone).has_global_point(p):
+		if z is WitchZone and (z as WitchZone).in_pose == _pose and (z as WitchZone).has_global_point(p):
 			return z as WitchZone
 	return null
 
@@ -136,10 +136,17 @@ func _gui_input(event: InputEvent) -> void:
 			accept_event()
 			witch_react(z)
 
+## Текущая поза: пусто — обычная (mainmenu_witch.png), иначе имя картинки позы.
+var _pose := ""
+
 ## Клик по зоне: картинка зоны на duration секунд (если она уже есть в assets/ui/menu/) и действие.
+## "pose" — поза меняется и держится, пока не кликнут по зоне позы ещё раз.
 func witch_react(z: WitchZone) -> void:
 	if z.action == "heart":
 		show_palm_heart()
+	if z.action == "pose":
+		set_pose("" if _pose != "" else z.sprite)
+		return
 	var path := WITCH_DIR + z.sprite + ".png"
 	if not ResourceLoader.exists(path):
 		return
@@ -148,7 +155,24 @@ func witch_react(z: WitchZone) -> void:
 	witch_sprite.texture = load(path) as Texture2D
 	await get_tree().create_timer(maxf(0.1, z.duration)).timeout
 	if token == _witch_token and is_instance_valid(witch_sprite):
-		witch_sprite.texture = _witch_tex
+		witch_sprite.texture = _pose_texture()
+
+## Сменить позу ("" — обычная). Нет картинки позы — ничего не происходит.
+func set_pose(pose: String) -> void:
+	if pose != "" and not ResourceLoader.exists(WITCH_DIR + pose + ".png"):
+		return
+	_witch_token += 1   ## прерываем недосмотренную реакцию
+	_pose = pose
+	_palm_heart_left = 0.0
+	if _palm_heart != null:
+		_palm_heart.visible = false
+	witch_sprite.texture = _pose_texture()
+
+func current_pose() -> String:
+	return _pose
+
+func _pose_texture() -> Texture2D:
+	return _witch_tex if _pose == "" else load(WITCH_DIR + _pose + ".png") as Texture2D
 
 ## Сердечко на ладошке (крутится и подпрыгивает, двигается вместе с ведьмочкой).
 func show_palm_heart() -> void:

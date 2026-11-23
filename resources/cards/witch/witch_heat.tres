@@ -20,6 +20,5 @@ id = "witch_heat"
 title = "Жар тела"
 target = 4
 tags = PackedStringArray("support")
-description = "[s]+{0}[/s] щита выбранному.
-Враг, ударивший по этому щиту, получает [e]Горение 1[/e] (1 ход)."
+description = "[s]+{0}[/s] щита выбранному и [e]Жар тела[/e]."
 effects = Array[ExtResource("1_ymrml")]([SubResource("Resource_ha7hx"), SubResource("Resource_tlgn6")])

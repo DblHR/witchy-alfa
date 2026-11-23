@@ -56,6 +56,7 @@ color = Color(1, 0.3, 0.6, 0.35)
 polygon = PackedVector2Array(1060, 120, 1230, 60, 1380, 150, 1420, 280, 1300, 370, 1180, 390, 1100, 340, 1040, 240)
 script = ExtResource("12_zone")
 sprite = "mainmenu_witch_face"
+duration = 2.0
 
 [node name="Hand" type="Polygon2D" parent="Witch/Canvas/Zones" unique_id=1730800006]
 color = Color(1, 0.65, 0.15, 0.35)
@@ -69,7 +70,15 @@ color = Color(0.6, 0.3, 1, 0.35)
 polygon = PackedVector2Array(540, 0, 620, 0, 780, 140, 940, 330, 1060, 470, 1200, 600, 1340, 640, 1360, 820, 1320, 1080, 560, 1080, 540, 700)
 script = ExtResource("12_zone")
 sprite = "mainmenu_witch_butt"
-duration = 10.0
+action = "pose"
+
+[node name="PoseLegs" type="Polygon2D" parent="Witch/Canvas/Zones" unique_id=1730800010]
+color = Color(0.3, 0.8, 1, 0.35)
+polygon = PackedVector2Array(340, 762, 410, 675, 574, 669, 726, 727, 784, 833, 773, 985, 1346, 985, 1346, 1090, 340, 1090)
+script = ExtResource("12_zone")
+sprite = "mainmenu_witch_butt"
+action = "pose"
+in_pose = "mainmenu_witch_butt"
 
 [node name="HeartAt" type="Marker2D" parent="Witch/Canvas" unique_id=1730800008]
 position = Vector2(1762, 318)

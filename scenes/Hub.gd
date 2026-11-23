@@ -104,28 +104,45 @@ const SPRITE_PATH := "res://assets/characters/%s/%s_battle.png"
 ## Где персонажи появляются (линии без кровати, случайно).
 var walkers: Dictionary = {}   ## id -> HomeWalker
 
+var _walker_hider: VnSpriteHider
+
 func _spawn_walkers() -> void:
+	for id in HOME_UNITS:
+		_spawn_walker(id)
+	# Пока открыт диалог (VN), гуляющие по дому прячутся — на экране только портреты из диалога.
+	_walker_hider = VnSpriteHider.attach(self, walkers.values().map(func(w: HomeWalker) -> CanvasItem: return w))
+	# Персонаж вступил в отряд прямо сейчас (воин после квеста, пойманная в забеге) — появляется сразу.
+	if UnitRoster_ != null and not UnitRoster_.changed.is_connected(_spawn_new_walkers):
+		UnitRoster_.changed.connect(_spawn_new_walkers)
+
+func _spawn_new_walkers() -> void:
+	for id in HOME_UNITS:
+		if not walkers.has(id):
+			var w := _spawn_walker(id)
+			if w != null and _walker_hider != null:
+				_walker_hider.add_item(w)
+
+## Один гуляющий персонаж (если он есть в ростере и у него есть картинка). Уже есть — null.
+func _spawn_walker(id: String) -> HomeWalker:
+	if walkers.has(id):
+		return null
+	if id != "witch" and (UnitRoster_ == null or not UnitRoster_.has_unit(id)):
+		return null
 	var walk_routes := routes.filter(func(r: HomeRoute) -> bool: return r.action == "")
 	if walk_routes.is_empty():
-		return
-	var bodies: Array = []
-	for id in HOME_UNITS:
-		if id != "witch" and (UnitRoster_ == null or not UnitRoster_.has_unit(id)):
-			continue
-		var path := SPRITE_PATH % [id, id]
-		if not ResourceLoader.exists(path):
-			continue
-		var w := HomeWalker.new()
-		w.setup(id, load(path) as Texture2D, self)
-		w.route_changed.connect(func(x: HomeWalker) -> void: _sync_layer.call_deferred(x))
-		walkers_front.add_child(w)
-		var r: HomeRoute = walk_routes[randi() % walk_routes.size()]
-		w.place(r, randf_range(0.1, 0.9) * r.length())
-		w.body.flip_h = randf() < 0.5
-		walkers[id] = w
-		bodies.append(w)
-	# Пока открыт диалог (VN), гуляющие по дому прячутся — на экране только портреты из диалога.
-	VnSpriteHider.attach(self, bodies)
+		return null
+	var path := SPRITE_PATH % [id, id]
+	if not ResourceLoader.exists(path):
+		return null
+	var w := HomeWalker.new()
+	w.setup(id, load(path) as Texture2D, self)
+	w.route_changed.connect(func(x: HomeWalker) -> void: _sync_layer.call_deferred(x))
+	walkers_front.add_child(w)
+	var r: HomeRoute = walk_routes[randi() % walk_routes.size()]
+	w.place(r, randf_range(0.1, 0.9) * r.length())
+	w.body.flip_h = randf() < 0.5
+	walkers[id] = w
+	return w
 
 ## Персонаж на линии «за котлом» — под слоем котла, иначе — над ним; пока тащим — поверх всего.
 func _sync_layer(w: HomeWalker) -> void:

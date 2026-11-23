@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://danu28anmpic6"
-path="res://.godot/imported/алхимия8.png-871b4f205a74ebd6383b910850389ef0.ctex"
+uid="uid://cyjltnh3mt2ol"
+path="res://.godot/imported/intent_summon.png-4d3c941b1d45c7b66c2e72295faeae84.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/backgrounds/rooms/алхимия8.png"
-dest_files=["res://.godot/imported/алхимия8.png-871b4f205a74ebd6383b910850389ef0.ctex"]
+source_file="res://assets/ui/battle/intent_summon.png"
+dest_files=["res://.godot/imported/intent_summon.png-4d3c941b1d45c7b66c2e72295faeae84.ctex"]
 
 [params]
 

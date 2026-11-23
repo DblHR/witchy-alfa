@@ -15,5 +15,5 @@ id = "witch_fan"
 title = "Распаляющее касание"
 target = 1
 tags = PackedStringArray("support")
-description = "Каждому горящему врагу: [e]+{0b} стак[/e] и [e]+{0} ход[/e] горения (не больше 5 стаков)."
+description = "Каждому горящему врагу: [e]+{0b} стак[/e] и [e]+{0} ход[/e] [e]горения[/e]."
 effects = Array[ExtResource("1_pe5kp")]([SubResource("Resource_pe5kp")])

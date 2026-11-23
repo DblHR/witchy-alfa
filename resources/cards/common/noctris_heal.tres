@@ -16,5 +16,5 @@ target = 4
 tags = PackedStringArray("support")
 exhaust = 2
 description = "Лечит выбранного персонажа на [h]25%[/h] HP.
-[e]Одноразовая[/e]: сгорает до конца забега."
+[e]Одноразовая[/e]."
 effects = Array[ExtResource("1_eff")]([SubResource("Resource_heal")])
