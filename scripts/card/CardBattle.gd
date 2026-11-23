@@ -730,9 +730,19 @@ func _wait(seconds: float) -> void:
 	t.tween_interval(seconds)
 	await t.finished
 
+func _set_pile_count(b: Button, n: int, title: String) -> void:
+	var l := b.get_node_or_null("Count") as Label
+	if l != null:
+		l.text = str(n)
+		b.text = ""
+	else:
+		b.text = "%s: %d" % [title, n]
+	b.tooltip_text = "%s: %d" % [title, n]
+
 func _refresh_pile_buttons() -> void:
-	deck_button.text = "Колода: %d" % _deck.draw_pile.size()
-	discard_button.text = "Сброс: %d" % _deck.discard_pile.size()
+	# Стопки — картинки (assets/ui/battle/draw_pile.png, discard_pile.png), число — на них (узел Count).
+	_set_pile_count(deck_button, _deck.draw_pile.size(), "Колода")
+	_set_pile_count(discard_button, _deck.discard_pile.size(), "Сброс")
 
 func _discard_pos() -> Vector2:
 	return discard_button.get_global_rect().get_center() - CardView.CARD_SIZE * 0.5

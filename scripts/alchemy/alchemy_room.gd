@@ -39,12 +39,9 @@ const POT_MOUTH := Rect2(250, 720, 880, 480)
 ## Стенки котла (ломаные по краю картинки cauldron.png, координаты World). Сверху котёл открыт.
 const POT_WALL_LEFT: Array[Vector2] = [Vector2(330, 700), Vector2(230, 800), Vector2(150, 920), Vector2(110, 1010), Vector2(130, 1240)]
 const POT_WALL_RIGHT: Array[Vector2] = [Vector2(1050, 700), Vector2(1160, 820), Vector2(1240, 940), Vector2(1270, 1040), Vector2(1240, 1240)]
-## Дуга маятника — по розовому кругу на полу alchemyBG.png (координаты World, углы в градусах).
-const PENDULUM_CENTER := Vector2(1040, 2080)
-const PENDULUM_RADIUS := 1250.0
-const PENDULUM_WIDTH := 58.0
-const PENDULUM_FROM_DEG := 227.0
-const PENDULUM_TO_DEG := 311.0
+## Промахов маятником — и вместо зелья алхимический шлак (ингредиенты всё равно тратятся).
+const SLAG_AFTER_MISSES := 2
+const SLAG_ITEM := "alchemy_slag"
 
 const DEBUG_WALLS := false
 
@@ -104,6 +101,7 @@ var _pendulum: _PendulumScript
 var _result_panel: PanelContainer
 var _result_label: Label
 var _result_icon: TextureRect
+var _result_ok: Button
 var _toast: Label
 var _toast_tween: Tween
 
@@ -296,16 +294,15 @@ func _build_stage_overlays() -> void:
 	_stir.size = Vector2(STIR_SIZE, STIR_SIZE)
 	_stir.position = POT_CENTER - Vector2(STIR_SIZE, STIR_SIZE) * 0.5
 	_stir.finished.connect(_on_stir_finished)
+	# Маятник — поверх экрана (не катается вместе с фоном), дуга как раньше.
 	_pendulum = _PendulumScript.new()
 	_pendulum.visible = false
-	world.add_child(_pendulum)
-	_pendulum.position = Vector2.ZERO
-	_pendulum.size = world.size
-	_pendulum.arc_center = PENDULUM_CENTER
-	_pendulum.arc_radius = PENDULUM_RADIUS
-	_pendulum.arc_width = PENDULUM_WIDTH
-	_pendulum.from_angle_deg = PENDULUM_FROM_DEG
-	_pendulum.to_angle_deg = PENDULUM_TO_DEG
+	add_child(_pendulum)
+	_pendulum.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	var k := _size.y / 1080.0
+	_pendulum.arc_center = Vector2(607.0, 1024.0) * k
+	_pendulum.arc_radius = 690.0 * k
+	_pendulum.arc_width = 52.0 * k
 	_pendulum.stopped.connect(_on_pendulum_stopped)
 
 func _panel_style(alpha: float = 0.72) -> StyleBoxFlat:
@@ -587,6 +584,7 @@ func _build_result_panel() -> void:
 	_result_label.add_theme_font_size_override("font_size", 28)
 	box.add_child(_result_label)
 	var ok := Button.new()
+	_result_ok = ok
 	ok.text = "Отлично"
 	ok.custom_minimum_size = Vector2(0, 54)
 	ok.focus_mode = Control.FOCUS_NONE
@@ -655,7 +653,6 @@ func _on_recipe_pressed(recipe_id: String) -> void:
 		_accepted_items.clear()
 		_attempts = 0
 		_spawn_shelf()
-		_set_potion(false)
 	_shelf_open = true
 	_set_stage(Stage.ADD)
 
@@ -672,7 +669,6 @@ func _on_reset_pressed() -> void:
 	_accepted_items.clear()
 	_attempts = 0
 	_spawn_shelf()
-	_set_potion(false)
 	_set_stage(Stage.ADD if _recipe_id != "" else Stage.PICK)
 	_say("Котёл пуст, ингредиенты вернулись на полку", Color(0.9, 0.85, 1.0))
 
@@ -936,7 +932,6 @@ func _try_accept(ib: _BodyScript) -> void:
 	ib.visible = false
 	ib.queue_free()
 	_pulse_cauldron()
-	_set_potion(true)
 	_refresh_checklist()
 	call_deferred("_top_up")
 	if _all_added():
@@ -946,19 +941,6 @@ func _try_accept(ib: _BodyScript) -> void:
 func _bounce_out(ib: _BodyScript) -> void:
 	ib.freeze = false
 	ib.linear_velocity = Vector2(_rng.randf_range(-260.0, 260.0), -1250.0)
-
-## Зелье в котле (cauldron_potion.png): появляется с первым ингредиентом, пропадает после варки / сброса.
-func _set_potion(on: bool) -> void:
-	if potion == null or potion.visible == on:
-		return
-	if on:
-		potion.modulate.a = 0.0
-		potion.visible = true
-		create_tween().tween_property(potion, "modulate:a", 1.0, 0.35)
-	else:
-		var t := create_tween()
-		t.tween_property(potion, "modulate:a", 0.0, 0.35)
-		t.tween_callback(func() -> void: potion.visible = false)
 
 func _pulse_cauldron() -> void:
 	var t := create_tween()
@@ -1167,6 +1149,11 @@ func _pendulum_press() -> void:
 func _on_pendulum_stopped(hit: bool, _accuracy: float) -> void:
 	_attempts += 1
 	if not hit:
+		if _attempts >= SLAG_AFTER_MISSES:
+			_pendulum.hide_meter()
+			await get_tree().create_timer(0.45).timeout
+			_complete(true)
+			return
 		_miss_lock_until = Time.get_ticks_msec() / 1000.0 + 0.3
 		_say("Мимо!", Color(1.0, 0.55, 0.55))
 		return
@@ -1180,16 +1167,28 @@ func _quality_label() -> String:
 		return "хорошее"
 	return "обычное"
 
-func _complete() -> void:
+## failed — два промаха маятником: вместо зелья алхимический шлак.
+## Удвоение от улучшенного котла — только при идеальной варке.
+func _complete(failed: bool = false) -> void:
 	if Inventory_ == null or _recipe_id == "":
 		return
 	# Списываем ровно то, что положили в котёл (для улучшения — конкретные посохи).
 	for id in _accepted_items.keys():
 		Inventory_.remove_item(String(id), int(_accepted_items[id]))
-	var result_id := AlchemyDB.roll_result(_recipe_id, _rng)
-	var count := AlchemyDB.cauldron_count(result_id, _rng)
-	Inventory_.add_item(result_id, count)
 	_last_brewed = _recipe_id
+	if failed:
+		Inventory_.add_item(SLAG_ITEM, 1)
+		_set_stage(Stage.DONE)
+		_result_icon.texture = Inventory_.get_item_icon(SLAG_ITEM)
+		_result_label.text = "Не вышло: %s\nДва промаха — зелье испорчено." % RunItems.get_item_name(SLAG_ITEM)
+		_result_ok.text = "Эх…"
+		_result_panel.visible = true
+		return
+	var result_id := AlchemyDB.roll_result(_recipe_id, _rng)
+	_result_ok.text = "Отлично"
+	var perfect := _quality_label() == "идеальное"
+	var count := AlchemyDB.cauldron_count(result_id, _rng) if perfect else 1
+	Inventory_.add_item(result_id, count)
 	_set_stage(Stage.DONE)
 	_result_icon.texture = Inventory_.get_item_icon(result_id)
 	_result_label.text = "Готово: %s%s\nКачество варки: %s" % [RunItems.get_item_name(result_id), " ×2 — котёл постарался!" if count > 1 else "", _quality_label()]
@@ -1197,7 +1196,6 @@ func _complete() -> void:
 
 func _on_result_closed() -> void:
 	_result_panel.visible = false
-	_set_potion(false)
 	_accepted.clear()
 	_accepted_items.clear()
 	_attempts = 0

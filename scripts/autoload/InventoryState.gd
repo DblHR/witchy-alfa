@@ -27,6 +27,7 @@ const ICON_PATHS := {
 	"sweetflower": "res://assets/farm/plants/sweet_flower.png",
 	"fruitflower": "res://assets/farm/plants/fruit_flower.png",
 	"slime_goop": "res://assets/items/loot/slime_goop.png",
+	"alchemy_slag": "res://assets/items/ingredients/alchemy_slag.png",
 	"quartz": "res://assets/items/ingredients/quartz.png",
 	"meat_fruit": "res://assets/items/ingredients/meat.png",
 	"gift": "res://assets/items/gift.png",

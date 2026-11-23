@@ -513,6 +513,17 @@ const ITEM_DEFS := {
 		"price": 6,
 		"effect_id": "",
 	},
+	"alchemy_slag": {
+		"name": "Алхимический шлак",
+		"desc": "Что получается, если промахнуться в варке. Ни на что не годится — разве что продать за гроши.",
+		"kind": "ingredient",
+		"equippable": false,
+		"unique": false,
+		"stackable": true,
+		"sellable": true,
+		"price": 1,
+		"effect_id": "",
+	},
 	"slime_goop": {
 		"name": "Слизь",
 		"desc": "Обычная добыча со слаймов. Липкая, но полезная.",
@@ -633,7 +644,7 @@ static func get_item_desc(id: String) -> String:
 			if not AlchemyDB.has_cauldron():
 				return "Свой котёл: можно варить зелья и еду."
 			var lv := clampi(AlchemyDB.cauldron_level() + 1, 0, AlchemyDB.CAULDRON_DOUBLE_CHANCE.size() - 1)
-			return "Зелья и еда с шансом %d%% получаются вдвое." % roundi(AlchemyDB.CAULDRON_DOUBLE_CHANCE[lv] * 100.0)
+			return "Идеально сваренные зелья и еда с шансом %d%% получаются вдвое." % roundi(AlchemyDB.CAULDRON_DOUBLE_CHANCE[lv] * 100.0)
 		"farm_pot":
 			if FarmState_ != null:
 				return "Ещё один горшок на ферму (будет %d из %d)." % [FarmState_.unlocked_pots() + 1, FarmState.SLOT_COUNT]

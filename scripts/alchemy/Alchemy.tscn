@@ -55,7 +55,6 @@ expand_mode = 1
 
 [node name="Potion" type="TextureRect" parent="World"]
 unique_name_in_owner = true
-visible = false
 layout_mode = 0
 offset_left = 46.0
 offset_top = 40.0

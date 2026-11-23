@@ -9,8 +9,11 @@ signal card_clicked(card: CardInstance)
 
 ## Сколько карт можно отложить (растёт с метапрогрессией).
 const SLOTS := 1
-const RECT := Rect2(1395, 790, 190, 262)
-const CARD_OFFSET := Vector2(20, 42)
+## Рукав на 35% меньше прежнего (190×262): картинка и карта в нём.
+const RECT := Rect2(1428, 882, 124, 170)
+## Карта в рукаве уменьшена (CARD_SCALE) и стоит по центру картинки.
+const CARD_SCALE := 0.65
+const CARD_OFFSET := Vector2(13, 17)
 ## Картинка рукава (вместо цветной плашки с подписью). Пока над ним тащат карту — светится.
 const ART_PATH := "res://assets/ui/battle/sleeve.png"
 const ART_IDLE := Color(1, 1, 1, 1)
@@ -104,7 +107,8 @@ func remove_owner(owner_id: String) -> void:
 func refresh() -> void:
 	for v in _views:
 		if is_instance_valid(v):
-			v.queue_free()
+			var host: Node = v.get_parent()
+			(host if host != self and host != null else v).queue_free()
 	_views.clear()
 	_label.visible = _art == null or SLOTS > 1   ## с картинкой подписи не нужны (кроме счётчика, если мест больше одного)
 	if cards.is_empty():
@@ -117,10 +121,16 @@ func refresh() -> void:
 	_label.add_theme_font_size_override("font_size", 20)
 	var x := CARD_OFFSET.x
 	for c in cards:
+		# Карта в уменьшенной рамке: увеличение при наведении работает относительно неё.
+		var holder := Control.new()
+		holder.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		holder.scale = Vector2(CARD_SCALE, CARD_SCALE)
+		holder.position = Vector2(x, CARD_OFFSET.y)
+		add_child(holder)
 		var cv := CardView.new()
 		cv.setup(c, true)
-		add_child(cv)
-		cv.position = Vector2(x, CARD_OFFSET.y)
+		holder.add_child(cv)
+		cv.position = Vector2.ZERO
 		cv.home_position = cv.position
 		cv.pressed.connect(func(view: CardView) -> void: card_clicked.emit(view.card))
 		_views.append(cv)

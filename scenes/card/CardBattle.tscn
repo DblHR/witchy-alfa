@@ -3,6 +3,8 @@
 [ext_resource type="Script" uid="uid://ckee8tx6l8um0" path="res://scripts/card/CardBattle.gd" id="1_cardbattle"]
 [ext_resource type="Script" uid="uid://xwu5k2od7yrb" path="res://scripts/card/FloorBackdrop.gd" id="2_bg"]
 [ext_resource type="Script" uid="uid://ebckabx3wtl0" path="res://scripts/dialogue/BattleSpeechLayer.gd" id="speechlayer"]
+[ext_resource type="Texture2D" path="res://assets/ui/battle/draw_pile.png" id="draw_pile"]
+[ext_resource type="Texture2D" path="res://assets/ui/battle/discard_pile.png" id="discard_pile"]
 
 [node name="CardBattle" type="Node2D" unique_id=2051366954]
 script = ExtResource("1_cardbattle")
@@ -140,22 +142,70 @@ vertical_alignment = 1
 [node name="DeckButton" type="Button" parent="UI/Hud" unique_id=580738439]
 unique_name_in_owner = true
 layout_mode = 0
-offset_left = 24.0
-offset_top = 970.0
-offset_right = 224.0
-offset_bottom = 1026.0
-theme_override_font_sizes/font_size = 24
-text = "Колода"
+offset_left = 178.0
+offset_top = 892.0
+offset_right = 282.0
+offset_bottom = 1062.0
+tooltip_text = "Колода"
+focus_mode = 0
+mouse_default_cursor_shape = 2
+flat = true
+icon = ExtResource("draw_pile")
+icon_alignment = 1
+expand_icon = true
+
+[node name="Count" type="Label" parent="UI/Hud/DeckButton" unique_id=580738440]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -58.0
+offset_bottom = -8.0
+grow_horizontal = 2
+grow_vertical = 0
+mouse_filter = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0.16, 0.05, 0.26, 1)
+theme_override_constants/outline_size = 9
+theme_override_font_sizes/font_size = 34
+text = "0"
+horizontal_alignment = 1
+vertical_alignment = 1
 
 [node name="DiscardButton" type="Button" parent="UI/Hud" unique_id=892902793]
 unique_name_in_owner = true
 layout_mode = 0
-offset_left = 1600.0
-offset_top = 872.0
-offset_right = 1890.0
-offset_bottom = 928.0
-theme_override_font_sizes/font_size = 24
-text = "Сброс"
+offset_left = 1693.0
+offset_top = 762.0
+offset_right = 1797.0
+offset_bottom = 932.0
+tooltip_text = "Сброс"
+focus_mode = 0
+mouse_default_cursor_shape = 2
+flat = true
+icon = ExtResource("discard_pile")
+icon_alignment = 1
+expand_icon = true
+
+[node name="Count" type="Label" parent="UI/Hud/DiscardButton" unique_id=892902794]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -58.0
+offset_bottom = -8.0
+grow_horizontal = 2
+grow_vertical = 0
+mouse_filter = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0.16, 0.05, 0.26, 1)
+theme_override_constants/outline_size = 9
+theme_override_font_sizes/font_size = 34
+text = "0"
+horizontal_alignment = 1
+vertical_alignment = 1
 
 [node name="EndTurnButton" type="Button" parent="UI/Hud" unique_id=190345526]
 unique_name_in_owner = true

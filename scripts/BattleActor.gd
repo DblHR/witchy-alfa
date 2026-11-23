@@ -21,7 +21,7 @@ const BOSS_HP_WIDTH := 210.0
 ## Щит — как в League of Legends: светлая полоска нарастает справа от текущего HP. Общая длина
 ## полоски не меняется: если HP + щит больше макс. HP, вся полоска делится между HP и щитом.
 ## Число щита — на значке щита слева от полоски.
-const SHIELD_FILL := Color(0.90, 0.93, 1.0, 0.95)
+const SHIELD_FILL := Color(0.45, 0.78, 1.0, 1.0)   ## голубой
 const SHIELD_ICON := "res://assets/ui/battle/intent_apply_shield.png"
 const SHIELD_ICON_SIZE := 58.0
 const SHIELD_FONT := 22
@@ -253,15 +253,13 @@ func _place_shield_fill() -> void:
 	_shield_fill.visible = shield > 0 and unit != null and not unit.is_dead
 	if not _shield_fill.visible:
 		return
-	var fill := hp_bar.get_theme_stylebox("fill")
-	var m_t := fill.content_margin_top if fill != null else 0.0
-	var m_b := fill.content_margin_bottom if fill != null else 0.0
 	var w := hp_bar.size.x
 	var total := maxf(1.0, float(hp_bar.max_value))
 	var x0 := w * float(unit.hp) / total
 	var x1 := minf(w, w * float(unit.hp + shield) / total)
-	_shield_fill.position = Vector2(x0, maxf(0.0, m_t))
-	_shield_fill.size = Vector2(maxf(2.0, x1 - x0), maxf(2.0, hp_bar.size.y - maxf(0.0, m_t) - maxf(0.0, m_b)))
+	# Во всю высоту полоски HP — та же толщина, что у самого HP.
+	_shield_fill.position = Vector2(x0, 0.0)
+	_shield_fill.size = Vector2(maxf(2.0, x1 - x0), hp_bar.size.y)
 
 func sync_effect_icons(unit: Unit) -> void:
 	for c in effects_row.get_children():

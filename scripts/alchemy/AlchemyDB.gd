@@ -207,7 +207,7 @@ static func craft(recipe_id: String) -> bool:
 	var rng := RandomNumberGenerator.new()
 	rng.randomize()
 	var result_id := roll_result(recipe_id, rng)
-	Inventory_.add_item(result_id, cauldron_count(result_id, rng))
+	Inventory_.add_item(result_id, 1)   ## без мини-игр котёл не удваивает (только идеальная варка)
 	return true
 
 static func get_recipe_summary(recipe_id: String) -> String:

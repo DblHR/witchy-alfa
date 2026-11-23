@@ -18,12 +18,16 @@
       "images": [
         "res://assets/characters/witch/witch_portrait.png",
         "res://assets/characters/witch/witch_battle.png",
+		"res://assets/characters/witch/witch_battle_phase2.png",
+		"res://assets/characters/witch/witch_battle_phase3.png",
+		"res://assets/characters/witch/witch_battle.png",
         "res://assets/characters/witch/cards/witch_candle.png",
         "res://assets/characters/witch/cards/witch_fan.png",
         "res://assets/characters/witch/cards/witch_heat.png",
         "res://assets/characters/witch/cards/witch_rain.png",
         "res://assets/characters/witch/cards/witch_spark.png",
         "res://assets/characters/witch/cards/witch_wall.png",
+		"res://assets/characters/witch/cards/witch_wall.png",
 		"res://assets/characters/witch/witch_ult.png"
       ]
     },
@@ -37,6 +41,7 @@
       "images": [
         "res://assets/characters/warrior/warrior_portrait.png",
         "res://assets/characters/warrior/warrior_battle.png",
+		"res://assets/characters/warrior/warrior_drag.png",
 		"res://assets/characters/warrior/cards/warrior_chop.png",
         "res://assets/characters/warrior/cards/warrior_finish.png",
         "res://assets/characters/warrior/cards/warrior_lunge.png",
@@ -56,6 +61,7 @@
       "images": [
         "res://assets/characters/aki/aki_portrait.png",
         "res://assets/characters/aki/aki_battle.png",
+		"res://assets/characters/warrior/aki_drag.png",
         "res://assets/characters/aki/cards/aki_bounce.png",
         "res://assets/characters/aki/cards/aki_cheer_slap.png",
         "res://assets/characters/aki/cards/aki_kiss.png",
@@ -74,6 +80,7 @@
       "images": [
         "res://assets/characters/luisa/luisa_portrait.png",
         "res://assets/characters/luisa/luisa_battle.png",
+		"res://assets/characters/warrior/luisa_drag.png",
         "res://assets/characters/luisa/cards/luisa_deep.png",
         "res://assets/characters/luisa/cards/luisa_loosen.png",
         "res://assets/characters/luisa/cards/luisa_spank.png",
@@ -90,7 +97,9 @@
       "hint": "Откроется, когда Фуфу будет в отряде.",
       "images": [
         "res://assets/characters/fufu/fufu_portrait.png",
+		"res://assets/characters/fufu/emotions/fufu_mask.png",
         "res://assets/characters/fufu/fufu_battle.png",
+		"res://assets/characters/warrior/fufu_drag.png",
         "res://assets/characters/fufu/cards/fufu_break.png",
         "res://assets/characters/fufu/cards/fufu_cover.png",
         "res://assets/characters/fufu/cards/fufu_foreplay.png",
