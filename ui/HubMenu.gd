@@ -3,7 +3,7 @@ class_name HubMenu
 ## Меню перехода между комнатами дома (сверху справа): большая кнопка «…» разворачивает /
 ## сворачивает ряд кнопок Лавка, Ферма, Алхимия, Дом. Меню одно и то же в доме, на ферме, в алхимии
 ## и в лавке (scenes/ui/HubMenu.tscn — двигайте кнопки там). Открыто/закрыто — запоминается при
-## переходах между этими комнатами. Кнопка текущей комнаты тоже на месте (просто ничего не делает).
+## переходах между этими комнатами. Кнопка текущей комнаты чуть крупнее (CURRENT_SCALE) и не нажимается.
 ##
 ## Новая кнопка: добавить TextureButton в сцену и строку в TARGETS.
 
@@ -16,6 +16,8 @@ const TARGETS := {
 	"HomeButton": "go_to_hub",
 }
 const SLIDE_TIME := 0.22
+## Кнопка комнаты, где игрок сейчас: во столько раз крупнее остальных.
+const CURRENT_SCALE := 1.18
 const STAGGER := 0.035
 
 ## Развёрнуто ли меню (общее для всех комнат, пока игра запущена).
@@ -24,6 +26,7 @@ static var expanded := false
 @onready var toggle: TextureButton = $ToggleButton
 var _buttons: Array[TextureButton] = []
 var _open_pos: Dictionary = {}     ## кнопка -> где она стоит в развёрнутом меню
+var _current: TextureButton        ## кнопка текущей комнаты
 var _tween: Tween
 
 ## Добавить меню в комнату (поверх всего, что в ней есть).
@@ -44,6 +47,9 @@ func _ready() -> void:
 		if TARGETS.has(String(b.name)):
 			var method := String(TARGETS[String(b.name)])
 			b.pressed.connect(_go.bind(method))
+			if _is_current(method):
+				_current = b
+				b.mouse_filter = Control.MOUSE_FILTER_IGNORE   ## тут и так — не нажимается, не подсвечивается
 	toggle.pressed.connect(_on_toggle)
 	_refresh_locks()
 	_apply(expanded, false)
@@ -73,6 +79,13 @@ func _refresh_locks() -> void:
 func button(btn_name: String) -> TextureButton:
 	return get_node_or_null(btn_name) as TextureButton
 
+func _is_current(method: String) -> bool:
+	var cur := get_tree().current_scene if is_inside_tree() else null
+	return cur != null and cur.scene_file_path == _scene_path(method)
+
+func _open_scale(b: TextureButton) -> Vector2:
+	return Vector2.ONE * (CURRENT_SCALE if b == _current else 1.0)
+
 func _go(method: String) -> void:
 	var cur := get_tree().current_scene
 	var path := cur.scene_file_path if cur != null else ""
@@ -100,7 +113,7 @@ func _apply(open: bool, animated: bool) -> void:
 		for b in _buttons:
 			b.position = _open_pos[b] if open else home
 			b.modulate.a = 1.0 if open else 0.0
-			b.scale = Vector2.ONE if open else Vector2(0.4, 0.4)
+			b.scale = _open_scale(b) if open else Vector2(0.4, 0.4)
 			b.visible = open
 		toggle.rotation = PI * 0.5 if open else 0.0
 		refresh_badges()
@@ -121,7 +134,7 @@ func _apply(open: bool, animated: bool) -> void:
 			b.visible = true
 			_tween.tween_property(b, "position", _open_pos[b], SLIDE_TIME).set_delay(delay).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 			_tween.tween_property(b, "modulate:a", 1.0, SLIDE_TIME * 0.7).set_delay(delay)
-			_tween.tween_property(b, "scale", Vector2.ONE, SLIDE_TIME).set_delay(delay)
+			_tween.tween_property(b, "scale", _open_scale(b), SLIDE_TIME).set_delay(delay)
 		else:
 			_tween.tween_property(b, "position", home, SLIDE_TIME * 0.8).set_delay(delay).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
 			_tween.tween_property(b, "modulate:a", 0.0, SLIDE_TIME * 0.8).set_delay(delay)

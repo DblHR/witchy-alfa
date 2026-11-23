@@ -1772,19 +1772,34 @@ func _ult_targets(ult: CardInstance, hero: Unit) -> Array[Unit]:
 
 # --- Забег: HUD, лагерь между комнатами, награды ----------------------------
 
+## Плашка золота слева сверху (assets/ui/buttons/goldStatus.png — та же, что в лавке).
+const GOLD_PLATE := "res://assets/ui/buttons/goldStatus.png"
+const GOLD_PLATE_RECT := Rect2(14, 10, 220, 79)
+
 func _build_run_hud() -> void:
+	# Золото — плашка интерфейса с монеткой (как в лавке и на подготовке), число на ней.
+	var plate := TextureRect.new()
+	plate.name = "GoldStatus"
+	plate.texture = load(GOLD_PLATE) as Texture2D if ResourceLoader.exists(GOLD_PLATE) else null
+	plate.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	plate.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	plate.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	plate.position = GOLD_PLATE_RECT.position
+	plate.size = GOLD_PLATE_RECT.size
+	hud.add_child(plate)
 	_gold_label = Label.new()
-	_gold_label.position = Vector2(24, 22)
-	_gold_label.size = Vector2(900, 36)
+	_gold_label.position = Vector2(GOLD_PLATE_RECT.size.x * 0.33, 0)
+	_gold_label.size = Vector2(GOLD_PLATE_RECT.size.x * 0.6, GOLD_PLATE_RECT.size.y)
+	_gold_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_gold_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_gold_label.add_theme_font_size_override("font_size", 26)
-	_gold_label.add_theme_color_override("font_color", Color(1.0, 0.88, 0.4))
-	_gold_label.add_theme_color_override("font_outline_color", Color(0, 0, 0, 1))
-	_gold_label.add_theme_constant_override("outline_size", 6)
-	hud.add_child(_gold_label)
+	_gold_label.add_theme_font_size_override("font_size", 30)
+	_gold_label.add_theme_color_override("font_color", Color(1, 0.95, 0.8, 1))
+	_gold_label.add_theme_color_override("font_outline_color", Color(0.2, 0.08, 0.02, 1))
+	_gold_label.add_theme_constant_override("outline_size", 5)
+	plate.add_child(_gold_label)
 
 	_buff_bar = CardBuffBar.new()
-	_buff_bar.position = Vector2(24, 66)
+	_buff_bar.position = Vector2(24, GOLD_PLATE_RECT.end.y + 8.0)
 	hud.add_child(_buff_bar)
 	_buff_bar.entry_pressed.connect(_on_buff_pressed)
 	_potion_bar = CardBuffBar.new()
@@ -1805,7 +1820,7 @@ func refresh_run_hud() -> void:
 		return
 	if _progress != null:
 		_progress.setup(_run.total_rooms(), _room_index)
-	var text := "Золото: %d" % DungRun.gold
+	var text := str(DungRun.gold)
 	_gold_label.text = text
 	if _buff_bar != null and _relics != null:
 		var all := _buff_entries()

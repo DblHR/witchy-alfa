@@ -37,6 +37,8 @@ const ZONE_TEX_H := 59.0
 ## Размер сердечка относительно толщины полосы.
 @export var cursor_scale: float = 1.9
 
+## Секунд на путь от края до края (было 1.35).
+const SWEEP_TIME := 1.1
 var _active := false
 var _pos := 0.0        ## 0..1 вдоль дуги
 var _dir := 1.0
@@ -48,11 +50,20 @@ func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	set_process(false)
 
+## С картинкой зоны ширина зоны (доля дуги) берётся из самой картинки — попадание совпадает с тем, что видно.
+func _sync_zone_width() -> void:
+	if arc_texture == null or zone_texture == null:
+		return
+	var total := deg_to_rad(absf(to_angle_deg - from_angle_deg)) * TEX_RADIUS
+	if total > 0.0:
+		zone_width = clampf(ZONE_TEX_W / total, 0.02, 0.9)
+
 func begin(rng: RandomNumberGenerator, speed_scale: float = 1.0) -> void:
+	_sync_zone_width()
 	_zone_center = rng.randf_range(0.2, 0.8)
 	_pos = 0.0 if rng.randf() < 0.5 else 1.0
 	_dir = 1.0 if _pos == 0.0 else -1.0
-	sweep_time = 1.35 / maxf(speed_scale, 0.2)
+	sweep_time = SWEEP_TIME / maxf(speed_scale, 0.2)
 	_active = true
 	visible = true
 	set_process(true)
@@ -142,9 +153,8 @@ func _draw_textured() -> void:
 	if zone_texture != null:
 		var zc := (z0 + z1) * 0.5
 		var ang := deg_to_rad(lerpf(from_angle_deg, to_angle_deg, zc))
-		var arc_len := arc_radius * deg_to_rad(absf(to_angle_deg - from_angle_deg)) * (z1 - z0)
-		var sc := Vector2(arc_len / ZONE_TEX_W, band / ZONE_TEX_H)
-		draw_set_transform(_point_at(zc), ang + PI * 0.5, sc)
+		# Зона — в своём размере (подогнана под дорожку), только общий масштаб дуги.
+		draw_set_transform(_point_at(zc), ang + PI * 0.5, Vector2(k, k))
 		var zs := zone_texture.get_size()
 		draw_texture(zone_texture, -zs * 0.5, zone_col)
 		draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)

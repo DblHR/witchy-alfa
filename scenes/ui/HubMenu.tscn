@@ -17,10 +17,10 @@ script = ExtResource("1_menu")
 
 [node name="ShopButton" type="TextureButton" parent="."]
 layout_mode = 0
-offset_left = 1371.0
-offset_top = 8.0
-offset_right = 1471.0
-offset_bottom = 108.0
+offset_left = 1351.0
+offset_top = 18.0
+offset_right = 1451.0
+offset_bottom = 118.0
 focus_mode = 0
 texture_normal = ExtResource("3_shop")
 ignore_texture_size = true
@@ -28,10 +28,10 @@ stretch_mode = 5
 
 [node name="FarmButton" type="TextureButton" parent="."]
 layout_mode = 0
-offset_left = 1480.0
-offset_top = 8.0
-offset_right = 1580.0
-offset_bottom = 108.0
+offset_left = 1460.0
+offset_top = 18.0
+offset_right = 1560.0
+offset_bottom = 118.0
 focus_mode = 0
 texture_normal = ExtResource("4_farm")
 ignore_texture_size = true
@@ -39,10 +39,10 @@ stretch_mode = 5
 
 [node name="AlchemyButton" type="TextureButton" parent="."]
 layout_mode = 0
-offset_left = 1589.0
-offset_top = 8.0
-offset_right = 1689.0
-offset_bottom = 108.0
+offset_left = 1569.0
+offset_top = 18.0
+offset_right = 1669.0
+offset_bottom = 118.0
 focus_mode = 0
 texture_normal = ExtResource("5_alch")
 ignore_texture_size = true
@@ -50,10 +50,10 @@ stretch_mode = 5
 
 [node name="HomeButton" type="TextureButton" parent="."]
 layout_mode = 0
-offset_left = 1698.0
-offset_top = 8.0
-offset_right = 1798.0
-offset_bottom = 108.0
+offset_left = 1678.0
+offset_top = 18.0
+offset_right = 1778.0
+offset_bottom = 118.0
 focus_mode = 0
 texture_normal = ExtResource("6_home")
 ignore_texture_size = true
@@ -61,11 +61,11 @@ stretch_mode = 5
 
 [node name="ToggleButton" type="TextureButton" parent="."]
 layout_mode = 0
-offset_left = 1807.0
+offset_left = 1787.0
 offset_top = 8.0
 offset_right = 1907.0
-offset_bottom = 108.0
-pivot_offset = Vector2(50, 50)
+offset_bottom = 128.0
+pivot_offset = Vector2(60, 60)
 focus_mode = 0
 texture_normal = ExtResource("2_dots")
 ignore_texture_size = true

@@ -173,9 +173,6 @@ func _setup_pan() -> void:
 	_pan = _pan_base
 
 func _update_pan(delta: float) -> void:
-	# Пока мешаем или ловим маятник — фон стоит (иначе круг уезжает из-под мышки).
-	if _stage == Stage.STIR or _stage == Stage.PENDULUM:
-		return
 	var c := _size * 0.5
 	var k := ((_mouse - c) / c).clamp(Vector2(-1, -1), Vector2(1, 1))
 	var target := _pan_base - k * _pan_max
@@ -904,10 +901,11 @@ func _on_pot_body_entered(body: Node) -> void:
 	var ib := body as _BodyScript
 	if ib == null or ib == _dragged:
 		return   # пока предмет в руке — не засчитываем, только когда отпустили
-	_try_accept(ib)
+	# Сигнал приходит посреди шага физики: менять тело (freeze, слои) здесь нельзя — после шага.
+	_try_accept.call_deferred(ib)
 
 func _try_accept(ib: _BodyScript) -> void:
-	if ib.accepted or ib.is_queued_for_deletion():
+	if not is_instance_valid(ib) or ib.accepted or ib.is_queued_for_deletion():
 		return
 	if _stage != Stage.ADD:
 		_bounce_out(ib)

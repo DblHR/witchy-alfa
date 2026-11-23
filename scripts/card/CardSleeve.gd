@@ -32,7 +32,10 @@ func _init() -> void:
 	color = COLOR_IDLE
 	position = RECT.position
 	size = RECT.size
-	mouse_filter = Control.MOUSE_FILTER_IGNORE
+	# Наведение — подсказка, что такое рукав (HoverTips). Клики проходят дальше.
+	mouse_filter = Control.MOUSE_FILTER_PASS
+	mouse_entered.connect(_show_tip)
+	mouse_exited.connect(func() -> void: HoverTips.hide_tips(self))
 	if ResourceLoader.exists(ART_PATH):
 		color = Color(0, 0, 0, 0)
 		_art = TextureRect.new()
@@ -56,7 +59,16 @@ func _ready() -> void:
 static func in_zone(point: Vector2) -> bool:
 	return RECT.has_point(point)
 
+## Что написано в подсказке рукава.
+const TIP_TITLE := "Рукав"
+const TIP_TEXT := "Перетащите сюда карту — она не уйдёт в сброс в конце хода и в следующий ход вернётся в руку (добор будет на одну карту меньше). Клик по карте в рукаве — вернуть её в руку сейчас."
+
+func _show_tip() -> void:
+	HoverTips.show_tips(self, HoverTips.screen_rect.bind(self), [HoverTips.box(TIP_TITLE, TIP_TEXT, Color(0.8, 0.7, 1.0))])
+
 func set_hover(on: bool) -> void:
+	if on:
+		HoverTips.hide_tips(self)
 	if _art != null:
 		_art.modulate = ART_ACTIVE if on else ART_IDLE
 	else:

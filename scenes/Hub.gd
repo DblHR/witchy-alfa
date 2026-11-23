@@ -176,40 +176,86 @@ func _set_cauldron_hover(on: bool) -> void:
 	_cauldron_hover = on
 	_bubbles.emitting = on
 
-# --- Дверной проём: вход на ферму -----------------------------------------------------
-## Где дверной проём (клик — ферма). При наведении над ним всплывает значок фермы.
+# --- Дверной проём: ферма и лавка ----------------------------------------------------
+## Наведение на дверной проём — над ним всплывают значки фермы и лавки. Переход — клик по значку
+## (по самому проёму клик ничего не делает). Значки видны, пока курсор на проёме или на них.
 const DOOR_RECT := Rect2(1462, 195, 290, 355)
-const FARM_ICON := "res://assets/ui/buttons/farmButton.png"
-var _door_hint: TextureRect
+const DOOR_ICON_SIZE := Vector2(120, 120)
+const DOOR_ICON_GAP := 14.0
+## Значок: картинка и куда ведёт (SceneRouter_).
+const DOOR_ICONS := [
+	["farm", "res://assets/ui/buttons/farmButton.png", "go_to_farm"],
+	["shop", "res://assets/ui/buttons/shopButton.png", "go_to_shop"],
+]
+const DOOR_ICON_HOVER_SCALE := 1.12
+var _door_icons: Dictionary = {}   ## id -> TextureRect
 var _door_hover := false
+var _door_hot := ""                ## значок под курсором
 var _door_tween: Tween
 
 func _build_door_hint() -> void:
-	_door_hint = TextureRect.new()
-	_door_hint.name = "DoorFarmHint"
-	_door_hint.texture = load(FARM_ICON) as Texture2D
-	_door_hint.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	_door_hint.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	_door_hint.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_door_hint.size = Vector2(110, 110)
-	_door_hint.position = Vector2(DOOR_RECT.get_center().x - 55, DOOR_RECT.position.y + 40)
-	_door_hint.modulate.a = 0.0
-	add_child(_door_hint)
-	move_child(_door_hint, foreground.get_index() + 1)
+	var total := DOOR_ICON_SIZE.x * DOOR_ICONS.size() + DOOR_ICON_GAP * (DOOR_ICONS.size() - 1)
+	var x := DOOR_RECT.get_center().x - total * 0.5
+	for d in DOOR_ICONS:
+		var icon := TextureRect.new()
+		icon.name = "Door_" + String(d[0])
+		icon.texture = load(String(d[1])) as Texture2D
+		icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		icon.size = DOOR_ICON_SIZE
+		icon.pivot_offset = DOOR_ICON_SIZE * 0.5
+		icon.position = Vector2(x, _door_icon_y(false))
+		icon.modulate.a = 0.0
+		icon.visible = false
+		add_child(icon)
+		move_child(icon, foreground.get_index() + 1)
+		_door_icons[String(d[0])] = icon
+		x += DOOR_ICON_SIZE.x + DOOR_ICON_GAP
 
+func _door_icon_y(shown: bool) -> float:
+	return DOOR_RECT.position.y + (40.0 if shown else 60.0)
+
+## Курсор на проёме (значки показываются).
 func _door_at(p: Vector2) -> bool:
-	return DOOR_RECT.has_point(p)
+	return DOOR_RECT.has_point(p) or (_door_hover and _door_icon_at(p) != "")
+
+## Значок под курсором ("" — нет). Только пока значки показаны.
+func _door_icon_at(p: Vector2) -> String:
+	if not _door_hover:
+		return ""
+	for id in _door_icons.keys():
+		var icon: TextureRect = _door_icons[id]
+		if Rect2(icon.position, icon.size).has_point(p):
+			return String(id)
+	return ""
 
 func _set_door_hover(on: bool) -> void:
-	if on == _door_hover:
-		return
-	_door_hover = on
-	if _door_tween != null and _door_tween.is_valid():
-		_door_tween.kill()
-	_door_tween = create_tween().set_parallel(true)
-	_door_tween.tween_property(_door_hint, "modulate:a", 1.0 if on else 0.0, 0.15)
-	var y := DOOR_RECT.position.y + (20.0 if on else 40.0)
-	_door_tween.tween_property(_door_hint, "position:y", y, 0.15)
+	if on != _door_hover:
+		_door_hover = on
+		if _door_tween != null and _door_tween.is_valid():
+			_door_tween.kill()
+		_door_tween = create_tween().set_parallel(true)
+		for icon: TextureRect in _door_icons.values():
+			if on:
+				icon.visible = true
+			_door_tween.tween_property(icon, "modulate:a", 1.0 if on else 0.0, 0.15)
+			_door_tween.tween_property(icon, "position:y", _door_icon_y(on), 0.15)
+		if not on:
+			_door_tween.chain().tween_callback(func() -> void:
+				for icon: TextureRect in _door_icons.values():
+					icon.visible = _door_hover)
+	var hot := _door_icon_at(get_viewport().get_mouse_position()) if on else ""
+	if hot != _door_hot:
+		_door_hot = hot
+		for id in _door_icons.keys():
+			var icon: TextureRect = _door_icons[id]
+			icon.create_tween().tween_property(icon, "scale", Vector2.ONE * (DOOR_ICON_HOVER_SCALE if id == hot else 1.0), 0.1)
+
+func _go_door(id: String) -> void:
+	for d in DOOR_ICONS:
+		if String(d[0]) == id:
+			SceneRouter_.call(String(d[2]))
 
 # --- Мышь: наведение, клик, перетаскивание ----------------------------------------------
 const HUB_TALK_TYPE := "hub_talk"
@@ -304,7 +350,7 @@ func _process(delta: float) -> void:
 			over.set_hover(true)
 	_set_cauldron_hover(cauldron)
 	_set_door_hover(door)
-	var hand := over != null or cauldron or door or _dragging or star or toggle_hot
+	var hand := over != null or cauldron or _door_hot != "" or _dragging or star or toggle_hot
 	var drag := _dragging or stars.is_grabbing()
 	Input.set_default_cursor_shape(Input.CURSOR_DRAG if drag else (Input.CURSOR_POINTING_HAND if hand else Input.CURSOR_ARROW))
 
@@ -376,9 +422,9 @@ func _input(event: InputEvent) -> void:
 			t.toggle()
 			if t == fireplace:
 				_fireplace_first_click()
-		elif _door_at(p):
+		elif _door_icon_at(p) != "":
 			get_viewport().set_input_as_handled()
-			SceneRouter_.go_to_farm()
+			_go_door(_door_icon_at(p))
 
 ## Первый клик по камину: главный герой находит данго-посох (диалог data/dialogues/hub/home_events.json,
 ## "fireplace_dango": реплика с give_item — посох выдаётся и показывается «Получено»). Один раз.
