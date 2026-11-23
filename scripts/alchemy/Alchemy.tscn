@@ -1,6 +1,11 @@
 [gd_scene format=3 uid="uid://bnen7dj4sqcb3"]
 
 [ext_resource type="Script" uid="uid://dl6rem1j21jf2" path="res://scripts/alchemy/alchemy_room.gd" id="1"]
+[ext_resource type="Texture2D" uid="uid://drifgh58otm62" path="res://assets/alchemy/alchemyBG.png" id="2_bg"]
+[ext_resource type="Texture2D" uid="uid://qbfyrfa6wnd8" path="res://assets/alchemy/alchemy_witch.png" id="3_witch"]
+[ext_resource type="Texture2D" uid="uid://ce7lupfayylvl" path="res://assets/alchemy/cauldron_potion.png" id="4_potion"]
+[ext_resource type="Texture2D" uid="uid://bioju62n2qrcg" path="res://assets/alchemy/cauldron.png" id="5_cauldron"]
+[ext_resource type="Script" uid="uid://djs8lrqv0wkbg" path="res://scripts/farm/WitchZone.gd" id="6_zone"]
 
 [node name="Control" type="Control"]
 layout_mode = 3
@@ -9,4 +14,70 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+mouse_filter = 2
 script = ExtResource("1")
+
+[node name="World" type="Control" parent="."]
+unique_name_in_owner = true
+layout_mode = 3
+anchors_preset = 0
+offset_left = -65.0
+offset_top = -60.0
+offset_right = 1985.0
+offset_bottom = 1140.0
+mouse_filter = 2
+
+[node name="Background" type="TextureRect" parent="World"]
+layout_mode = 0
+offset_right = 2050.0
+offset_bottom = 1200.0
+mouse_filter = 2
+texture = ExtResource("2_bg")
+expand_mode = 1
+
+[node name="Witch" type="TextureRect" parent="World"]
+unique_name_in_owner = true
+layout_mode = 0
+offset_right = 2050.0
+offset_bottom = 1200.0
+mouse_filter = 2
+texture = ExtResource("3_witch")
+expand_mode = 1
+
+[node name="Cauldron" type="TextureRect" parent="World"]
+unique_name_in_owner = true
+layout_mode = 0
+offset_right = 2050.0
+offset_bottom = 1200.0
+mouse_filter = 2
+texture = ExtResource("5_cauldron")
+expand_mode = 1
+
+[node name="Potion" type="TextureRect" parent="World"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 0
+offset_left = 46.0
+offset_top = 40.0
+offset_right = 2096.0
+offset_bottom = 1240.0
+mouse_filter = 2
+texture = ExtResource("4_potion")
+expand_mode = 1
+
+[node name="Zones" type="Node2D" parent="World"]
+unique_name_in_owner = true
+
+[node name="Cauldron" type="Polygon2D" parent="World/Zones"]
+color = Color(0.3, 0.8, 1, 0.35)
+polygon = PackedVector2Array(480, 636, 896, 636, 988, 676, 1104, 756, 1196, 876, 1268, 1000, 1256, 1080, 1228, 1200, 144, 1200, 124, 1040, 108, 960, 180, 876, 272, 756, 384, 676)
+script = ExtResource("6_zone")
+sprite = ""
+action = "recipes"
+
+[node name="Witch" type="Polygon2D" parent="World/Zones"]
+color = Color(1, 0.3, 0.6, 0.35)
+polygon = PackedVector2Array(940, 0, 1560, 0, 1610, 250, 1570, 500, 1530, 720, 1470, 920, 1450, 1150, 1300, 1150, 1270, 760, 1010, 650, 980, 500, 700, 430, 380, 530, 180, 450, 300, 250, 620, 230, 900, 300)
+script = ExtResource("6_zone")
+sprite = "alchemy_witch2"
+duration = 1.5

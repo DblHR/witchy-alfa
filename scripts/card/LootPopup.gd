@@ -13,6 +13,7 @@ const FOOT_H := 86.0
 
 ## Значок золота (тот же, что в лавке Сессилии).
 const COIN_ICON := "res://assets/items/loot/coin.png"
+const XP_ICON := "res://assets/items/loot/EXP.png"
 ## loot: {gold: int, xp: int, items: {item_id: count}}
 func setup(loot: Dictionary, title_text: String = "Добыча") -> void:
 	set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -40,7 +41,8 @@ func setup(loot: Dictionary, title_text: String = "Добыча") -> void:
 
 	var coin: Texture2D = load(COIN_ICON) as Texture2D if ResourceLoader.exists(COIN_ICON) else null
 	col.add_child(_row(coin, "Золото", "+%d" % int(loot.get("gold", 0)), Color(1.0, 0.88, 0.4)))
-	col.add_child(_row(null, "Опыт (в конце забега)", "+%d" % int(loot.get("xp", 0)), Color(0.6, 0.85, 1.0)))
+	var xp_icon: Texture2D = load(XP_ICON) as Texture2D if ResourceLoader.exists(XP_ICON) else null
+	col.add_child(_row(xp_icon, "Опыт (в конце забега)", "+%d" % int(loot.get("xp", 0)), Color(0.6, 0.85, 1.0)))
 	for id in items.keys():
 		var icon: Texture2D = null
 		if Inventory_ != null:

@@ -304,6 +304,8 @@ func _build_item_entries() -> Array[Dictionary]:
 func _build_recipe_entries() -> Array[Dictionary]:
 	var out: Array[Dictionary] = []
 	for recipe_id in AlchemyDB.get_recipe_ids():
+		if not AlchemyDB.is_known(recipe_id):
+			continue   ## неизученные рецепты в книге не показываем
 		var result_item_id := AlchemyDB.get_result_item_id(recipe_id)
 		out.append({
 			"id": recipe_id,

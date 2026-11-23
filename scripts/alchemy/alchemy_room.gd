@@ -1,22 +1,27 @@
 extends Control
 ## Алхимия: цепочка мини-игр.
-## 1) кнопка «Рецепт» слева сверху открывает окно выбора -> 2) справа полка: ячейки с ингредиентами
-##    рецепта; ячейку тянем мышкой (появляется предмет с 2D-физикой) или кликаем — предмет сам летит в котёл
-## 3) кидаем нужное в котёл СВЕРХУ -> 4) помешиваем круговым зажатием -> 5) маятник -> зелье.
-## «Повторить» рядом с рецептом варит прошлый рецепт сразу, без мини-игр.
-## Верстка задана долями экрана (дизайн 1920x1080), фон — alchemyBG.png, котёл — cauldron.png поверх.
+## 1) клик по котлу открывает окно выбора рецепта -> 2) справа окно ингредиентов (появляется после выбора,
+##    закрывается крестиком): ячейку тянем мышкой (появляется предмет с 2D-физикой) или кликаем — предмет
+##    сам летит в котёл -> 3) помешиваем круговым зажатием -> 4) маятник -> зелье.
+## Кнопка-стрелка слева сверху варит прошлый рецепт сразу, без мини-игр (рядом — значок того, что варили).
+## Картинки — в сцене Alchemy.tscn: World (фон, ведьмочка, зелье в котле, котёл, зоны клика) чуть больше экрана
+## и катается за курсором, как на ферме. Физика, помешивание и маятник тоже внутри World (координаты World).
 
 const _BodyScript := preload("res://scripts/alchemy/ingredient_body.gd")
 const _PendulumScript := preload("res://scripts/alchemy/pendulum_meter.gd")
 const _StirScript := preload("res://scripts/alchemy/stirring_minigame.gd")
 
-const BG_PATH := "res://assets/backgrounds/rooms/alchemyBG.png"
-const CAULDRON_PATH := "res://assets/alchemy/cauldron.png"
+## Картинки ведьмочки (реакция на клик — WitchZone в World/Zones, имя файла без .png).
+const WITCH_DIR := "res://assets/alchemy/"
+const REPEAT_TEXTURE := "res://assets/alchemy/recraft_button.png"
+## Фон катается за курсором (как на ферме): скорость догоняния.
+const PAN_SMOOTH := 5.0
 
 # --- Раскладка (доли экрана: x, y, w, h) ---
-const R_RECIPE_BTN := Rect2(0.02, 0.025, 0.30, 0.10)
-const R_REPEAT_BTN := Rect2(0.33, 0.025, 0.235, 0.10)   ## справа — меню комнат (HubMenu)
-const R_HINT := Rect2(0.02, 0.145, 0.60, 0.05)
+## Кнопка «повторить» (px экрана) и значок последнего сваренного рядом.
+const REPEAT_RECT := Rect2(24, 22, 112, 112)
+const LAST_ICON_RECT := Rect2(146, 38, 80, 80)
+const R_HINT := Rect2(0.02, 0.135, 0.60, 0.05)
 const R_CHECKLIST := Rect2(0.02, 0.21, 0.27, 0.20)
 const R_RESET := Rect2(0.30, 0.215, 0.105, 0.045)
 const R_SHELF := Rect2(0.705, 0.20, 0.28, 0.79)
@@ -26,19 +31,27 @@ const SLOT_SIZE := Vector2(150, 168)
 const RETURN_AFTER := 2.2
 ## Клик по ячейке (без перетаскивания): предмет сам летит в котёл за это время.
 const TOSS_TIME := 0.75
-const POT_CENTER := Vector2(0.31, 0.745)
+## Котёл в координатах World (картинки 2050×1200): центр, круг помешивания, горло-триггер.
+const POT_CENTER := Vector2(690, 905)
 const STIR_SIZE := 740.0
 ## Горло котла (триггер): всё, что оказалось здесь, считается брошенным в котёл.
-const R_POT_MOUTH := Rect2(0.09, 0.70, 0.465, 0.30)
+const POT_MOUTH := Rect2(250, 720, 880, 480)
+## Стенки котла (ломаные по краю картинки cauldron.png, координаты World). Сверху котёл открыт.
+const POT_WALL_LEFT: Array[Vector2] = [Vector2(330, 700), Vector2(230, 800), Vector2(150, 920), Vector2(110, 1010), Vector2(130, 1240)]
+const POT_WALL_RIGHT: Array[Vector2] = [Vector2(1050, 700), Vector2(1160, 820), Vector2(1240, 940), Vector2(1270, 1040), Vector2(1240, 1240)]
+## Дуга маятника — по розовому кругу на полу alchemyBG.png (координаты World, углы в градусах).
+const PENDULUM_CENTER := Vector2(1040, 2080)
+const PENDULUM_RADIUS := 1250.0
+const PENDULUM_WIDTH := 58.0
+const PENDULUM_FROM_DEG := 227.0
+const PENDULUM_TO_DEG := 311.0
 
 const DEBUG_WALLS := false
 
-## Пузырьки при наведении на котёл: откуда поднимаются (экран 1920×1080).
-const BUBBLES_CENTER := Vector2(600, 790)
-const BUBBLES_EXTENTS := Vector2(360, 60)
+## Пузырьки при наведении на котёл: откуда поднимаются (координаты World).
+const BUBBLES_CENTER := Vector2(690, 860)
+const BUBBLES_EXTENTS := Vector2(400, 70)
 var _bubbles: CPUParticles2D
-var _cauldron_mask: Image   ## уменьшенная альфа котла — понять, что курсор на нём
-const MASK_STEP := 8.0
 
 ## Инвентарь слева снизу (вместо кнопки паузы; пауза — по Esc).
 const INVENTORY_BTN_RECT := Rect2(9, 881, 180, 180)
@@ -55,16 +68,29 @@ var _stir_score := 0.0
 var _rng := RandomNumberGenerator.new()
 var _size := Vector2(1920, 1080)
 
-var _world: Node2D
+@onready var world: Control = %World
+@onready var witch: TextureRect = %Witch
+@onready var potion: TextureRect = %Potion
+@onready var zones: Node2D = %Zones
+@onready var _cauldron_art: TextureRect = %Cauldron
+var _witch_tex: Texture2D
+var _witch_token := 0
+var _pan_base := Vector2.ZERO
+var _pan_max := Vector2.ZERO
+var _pan := Vector2.ZERO
+var _hand_cursor := false
+
+var _world: Node2D   ## физика (стенки, предметы) — внутри World
 var _pot_area: Area2D
-var _cauldron_art: TextureRect
 var _hint_label: Label
 var _checklist_box: VBoxContainer
 var _checklist_panel: PanelContainer
 var _legend_box: GridContainer
 var _shelf_note: Label
-var _recipe_button: Button
-var _repeat_button: Button
+var _shelf_panel: PanelContainer
+var _shelf_open := false
+var _repeat_button: TextureButton
+var _last_icon: TextureRect
 var _recipe_popup: Control
 var _recipe_grid: GridContainer
 var _recipe_buttons: Dictionary = {}
@@ -92,7 +118,9 @@ func _ready() -> void:
 	_rng.randomize()
 	mouse_filter = Control.MOUSE_FILTER_IGNORE   # иначе корневой Control съедает клики и _unhandled_input их не видит
 	_size = get_viewport_rect().size
+	_mouse = _size * 0.5
 	UIThemeHelper.apply_pink_theme(self)
+	_setup_pan()
 	_build_backdrop()
 	_build_world()
 	_build_shelf_panel()
@@ -109,6 +137,8 @@ func _ready() -> void:
 	_set_stage(Stage.PICK)
 
 func _exit_tree() -> void:
+	if _hand_cursor:
+		Input.set_default_cursor_shape(Input.CURSOR_ARROW)
 	if Inventory_ != null and Inventory_.changed.is_connected(_on_inventory_changed):
 		Inventory_.changed.disconnect(_on_inventory_changed)
 
@@ -125,26 +155,35 @@ func _place(c: Control, r: Rect2) -> void:
 	c.position = px.position
 	c.size = px.size
 
+# --- Фон за курсором (как на ферме) ---------------------------------------------
+
+func _setup_pan() -> void:
+	_pan_base = world.position
+	var left := -_pan_base
+	var right := world.size + _pan_base - _size
+	_pan_max = Vector2(maxf(0.0, minf(left.x, right.x)), maxf(0.0, minf(left.y, right.y)))
+	_pan = _pan_base
+
+func _update_pan(delta: float) -> void:
+	# Пока мешаем или ловим маятник — фон стоит (иначе круг уезжает из-под мышки).
+	if _stage == Stage.STIR or _stage == Stage.PENDULUM:
+		return
+	var c := _size * 0.5
+	var k := ((_mouse - c) / c).clamp(Vector2(-1, -1), Vector2(1, 1))
+	var target := _pan_base - k * _pan_max
+	_pan = _pan.lerp(target, 1.0 - exp(-PAN_SMOOTH * delta))
+	world.position = _pan.round()
+
+## Точка World -> экран (и обратно).
+func _to_screen(p: Vector2) -> Vector2:
+	return world.get_global_transform() * p
+
 func _build_backdrop() -> void:
-	var bg := TextureRect.new()
-	bg.texture = load(BG_PATH)
-	bg.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	bg.stretch_mode = TextureRect.STRETCH_SCALE
-	bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(bg)
-	bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	# Котёл — картинка того же размера, что и фон; кладём поверх целиком.
-	_cauldron_art = TextureRect.new()
-	_cauldron_art.texture = load(CAULDRON_PATH)
-	_cauldron_art.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	_cauldron_art.stretch_mode = TextureRect.STRETCH_SCALE
-	_cauldron_art.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(_cauldron_art)
-	_cauldron_art.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	# Пузырьки над варевом, когда курсор на котле (как у котла в доме).
+	_witch_tex = witch.texture
+	# Пузырьки над котлом, когда курсор на нём (как у котла в доме).
 	_bubbles = CauldronBubbles.make(BUBBLES_CENTER, BUBBLES_EXTENTS, 40, 3.0)
-	add_child(_bubbles)
-	_build_cauldron_mask()
+	world.add_child(_bubbles)
+	world.move_child(_bubbles, potion.get_index() + 1)
 
 func _build_shelf_panel() -> void:
 	var panel := PanelContainer.new()
@@ -158,16 +197,32 @@ func _build_shelf_panel() -> void:
 	panel.add_theme_stylebox_override("panel", sb)
 	add_child(panel)
 	_place(panel, R_SHELF)
-	move_child(panel, _world.get_index())  # полка под физическими телами
+	_shelf_panel = panel
+	panel.visible = false
 	var box := VBoxContainer.new()
 	box.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	box.add_theme_constant_override("separation", 12)
 	panel.add_child(box)
+	var head := HBoxContainer.new()
+	head.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	box.add_child(head)
 	var title := Label.new()
 	title.text = "Ингредиенты"
 	title.add_theme_font_size_override("font_size", 28)
 	title.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	box.add_child(title)
+	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	head.add_child(title)
+	# Крестик: окно закрывается; снова откроется при выборе рецепта (того же или другого).
+	var close := Button.new()
+	close.name = "Close"
+	close.text = "✕"
+	close.focus_mode = Control.FOCUS_NONE
+	close.custom_minimum_size = Vector2(48, 48)
+	close.add_theme_font_size_override("font_size", 24)
+	close.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	_style_top_button(close, Color(0.42, 0.22, 0.46))
+	close.pressed.connect(close_shelf)
+	head.add_child(close)
 	_shelf_note = Label.new()
 	_shelf_note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_shelf_note.custom_minimum_size = Vector2(300, 0)
@@ -184,29 +239,28 @@ func _build_shelf_panel() -> void:
 
 func _build_world() -> void:
 	_world = Node2D.new()
-	_world.name = "World"
-	add_child(_world)
-	# Пол и стены экрана.
-	_add_wall(Vector2(-200, _size.y + 24), Vector2(_size.x + 200, _size.y + 24), 48.0)
-	_add_wall(Vector2(-24, -600), Vector2(-24, _size.y + 100), 48.0)
-	_add_wall(Vector2(_size.x + 24, -600), Vector2(_size.x + 24, _size.y + 100), 48.0)
-	_add_wall(Vector2(-100, -600), Vector2(_size.x + 100, -600), 48.0)
-	# Бока котла: ломаные по контуру картинки. Сверху котёл открыт.
-	var left := [Vector2(0.092, 0.675), Vector2(0.040, 0.80), Vector2(0.020, 0.90), Vector2(0.020, 1.03)]
-	var right := [Vector2(0.568, 0.70), Vector2(0.596, 0.76), Vector2(0.608, 0.88), Vector2(0.608, 1.03)]
-	for chain in [left, right]:
+	_world.name = "Physics"
+	world.add_child(_world)
+	world.move_child(_world, zones.get_index())   ## предметы — над котлом
+	var w := world.size
+	# Пол и стены по краям World.
+	_add_wall(Vector2(-200, w.y + 24), Vector2(w.x + 200, w.y + 24), 48.0)
+	_add_wall(Vector2(-24, -600), Vector2(-24, w.y + 100), 48.0)
+	_add_wall(Vector2(w.x + 24, -600), Vector2(w.x + 24, w.y + 100), 48.0)
+	_add_wall(Vector2(-100, -600), Vector2(w.x + 100, -600), 48.0)
+	# Бока котла. Сверху котёл открыт.
+	for chain in [POT_WALL_LEFT, POT_WALL_RIGHT]:
 		for i in range(chain.size() - 1):
-			_add_wall(chain[i] * _size, chain[i + 1] * _size, 36.0)
+			_add_wall(chain[i], chain[i + 1], 36.0)
 	# Триггер: горло котла.
 	_pot_area = Area2D.new()
 	_pot_area.collision_layer = 0
 	_pot_area.collision_mask = 1
 	var cs := CollisionShape2D.new()
 	var rs := RectangleShape2D.new()
-	var mouth := _frac(R_POT_MOUTH)
-	rs.size = mouth.size
+	rs.size = POT_MOUTH.size
 	cs.shape = rs
-	cs.position = mouth.position + mouth.size * 0.5
+	cs.position = POT_MOUTH.position + POT_MOUTH.size * 0.5
 	_pot_area.add_child(cs)
 	_world.add_child(_pot_area)
 	_pot_area.body_entered.connect(_on_pot_body_entered)
@@ -238,18 +292,20 @@ func _add_wall(a: Vector2, b: Vector2, thick: float) -> void:
 func _build_stage_overlays() -> void:
 	_stir = _StirScript.new()
 	_stir.visible = false
-	add_child(_stir)
+	world.add_child(_stir)
 	_stir.size = Vector2(STIR_SIZE, STIR_SIZE)
-	_stir.position = POT_CENTER * _size - Vector2(STIR_SIZE, STIR_SIZE) * 0.5
+	_stir.position = POT_CENTER - Vector2(STIR_SIZE, STIR_SIZE) * 0.5
 	_stir.finished.connect(_on_stir_finished)
 	_pendulum = _PendulumScript.new()
 	_pendulum.visible = false
-	add_child(_pendulum)
-	_pendulum.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	var k := _size.y / 1080.0
-	_pendulum.arc_center = Vector2(607.0, 1024.0) * k
-	_pendulum.arc_radius = 690.0 * k
-	_pendulum.arc_width = 52.0 * k
+	world.add_child(_pendulum)
+	_pendulum.position = Vector2.ZERO
+	_pendulum.size = world.size
+	_pendulum.arc_center = PENDULUM_CENTER
+	_pendulum.arc_radius = PENDULUM_RADIUS
+	_pendulum.arc_width = PENDULUM_WIDTH
+	_pendulum.from_angle_deg = PENDULUM_FROM_DEG
+	_pendulum.to_angle_deg = PENDULUM_TO_DEG
 	_pendulum.stopped.connect(_on_pendulum_stopped)
 
 func _panel_style(alpha: float = 0.72) -> StyleBoxFlat:
@@ -262,30 +318,25 @@ func _panel_style(alpha: float = 0.72) -> StyleBoxFlat:
 	return sb
 
 func _build_top_ui() -> void:
-	# Кнопка рецепта: показывает выбранное, по нажатию — окно выбора.
-	_recipe_button = Button.new()
-	_recipe_button.focus_mode = Control.FOCUS_NONE
-	_recipe_button.expand_icon = true
-	_recipe_button.alignment = HORIZONTAL_ALIGNMENT_LEFT
-	_recipe_button.add_theme_constant_override("icon_max_width", 72)
-	_recipe_button.add_theme_font_size_override("font_size", 28)
-	_recipe_button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-	_style_top_button(_recipe_button, Color(0.42, 0.22, 0.46))
-	_recipe_button.pressed.connect(_open_recipe_popup)
-	add_child(_recipe_button)
-	_place(_recipe_button, R_RECIPE_BTN)
-	# «Повторить»: прошлый рецепт сразу, без мини-игр.
-	_repeat_button = Button.new()
+	# «Повторить»: прошлый рецепт сразу, без мини-игр. Рядом — значок того, что варили.
+	_repeat_button = TextureButton.new()
+	_repeat_button.name = "RepeatButton"
+	_repeat_button.texture_normal = load(REPEAT_TEXTURE) as Texture2D if ResourceLoader.exists(REPEAT_TEXTURE) else null
+	_repeat_button.ignore_texture_size = true
+	_repeat_button.stretch_mode = TextureButton.STRETCH_KEEP_ASPECT_CENTERED
 	_repeat_button.focus_mode = Control.FOCUS_NONE
-	_repeat_button.expand_icon = true
-	_repeat_button.alignment = HORIZONTAL_ALIGNMENT_LEFT
-	_repeat_button.add_theme_constant_override("icon_max_width", 64)
-	_repeat_button.add_theme_font_size_override("font_size", 24)
-	_repeat_button.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_style_top_button(_repeat_button, Color(0.24, 0.36, 0.30))
+	_repeat_button.position = REPEAT_RECT.position
+	_repeat_button.size = REPEAT_RECT.size
 	_repeat_button.pressed.connect(_on_repeat_pressed)
 	add_child(_repeat_button)
-	_place(_repeat_button, R_REPEAT_BTN)
+	_last_icon = TextureRect.new()
+	_last_icon.name = "LastBrewed"
+	_last_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_last_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	_last_icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_last_icon.position = LAST_ICON_RECT.position
+	_last_icon.size = LAST_ICON_RECT.size
+	add_child(_last_icon)
 	_hint_label = Label.new()
 	_hint_label.add_theme_font_size_override("font_size", 24)
 	_hint_label.add_theme_color_override("font_outline_color", Color(0.1, 0.03, 0.12, 1))
@@ -316,28 +367,20 @@ func _style_top_button(b: Button, color: Color) -> void:
 	b.add_theme_color_override("font_disabled_color", Color(1, 1, 1, 0.55))
 
 func _refresh_top_buttons() -> void:
-	if _recipe_button == null:
+	if _repeat_button == null:
 		return
-	if _recipe_id == "":
-		_recipe_button.text = "Выбрать рецепт  ▾"
-		_recipe_button.icon = null
-	else:
-		_recipe_button.text = "Рецепт: %s  ▾" % AlchemyDB.get_recipe_name(_recipe_id)
-		_recipe_button.icon = Inventory_.get_item_icon(AlchemyDB.get_result_item_id(_recipe_id)) if Inventory_ != null else null
-	_recipe_button.disabled = _stage == Stage.STIR or _stage == Stage.PENDULUM or _stage == Stage.DONE
+	var busy := _stage == Stage.STIR or _stage == Stage.PENDULUM or _stage == Stage.DONE
 	if _last_brewed == "" or not AlchemyDB.is_known(_last_brewed):
-		_repeat_button.text = "Повторно приготовить прошлый рецепт: пока нечего"
-		_repeat_button.icon = null
+		_last_icon.texture = null
 		_repeat_button.disabled = true
-		_repeat_button.tooltip_text = "Сварите что-нибудь — и это можно будет повторять одной кнопкой, без мини-игр."
+		_repeat_button.tooltip_text = ""
 	else:
 		var can := AlchemyDB.can_craft(_last_brewed)
-		_repeat_button.text = "Повторно приготовить: %s" % AlchemyDB.get_recipe_name(_last_brewed)
-		if not can:
-			_repeat_button.text += "\n(не хватает ингредиентов)"
-		_repeat_button.icon = Inventory_.get_item_icon(AlchemyDB.get_result_item_id(_last_brewed)) if Inventory_ != null else null
-		_repeat_button.disabled = not can or _stage == Stage.STIR or _stage == Stage.PENDULUM or _stage == Stage.DONE
-		_repeat_button.tooltip_text = "Без мини-игр. Нужно: %s" % AlchemyDB.get_recipe_summary(_last_brewed)
+		_last_icon.texture = Inventory_.get_item_icon(AlchemyDB.get_result_item_id(_last_brewed)) if Inventory_ != null else null
+		_last_icon.modulate = Color(1, 1, 1, 1.0 if can else 0.45)
+		_repeat_button.disabled = not can or busy
+		_repeat_button.tooltip_text = "Повторить: %s\n%s" % [AlchemyDB.get_recipe_name(_last_brewed), AlchemyDB.get_recipe_summary(_last_brewed) if can else "Не хватает ингредиентов"]
+	_repeat_button.modulate = Color(1, 1, 1, 0.4 if _repeat_button.disabled else 1.0)
 	_repeat_button.mouse_default_cursor_shape = Control.CURSOR_ARROW if _repeat_button.disabled else Control.CURSOR_POINTING_HAND
 
 ## Сварить прошлый рецепт сразу (ингредиенты списываются, мини-игр нет).
@@ -418,13 +461,14 @@ func _open_recipe_popup() -> void:
 	_recipe_popup.visible = true
 
 ## Порядок в окне рецептов: 0 — можно сварить сейчас, 1 — рецепт есть, но не хватает ингредиентов,
-## 2 — рецепт не открыт.
+## 2 — рецепт не открыт (такие в окне не показываются).
 static func _recipe_rank(recipe_id: String) -> int:
 	if not AlchemyDB.is_known(recipe_id):
 		return 2
 	return 0 if AlchemyDB.can_craft(recipe_id) else 1
 
-## Карточки рецептов: сначала те, что можно сварить, потом открытые без ингредиентов, потом закрытые. На карточке — что нужно и сколько есть.
+## Карточки рецептов: только открытые. Сначала те, что можно сварить; на что не хватает ингредиентов —
+## затемнены и не нажимаются. На карточке — что нужно и сколько есть.
 func _rebuild_recipe_cards() -> void:
 	for c in _recipe_grid.get_children():
 		_recipe_grid.remove_child(c)
@@ -439,14 +483,18 @@ func _rebuild_recipe_cards() -> void:
 		return AlchemyDB.get_recipe_name(a) < AlchemyDB.get_recipe_name(b)
 	)
 	for recipe_id in ids:
-		var known := AlchemyDB.is_known(recipe_id)
+		if not AlchemyDB.is_known(recipe_id):
+			continue
+		var known := true
+		var can := AlchemyDB.can_craft(recipe_id)
 		var b := Button.new()
 		b.focus_mode = Control.FOCUS_NONE
 		b.custom_minimum_size = Vector2(430, 150)
 		b.clip_contents = true
-		b.disabled = not known
-		b.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND if known else Control.CURSOR_ARROW
-		b.tooltip_text = AlchemyDB.get_recipe_desc(recipe_id) if known else "Рецепт можно найти в сундуке или купить у Рикки."
+		b.disabled = not can
+		b.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND if can else Control.CURSOR_ARROW
+		b.tooltip_text = AlchemyDB.get_recipe_desc(recipe_id)
+		b.modulate = Color(1, 1, 1, 1) if can else Color(0.62, 0.58, 0.66, 1)
 		_style_top_button(b, Color(0.50, 0.26, 0.52) if recipe_id == _recipe_id else Color(0.30, 0.18, 0.36))
 		var row := HBoxContainer.new()
 		row.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -581,12 +629,13 @@ func _set_stage(stage: int) -> void:
 		_pendulum.hide_meter()
 	_checklist_panel.visible = stage == Stage.ADD
 	_reset_button.visible = stage != Stage.PICK and stage != Stage.DONE
+	_shelf_panel.visible = _shelf_open and stage == Stage.ADD
 	_refresh_top_buttons()
 	match stage:
 		Stage.PICK:
-			_hint_label.text = "Нажмите «Выбрать рецепт» слева сверху."
+			_hint_label.text = "Нажмите на котёл, чтобы выбрать рецепт."
 		Stage.ADD:
-			_hint_label.text = "Тяните ингредиенты из ячеек справа в котёл — или просто кликайте по ячейке."
+			_hint_label.text = "Тяните ингредиенты из ячеек справа в котёл — или просто кликайте по ячейке." if _shelf_open else "Нажмите на котёл, чтобы снова открыть ингредиенты."
 		Stage.STIR:
 			_hint_label.text = "Зажмите левую кнопку мыши и мешайте по кругу."
 		Stage.PENDULUM:
@@ -598,12 +647,23 @@ func _set_stage(stage: int) -> void:
 func _on_recipe_pressed(recipe_id: String) -> void:
 	if _stage == Stage.STIR or _stage == Stage.PENDULUM or _stage == Stage.DONE:
 		return   # во время варки рецепт менять нельзя
-	_recipe_id = recipe_id
-	_accepted.clear()
-	_accepted_items.clear()
-	_attempts = 0
-	_spawn_shelf()
+	if not AlchemyDB.can_craft(recipe_id):
+		return
+	if recipe_id != _recipe_id:
+		_recipe_id = recipe_id
+		_accepted.clear()
+		_accepted_items.clear()
+		_attempts = 0
+		_spawn_shelf()
+		_set_potion(false)
+	_shelf_open = true
 	_set_stage(Stage.ADD)
+
+## Крестик в окне ингредиентов. Рецепт остаётся выбранным; окно откроется снова при выборе рецепта.
+func close_shelf() -> void:
+	_shelf_open = false
+	if _shelf_panel != null:
+		_shelf_panel.visible = false
 
 func _on_reset_pressed() -> void:
 	if _stage == Stage.DONE:
@@ -612,6 +672,7 @@ func _on_reset_pressed() -> void:
 	_accepted_items.clear()
 	_attempts = 0
 	_spawn_shelf()
+	_set_potion(false)
 	_set_stage(Stage.ADD if _recipe_id != "" else Stage.PICK)
 	_say("Котёл пуст, ингредиенты вернулись на полку", Color(0.9, 0.85, 1.0))
 
@@ -770,7 +831,7 @@ func _toss(ib: _BodyScript) -> void:
 	_dragged = null
 	if not is_instance_valid(ib):
 		return
-	var target := Vector2(POT_CENTER.x * _size.x + _rng.randf_range(-60.0, 60.0), R_POT_MOUTH.position.y * _size.y + 30.0)
+	var target := _to_screen(Vector2(POT_CENTER.x + _rng.randf_range(-60.0, 60.0), POT_MOUTH.position.y + 40.0))
 	var g := float(ProjectSettings.get_setting("physics/2d/default_gravity", 980.0)) * ib.gravity_scale
 	var d := target - ib.global_position
 	ib.freeze = false
@@ -875,6 +936,7 @@ func _try_accept(ib: _BodyScript) -> void:
 	ib.visible = false
 	ib.queue_free()
 	_pulse_cauldron()
+	_set_potion(true)
 	_refresh_checklist()
 	call_deferred("_top_up")
 	if _all_added():
@@ -885,6 +947,19 @@ func _bounce_out(ib: _BodyScript) -> void:
 	ib.freeze = false
 	ib.linear_velocity = Vector2(_rng.randf_range(-260.0, 260.0), -1250.0)
 
+## Зелье в котле (cauldron_potion.png): появляется с первым ингредиентом, пропадает после варки / сброса.
+func _set_potion(on: bool) -> void:
+	if potion == null or potion.visible == on:
+		return
+	if on:
+		potion.modulate.a = 0.0
+		potion.visible = true
+		create_tween().tween_property(potion, "modulate:a", 1.0, 0.35)
+	else:
+		var t := create_tween()
+		t.tween_property(potion, "modulate:a", 0.0, 0.35)
+		t.tween_callback(func() -> void: potion.visible = false)
+
 func _pulse_cauldron() -> void:
 	var t := create_tween()
 	t.tween_property(_cauldron_art, "modulate", Color(1.35, 1.2, 1.5, 1.0), 0.08)
@@ -892,34 +967,64 @@ func _pulse_cauldron() -> void:
 
 # --- Перетаскивание ---------------------------------------------------------
 
-func _build_cauldron_mask() -> void:
-	var tex := _cauldron_art.texture
-	if tex == null:
-		return
-	var img := tex.get_image()
-	if img == null:
-		return
-	if img.is_compressed():
-		img.decompress()
-	img.resize(int(_size.x / MASK_STEP), int(_size.y / MASK_STEP), Image.INTERPOLATE_BILINEAR)
-	_cauldron_mask = img
+## Зона под курсором (World/Zones): котёл ("recipes") или ведьмочка. Котёл — первым в списке.
+func _zone_at(p: Vector2) -> WitchZone:
+	if zones == null:
+		return null
+	for z in zones.get_children():
+		if z is WitchZone and (z as WitchZone).has_global_point(p):
+			return z as WitchZone
+	return null
 
 func _over_cauldron(p: Vector2) -> bool:
-	if _cauldron_mask == null:
-		return false
-	var x := int(p.x / MASK_STEP)
-	var y := int(p.y / MASK_STEP)
-	if x < 0 or y < 0 or x >= _cauldron_mask.get_width() or y >= _cauldron_mask.get_height():
-		return false
-	return _cauldron_mask.get_pixel(x, y).a > 0.5
+	var z := _zone_at(p)
+	return z != null and z.action == "recipes"
 
-func _process(_delta: float) -> void:
+## Можно ли сейчас кликать по котлу и ведьмочке (не варим, нет окон поверх).
+func _scene_clickable() -> bool:
+	if _recipe_popup.visible or _result_panel.visible or get_tree().paused:
+		return false
+	return get_viewport().gui_get_hovered_control() == null
+
+func _process(delta: float) -> void:
+	_update_pan(delta)
 	if _bubbles == null:
 		return
-	var hc := get_viewport().gui_get_hovered_control()
-	var on := hc == null and _over_cauldron(get_viewport().get_mouse_position()) and not get_tree().paused
+	var z: WitchZone = _zone_at(_mouse) if _scene_clickable() else null
+	var on := z != null and z.action == "recipes" and (_stage == Stage.PICK or _stage == Stage.ADD) and _dragged == null
 	if _bubbles.emitting != on:
 		_bubbles.emitting = on
+	var hand := _dragged == null and z != null and (z.action != "recipes" or on)
+	if hand != _hand_cursor:
+		_hand_cursor = hand
+		Input.set_default_cursor_shape(Input.CURSOR_POINTING_HAND if hand else Input.CURSOR_ARROW)
+
+## Ведьмочка ненадолго меняет позу (картинка зоны из assets/alchemy/).
+func witch_react(z: WitchZone) -> void:
+	var path := WITCH_DIR + z.sprite + ".png"
+	if z.sprite == "" or not ResourceLoader.exists(path):
+		return
+	_witch_token += 1
+	var token := _witch_token
+	witch.texture = load(path) as Texture2D
+	await get_tree().create_timer(maxf(0.1, z.duration)).timeout
+	if token == _witch_token and is_instance_valid(witch):
+		witch.texture = _witch_tex
+
+## Клик по сцене (не по предмету): котёл — окно рецептов, ведьмочка — реакция.
+func _click_scene(p: Vector2) -> bool:
+	if not _scene_clickable():
+		return false
+	var z := _zone_at(p)
+	if z == null:
+		return false
+	if z.action == "recipes":
+		if _stage == Stage.PICK or _stage == Stage.ADD:
+			_open_recipe_popup()
+			return true
+		return false
+	witch_react(z)
+	return true
 
 func _build_inventory_button() -> void:
 	var b := TextureButton.new()
@@ -948,17 +1053,18 @@ func _unhandled_input(event: InputEvent) -> void:
 			get_viewport().set_input_as_handled()
 			_pendulum_press()
 		return
-	if _stage != Stage.ADD:
-		return
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
 		if event.pressed:
-			_try_grab()
-		else:
+			if _stage == Stage.ADD and _try_grab():
+				return
+			if _dragged == null and _click_scene((event as InputEventMouseButton).position):
+				get_viewport().set_input_as_handled()
+		elif _stage == Stage.ADD:
 			_release()
 
-func _try_grab() -> void:
+func _try_grab() -> bool:
 	if _dragged != null:
-		return
+		return false
 	var mouse := _mouse
 	var params := PhysicsPointQueryParameters2D.new()
 	params.position = mouse
@@ -976,10 +1082,11 @@ func _try_grab() -> void:
 			best_d = d
 			best = ib
 	if best == null:
-		return
+		return false
 	_grab(best, best.global_position - mouse)
 	_press_time = 0.0
 	get_viewport().set_input_as_handled()
+	return true
 
 func _grab(body: _BodyScript, offset: Vector2) -> void:
 	_dragged = body
@@ -1090,6 +1197,7 @@ func _complete() -> void:
 
 func _on_result_closed() -> void:
 	_result_panel.visible = false
+	_set_potion(false)
 	_accepted.clear()
 	_accepted_items.clear()
 	_attempts = 0

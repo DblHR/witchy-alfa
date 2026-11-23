@@ -98,7 +98,7 @@ static func _acid(id: String, title: String, hp_min: int, hp_max: int, size: flo
 	m.priority = 10
 	m.max_in_row = 1
 	m.intent = "Снять щиты + {d}"
-	m.negative_tip = "Противник разъест щиты всех героинь — раньше, чем ударят остальные."
+	m.negative_tip = "Противник разъест щиты всех персонажей — раньше, чем ударят остальные."
 	# Щиты снимаются до удара, поэтому урон наносит сам custom.
 	m.manual_damage = true
 	m.custom = func(api: EnemyApi, me: Unit, mv: EnemyMove) -> void:

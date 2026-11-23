@@ -11,12 +11,18 @@ signal card_clicked(card: CardInstance)
 const SLOTS := 1
 const RECT := Rect2(1395, 790, 190, 262)
 const CARD_OFFSET := Vector2(20, 42)
+## Картинка рукава (вместо цветной плашки с подписью). Пока над ним тащат карту — светится.
+const ART_PATH := "res://assets/ui/battle/sleeve.png"
+const ART_IDLE := Color(1, 1, 1, 1)
+const ART_ACTIVE := Color(1.35, 1.2, 1.45, 1)
+## Без картинки — старая плашка.
 const COLOR_IDLE := Color(0.35, 0.2, 0.45, 0.35)
 const COLOR_ACTIVE := Color(0.75, 0.45, 0.95, 0.6)
 
 var cards: Array[CardInstance] = []
 var _label: Label
 var _views: Array[CardView] = []
+var _art: TextureRect
 
 func _init() -> void:
 	name = "SleeveZone"
@@ -24,6 +30,16 @@ func _init() -> void:
 	position = RECT.position
 	size = RECT.size
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
+	if ResourceLoader.exists(ART_PATH):
+		color = Color(0, 0, 0, 0)
+		_art = TextureRect.new()
+		_art.name = "Art"
+		_art.texture = load(ART_PATH) as Texture2D
+		_art.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		_art.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		_art.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_art.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		add_child(_art)
 	_label = Label.new()
 	_label.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -38,7 +54,10 @@ static func in_zone(point: Vector2) -> bool:
 	return RECT.has_point(point)
 
 func set_hover(on: bool) -> void:
-	color = COLOR_ACTIVE if on else COLOR_IDLE
+	if _art != null:
+		_art.modulate = ART_ACTIVE if on else ART_IDLE
+	else:
+		color = COLOR_ACTIVE if on else COLOR_IDLE
 
 func is_full() -> bool:
 	return cards.size() >= SLOTS
@@ -87,6 +106,7 @@ func refresh() -> void:
 		if is_instance_valid(v):
 			v.queue_free()
 	_views.clear()
+	_label.visible = _art == null or SLOTS > 1   ## с картинкой подписи не нужны (кроме счётчика, если мест больше одного)
 	if cards.is_empty():
 		_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		_label.text = "Рукав\n\nперетащи сюда карту — она вернётся в руку в следующий ход" if SLOTS == 1 else "Рукав 0/%d" % SLOTS

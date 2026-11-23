@@ -24,22 +24,22 @@ const COL_NUMBER := Color(1.0, 1.0, 1.0)
 const COL_WEAKENED := Color(0.62, 0.78, 1.0)   ## удар ослаблен (Слабость) — число голубое
 const COL_CHARM := Color(1.0, 0.55, 0.85)
 
-## Статусы, которые враги вешают на себя / своих (остальные — на героинь, это «негативный эффект»).
+## Статусы, которые враги вешают на себя / своих (остальные — на отряд, это «негативный эффект»).
 const POSITIVE_STATUSES := [CardStatuses.EMPOWER, CardStatuses.HEAT_BODY]
 
 const AIM_TEXT := {
-	EnemyMove.Aim.FRONT_HERO: "передней героине",
-	EnemyMove.Aim.ALL_HEROES: "каждой героине",
-	EnemyMove.Aim.RANDOM_HERO: "случайной героине",
-	EnemyMove.Aim.BACK_HERO: "задней героине",
-	EnemyMove.Aim.LOWEST_HERO: "самой раненой героине",
+	EnemyMove.Aim.FRONT_HERO: "переднему персонажу",
+	EnemyMove.Aim.ALL_HEROES: "каждому персонажу",
+	EnemyMove.Aim.RANDOM_HERO: "случайному персонажу",
+	EnemyMove.Aim.BACK_HERO: "заднему персонажу",
+	EnemyMove.Aim.LOWEST_HERO: "самому раненому персонажу",
 }
 const AIM_TARGET := {
-	EnemyMove.Aim.FRONT_HERO: "на переднюю героиню",
-	EnemyMove.Aim.ALL_HEROES: "на всех героинь",
-	EnemyMove.Aim.RANDOM_HERO: "на случайную героиню",
-	EnemyMove.Aim.BACK_HERO: "на заднюю героиню",
-	EnemyMove.Aim.LOWEST_HERO: "на самую раненую героиню",
+	EnemyMove.Aim.FRONT_HERO: "на переднего персонажа",
+	EnemyMove.Aim.ALL_HEROES: "на всех персонажей",
+	EnemyMove.Aim.RANDOM_HERO: "на случайного персонажа",
+	EnemyMove.Aim.BACK_HERO: "на заднего персонажа",
+	EnemyMove.Aim.LOWEST_HERO: "на самого раненого персонажа",
 }
 const SUPPORT_TEXT := {
 	"self": "себе",
@@ -74,7 +74,7 @@ static func parts(api: EnemyApi, me: Unit, move: EnemyMove) -> Array:
 
 	# --- Удар -----------------------------------------------------------------
 	if move.kind == EnemyMove.Kind.DIGEST:
-		out.append(_part(ICON_ATTACK, "", str(dmg), head + "Противник переварит проглоченную героиню: %d урона, щит не спасёт." % dmg))
+		out.append(_part(ICON_ATTACK, "", str(dmg), head + "Противник переварит проглоченного персонажа: %d урона, щит не спасёт." % dmg))
 	elif move.damage > 0:
 		var hits := move.hits
 		var per_status := ""
@@ -132,7 +132,7 @@ static func parts(api: EnemyApi, me: Unit, move: EnemyMove) -> Array:
 		EnemyMove.Kind.SPLIT:
 			out.append(_part(ICON_SUMMON, "Делится", "", head + "Противник разделится на части."))
 		EnemyMove.Kind.SWALLOW:
-			out.append(_part(ICON_NEGATIVE, "", "", head + "Противник проглотит переднюю героиню.", COL_NUMBER, CardStatuses.SWALLOWED))
+			out.append(_part(ICON_NEGATIVE, "", "", head + "Противник проглотит переднего персонажа.", COL_NUMBER, CardStatuses.SWALLOWED))
 	if out.is_empty():
 		out.append(_part("", move.intent_text(dmg), "", head.strip_edges()))
 	if move.tip != "":

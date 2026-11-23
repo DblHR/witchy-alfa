@@ -80,8 +80,27 @@ sprite = "mainmenu_witch_butt"
 action = "pose"
 in_pose = "mainmenu_witch_butt"
 
+[node name="FacePose2" type="Polygon2D" parent="Witch/Canvas/Zones" unique_id=1730800011]
+color = Color(1, 0.3, 0.6, 0.35)
+polygon = PackedVector2Array(1147, 294, 1264, 224, 1381, 282, 1405, 400, 1323, 470, 1194, 458, 1136, 388)
+script = ExtResource("12_zone")
+sprite = "mainmenu_witch_face"
+duration = 2.0
+in_pose = "mainmenu_witch_butt"
+
+[node name="HandPose2" type="Polygon2D" parent="Witch/Canvas/Zones" unique_id=1730800012]
+color = Color(1, 0.65, 0.15, 0.35)
+polygon = PackedVector2Array(1616, 306, 1686, 247, 1885, 236, 1897, 318, 1897, 505, 1756, 517, 1662, 458)
+script = ExtResource("12_zone")
+sprite = "mainmenu_witch_hand"
+action = "heart"
+in_pose = "mainmenu_witch_butt"
+
 [node name="HeartAt" type="Marker2D" parent="Witch/Canvas" unique_id=1730800008]
 position = Vector2(1762, 318)
+
+[node name="HeartAt_mainmenu_witch_butt" type="Marker2D" parent="Witch/Canvas" unique_id=1730800013]
+position = Vector2(1780, 388)
 
 [node name="MenuPanel" type="TextureRect" parent="." unique_id=1730800009]
 layout_mode = 0

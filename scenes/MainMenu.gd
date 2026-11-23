@@ -112,7 +112,7 @@ func _animate_witch(delta: float) -> void:
 		var base := PALM_HEART_SIZE / maxf(1.0, _palm_heart.region_rect.size.x)
 		var pop := minf(1.0, _palm_heart_t / 0.2)
 		var hop := absf(sin(_palm_heart_t * PALM_HEART_HOP_SPEED)) * PALM_HEART_HOP
-		_palm_heart.position = heart_at.position + Vector2(0, -hop)
+		_palm_heart.position = _heart_point() + Vector2(0, -hop)
 		_palm_heart.scale = Vector2(cos(_palm_heart_t * PALM_HEART_SPIN), 1.0) * base * pop
 		_palm_heart.modulate.a = clampf(_palm_heart_left / 0.4, 0.0, 1.0)
 		if _palm_heart_left <= 0.0:
@@ -167,6 +167,14 @@ func set_pose(pose: String) -> void:
 	if _palm_heart != null:
 		_palm_heart.visible = false
 	witch_sprite.texture = _pose_texture()
+
+## Где сердечко в текущей позе: Witch/Canvas/HeartAt_<поза> (если есть), иначе HeartAt.
+func _heart_point() -> Vector2:
+	if _pose != "":
+		var m := heart_at.get_parent().get_node_or_null("HeartAt_" + _pose) as Marker2D
+		if m != null:
+			return m.position
+	return heart_at.position
 
 func current_pose() -> String:
 	return _pose

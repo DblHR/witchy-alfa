@@ -18,12 +18,17 @@ class_name BattleActor
 ## Полоска HP: ширина у обычных и у босса (босс ещё и сам крупнее, × 1.35).
 const HP_WIDTH := 150.0
 const BOSS_HP_WIDTH := 210.0
-## Пока на юните щит: полоска серая, на ней «HP/макс + щит», слева значок щита.
-const SHIELD_FILL := Color(0.50, 0.55, 0.64, 1.0)
+## Щит — как в League of Legends: светлая полоска нарастает справа от текущего HP. Общая длина
+## полоски не меняется: если HP + щит больше макс. HP, вся полоска делится между HP и щитом.
+## Число щита — на значке щита слева от полоски.
+const SHIELD_FILL := Color(0.90, 0.93, 1.0, 0.95)
 const SHIELD_ICON := "res://assets/ui/battle/intent_apply_shield.png"
-const SHIELD_ICON_SIZE := 40.0
+const SHIELD_ICON_SIZE := 58.0
+const SHIELD_FONT := 22
 var shield := 0
 var _shield_icon: TextureRect
+var _shield_num: Label
+var _shield_fill: ColorRect
 var unit: Unit
 var is_left := true
 var show_hp_overhead := true
@@ -158,8 +163,8 @@ func update_visual() -> void:
 			sprite.modulate = Color(1, 1, 1, 1)
 
 	# текст и полоска
-	hp_label.text = ("%d/%d + %d" % [unit.hp, unit.max_hp, shield]) if shield > 0 else ("%d/%d" % [unit.hp, unit.max_hp])
-	hp_bar.max_value = unit.max_hp
+	hp_label.text = "%d/%d" % [unit.hp, unit.max_hp]
+	hp_bar.max_value = maxi(unit.max_hp, unit.hp + shield)
 	hp_bar.value = unit.hp
 	_apply_hp_bar_state()
 	
@@ -189,9 +194,6 @@ func _apply_hp_bar_state() -> void:
 	if unit.is_dead:
 		_set_progress_fill_color(hp_bar, Color(0.45, 0.45, 0.45, 0.95))
 		hp_label.modulate = Color(0.8, 0.8, 0.8, 1.0)
-	elif shield > 0:
-		_set_progress_fill_color(hp_bar, SHIELD_FILL)
-		hp_label.modulate = Color(1, 1, 1, 1)
 	elif ratio <= 0.30:
 		_set_progress_fill_color(hp_bar, Color(0.92, 0.18, 0.18, 0.95))
 		hp_label.modulate = Color(1.0, 0.85, 0.85, 1.0)
@@ -205,10 +207,11 @@ func set_shield(amount: int) -> void:
 	if unit != null:
 		update_visual()
 
-## Значок щита у левого края полоски HP (виден, пока есть щит).
+## Значок щита с числом у левого края полоски HP и светлая полоска щита (видны, пока есть щит).
 func _place_shield_icon() -> void:
 	if hp_bar == null:
 		return
+	_place_shield_fill()
 	if _shield_icon == null:
 		if shield <= 0 or not ResourceLoader.exists(SHIELD_ICON):
 			return
@@ -220,9 +223,45 @@ func _place_shield_icon() -> void:
 		_shield_icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		_shield_icon.size = Vector2(SHIELD_ICON_SIZE, SHIELD_ICON_SIZE)
 		add_child(_shield_icon)
+		_shield_num = Label.new()
+		_shield_num.name = "Amount"
+		_shield_num.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		_shield_num.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		_shield_num.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_shield_num.add_theme_font_size_override("font_size", SHIELD_FONT)
+		_shield_num.add_theme_color_override("font_color", Color.WHITE)
+		_shield_num.add_theme_color_override("font_outline_color", Color(0.05, 0.08, 0.25, 1))
+		_shield_num.add_theme_constant_override("outline_size", 6)
+		_shield_num.position = Vector2(-10, 0)
+		_shield_num.size = Vector2(SHIELD_ICON_SIZE + 20, SHIELD_ICON_SIZE)
+		_shield_icon.add_child(_shield_num)
 	var bar_h := hp_bar.offset_bottom - hp_bar.offset_top
-	_shield_icon.position = Vector2(hp_bar.offset_left - SHIELD_ICON_SIZE * 0.6, hp_bar.offset_top + (bar_h - SHIELD_ICON_SIZE) * 0.5)
+	_shield_icon.position = Vector2(hp_bar.offset_left - SHIELD_ICON_SIZE * 0.7, hp_bar.offset_top + (bar_h - SHIELD_ICON_SIZE) * 0.5)
 	_shield_icon.visible = shield > 0 and hp_bar.visible
+	_shield_num.text = str(shield)
+
+## Полоска щита внутри полоски HP: от конца HP на длину щита (в общих единицах max(макс. HP, HP + щит)).
+func _place_shield_fill() -> void:
+	if _shield_fill == null:
+		if shield <= 0:
+			return
+		_shield_fill = ColorRect.new()
+		_shield_fill.name = "ShieldFill"
+		_shield_fill.color = SHIELD_FILL
+		_shield_fill.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		hp_bar.add_child(_shield_fill)
+	_shield_fill.visible = shield > 0 and unit != null and not unit.is_dead
+	if not _shield_fill.visible:
+		return
+	var fill := hp_bar.get_theme_stylebox("fill")
+	var m_t := fill.content_margin_top if fill != null else 0.0
+	var m_b := fill.content_margin_bottom if fill != null else 0.0
+	var w := hp_bar.size.x
+	var total := maxf(1.0, float(hp_bar.max_value))
+	var x0 := w * float(unit.hp) / total
+	var x1 := minf(w, w * float(unit.hp + shield) / total)
+	_shield_fill.position = Vector2(x0, maxf(0.0, m_t))
+	_shield_fill.size = Vector2(maxf(2.0, x1 - x0), maxf(2.0, hp_bar.size.y - maxf(0.0, m_t) - maxf(0.0, m_b)))
 
 func sync_effect_icons(unit: Unit) -> void:
 	for c in effects_row.get_children():
