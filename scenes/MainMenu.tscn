@@ -53,7 +53,7 @@ centered = false
 position = Vector2(-33.9392, -2.9711885)
 scale = Vector2(1.0495195, 1.0495195)
 color = Color(1, 0.3, 0.6, 0.35)
-polygon = PackedVector2Array(1060, 120, 1230, 60, 1380, 150, 1420, 280, 1300, 370, 1180, 390, 1100, 340, 1040, 240)
+polygon = PackedVector2Array(1073.4646, 172.47888, 1230, 60, 1380, 150, 1432.2815, 658.64795, 1179.4364, 573.1268, 1131.0984, 531.2958, 956.3378, 427.1831, 1001.88715, 341.66196)
 script = ExtResource("12_zone")
 sprite = "mainmenu_witch_face"
 duration = 2.0
@@ -67,7 +67,7 @@ action = "heart"
 
 [node name="Butt" type="Polygon2D" parent="Witch/Canvas/Zones" unique_id=1730800007]
 color = Color(0.6, 0.3, 1, 0.35)
-polygon = PackedVector2Array(540, 0, 620, 0, 780, 140, 940, 330, 1060, 470, 1200, 600, 1340, 640, 1360, 820, 1320, 1080, 560, 1080, 540, 700)
+polygon = PackedVector2Array(540.4878, 136.09756, 620.4878, 161.46342, 750.2439, 260, 902.439, 408.2927, 1021.46344, 527.3171, 1172.683, 665.85364, 1273.1708, 759.5122, 1356.0977, 926.3415, 1352.1952, 1088.2927, 560, 1080, 540, 700)
 script = ExtResource("12_zone")
 sprite = "mainmenu_witch_butt"
 action = "pose"
@@ -82,7 +82,7 @@ in_pose = "mainmenu_witch_butt"
 
 [node name="FacePose2" type="Polygon2D" parent="Witch/Canvas/Zones" unique_id=1730800011]
 color = Color(1, 0.3, 0.6, 0.35)
-polygon = PackedVector2Array(1147, 294, 1264, 224, 1381, 282, 1405, 400, 1323, 470, 1194, 458, 1136, 388)
+polygon = PackedVector2Array(1082.9269, 328.2927, 1094.6342, 136.09756, 1458.5366, 150.7317, 1481.9513, 706.8293, 1300.4879, 786.8293, 1068.2927, 677.561, 904.39026, 506.82928)
 script = ExtResource("12_zone")
 sprite = "mainmenu_witch_face"
 duration = 2.0

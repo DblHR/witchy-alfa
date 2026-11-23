@@ -39,6 +39,13 @@ mouse_filter = 2
 texture = ExtResource("1_mbp2a")
 stretch_mode = 5
 
+[node name="MoonlightBack" type="Node2D" parent="World"]
+script = ExtResource("6_moon")
+ray_count = 4
+ray_alpha = 0.2
+mote_count = 16
+seed_value = 3
+
 [node name="Witch" type="TextureRect" parent="World" unique_id=1731500002]
 unique_name_in_owner = true
 layout_mode = 1
@@ -53,6 +60,9 @@ stretch_mode = 5
 
 [node name="Moonlight" type="Node2D" parent="World"]
 script = ExtResource("6_moon")
+ray_count = 3
+ray_alpha = 0.13
+mote_count = 14
 
 [node name="WitchZones" type="Node2D" parent="World" unique_id=1731500003]
 unique_name_in_owner = true

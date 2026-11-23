@@ -45,7 +45,12 @@ static func feet_center_x(tex: Texture2D) -> float:
 	return cx
 
 
+## Тени пока выключены (ENABLED = false) — включить обратно здесь.
+const ENABLED := false
+
 static func texture() -> Texture2D:
+	if not ENABLED:
+		return null
 	if _tex == null and ResourceLoader.exists(TEXTURE):
 		_tex = load(TEXTURE) as Texture2D
 	return _tex
