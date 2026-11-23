@@ -17,9 +17,9 @@
       "title": "Ведьмочка",
       "images": [
         "res://assets/characters/witch/witch_portrait.png",
-        "res://assets/characters/witch/witch_battle.png",
-		"res://assets/characters/witch/witch_battle_phase2.png",
-		"res://assets/characters/witch/witch_battle_phase3.png",
+        "res://assets/characters/witch/witch_drag.png",
+		"res://assets/characters/witch/witch_drag_phase2.png",
+		"res://assets/characters/witch/witch_drag_phase3.png",
 		"res://assets/characters/witch/witch_battle.png",
         "res://assets/characters/witch/cards/witch_candle.png",
         "res://assets/characters/witch/cards/witch_fan.png",
