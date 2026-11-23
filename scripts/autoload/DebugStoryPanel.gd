@@ -56,8 +56,16 @@ func _build_ui() -> void:
 	_add_button(box, "Start quest: find_warrior", _start_find_warrior)
 	_add_button(box, "Reset quest: find_warrior", _reset_find_warrior)
 	_add_button(box, "Set party level to 3", _set_party_level_3)
+	_add_button(box, "Day / night: next (DayCycle)", _next_day_phase)
 	_add_button(box, "Refresh status", _refresh_status)
 	_add_button(box, "Close", _toggle)
+
+func _next_day_phase() -> void:
+	DayCycle.advance()
+	print("[DayCycle] ", DayCycle.phase_name(), ", day ", DayCycle.day_number())
+	if get_tree().current_scene != null and get_tree().current_scene.scene_file_path == SceneRouter.HUB:
+		get_tree().reload_current_scene()
+	_refresh_status()
 
 func _add_button(parent: Node, text: String, callback: Callable) -> void:
 	var b := Button.new()

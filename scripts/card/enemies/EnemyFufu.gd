@@ -20,6 +20,8 @@ const MASK_TEXTURE := "res://assets/characters/fufu/fufu_mask.png"
 const FACE_TEXTURE := "res://assets/characters/fufu/fufu_battle.png"
 ## На какой фазе (номер в PHASES, с нуля) слетает маска: 2 — третья фаза, 25% HP.
 const UNMASK_PHASE := 2
+## Только в квестовом бою за воина (CardBattle выставляет quest_fight перед появлением врагов).
+static var quest_fight := false
 ## Недокачанный отряд: на каждый уровень отряда ниже RECOMMENDED_LEVEL Фуфу крепче и бьёт сильнее,
 ## а на каждой новой фазе получает щит (доля макс. HP за каждый недостающий уровень).
 ## Без надписей и значков — просто бой тяжелее. На RECOMMENDED_LEVEL и выше ничего не меняется.
@@ -84,6 +86,8 @@ func make_unit(floor_no: int, rng: RandomNumberGenerator, hp_override: int = 0) 
 
 ## На сколько уровней отряд не дотягивает до RECOMMENDED_LEVEL (0 — дотягивает).
 static func underlevel_gap() -> int:
+	if not quest_fight:
+		return 0
 	var lvl := 1
 	if DungRun != null:
 		lvl = maxi(1, int(DungRun.party_level))

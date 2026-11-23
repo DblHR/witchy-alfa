@@ -1,17 +1,22 @@
 [gd_scene format=3 uid="uid://4e3na5jprilj"]
 
 [ext_resource type="Script" uid="uid://y0lb4ydr6ms6" path="res://scenes/Hub.gd" id="1_6grgh"]
-[ext_resource type="Texture2D" path="res://assets/hub/homeBG.png" id="1_hnc56"]
-[ext_resource type="Texture2D" path="res://assets/hub/homeBG_L2.png" id="2_l2"]
-[ext_resource type="Texture2D" path="res://assets/hub/homeBG_L3.png" id="3_l3"]
-[ext_resource type="Texture2D" path="res://assets/hub/homeFireplace.png" id="10_fire"]
-[ext_resource type="Texture2D" path="res://assets/hub/homeMagickEffect.png" id="11_magic"]
-[ext_resource type="Texture2D" path="res://assets/hub/homePumpkinOn.png" id="12_pon"]
-[ext_resource type="Texture2D" path="res://assets/hub/homePumpkinOff.png" id="13_poff"]
-[ext_resource type="Texture2D" path="res://assets/hub/homeStar1.png" id="14_s1"]
-[ext_resource type="Texture2D" path="res://assets/hub/homeStar2.png" id="15_s2"]
-[ext_resource type="Texture2D" path="res://assets/hub/homeStar3.png" id="16_s3"]
+[ext_resource type="Texture2D" path="res://assets/hub/night_hub/homeBG.png" id="1_hnc56"]
+[ext_resource type="Texture2D" path="res://assets/hub/night_hub/homeBG_L2.png" id="2_l2"]
+[ext_resource type="Texture2D" path="res://assets/hub/night_hub/homeBG_L3.png" id="3_l3"]
+[ext_resource type="Texture2D" path="res://assets/hub/night_hub/homeFireplace.png" id="10_fire"]
+[ext_resource type="Texture2D" path="res://assets/hub/night_hub/homeMagickEffect.png" id="11_magic"]
+[ext_resource type="Texture2D" path="res://assets/hub/night_hub/homePumpkinOn.png" id="12_pon"]
+[ext_resource type="Texture2D" path="res://assets/hub/night_hub/homePumpkinOff.png" id="13_poff"]
+[ext_resource type="Texture2D" path="res://assets/hub/night_hub/homeStar1.png" id="14_s1"]
+[ext_resource type="Texture2D" path="res://assets/hub/night_hub/homeStar2.png" id="15_s2"]
+[ext_resource type="Texture2D" path="res://assets/hub/night_hub/homeStar3.png" id="16_s3"]
 [ext_resource type="Script" path="res://scripts/home/HubToggle.gd" id="17_toggle"]
+[ext_resource type="Script" path="res://scripts/home/HubSky.gd" id="20_sky"]
+[ext_resource type="Texture2D" path="res://assets/hub/night_hub/homeSky.png" id="21_sky"]
+[ext_resource type="Texture2D" path="res://assets/hub/night_hub/homeMoon1.png" id="22_moon"]
+[ext_resource type="Texture2D" path="res://assets/hub/night_hub/homeClouds.png" id="23_clouds"]
+[ext_resource type="Texture2D" path="res://assets/hub/night_hub/homeTrees.png" id="24_trees"]
 [ext_resource type="Script" path="res://scripts/home/HubStars.gd" id="18_stars"]
 [ext_resource type="Script" path="res://scripts/home/HubStar.gd" id="19_star"]
 [ext_resource type="Texture2D" uid="uid://cniy2vvgjr5h7" path="res://assets/ui/buttons/startRunButton.png" id="2_6grgh"]
@@ -27,6 +32,64 @@ anchors_preset = 0
 offset_right = 1920.0
 offset_bottom = 1080.0
 script = ExtResource("1_6grgh")
+
+[node name="Sky" type="Control" parent="."]
+layout_mode = 0
+offset_right = 1920.0
+offset_bottom = 1080.0
+mouse_filter = 2
+script = ExtResource("20_sky")
+
+[node name="SkyBG" type="TextureRect" parent="Sky"]
+layout_mode = 0
+offset_right = 1920.0
+offset_bottom = 1080.0
+mouse_filter = 2
+texture = ExtResource("21_sky")
+expand_mode = 1
+
+[node name="SkyStars" type="Control" parent="Sky"]
+layout_mode = 0
+mouse_filter = 2
+
+[node name="Moon" type="TextureRect" parent="Sky"]
+layout_mode = 0
+offset_left = 335.0
+offset_top = 105.0
+offset_right = 705.0
+offset_bottom = 475.0
+pivot_offset = Vector2(185, 185)
+mouse_filter = 2
+texture = ExtResource("22_moon")
+expand_mode = 1
+
+[node name="Clouds" type="Control" parent="Sky"]
+layout_mode = 0
+mouse_filter = 2
+
+[node name="A" type="TextureRect" parent="Sky/Clouds"]
+layout_mode = 0
+offset_right = 1920.0
+offset_bottom = 1080.0
+mouse_filter = 2
+texture = ExtResource("23_clouds")
+expand_mode = 1
+
+[node name="B" type="TextureRect" parent="Sky/Clouds"]
+layout_mode = 0
+offset_left = -1920.0
+offset_bottom = 1080.0
+mouse_filter = 2
+texture = ExtResource("23_clouds")
+expand_mode = 1
+
+[node name="Trees" type="TextureRect" parent="Sky"]
+layout_mode = 0
+offset_right = 1920.0
+offset_bottom = 1080.0
+mouse_filter = 2
+texture = ExtResource("24_trees")
+expand_mode = 1
 
 [node name="BackGround" type="TextureRect" parent="." unique_id=19846586]
 layout_mode = 0

@@ -317,10 +317,12 @@ func _build_tooltip(slot: Dictionary) -> String:
 		for seed_id in available:
 			names.append(RunItems.get_item_name(seed_id))
 		return "Выберите мешочек с семенами: %s" % ", ".join(names)
+	# «Нужно полить» — только если сейчас правда не полито.
+	var dry := FarmState_.can_water_slot(slot_index)
 	if stage == FarmState.PlantStage.SEED:
-		return "Посажено: %s\nНужно полить." % FarmState_.get_stage_label(slot)
+		return "Посажено: %s%s" % [FarmState_.get_stage_label(slot), "\nНужно полить." if dry else ""]
 	if stage == FarmState.PlantStage.SPROUT:
-		return "Росток: %s\nНужно полить ещё раз." % FarmState_.get_stage_label(slot)
+		return "Росток: %s%s" % [FarmState_.get_stage_label(slot), "\nНужно полить ещё раз." if dry else ""]
 	if stage == FarmState.PlantStage.FLOWER:
 		return "Созрел урожай: %s" % FarmState_.get_stage_label(slot)
 	return ""

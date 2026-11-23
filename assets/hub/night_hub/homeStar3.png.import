@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://daagcjab07dqg"
-path="res://.godot/imported/homeStar3.png-4511616d12a54956db866764a6fcec4f.ctex"
+path="res://.godot/imported/homeStar3.png-e095038cc164aca56a7844e2b666266c.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/hub/homeStar3.png"
-dest_files=["res://.godot/imported/homeStar3.png-4511616d12a54956db866764a6fcec4f.ctex"]
+source_file="res://assets/hub/night_hub/homeStar3.png"
+dest_files=["res://.godot/imported/homeStar3.png-e095038cc164aca56a7844e2b666266c.ctex"]
 
 [params]
 

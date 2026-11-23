@@ -294,6 +294,8 @@ func _spawn_heroes() -> void:
 			left_team.append(fallback)
 
 func _spawn_enemies(room: Dictionary) -> void:
+	# Усиление Фуфу против недокачанного отряда — только в квестовом бою за воина.
+	EnemyFufu.quest_fight = String(room.get("kind", "")) == "quest"
 	right_team.clear()
 	for id in room.get("enemies", []):
 		var def := EnemyDefs.get_def(String(id))

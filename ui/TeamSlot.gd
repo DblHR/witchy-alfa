@@ -65,6 +65,7 @@ var chibi_mode := false
 ## Sprite2D, а не TextureRect: Control-ы прилипают к целым пикселям (snap_controls_to_pixels),
 ## и медленное покачивание шло рывками. Node2D двигается плавно.
 var _chibi: Sprite2D
+var _shadow: Sprite2D
 var _chibi_base := Vector2.ZERO
 var _idle: Array[Tween] = []
 
@@ -106,6 +107,8 @@ func _set_chibi(tex: Texture2D) -> void:
 	_idle.clear()
 	_chibi.visible = tex != null
 	_chibi.texture = tex
+	if _shadow != null:
+		_shadow.visible = tex != null
 	if tex == null:
 		return
 	var r := CharSizes.used_rect(tex)
@@ -117,6 +120,15 @@ func _set_chibi(tex: Texture2D) -> void:
 	_chibi.offset = Vector2(-mirrored_mid, -float(r.position.y + r.size.y))
 	_chibi_base = Vector2(size.x * 0.5, size.y - CHIBI_FEET_MARGIN)
 	_chibi.position = _chibi_base
+	# Тень под ногами (ChibiShadow), стоит на месте, пока чибик покачивается.
+	if _shadow == null and ChibiShadow.texture() != null:
+		_shadow = ChibiShadow.make()
+		add_child(_shadow)
+		move_child(_shadow, _chibi.get_index())
+	if _shadow != null:
+		# Под ногами (а не под серединой картинки с оружием): картинка отражена.
+		var feet_dx := (float(tex.get_width()) - ChibiShadow.feet_center_x(tex) - mirrored_mid) * k
+		ChibiShadow.place(_shadow, _chibi_base + Vector2(feet_dx, 0), ChibiShadow.width_for(tex, k))
 	# Idle как в бою: покачивание влево-вправо и лёгкие подпрыгивания, своя фаза у каждого.
 	var half := randf_range(0.95, 1.35)
 	var t := create_tween().set_loops()

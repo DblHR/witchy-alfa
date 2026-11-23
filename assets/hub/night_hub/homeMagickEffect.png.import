@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://cxi1udjwph7ja"
-path="res://.godot/imported/homeMagickEffect.png-17efdb0a6a57702cf21a6b161d523b9f.ctex"
+path="res://.godot/imported/homeMagickEffect.png-d15da09b336dd38fc340f322dba090b4.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/hub/homeMagickEffect.png"
-dest_files=["res://.godot/imported/homeMagickEffect.png-17efdb0a6a57702cf21a6b161d523b9f.ctex"]
+source_file="res://assets/hub/night_hub/homeMagickEffect.png"
+dest_files=["res://.godot/imported/homeMagickEffect.png-d15da09b336dd38fc340f322dba090b4.ctex"]
 
 [params]
 

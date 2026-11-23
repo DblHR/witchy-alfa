@@ -582,17 +582,13 @@ func _build_result_panel() -> void:
 	_result_panel.visible = false
 	_result_panel.add_theme_stylebox_override("panel", _panel_style(0.92))
 	_result_panel.z_index = 20
+	_build_result_show()
 	add_child(_result_panel)
-	_place(_result_panel, Rect2(0.30, 0.34, 0.40, 0.30))
+	_place(_result_panel, RESULT_PANEL_RECT)
 	var box := VBoxContainer.new()
 	box.alignment = BoxContainer.ALIGNMENT_CENTER
 	box.add_theme_constant_override("separation", 14)
 	_result_panel.add_child(box)
-	_result_icon = TextureRect.new()
-	_result_icon.custom_minimum_size = Vector2(120, 120)
-	_result_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	_result_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	box.add_child(_result_icon)
 	_result_label = Label.new()
 	_result_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_result_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -605,6 +601,116 @@ func _build_result_panel() -> void:
 	ok.focus_mode = Control.FOCUS_NONE
 	ok.pressed.connect(_on_result_closed)
 	box.add_child(ok)
+
+# --- Показ результата: большая картинка того, что сварилось, с подсветкой сзади ---------------
+## Удачно — золотая подсветка, с удвоением от котла — голубая и фиолетовая, шлак — без подсветки.
+const RESULT_CENTER := Vector2(960, 380)
+const RESULT_ICON_SIZE := 400.0
+const RESULT_GLOW_SIZE := 760.0
+const RESULT_PANEL_RECT := Rect2(0.32, 0.64, 0.36, 0.22)
+const GLOW_GOLD := Color(1.0, 0.72, 0.22)
+const GLOW_BLUE := Color(0.3, 0.68, 1.0)
+const GLOW_PURPLE := Color(0.72, 0.32, 1.0)
+enum Glow { NONE, GOLD, DOUBLE }
+var _result_show: Control
+var _result_glows: Array[TextureRect] = []
+var _result_tween: Tween
+
+func _build_result_show() -> void:
+	_result_show = Control.new()
+	_result_show.name = "ResultShow"
+	_result_show.visible = false
+	_result_show.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_result_show.z_index = 19
+	add_child(_result_show)
+	for i in range(2):
+		var g := TextureRect.new()
+		g.name = "Glow%d" % i
+		g.texture = _radial_glow()
+		g.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		g.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		g.size = Vector2(RESULT_GLOW_SIZE, RESULT_GLOW_SIZE)
+		g.pivot_offset = g.size * 0.5
+		g.position = RESULT_CENTER - g.size * 0.5
+		var add := CanvasItemMaterial.new()
+		add.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD   ## светится, как свет
+		g.material = add
+		_result_show.add_child(g)
+		_result_glows.append(g)
+	_result_icon = TextureRect.new()
+	_result_icon.name = "Item"
+	_result_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_result_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	_result_icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_result_icon.size = Vector2(RESULT_ICON_SIZE, RESULT_ICON_SIZE)
+	_result_icon.pivot_offset = _result_icon.size * 0.5
+	_result_icon.position = RESULT_CENTER - _result_icon.size * 0.5
+	_result_show.add_child(_result_icon)
+
+## Мягкое круглое свечение (белое — цвет задаётся modulate).
+static func _radial_glow() -> Texture2D:
+	var g := Gradient.new()
+	g.offsets = PackedFloat32Array([0.0, 0.35, 0.7, 1.0])
+	g.colors = PackedColorArray([Color(1, 1, 1, 1.0), Color(1, 1, 1, 0.8), Color(1, 1, 1, 0.3), Color(1, 1, 1, 0.0)])
+	var t := GradientTexture2D.new()
+	t.gradient = g
+	t.fill = GradientTexture2D.FILL_RADIAL
+	t.fill_from = Vector2(0.5, 0.5)
+	t.fill_to = Vector2(0.5, 0.0)
+	t.width = 256
+	t.height = 256
+	return t
+
+## Показать картинку результата с подсветкой.
+func _show_result_item(tex: Texture2D, glow: Glow) -> void:
+	if _result_tween != null and _result_tween.is_valid():
+		_result_tween.kill()
+	_result_icon.texture = tex
+	_result_show.visible = true
+	_result_icon.scale = Vector2(0.3, 0.3)
+	_result_icon.modulate.a = 0.0
+	var g0 := _result_glows[0]
+	var g1 := _result_glows[1]
+	g0.visible = glow != Glow.NONE
+	g1.visible = glow == Glow.DOUBLE
+	var c := RESULT_GLOW_SIZE * 0.5
+	match glow:
+		Glow.GOLD:
+			g0.modulate = GLOW_GOLD
+			g0.position = RESULT_CENTER - Vector2(c, c)
+		Glow.DOUBLE:
+			g0.modulate = GLOW_BLUE
+			g1.modulate = GLOW_PURPLE
+	_result_tween = create_tween().set_parallel(true)
+	_result_tween.tween_property(_result_icon, "scale", Vector2.ONE, 0.45).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	_result_tween.tween_property(_result_icon, "modulate:a", 1.0, 0.25)
+	for g in [g0, g1]:
+		g.scale = Vector2(0.4, 0.4)
+		_result_tween.tween_property(g, "scale", Vector2.ONE, 0.5).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	_glow_time = 0.0
+	_glow_kind = glow
+
+var _glow_time := 0.0
+var _glow_kind: Glow = Glow.NONE
+
+## Подсветка «дышит»; голубая и фиолетовая кружат друг вокруг друга.
+func _animate_result_glow(delta: float) -> void:
+	if _result_show == null or not _result_show.visible or _glow_kind == Glow.NONE:
+		return
+	_glow_time += delta
+	var pulse := 1.0 + 0.06 * sin(_glow_time * 2.4)
+	var c := Vector2(RESULT_GLOW_SIZE, RESULT_GLOW_SIZE) * 0.5
+	if _glow_kind == Glow.GOLD:
+		if _glow_time > 0.5:
+			_result_glows[0].scale = Vector2(pulse, pulse)
+		return
+	var r := 110.0
+	for i in range(2):
+		var a := _glow_time * 1.1 + PI * i
+		var g := _result_glows[i]
+		g.position = RESULT_CENTER - c + Vector2(cos(a), sin(a) * 0.6) * r
+		if _glow_time > 0.5:
+			g.scale = Vector2(pulse, pulse)
 
 func _build_toast() -> void:
 	_toast = Label.new()
@@ -986,6 +1092,7 @@ func _scene_clickable() -> bool:
 
 func _process(delta: float) -> void:
 	_update_pan(delta)
+	_animate_result_glow(delta)
 	if _bubbles == null:
 		return
 	var z: WitchZone = _zone_at(_mouse) if _scene_clickable() else null
@@ -1195,7 +1302,7 @@ func _complete(failed: bool = false) -> void:
 	if failed:
 		Inventory_.add_item(SLAG_ITEM, 1)
 		_set_stage(Stage.DONE)
-		_result_icon.texture = Inventory_.get_item_icon(SLAG_ITEM)
+		_show_result_item(Inventory_.get_item_icon(SLAG_ITEM), Glow.NONE)
 		_result_label.text = "Не вышло: %s\nДва промаха — зелье испорчено." % RunItems.get_item_name(SLAG_ITEM)
 		_result_ok.text = "Эх…"
 		_result_panel.visible = true
@@ -1206,12 +1313,13 @@ func _complete(failed: bool = false) -> void:
 	var count := AlchemyDB.cauldron_count(result_id, _rng) if perfect else 1
 	Inventory_.add_item(result_id, count)
 	_set_stage(Stage.DONE)
-	_result_icon.texture = Inventory_.get_item_icon(result_id)
+	_show_result_item(Inventory_.get_item_icon(result_id), Glow.DOUBLE if count > 1 else Glow.GOLD)
 	_result_label.text = "Готово: %s%s\nКачество варки: %s" % [RunItems.get_item_name(result_id), " ×2 — котёл постарался!" if count > 1 else "", _quality_label()]
 	_result_panel.visible = true
 
 func _on_result_closed() -> void:
 	_result_panel.visible = false
+	_result_show.visible = false
 	_accepted.clear()
 	_accepted_items.clear()
 	_attempts = 0

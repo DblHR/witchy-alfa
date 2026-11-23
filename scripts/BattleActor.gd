@@ -146,6 +146,7 @@ func update_visual() -> void:
 	sprite.scale = Vector2(k, k)
 	sprite.offset.y = unit.data.battle_offset_y
 	sprite.flip_h = is_left
+	_update_shadow()
 
 	# если юнит умер — картинка смерти (<id>_dead.png), а если её нет — серый цвет; глушим «красные» твины
 	if unit.is_dead:
@@ -200,6 +201,30 @@ func _apply_hp_bar_state() -> void:
 	else:
 		_set_progress_fill_color(hp_bar, Color(0.18, 0.82, 0.32, 0.95))
 		hp_label.modulate = Color(1, 1, 1, 1)
+
+## Тень под ногами (ChibiShadow) — позади спрайта, по центру фигуры.
+var _shadow: Sprite2D
+
+func _update_shadow() -> void:
+	if sprite == null or sprite.texture == null:
+		return
+	if _shadow == null:
+		if ChibiShadow.texture() == null:
+			return
+		_shadow = ChibiShadow.make()
+		add_child(_shadow)
+		move_child(_shadow, sprite.get_index())
+	var tex := sprite.texture
+	var r := CharSizes.used_rect(tex)
+	var k := sprite.scale.y
+	var tw := float(tex.get_width())
+	var th := float(tex.get_height())
+	var cx := (ChibiShadow.feet_center_x(tex) - tw * 0.5) * k
+	if sprite.flip_h:
+		cx = -cx
+	# От исходной точки спрайта (0,0), а не от текущей: idle-покачивание тень не двигает.
+	var feet_y := (sprite.offset.y + float(r.position.y + r.size.y) - th * 0.5) * k
+	ChibiShadow.place(_shadow, Vector2(cx, feet_y), ChibiShadow.width_for(tex, k))
 
 ## Щит на юните (CardBattle обновляет при каждом изменении).
 func set_shield(amount: int) -> void:

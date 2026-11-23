@@ -19,6 +19,9 @@ extends Control
 @onready var pumpkin: HubToggle = $Pumpkin
 @onready var fireplace: HubToggle = $Fireplace
 @onready var magic_effect: TextureRect = $MagicEffect
+## Небо за домом (HubSky): звёзды, луна-котик, облака, ёлки. Видно через прозрачные места BackGround.
+@onready var sky: HubSky = $Sky
+@onready var background: TextureRect = $BackGround
 
 ## Магический круг: через сколько секунд на котле начинает проявляться, за сколько проявляется
 ## полностью и за сколько гаснет, когда курсор ушёл.
@@ -29,6 +32,8 @@ var _magic_hold := 0.0
 
 func _ready() -> void:
 	get_tree().paused = false
+	# Картинки под время суток (DayCycle: night_hub -> day_hub, если есть дневные).
+	DayCycle.apply_textures(self)
 	start_run.pressed.connect(_on_start_run)
 	inv.pressed.connect(func(): SceneRouter_.go_to_inventory())
 	_collect_routes()
@@ -330,6 +335,7 @@ func _process(delta: float) -> void:
 	var over: HomeWalker = null
 	var cauldron := false
 	var door := false
+	var moon := false
 	var star := false
 	var toggle_hot := false
 	if not _world_locked() and not _dragging and not _ui_blocks() and not stars.is_grabbing():
@@ -338,6 +344,7 @@ func _process(delta: float) -> void:
 		cauldron = not star and over == null and not _opaque(foreground, p) and _cauldron_at(p)
 		toggle_hot = not star and over == null and not cauldron and _toggle_at(p) != null
 		door = not star and over == null and not cauldron and not toggle_hot and _door_at(p)
+		moon = not star and over == null and not cauldron and not toggle_hot and not door and _moon_at(p)
 	# Круг считает курсор на котле, даже если перед котлом прошёл персонаж.
 	var on_cauldron := not _world_locked() and not _ui_blocks() and not stars.is_grabbing() \
 		and not _opaque(foreground, p) and _cauldron_at(p)
@@ -350,7 +357,7 @@ func _process(delta: float) -> void:
 			over.set_hover(true)
 	_set_cauldron_hover(cauldron)
 	_set_door_hover(door)
-	var hand := over != null or cauldron or _door_hot != "" or _dragging or star or toggle_hot
+	var hand := over != null or cauldron or _door_hot != "" or _dragging or star or toggle_hot or moon
 	var drag := _dragging or stars.is_grabbing()
 	Input.set_default_cursor_shape(Input.CURSOR_DRAG if drag else (Input.CURSOR_POINTING_HAND if hand else Input.CURSOR_ARROW))
 
@@ -425,6 +432,18 @@ func _input(event: InputEvent) -> void:
 		elif _door_icon_at(p) != "":
 			get_viewport().set_input_as_handled()
 			_go_door(_door_icon_at(p))
+		elif _moon_at(p):
+			get_viewport().set_input_as_handled()
+			sky.click_moon()
+
+## Луна под курсором и её видно (через прозрачные места дома: стены, передний план, котёл не закрывают).
+func _moon_at(p: Vector2) -> bool:
+	if sky == null or not sky.moon_at(p):
+		return false
+	for layer in [background, foreground, cauldron_layer]:
+		if layer != null and layer.visible and _opaque(layer, p):
+			return false
+	return true
 
 ## Первый клик по камину: главный герой находит данго-посох (диалог data/dialogues/hub/home_events.json,
 ## "fireplace_dango": реплика с give_item — посох выдаётся и показывается «Получено»). Один раз.
@@ -442,15 +461,21 @@ func _fireplace_first_click() -> void:
 	StoryState_.set_flag(FIREPLACE_FLAG, true)   ## сразу: второй клик посреди сцены посох не дублирует
 	DialogueManager_.show_sequence(StoryDialogueDB_.resolve_lines(d), Callable(self, "_on_pending_story_dialogue_finished").bind(d))
 
+## Картинка «по персонажу кликнули»: assets/characters/<id>/<id>_click.png (тот же холст, что _battle).
+const CLICK_SPRITE_PATH := "res://assets/characters/%s/%s_click.png"
+
 ## Клик по персонажу: с кем есть разговор — разговор (пока только Фуфу), остальные подпрыгивают
-## (на кровати — нет), ведьмочка на миг становится «фазой 2».
+## (на кровати — нет) и на время прыжка показывают картинку <id>_click (нет её — ведьмочка «фаза 2»).
 func _click(w: HomeWalker) -> void:
 	if _can_talk(w.unit_id):
 		talk_to(w.unit_id)
 		return
 	if w.on_bed():
 		return
-	if w.unit_id == "witch":
+	var click_path := CLICK_SPRITE_PATH % [w.unit_id, w.unit_id]
+	if ResourceLoader.exists(click_path):
+		w.poke(load(click_path) as Texture2D)
+	elif w.unit_id == "witch":
 		var alt := CharacterPhases.texture(w.base_tex, 2)
 		w.poke(alt if alt != w.base_tex else null)
 	else:

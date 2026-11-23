@@ -7,6 +7,7 @@
 [ext_resource type="Texture2D" uid="uid://r6mi4odvmydo" path="res://assets/farm/background/table.png" id="4_o7qkg"]
 [ext_resource type="Texture2D" uid="uid://cwcidm8ocahx1" path="res://assets/farm/background/chair.png" id="5_o7qkg"]
 [ext_resource type="PackedScene" uid="uid://cu1a3uu65x45s" path="res://scenes/FarmSlot.tscn" id="5_slot"]
+[ext_resource type="Script" path="res://scripts/farm/MoonLight.gd" id="6_moon"]
 
 [node name="Control" type="Control" unique_id=1417306981]
 layout_mode = 3
@@ -49,6 +50,9 @@ grow_vertical = 2
 mouse_filter = 2
 texture = ExtResource("2_witch")
 stretch_mode = 5
+
+[node name="Moonlight" type="Node2D" parent="World"]
+script = ExtResource("6_moon")
 
 [node name="WitchZones" type="Node2D" parent="World" unique_id=1731500003]
 unique_name_in_owner = true
