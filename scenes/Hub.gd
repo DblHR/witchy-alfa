@@ -32,7 +32,7 @@ var _magic_hold := 0.0
 
 func _ready() -> void:
 	get_tree().paused = false
-	# Картинки под время суток (DayCycle: night_hub -> day_hub, если есть дневные).
+	# Картинки под время суток (DayCycle: nighttime / daytime).
 	DayCycle.apply_textures(self)
 	start_run.pressed.connect(_on_start_run)
 	inv.pressed.connect(func(): SceneRouter_.go_to_inventory())
@@ -359,8 +359,10 @@ func _process(delta: float) -> void:
 	_set_cauldron_hover(cauldron)
 	_set_door_hover(door)
 	var mess_hot := not _world_locked() and not _ui_blocks() and _mess_at(p) != null
+	var bed_hot := over == null and not star and not cauldron and not toggle_hot and not door and not moon \
+		and not _world_locked() and not _ui_blocks() and _bed_at(p)
 	_shake_cobweb(delta)
-	var hand := over != null or cauldron or _door_hot != "" or _dragging or star or toggle_hot or moon or mess_hot
+	var hand := over != null or cauldron or _door_hot != "" or _dragging or star or toggle_hot or moon or mess_hot or bed_hot
 	var drag := _dragging or stars.is_grabbing()
 	Input.set_default_cursor_shape(Input.CURSOR_DRAG if drag else (Input.CURSOR_POINTING_HAND if hand else Input.CURSOR_ARROW))
 
@@ -440,6 +442,9 @@ func _input(event: InputEvent) -> void:
 		elif _moon_at(p):
 			get_viewport().set_input_as_handled()
 			sky.click_moon()
+		elif _bed_at(p):
+			get_viewport().set_input_as_handled()
+			switch_day_phase()
 
 ## Луна под курсором и её видно (через прозрачные места дома: стены, передний план, котёл не закрывают).
 func _moon_at(p: Vector2) -> bool:
@@ -463,6 +468,44 @@ const FIREPLACE_FLAG := "fireplace_dango_found"
 const FIREPLACE_DIALOGUE := "fireplace_dango"
 ## Книги и весы на заднем фоне — с улучшениями котла (уровень 2 — книги, 3 — весы).
 @onready var cauldron_upgrade_1: TextureRect = $CauldronUpgrade1
+@onready var bed: TextureRect = $Bed
+
+# --- День и ночь (пока для тестов: клик по кровати) ----------------------------------------
+
+## Затемнение при смене времени суток: цвет, сколько гаснет и сколько проявляется (секунды).
+const PHASE_FADE_COLOR := Color(0.04, 0.02, 0.08)
+const PHASE_FADE_OUT := 0.35
+const PHASE_FADE_IN := 0.5
+var _phase_switching := false
+
+## Кровать под курсором (по непрозрачным пикселям; передний план её закрывает).
+func _bed_at(p: Vector2) -> bool:
+	return bed != null and bed.visible and not _phase_switching and _opaque(bed, p) and not _opaque(foreground, p)
+
+## День <-> ночь: экран мягко темнеет, картинки дома меняются, экран светлеет.
+func switch_day_phase() -> void:
+	if _phase_switching:
+		return
+	_phase_switching = true
+	var layer := CanvasLayer.new()
+	layer.layer = 50
+	add_child(layer)
+	var dim := ColorRect.new()
+	dim.color = PHASE_FADE_COLOR
+	dim.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	dim.mouse_filter = Control.MOUSE_FILTER_STOP
+	dim.modulate.a = 0.0
+	layer.add_child(dim)
+	var t := create_tween()
+	t.tween_property(dim, "modulate:a", 1.0, PHASE_FADE_OUT)
+	t.tween_callback(func() -> void:
+		DayCycle.advance()
+		DayCycle.apply_textures(self)
+		sky.refresh_day_phase())
+	t.tween_property(dim, "modulate:a", 0.0, PHASE_FADE_IN)
+	t.tween_callback(func() -> void:
+		layer.queue_free()
+		_phase_switching = false)
 @onready var cauldron_upgrade_2: TextureRect = $CauldronUpgrade2
 var _messes: Array[HubMess] = []
 var _bubble_layer: BattleSpeechLayer

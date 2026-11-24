@@ -61,10 +61,15 @@ func _build_ui() -> void:
 	_add_button(box, "Close", _toggle)
 
 func _next_day_phase() -> void:
-	DayCycle.advance()
+	var scene := get_tree().current_scene
+	if scene != null and scene.has_method("switch_day_phase"):
+		scene.call("switch_day_phase")   ## дом — плавно, как по клику на кровать
+	else:
+		DayCycle.advance()
+		# Ферму и алхимию перезапускаем — картинки возьмутся под новое время суток.
+		if scene != null and scene.scene_file_path in [SceneRouter.FARM, SceneRouter.ALCHEMY]:
+			get_tree().reload_current_scene()
 	print("[DayCycle] ", DayCycle.phase_name(), ", day ", DayCycle.day_number())
-	if get_tree().current_scene != null and get_tree().current_scene.scene_file_path == SceneRouter.HUB:
-		get_tree().reload_current_scene()
 	_refresh_status()
 
 func _add_button(parent: Node, text: String, callback: Callable) -> void:

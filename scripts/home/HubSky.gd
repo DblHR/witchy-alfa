@@ -7,7 +7,8 @@ class_name HubSky
 ## (Clouds/A и Clouds/B — одна и та же картинка, едут вправо и по кругу), Trees.
 ## Звёзды: STAR_TEXTURES, раскидываются случайно при каждом заходе, каждая мерцает в своём ритме.
 ## Луна: чуть колышется в стороны; клик (если её видно) — переключает картинку (MOON_CLICK_TEXTURE и обратно).
-## Картинки — из assets/hub/night_hub/ (днём DayCycle подставит day_hub/, если там будут файлы).
+## Картинки — assets/hub/nighttime/ или daytime/ (по времени суток, DayCycle). Чего для текущего
+## времени нет (звёзд днём), того и не видно. Сменилось время суток — refresh_day_phase().
 
 @export var cloud_speed: float = 14.0          ## пикселей в секунду, слева направо
 @export var star_count: int = 46
@@ -20,13 +21,14 @@ class_name HubSky
 @export var moon_sway_speed: float = 0.6
 
 const STAR_TEXTURES := [
-	"res://assets/hub/night_hub/homeSkyStar1.png",
-	"res://assets/hub/night_hub/homeSkyStar2.png",
-	"res://assets/hub/night_hub/homeSkyStar3.png",
-	"res://assets/hub/night_hub/homeSkyStar4.png",
-	"res://assets/hub/night_hub/homeSkyStar5.png",
+	"res://assets/hub/nighttime/homeSkyStar1.png",
+	"res://assets/hub/nighttime/homeSkyStar2.png",
+	"res://assets/hub/nighttime/homeSkyStar3.png",
+	"res://assets/hub/nighttime/homeSkyStar4.png",
+	"res://assets/hub/nighttime/homeSkyStar5.png",
 ]
-const MOON_CLICK_TEXTURE := "res://assets/hub/night_hub/homeMoon2.png"
+const MOON_TEXTURE := "res://assets/hub/nighttime/homeMoon1.png"
+const MOON_CLICK_TEXTURE := "res://assets/hub/nighttime/homeMoon2.png"
 
 @onready var stars_root: Control = $SkyStars
 @onready var moon: TextureRect = $Moon
@@ -40,12 +42,18 @@ var _moon_img: Image
 
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
-	if moon.texture != null:
-		var t := DayCycle.texture(moon.texture.resource_path)
-		if t != null:
-			moon.texture = t
-	_moon_tex = moon.texture
 	_moon_base = moon.position
+	refresh_day_phase()
+
+## Картинки неба, луны и звёзд — под текущее время суток (при входе и после смены дня/ночи).
+func refresh_day_phase() -> void:
+	DayCycle.apply_textures(self)
+	var t := DayCycle.texture(MOON_TEXTURE)
+	if t != null:
+		_moon_tex = t
+	elif _moon_tex == null:
+		_moon_tex = moon.texture
+	_moon_img = null
 	_apply_moon_texture()
 	_scatter_stars()
 

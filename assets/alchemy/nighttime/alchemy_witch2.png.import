@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://cuelwdu877xaq"
-path="res://.godot/imported/alchemy_witch2.png-22cc94d5a8f353ab6ae9acc574b9fe23.ctex"
+path="res://.godot/imported/alchemy_witch2.png-5cc7c4ef904d3813d11ceabc4ef221a5.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/alchemy/alchemy_witch2.png"
-dest_files=["res://.godot/imported/alchemy_witch2.png-22cc94d5a8f353ab6ae9acc574b9fe23.ctex"]
+source_file="res://assets/alchemy/nighttime/alchemy_witch2.png"
+dest_files=["res://.godot/imported/alchemy_witch2.png-5cc7c4ef904d3813d11ceabc4ef221a5.ctex"]
 
 [params]
 

@@ -8,7 +8,7 @@ class_name WitchZone
 ## Если зоны перекрываются — срабатывает та, что выше в списке узлов.
 
 ## Какую картинку показать (имя файла без .png; папку задаёт сцена: ферма — assets/farm/background/,
-## главное меню — assets/ui/menu/). Если такой картинки нет — спрайт не меняется.
+## алхимия — assets/alchemy/ (там — из nighttime/ или daytime/ по времени суток), главное меню — assets/ui/menu/). Если такой картинки нет — спрайт не меняется.
 @export var sprite: String = "witch_face"
 ## Сколько секунд держать спрайт.
 @export var duration: float = 0.5

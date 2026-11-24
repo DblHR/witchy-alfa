@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bx3g2u8y4g6ul"
-path="res://.godot/imported/homeMoon2.png-2d5297ab3bfb007b44a662e618635e68.ctex"
+path="res://.godot/imported/homeMoon2.png-c2039dcfe5bc7f6149ecac93e730bda0.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/hub/night_hub/homeMoon2.png"
-dest_files=["res://.godot/imported/homeMoon2.png-2d5297ab3bfb007b44a662e618635e68.ctex"]
+source_file="res://assets/hub/nighttime/homeMoon2.png"
+dest_files=["res://.godot/imported/homeMoon2.png-c2039dcfe5bc7f6149ecac93e730bda0.ctex"]
 
 [params]
 

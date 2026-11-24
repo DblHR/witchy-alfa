@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://cyta6242ygd01"
-path="res://.godot/imported/fireplaceCobweb.png-52acf03d52a6cec6a860804aed50387a.ctex"
+path="res://.godot/imported/fireplaceCobweb.png-f12a47aa9e17188d26c7be788095075b.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/hub/night_hub/fireplaceCobweb.png"
-dest_files=["res://.godot/imported/fireplaceCobweb.png-52acf03d52a6cec6a860804aed50387a.ctex"]
+source_file="res://assets/hub/fireplaceCobweb.png"
+dest_files=["res://.godot/imported/fireplaceCobweb.png-f12a47aa9e17188d26c7be788095075b.ctex"]
 
 [params]
 

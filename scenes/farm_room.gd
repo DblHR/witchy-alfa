@@ -10,6 +10,7 @@ extends Control
 
 ## Скорость, с которой фон догоняет курсор (больше — резче).
 const PAN_SMOOTH := 5.0
+## Картинки фермы: nighttime/ и daytime/ — по времени суток, сама папка — не зависящие от него (DayCycle).
 const WITCH_DIR := "res://assets/farm/background/"
 const WITCH_BASE := "witch"
 
@@ -28,6 +29,7 @@ func _ready() -> void:
 	get_tree().paused = false
 	UIThemeHelper.apply_pink_theme(self)
 	_apply_catalog_assets()
+	_apply_day_phase()
 	HubMenu.attach(self)   ## меню комнат сверху справа (Лавка, Ферма, Алхимия, Дом)
 	_collect_pots()
 	_setup_pan()
@@ -104,8 +106,15 @@ func witch_react(sprite: String, duration: float) -> void:
 		witch.texture = _witch_tex(WITCH_BASE)
 
 func _witch_tex(sprite: String) -> Texture2D:
-	var path := WITCH_DIR + sprite + ".png"
-	return load(path) as Texture2D if ResourceLoader.exists(path) else null
+	return DayCycle.room_texture(WITCH_DIR, sprite)
+
+## Картинки под время суток; лунный свет из окна — только ночью.
+func _apply_day_phase() -> void:
+	DayCycle.apply_textures(self)
+	for n in ["World/Moonlight", "World/MoonlightBack"]:
+		var m := get_node_or_null(n) as CanvasItem
+		if m != null:
+			m.visible = DayCycle.is_night()
 
 func _collect_pots() -> void:
 	# Индекс горшка берём из сцены (slot_index), а не из порядка нод: порядок задаёт только слои

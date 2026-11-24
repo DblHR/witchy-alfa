@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://fku5i2pciso6"
-path="res://.godot/imported/homeBG.png-2fed4f1ad34cadf9d6430eb7de6d4f42.ctex"
+path="res://.godot/imported/homeBG.png-23fc7f9f5d3d9d557940b42cd045fc34.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/hub/night_hub/homeBG.png"
-dest_files=["res://.godot/imported/homeBG.png-2fed4f1ad34cadf9d6430eb7de6d4f42.ctex"]
+source_file="res://assets/hub/nighttime/homeBG.png"
+dest_files=["res://.godot/imported/homeBG.png-23fc7f9f5d3d9d557940b42cd045fc34.ctex"]
 
 [params]
 

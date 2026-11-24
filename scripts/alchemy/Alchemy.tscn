@@ -1,8 +1,8 @@
 [gd_scene format=3 uid="uid://bnen7dj4sqcb3"]
 
 [ext_resource type="Script" uid="uid://dl6rem1j21jf2" path="res://scripts/alchemy/alchemy_room.gd" id="1"]
-[ext_resource type="Texture2D" uid="uid://drifgh58otm62" path="res://assets/alchemy/alchemyBG.png" id="2_bg"]
-[ext_resource type="Texture2D" uid="uid://qbfyrfa6wnd8" path="res://assets/alchemy/alchemy_witch.png" id="3_witch"]
+[ext_resource type="Texture2D" uid="uid://drifgh58otm62" path="res://assets/alchemy/nighttime/alchemyBG.png" id="2_bg"]
+[ext_resource type="Texture2D" uid="uid://qbfyrfa6wnd8" path="res://assets/alchemy/nighttime/alchemy_witch.png" id="3_witch"]
 [ext_resource type="Texture2D" uid="uid://ce7lupfayylvl" path="res://assets/alchemy/cauldron_potion.png" id="4_potion"]
 [ext_resource type="Texture2D" uid="uid://bioju62n2qrcg" path="res://assets/alchemy/cauldron.png" id="5_cauldron"]
 [ext_resource type="Script" uid="uid://djs8lrqv0wkbg" path="res://scripts/farm/WitchZone.gd" id="6_zone"]

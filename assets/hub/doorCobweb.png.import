@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dtuyrsiykb3iu"
-path="res://.godot/imported/doorCobweb.png-c4c74f93a3e94b70e1fb31f119a4e308.ctex"
+path="res://.godot/imported/doorCobweb.png-02c48f645e6bfbcc573c6c22aabad69f.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/hub/night_hub/doorCobweb.png"
-dest_files=["res://.godot/imported/doorCobweb.png-c4c74f93a3e94b70e1fb31f119a4e308.ctex"]
+source_file="res://assets/hub/doorCobweb.png"
+dest_files=["res://.godot/imported/doorCobweb.png-02c48f645e6bfbcc573c6c22aabad69f.ctex"]
 
 [params]
 

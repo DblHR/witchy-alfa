@@ -123,6 +123,7 @@ var _miss_lock_until := 0.0
 var _mouse := Vector2.ZERO   ## позиция мыши в координатах вьюпорта (из событий)
 
 func _ready() -> void:
+	DayCycle.apply_textures(self)   ## картинки комнаты под время суток (nighttime / daytime)
 	_rng.randomize()
 	mouse_filter = Control.MOUSE_FILTER_IGNORE   # иначе корневой Control съедает клики и _unhandled_input их не видит
 	_size = get_viewport_rect().size
@@ -1104,10 +1105,10 @@ func _process(delta: float) -> void:
 		_hand_cursor = hand
 		Input.set_default_cursor_shape(Input.CURSOR_POINTING_HAND if hand else Input.CURSOR_ARROW)
 
-## Ведьмочка ненадолго меняет позу (картинка зоны из assets/alchemy/).
+## Ведьмочка ненадолго меняет позу (картинка зоны из assets/alchemy/ — с учётом времени суток).
 func witch_react(z: WitchZone) -> void:
-	var path := WITCH_DIR + z.sprite + ".png"
-	if z.sprite == "" or not ResourceLoader.exists(path):
+	var path := DayCycle.find(WITCH_DIR, z.sprite) if z.sprite != "" else ""
+	if path == "":
 		return
 	_witch_token += 1
 	var token := _witch_token

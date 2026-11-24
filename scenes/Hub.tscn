@@ -1,40 +1,40 @@
 [gd_scene format=3 uid="uid://4e3na5jprilj"]
 
 [ext_resource type="Script" uid="uid://y0lb4ydr6ms6" path="res://scenes/Hub.gd" id="1_6grgh"]
-[ext_resource type="Texture2D" uid="uid://fku5i2pciso6" path="res://assets/hub/night_hub/homeBG.png" id="1_hnc56"]
+[ext_resource type="Texture2D" uid="uid://fku5i2pciso6" path="res://assets/hub/nighttime/homeBG.png" id="1_hnc56"]
 [ext_resource type="Texture2D" uid="uid://cniy2vvgjr5h7" path="res://assets/ui/buttons/startRunButton.png" id="2_6grgh"]
-[ext_resource type="Texture2D" uid="uid://bxvwa7b5ceh34" path="res://assets/hub/night_hub/homeBG_L2.png" id="2_l2"]
-[ext_resource type="Texture2D" uid="uid://dtqm8vl367y3l" path="res://assets/hub/night_hub/homeBG_L3.png" id="3_l3"]
+[ext_resource type="Texture2D" uid="uid://bxvwa7b5ceh34" path="res://assets/hub/nighttime/homeBG_L2.png" id="2_l2"]
+[ext_resource type="Texture2D" uid="uid://dtqm8vl367y3l" path="res://assets/hub/nighttime/homeBG_L3.png" id="3_l3"]
 [ext_resource type="Texture2D" uid="uid://ngcxb0tkqr48" path="res://assets/ui/buttons/inventoryButton.png" id="6_shn0c"]
 [ext_resource type="Script" uid="uid://2gdt4dpgo5b7" path="res://scripts/home/HomeRoute.gd" id="7_route"]
 [ext_resource type="PackedScene" path="res://scenes/ui/HubMenu.tscn" id="8_menu"]
 [ext_resource type="PackedScene" path="res://scenes/ui/LoveMenu.tscn" id="9_love"]
-[ext_resource type="Texture2D" uid="uid://b3myf51f5xedy" path="res://assets/hub/night_hub/homeFireplace.png" id="10_fire"]
-[ext_resource type="Texture2D" uid="uid://cxi1udjwph7ja" path="res://assets/hub/night_hub/homeMagickEffect.png" id="11_magic"]
-[ext_resource type="Texture2D" uid="uid://qggvriai6546" path="res://assets/hub/night_hub/homePumpkinOn.png" id="12_pon"]
-[ext_resource type="Texture2D" uid="uid://cguqa7rstkmvs" path="res://assets/hub/night_hub/homePumpkinOff.png" id="13_poff"]
-[ext_resource type="Texture2D" uid="uid://d3mklqrlumrfq" path="res://assets/hub/night_hub/homeStar1.png" id="14_s1"]
-[ext_resource type="Texture2D" uid="uid://cm6ouwvmomjs0" path="res://assets/hub/night_hub/homeStar2.png" id="15_s2"]
-[ext_resource type="Texture2D" uid="uid://daagcjab07dqg" path="res://assets/hub/night_hub/homeStar3.png" id="16_s3"]
+[ext_resource type="Texture2D" uid="uid://b3myf51f5xedy" path="res://assets/hub/homeFireplace.png" id="10_fire"]
+[ext_resource type="Texture2D" uid="uid://cxi1udjwph7ja" path="res://assets/hub/homeMagickEffect.png" id="11_magic"]
+[ext_resource type="Texture2D" uid="uid://qggvriai6546" path="res://assets/hub/nighttime/homePumpkinOn.png" id="12_pon"]
+[ext_resource type="Texture2D" uid="uid://cguqa7rstkmvs" path="res://assets/hub/nighttime/homePumpkinOff.png" id="13_poff"]
+[ext_resource type="Texture2D" uid="uid://d3mklqrlumrfq" path="res://assets/hub/nighttime/homeStar1.png" id="14_s1"]
+[ext_resource type="Texture2D" uid="uid://cm6ouwvmomjs0" path="res://assets/hub/nighttime/homeStar2.png" id="15_s2"]
+[ext_resource type="Texture2D" uid="uid://daagcjab07dqg" path="res://assets/hub/nighttime/homeStar3.png" id="16_s3"]
 [ext_resource type="Script" uid="uid://bj5joixsg3y6w" path="res://scripts/home/HubToggle.gd" id="17_toggle"]
 [ext_resource type="Script" uid="uid://i102b6ph62ow" path="res://scripts/home/HubStars.gd" id="18_stars"]
 [ext_resource type="Script" uid="uid://blxfeatsl80eb" path="res://scripts/home/HubStar.gd" id="19_star"]
 [ext_resource type="Script" uid="uid://c22tmg8x77mf2" path="res://scripts/home/HubSky.gd" id="20_sky"]
-[ext_resource type="Texture2D" uid="uid://18qbhk84y8pn" path="res://assets/hub/night_hub/homeSky.png" id="21_sky"]
-[ext_resource type="Texture2D" uid="uid://bqp6pwaeegw8s" path="res://assets/hub/night_hub/homeMoon1.png" id="22_moon"]
-[ext_resource type="Texture2D" uid="uid://txtm116hi1fi" path="res://assets/hub/night_hub/homeClouds.png" id="23_clouds"]
-[ext_resource type="Texture2D" uid="uid://dg66x78vukw6o" path="res://assets/hub/night_hub/homeTrees.png" id="24_trees"]
-[ext_resource type="Texture2D" uid="uid://dv306vb64vp81" path="res://assets/hub/night_hub/bed.png" id="30_bed"]
-[ext_resource type="Texture2D" uid="uid://85fqhxdy01su" path="res://assets/hub/night_hub/cauldronUpgrade.png" id="31_up1"]
-[ext_resource type="Texture2D" uid="uid://6jpqrolvt6no" path="res://assets/hub/night_hub/cauldronUpgrade2.png" id="32_up2"]
-[ext_resource type="Texture2D" uid="uid://dtuyrsiykb3iu" path="res://assets/hub/night_hub/doorCobweb.png" id="33_door"]
-[ext_resource type="Texture2D" uid="uid://cyta6242ygd01" path="res://assets/hub/night_hub/fireplaceCobweb.png" id="34_fire"]
-[ext_resource type="Texture2D" uid="uid://dn3svrnbhqs6u" path="res://assets/hub/night_hub/floormess.png" id="35_floor"]
-[ext_resource type="Texture2D" uid="uid://bcctadfsw8rst" path="res://assets/hub/night_hub/floormess2.png" id="36_floor2"]
-[ext_resource type="Texture2D" uid="uid://pvhaulckw1wt" path="res://assets/hub/night_hub/pumpkinCobweb.png" id="37_pump"]
-[ext_resource type="Texture2D" uid="uid://f8sv12pyejgo" path="res://assets/hub/night_hub/starsCobweb.png" id="38_stars"]
-[ext_resource type="Texture2D" uid="uid://ca4c2t57ojoaj" path="res://assets/hub/night_hub/wallmess.png" id="39_wall"]
-[ext_resource type="Texture2D" uid="uid://lxu6b861jofd" path="res://assets/hub/night_hub/windowCobweb.png" id="40_window"]
+[ext_resource type="Texture2D" uid="uid://18qbhk84y8pn" path="res://assets/hub/nighttime/homeSky.png" id="21_sky"]
+[ext_resource type="Texture2D" uid="uid://bqp6pwaeegw8s" path="res://assets/hub/nighttime/homeMoon1.png" id="22_moon"]
+[ext_resource type="Texture2D" uid="uid://txtm116hi1fi" path="res://assets/hub/nighttime/homeClouds.png" id="23_clouds"]
+[ext_resource type="Texture2D" uid="uid://dg66x78vukw6o" path="res://assets/hub/nighttime/homeTrees.png" id="24_trees"]
+[ext_resource type="Texture2D" uid="uid://dv306vb64vp81" path="res://assets/hub/nighttime/bed.png" id="30_bed"]
+[ext_resource type="Texture2D" uid="uid://85fqhxdy01su" path="res://assets/hub/nighttime/cauldronUpgrade.png" id="31_up1"]
+[ext_resource type="Texture2D" uid="uid://6jpqrolvt6no" path="res://assets/hub/nighttime/cauldronUpgrade2.png" id="32_up2"]
+[ext_resource type="Texture2D" uid="uid://dtuyrsiykb3iu" path="res://assets/hub/doorCobweb.png" id="33_door"]
+[ext_resource type="Texture2D" uid="uid://cyta6242ygd01" path="res://assets/hub/fireplaceCobweb.png" id="34_fire"]
+[ext_resource type="Texture2D" uid="uid://dn3svrnbhqs6u" path="res://assets/hub/floormess.png" id="35_floor"]
+[ext_resource type="Texture2D" uid="uid://bcctadfsw8rst" path="res://assets/hub/floormess2.png" id="36_floor2"]
+[ext_resource type="Texture2D" uid="uid://pvhaulckw1wt" path="res://assets/hub/pumpkinCobweb.png" id="37_pump"]
+[ext_resource type="Texture2D" uid="uid://f8sv12pyejgo" path="res://assets/hub/starsCobweb.png" id="38_stars"]
+[ext_resource type="Texture2D" uid="uid://ca4c2t57ojoaj" path="res://assets/hub/wallmess.png" id="39_wall"]
+[ext_resource type="Texture2D" uid="uid://lxu6b861jofd" path="res://assets/hub/windowCobweb.png" id="40_window"]
 [ext_resource type="Script" uid="uid://buh504wxnqf73" path="res://scripts/home/HubMess.gd" id="41_mess"]
 
 [node name="Control" type="Control" unique_id=391545454]
@@ -116,10 +116,10 @@ stretch_mode = 5
 
 [node name="Bed" type="TextureRect" parent="." unique_id=892033507]
 layout_mode = 0
-offset_left = 212.0
-offset_top = 340.0
-offset_right = 672.0
-offset_bottom = 560.0
+offset_left = 220.0
+offset_top = 342.0
+offset_right = 680.0
+offset_bottom = 562.0
 mouse_filter = 2
 texture = ExtResource("30_bed")
 expand_mode = 1

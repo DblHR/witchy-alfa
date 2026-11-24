@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bcctadfsw8rst"
-path="res://.godot/imported/floormess2.png-9cb08e0fe1acce1ee91e81df710d766e.ctex"
+path="res://.godot/imported/floormess2.png-825e1ff8487f5477fda6981cb3bd54df.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/hub/night_hub/floormess2.png"
-dest_files=["res://.godot/imported/floormess2.png-9cb08e0fe1acce1ee91e81df710d766e.ctex"]
+source_file="res://assets/hub/floormess2.png"
+dest_files=["res://.godot/imported/floormess2.png-825e1ff8487f5477fda6981cb3bd54df.ctex"]
 
 [params]
 

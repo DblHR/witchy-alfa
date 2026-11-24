@@ -1,11 +1,11 @@
 [gd_scene format=3 uid="uid://dlt8t4201g1gx"]
 
 [ext_resource type="Script" uid="uid://d10t0s6328mbk" path="res://scenes/farm_room.gd" id="1_1t45w"]
-[ext_resource type="Texture2D" uid="uid://de7bgs3h4xxal" path="res://assets/farm/background/farm_BCG.png" id="1_mbp2a"]
-[ext_resource type="Texture2D" uid="uid://bxv5jqf3ny6us" path="res://assets/farm/background/witch.png" id="2_witch"]
+[ext_resource type="Texture2D" uid="uid://de7bgs3h4xxal" path="res://assets/farm/background/nighttime/farm_BCG.png" id="1_mbp2a"]
+[ext_resource type="Texture2D" uid="uid://bxv5jqf3ny6us" path="res://assets/farm/background/nighttime/witch.png" id="2_witch"]
 [ext_resource type="Script" uid="uid://djs8lrqv0wkbg" path="res://scripts/farm/WitchZone.gd" id="3_zone"]
-[ext_resource type="Texture2D" uid="uid://r6mi4odvmydo" path="res://assets/farm/background/table.png" id="4_o7qkg"]
-[ext_resource type="Texture2D" uid="uid://cwcidm8ocahx1" path="res://assets/farm/background/chair.png" id="5_o7qkg"]
+[ext_resource type="Texture2D" uid="uid://r6mi4odvmydo" path="res://assets/farm/background/nighttime/table.png" id="4_o7qkg"]
+[ext_resource type="Texture2D" uid="uid://cwcidm8ocahx1" path="res://assets/farm/background/nighttime/chair.png" id="5_o7qkg"]
 [ext_resource type="PackedScene" uid="uid://cu1a3uu65x45s" path="res://scenes/FarmSlot.tscn" id="5_slot"]
 [ext_resource type="Script" path="res://scripts/farm/MoonLight.gd" id="6_moon"]
 

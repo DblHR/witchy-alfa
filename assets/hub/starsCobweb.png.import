@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://f8sv12pyejgo"
-path="res://.godot/imported/starsCobweb.png-28114c1d2384fd26fc967ed95e80c8aa.ctex"
+path="res://.godot/imported/starsCobweb.png-cd3ce31f0f6145f524a495d470e5bd43.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/hub/night_hub/starsCobweb.png"
-dest_files=["res://.godot/imported/starsCobweb.png-28114c1d2384fd26fc967ed95e80c8aa.ctex"]
+source_file="res://assets/hub/starsCobweb.png"
+dest_files=["res://.godot/imported/starsCobweb.png-cd3ce31f0f6145f524a495d470e5bd43.ctex"]
 
 [params]
 
