@@ -108,3 +108,12 @@ offset_bottom = 780.0
 theme_override_constants/h_separation = 16
 theme_override_constants/v_separation = 16
 columns = 3
+
+[node name="RerollButton" type="Button" parent="Panel"]
+layout_mode = 0
+offset_left = 817.0
+offset_top = 297.0
+offset_right = 1049.0
+offset_bottom = 397.0
+text = "Обновить
+20"

@@ -217,6 +217,7 @@ mouse_filter = 2
 texture = ExtResource("34_fire")
 expand_mode = 1
 script = ExtResource("41_mess")
+clicks = 1
 covers = NodePath("../../Fireplace")
 
 [node name="PumpkinCobweb" type="TextureRect" parent="Mess" unique_id=761149940]
@@ -229,6 +230,7 @@ mouse_filter = 2
 texture = ExtResource("37_pump")
 expand_mode = 1
 script = ExtResource("41_mess")
+clicks = 1
 covers = NodePath("../../Pumpkin")
 
 [node name="WindowCobweb" type="TextureRect" parent="Mess" unique_id=34797888]
@@ -241,6 +243,7 @@ mouse_filter = 2
 texture = ExtResource("40_window")
 expand_mode = 1
 script = ExtResource("41_mess")
+clicks = 1
 
 [node name="DoorCobweb" type="TextureRect" parent="Mess" unique_id=199786439]
 layout_mode = 0
@@ -252,7 +255,7 @@ mouse_filter = 2
 texture = ExtResource("33_door")
 expand_mode = 1
 script = ExtResource("41_mess")
-clicks = 2
+clicks = 1
 
 [node name="WallMess" type="TextureRect" parent="Mess" unique_id=1886237826]
 layout_mode = 0
@@ -264,6 +267,7 @@ mouse_filter = 2
 texture = ExtResource("39_wall")
 expand_mode = 1
 script = ExtResource("41_mess")
+clicks = 1
 
 [node name="FloorMess" type="TextureRect" parent="Mess" unique_id=101068021]
 layout_mode = 0
@@ -275,6 +279,7 @@ mouse_filter = 2
 texture = ExtResource("35_floor")
 expand_mode = 1
 script = ExtResource("41_mess")
+clicks = 1
 
 [node name="FloorMess2" type="TextureRect" parent="Mess" unique_id=2109056720]
 layout_mode = 0
@@ -286,6 +291,7 @@ mouse_filter = 2
 texture = ExtResource("36_floor2")
 expand_mode = 1
 script = ExtResource("41_mess")
+clicks = 1
 
 [node name="MagicEffect" type="TextureRect" parent="." unique_id=1832556153]
 modulate = Color(1, 1, 1, 0)
@@ -363,7 +369,9 @@ mouse_filter = 2
 texture = ExtResource("38_stars")
 expand_mode = 1
 script = ExtResource("41_mess")
+clicks = 1
 shake = true
+shake_needed = 1200.0
 
 [node name="DragLayer" type="Node2D" parent="." unique_id=943281058]
 

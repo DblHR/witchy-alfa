@@ -314,14 +314,20 @@ func _build_stock_grid() -> void:
 	stock_grid.add_theme_constant_override("v_separation", ShopUi.CARD_GAP)
 	_build_reroll_button()
 
-## Кнопка «Обновить товар» справа от полки: DungRun.RIKKA_REROLL_PRICE золота, раз в день.
-const REROLL_RECT := Rect2(858, 430, 232, 100)
+## Кнопка «Обновить товар» — узел Panel/RerollButton в Shop.tscn (на одном слое с товаром,
+## под Риккой; двигать и менять размер — в редакторе). Цена — DungRun.RIKKA_REROLL_PRICE, раз в день.
+const REROLL_RECT := Rect2(858, 430, 232, 100)   ## только если узла в сцене нет
 const COIN_ICON := "res://assets/items/loot/coin.png"
 var _reroll: Button
 
 func _build_reroll_button() -> void:
-	_reroll = Button.new()
-	_reroll.name = "RerollButton"
+	_reroll = get_node_or_null("Panel/RerollButton") as Button
+	if _reroll == null:
+		_reroll = Button.new()
+		_reroll.name = "RerollButton"
+		stock_grid.get_parent().add_child(_reroll)
+		_reroll.global_position = REROLL_RECT.position
+		_reroll.size = REROLL_RECT.size
 	_reroll.text = "Обновить\n%d" % DungRun.RIKKA_REROLL_PRICE
 	_reroll.icon = load(COIN_ICON) as Texture2D if ResourceLoader.exists(COIN_ICON) else null
 	_reroll.expand_icon = false
@@ -329,9 +335,6 @@ func _build_reroll_button() -> void:
 	_reroll.icon_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	_reroll.focus_mode = Control.FOCUS_NONE
 	ShopUi.style_button(_reroll, 26)
-	add_child(_reroll)
-	_reroll.global_position = REROLL_RECT.position
-	_reroll.size = REROLL_RECT.size
 	_reroll.pressed.connect(_on_reroll_pressed)
 
 func _on_reroll_pressed() -> void:

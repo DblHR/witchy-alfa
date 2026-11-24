@@ -131,7 +131,9 @@ func refresh() -> void:
 			if t > 0:
 				var d := Time.get_datetime_dict_from_unix_time(t + _tz_bias())
 				when = "  ·  %02d.%02d.%d %02d:%02d" % [d.day, d.month, d.year, d.hour, d.minute]
-			b.text = "Слот %d\nУровень отряда %d  ·  %d зол.%s" % [slot, int(info.get("party_level", 1)), int(info.get("gold", 0)), when]
+			var secs := int(info.get("play_time", -1))
+			var played := "  ·  в игре %s" % SaveManager.format_play_time(secs) if secs >= 0 else ""
+			b.text = "Слот %d%s\nУровень отряда %d  ·  %d зол.%s" % [slot, played, int(info.get("party_level", 1)), int(info.get("gold", 0)), when]
 			b.disabled = false
 		else:
 			b.text = "Слот %d\nпусто" % slot

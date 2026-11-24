@@ -19,10 +19,49 @@ var _autosave_enabled := false
 var _save_queued := false
 ## В какой слот сейчас пишем (1..SLOT_COUNT).
 var current_slot := 1
+## Сколько секунд наиграно на этом сохранении. Идёт, пока открыта игра (не главное меню)
+## и окно игры активно; сохраняется вместе со всем остальным, раз в PLAY_TIME_SAVE_EVERY
+## секунд и при закрытии игры.
+var play_time := 0.0
+const PLAY_TIME_SAVE_EVERY := 60.0
+var _play_unsaved := 0.0
+var _window_focused := true
 
 func _ready() -> void:
+	process_mode = Node.PROCESS_MODE_ALWAYS   ## пауза (меню на Esc) — тоже время в игре
 	_migrate_legacy_save()
 	_connect_signals()
+
+func _process(delta: float) -> void:
+	if not _counting_play_time():
+		return
+	play_time += delta
+	_play_unsaved += delta
+	if _play_unsaved >= PLAY_TIME_SAVE_EVERY:
+		save_game()
+
+func _counting_play_time() -> bool:
+	if not _autosave_enabled or _is_loading or not _window_focused:
+		return false
+	var scene := get_tree().current_scene
+	return scene != null and scene.scene_file_path != SceneRouter.MAIN_MENU
+
+func _notification(what: int) -> void:
+	match what:
+		NOTIFICATION_APPLICATION_FOCUS_OUT:
+			_window_focused = false
+		NOTIFICATION_APPLICATION_FOCUS_IN:
+			_window_focused = true
+		NOTIFICATION_WM_CLOSE_REQUEST:
+			if _autosave_enabled and not _is_loading:
+				save_game()
+
+## «2 ч 05 мин» / «15 мин» — для меню сохранений.
+static func format_play_time(seconds: float) -> String:
+	var minutes := floori(seconds / 60.0)
+	if minutes < 60:
+		return "%d мин" % minutes
+	return "%d ч %02d мин" % [floori(minutes / 60.0), minutes % 60]
 
 static func slot_path(slot: int) -> String:
 	return SLOT_PATH % slot
@@ -73,6 +112,7 @@ func save_game() -> bool:
 	var data := {
 		"version": SAVE_VERSION,
 		"saved_at": int(Time.get_unix_time_from_system()),
+		"play_time": int(play_time),
 		"dungeon_run": DungRun.serialize_state() if DungRun != null else {},
 		"farm": FarmState_.serialize_state() if FarmState_ != null else {},
 		"inventory": Inventory_.serialize_state() if Inventory_ != null else {},
@@ -88,6 +128,7 @@ func save_game() -> bool:
 		return false
 	file.store_string(JSON.stringify(data, "\t"))
 	file.close()
+	_play_unsaved = 0.0
 
 	if FileAccess.file_exists(save_path):
 		DirAccess.copy_absolute(save_path, _backup_path(slot))
@@ -147,6 +188,7 @@ func load_game(slot: int = -1) -> bool:
 		push_warning("SaveManager: save was made by a newer game version")
 
 	_is_loading = true
+	play_time = float(data.get("play_time", 0))
 	if Inventory_ != null:
 		Inventory_.apply_state(data.get("inventory", {}))
 	if FarmState_ != null:
@@ -192,7 +234,7 @@ func slot_info(slot: int) -> Dictionary:
 	if saved_at <= 0:
 		saved_at = int(FileAccess.get_modified_time(slot_path(slot)))
 	return {"exists": true, "party_level": int(run.get("party_level", 1)), "gold": int(run.get("gold", 0)),
-		"units": units, "saved_at": saved_at}
+		"units": units, "saved_at": saved_at, "play_time": int(data.get("play_time", -1))}   ## -1 — сохранение старше счётчика
 
 func delete_save(slot: int = -1) -> void:
 	var s := current_slot if slot < 1 else slot
@@ -222,6 +264,7 @@ func start_new_game(slot: int = -1) -> void:
 	_autosave_enabled = false
 	delete_save(current_slot)
 	reset_all_state()
+	play_time = 0.0
 	_is_loading = false
 	_autosave_enabled = true
 	save_game()
