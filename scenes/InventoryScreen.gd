@@ -112,6 +112,12 @@ func _subscribe_state() -> void:
 
 # --- Уровень отряда: кружок с уровнем + полоса опыта ---------------------------
 const LEVEL_BOX_RECT := Rect2(970, 850, 578, 88)
+## В разделе «Персонажи» правая страница занята карточкой — уровень отряда внизу левой страницы,
+## а список героинь становится ниже на столько (ENTRIES_BOTTOM_CHARS — нижний край списка).
+const LEVEL_BOX_POS_CHARS := Vector2(262, 872)
+const ENTRIES_BOTTOM_CHARS := 856.0
+var _level_box: Control
+var _entries_bottom := 0.0
 var _level_num: Label
 var _xp_bar: ProgressBar
 var _xp_text: Label
@@ -126,6 +132,8 @@ func _build_level_box() -> void:
 	box.size = LEVEL_BOX_RECT.size
 	box.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(box)
+	_level_box = box
+	_entries_bottom = entries_scroll.offset_bottom
 	# Кружок с номером уровня.
 	var circle := Panel.new()
 	var csb := StyleBoxFlat.new()
@@ -227,6 +235,10 @@ func _select_section(section: int, reset_status: bool = true) -> void:
 		footer_label.text = ""
 	if section == Section.CHARACTERS and UnitRoster_ != null:
 		UnitRoster_.mark_upgrade_seen(UnitRoster_.UPGRADE_SEEN_CHARACTERS)
+	var chars := section == Section.CHARACTERS
+	if _level_box != null:
+		_level_box.position = LEVEL_BOX_POS_CHARS if chars else LEVEL_BOX_RECT.position
+		entries_scroll.offset_bottom = ENTRIES_BOTTOM_CHARS if chars else _entries_bottom
 	_rebuild_entry_grid()
 	_refresh_upgrade_badges()
 
@@ -342,11 +354,11 @@ func _build_character_entries() -> Array[Dictionary]:
 			continue
 		out.append({
 			"id": unit_id,
-			"title": data.display_name,
+			"title": _char_name(data),
 			"subtitle": "",
-			"icon": _get_character_avatar(data),
+			"icon": CharacterBust.texture(_get_character_avatar(data), unit_id),
 			"count": -1,
-			"compact": true,
+			"bust": true,
 		})
 	return out
 
@@ -355,7 +367,7 @@ func _get_columns_for_section(section: int) -> int:
 		Section.LORE:
 			return 1
 		Section.CHARACTERS:
-			return 4
+			return 2
 		Section.GALLERY:
 			return 2
 		_:
@@ -426,6 +438,28 @@ func _show_lore_detail(entry_id: String) -> void:
 		return
 	lore_body.text = "[center][b]%s[/b][/center]\n\n%s" % [String(e["title"]), String(e["body"])]
 
+@onready var _rank_label: Label = %RankLabel
+@onready var _cards_button: Button = %AllCardsButton
+@onready var _hearts: HBoxContainer = %Hearts
+@onready var _trust_text: RichTextLabel = %TrustText
+@onready var _desc_tab: Button = %DescriptionTab
+@onready var _notes_tab: Button = %NotesTab
+@onready var _tab_text: RichTextLabel = %TabText
+## Тексты вкладок «Описание» / «Заметки» текущей героини.
+var _char_desc_text := ""
+var _char_notes_text := ""
+
+## Сердечки отношений: картинка, размер, цвет пустого сердечка.
+const HEART_TEXTURE := "res://assets/ui/menu/heart.png"
+const HEART_SIZE := Vector2(40, 40)
+const HEART_EMPTY := Color(0.42, 0.3, 0.45, 0.28)
+
+## Имя героини по-русски (data/characters/names.json), нет там — из её ресурса.
+func _char_name(data: CharacterData) -> String:
+	if StoryDialogueDB_ != null:
+		return StoryDialogueDB_.get_character_name(data.id)
+	return data.display_name
+
 func _show_character_detail(unit_id: String) -> void:
 	_match_detail_visibility(false, true, false, false)
 	detail_title_label.text = "Карточка персонажа"
@@ -436,36 +470,88 @@ func _show_character_detail(unit_id: String) -> void:
 		return
 	var stats := data.stats_for_level(max(1, int(DungRun.party_level)))
 	character_sprite.texture = data.battle_texture if data.battle_texture != null else _get_character_avatar(data)
-	character_name.text = data.display_name
+	character_name.text = _char_name(data)
+	_current_char_id = unit_id
+	_rank_label.text = "Ранг %s  •  карт в колоде до %d" % [data.rank, data.card_cap()]
+	var owned := _CardLib.owned_defs(data).size()
+	_cards_button.text = "Все карты (%d/%d)" % [owned, data.card_pool.size() + data.unlock_cards.size()]
+	_cards_button.disabled = owned == 0 and data.unlock_cards.is_empty() and data.ult_card == null
+	character_stats.text = "[b]Класс:[/b] %s\n[b]Здоровье:[/b] %d\n[b]Атака:[/b] %d\n[b]Магия:[/b] %d\n[b]Энергия ульты:[/b] %d" % [
+		data.unit_class,
+		int(stats.get("max_hp", data.base_hp)),
+		int(stats.get("attack", data.attack)),
+		int(stats.get("magic", data.magic)),
+		data.max_energy,
+	]
+	_fill_hearts(UnitRoster_.get_relationship(unit_id) if UnitRoster_ != null else 0)
+	_trust_text.text = _trust_text_for(data)
 	# Описание и заметки — из data/lore/lore.json ("characters"); заметки открываются диалогами.
 	var desc := LoreData.character_description(unit_id)
 	if desc == "":
 		desc = data.codex_description.strip_edges()
 	if desc == "":
 		desc = _build_default_character_description(data)
-	var facts := LoreData.character_facts(unit_id)
-	var notes := "Пока ничего не известно."
-	if not facts.is_empty():
-		notes = "• " + "\n• ".join(facts)
-	_current_char_id = unit_id
-	_rank_label.text = "Ранг %s • карт до %d" % [data.rank, data.card_cap()]
-	var owned := _CardLib.owned_defs(data).size()
-	_cards_button.text = "Все карты (%d/%d)" % [owned, data.card_pool.size() + data.unlock_cards.size()]
-	_cards_button.disabled = owned == 0 and data.unlock_cards.is_empty() and data.ult_card == null
-	var passive_text := ""
 	if data.card_passive != null and data.card_passive.description.strip_edges() != "":
-		passive_text = "\n[b]Пассивка:[/b] %s\n" % data.card_passive.description.strip_edges()
-	passive_text = _relationship_text(data) + passive_text
-	character_stats.text = "[b]Класс:[/b] %s\n[b]HP:[/b] %d\n[b]Атака:[/b] %d\n[b]Магия:[/b] %d\n[b]Энергия ульты:[/b] %d\n%s\n[b]Описание:[/b]\n%s\n\n[b]Заметки:[/b]\n%s" % [
-		data.unit_class,
-		int(stats.get("max_hp", data.base_hp)),
-		int(stats.get("attack", data.attack)),
-		int(stats.get("magic", data.magic)),
-		data.max_energy,
-		passive_text,
-		desc,
-		notes,
-	]
+		desc = "[b]Пассивка:[/b] %s\n\n%s" % [data.card_passive.description.strip_edges(), desc]
+	_char_desc_text = desc
+	var facts := LoreData.character_facts(unit_id)
+	_char_notes_text = "Пока ничего не известно." if facts.is_empty() else "•  " + "\n•  ".join(facts)
+	_show_char_tab(1 if _notes_tab.button_pressed else 0)
+
+## Вкладки под карточкой: 0 — «Описание», 1 — «Заметки».
+func _show_char_tab(tab: int) -> void:
+	_desc_tab.set_pressed_no_signal(tab == 0)
+	_notes_tab.set_pressed_no_signal(tab == 1)
+	_tab_text.text = _char_notes_text if tab == 1 else _char_desc_text
+	_tab_text.scroll_to_line(0)
+
+func _fill_hearts(level: int) -> void:
+	var tex := _heart_texture()
+	while _hearts.get_child_count() < UnitRoster.RELATIONSHIP_MAX:
+		var h := TextureRect.new()
+		h.texture = tex
+		h.custom_minimum_size = HEART_SIZE
+		h.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		h.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		h.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		h.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		_hearts.add_child(h)
+	for i in _hearts.get_child_count():
+		(_hearts.get_child(i) as CanvasItem).modulate = Color.WHITE if i < level else HEART_EMPTY
+
+## Сердечко без пустых полей вокруг (картинка — на целый холст 1920x1080).
+var _heart_tex: Texture2D
+func _heart_texture() -> Texture2D:
+	if _heart_tex != null:
+		return _heart_tex
+	var src := load(HEART_TEXTURE) as Texture2D
+	_heart_tex = src
+	var img := src.get_image() if src != null else null
+	if img != null:
+		if img.is_compressed():
+			img.decompress()
+		var used := img.get_used_rect()
+		if used.has_area():
+			var at := AtlasTexture.new()
+			at.atlas = src
+			at.region = Rect2(used)
+			_heart_tex = at
+	return _heart_tex
+
+## «Доверие: ещё N до следующего уровня» + «Следующая награда — на X уровне: …».
+func _trust_text_for(data: CharacterData) -> String:
+	if UnitRoster_ == null:
+		return ""
+	var prog := UnitRoster_.trust_progress(data.id)
+	var lvl := int(prog["level"])
+	if lvl >= UnitRoster.RELATIONSHIP_MAX:
+		return "[b]Доверие:[/b] максимальное"
+	var left := int(prog["need"]) - int(prog["into_level"])
+	var text := "[b]Доверие:[/b] ещё %d до %d уровня" % [left, lvl + 1]
+	var next := TrustRewards.next_reward(data, lvl)
+	if not next.is_empty():
+		text += "\n[b]Следующая награда[/b] — на %d уровне: %s" % [int(next["level"]), String(next["text"])]
+	return text
 
 func _match_detail_visibility(show_item: bool, show_character: bool, show_lore: bool, show_placeholder: bool) -> void:
 	item_detail.visible = show_item
@@ -489,7 +575,7 @@ func _get_character_avatar(data: CharacterData) -> Texture2D:
 	return data.battle_texture
 
 func _build_default_character_description(data: CharacterData) -> String:
-	return "%s — %s. Базовое описание пока не заполнено, но раздел уже готов для ручной доработки через ресурсы персонажей." % [data.display_name, data.unit_class]
+	return "%s — %s. Базовое описание пока не заполнено, но раздел уже готов для ручной доработки через ресурсы персонажей." % [_char_name(data), data.unit_class]
 
 func _get_ability_name(ability: Ability, fallback_name: String) -> String:
 	if ability != null and ability.name.strip_edges() != "":
@@ -500,8 +586,6 @@ func _get_ability_name(ability: Ability, fallback_name: String) -> String:
 # --- Все карты персонажа ------------------------------------------------------
 
 var _current_char_id: String = ""
-var _rank_label: Label = null
-var _cards_button: Button = null
 var _cards_overlay: Control = null
 var _cards_grid: GridContainer = null
 var _locked_title: Label = null
@@ -511,38 +595,10 @@ var _cards_title: Label = null
 var _ult_title: Label = null
 var _ult_row: HBoxContainer = null
 
-## Строка отношений для досье.
-func _relationship_text(data: CharacterData) -> String:
-	if UnitRoster_ == null:
-		return ""
-	var prog := UnitRoster_.trust_progress(data.id)
-	var rel := int(prog["level"])
-	var mx := UnitRoster.RELATIONSHIP_MAX
-	var bar := "[color=#ff7fc8]%s[/color][color=#6a5a70]%s[/color]" % ["■".repeat(rel), "■".repeat(mx - rel)]
-	var text := "[b]Отношения:[/b] %s %d/%d" % [bar, rel, mx]
-	if rel < mx:
-		text += "\n[b]Доверие:[/b] %d/%d до следующего уровня" % [int(prog["into_level"]), int(prog["need"])]
-	if not data.unlock_cards.is_empty():
-		var levels := PackedStringArray()
-		for i in range(data.unlock_cards.size()):
-			levels.append(str(_CardLib.unlock_level(data, i)))
-		text += "\n[b]Карты за отношения:[/b] на уровнях %s" % ", ".join(levels)
-	return text + "\n"
-
 func _build_cards_ui() -> void:
-	_rank_label = Label.new()
-	_rank_label.position = Vector2(300, 100)
-	_rank_label.size = Vector2(260, 30)
-	_rank_label.add_theme_font_size_override("font_size", 20)
-	_rank_label.add_theme_color_override("font_color", Color(0.3, 0.14, 0.36))
-	character_detail.add_child(_rank_label)
-	_cards_button = Button.new()
-	_cards_button.name = "AllCardsButton"
-	_cards_button.position = Vector2(300, 140)
-	_cards_button.size = Vector2(260, 52)
-	_cards_button.text = "Все карты"
 	_cards_button.pressed.connect(_open_cards_overlay)
-	character_detail.add_child(_cards_button)
+	_desc_tab.pressed.connect(_show_char_tab.bind(0))
+	_notes_tab.pressed.connect(_show_char_tab.bind(1))
 
 	_cards_overlay = Control.new()
 	_cards_overlay.name = "CardsOverlay"
@@ -660,7 +716,7 @@ func _open_cards_overlay() -> void:
 	_ult_title.visible = ult != null
 	if ult != null:
 		_ult_row.add_child(_UiKit.card_preview(ult, 1.0))
-	_cards_title.text = "%s — ранг %s, получено карт: %d из %d, в бой берёт до %d" % [data.display_name, data.rank, owned, cards.size(), data.card_cap()]
+	_cards_title.text = "%s — ранг %s, получено карт: %d из %d, в бой берёт до %d" % [_char_name(data), data.rank, owned, cards.size(), data.card_cap()]
 	_cards_title.text += "\nОчки улучшения: %d" % points
 	_cards_overlay.visible = true
 
@@ -848,7 +904,7 @@ func _build_admin_ui() -> void:
 		var cd := c as CharacterData
 		if cd == null or cd.unit_class == "рядовой враг" or cd.card_pool.is_empty():
 			continue
-		_admin_hero.add_item(cd.display_name)
+		_admin_hero.add_item(_char_name(cd))
 		_admin_hero.set_item_metadata(_admin_hero.item_count - 1, cd.id)
 	_admin_hero.item_selected.connect(func(_i: int) -> void: _sync_admin_trust())
 	trow.add_child(_admin_hero)

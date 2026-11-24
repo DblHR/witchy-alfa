@@ -26,6 +26,8 @@ func _ready() -> void:
 	)
 
 const WIDE_SIZE := Vector2(440, 96)
+## Плитка героини в разделе «Персонажи» (картинка — CharacterBust, по бюст).
+const BUST_SIZE := Vector2(318, 300)
 
 func setup(data: Dictionary) -> void:
 	if not is_node_ready():
@@ -78,6 +80,23 @@ func setup(data: Dictionary) -> void:
 
 		count_badge.position = Vector2(13, 117)
 		count_badge.size = Vector2(56, 28)
+
+	# Большая плитка героини (раздел «Персонажи»): картинка по бюст и имя под ней.
+	if bool(data.get("bust", false)):
+		custom_minimum_size = BUST_SIZE
+		icon_rect.position = Vector2(10, 10)
+		icon_rect.size = Vector2(BUST_SIZE.x - 20, BUST_SIZE.y - 66)
+		icon_rect.custom_minimum_size = icon_rect.size
+		icon_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+		title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		title_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		title_label.position = Vector2(10, BUST_SIZE.y - 54)
+		title_label.size = Vector2(BUST_SIZE.x - 20, 44)
+		title_label.add_theme_font_size_override("font_size", 28)
+		title_label.add_theme_color_override("font_color", Color(0.33, 0.16, 0.38))
+		title_label.add_theme_constant_override("outline_size", 0)
+		subtitle_label.visible = false
+		count_badge.visible = false
 
 	# Широкая строка без значка (энциклопедия): заголовок и подпись во всю ширину страницы.
 	if bool(data.get("wide", false)):

@@ -85,9 +85,11 @@ static func upgrade_points_for_level(level: int) -> int:
 	return maxi(0, level) / UPGRADE_EVERY_LEVELS
 
 # --- Доверие ------------------------------------------------------------------
-## Очки доверия на каждый уровень отношений (1 очко = 1 забег с героиней в отряде).
-const TRUST_STEPS: Array[int] = [1, 2, 2, 2, 3, 3, 3, 4, 4, 4]
-const TRUST_PER_RUN := 1
+## Очки доверия на каждый уровень отношений (за забег с героиней в отряде — TRUST_PER_RUN очков).
+const TRUST_STEPS: Array[int] = [100, 200, 200, 200, 300, 300, 300, 400, 400, 400]
+const TRUST_PER_RUN := 100
+## Во сколько раз выросли очки доверия с 0.60.92 (раньше было 1 очко за забег) — для старых сохранений.
+const TRUST_SCALE := 100
 
 ## Уровень отношений по накопленным очкам.
 static func trust_level(points: int) -> int:

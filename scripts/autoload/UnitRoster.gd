@@ -93,8 +93,9 @@ func boss_defeated(unit_id: String) -> bool:
 	return discovered_boss_ids.has(unit_id)
 
 ## --- Отношения / доверие (у всех героинь, включая ведьмочку и воина) ---
-## Доверие копится очками: +1 за каждый забег с героиней в отряде (CardBalance.TRUST_PER_RUN).
-## Уровень отношений (0..10) считается из очков: 1-2-2-2-3-3-3-4-4-4 (28 забегов до 10).
+## Доверие копится очками: +100 за каждый забег с героиней в отряде (CardBalance.TRUST_PER_RUN).
+## Уровень отношений (0..10) считается из очков: 100-200-200-200-300-300-300-400-400-400
+## (CardBalance.TRUST_STEPS, 28 забегов до 10).
 const RELATIONSHIP_MAX := 10
 ## id героини -> очки доверия.
 var trust_points: Dictionary = {}
@@ -197,6 +198,7 @@ func serialize_state() -> Dictionary:
 		"discovered_boss_ids": discovered_boss_ids.duplicate(),
 		"copies": copies.duplicate(),
 		"trust_points": trust_points.duplicate(),
+		"trust_scale": CardBalance.TRUST_SCALE,
 		"deck_selection": deck_selection.duplicate(true),
 		"card_dupes": card_dupes.duplicate(true),
 		"card_upgrades": card_upgrades.duplicate(true),
@@ -223,8 +225,10 @@ func apply_state(data: Dictionary) -> void:
 		copies[String(k)] = int(cp[k])
 	trust_points.clear()
 	var pts: Dictionary = data.get("trust_points", {})
+	# Сохранения до 0.60.92 считали доверие по 1 очку за забег — переводим в новые очки.
+	var scale := CardBalance.TRUST_SCALE if not data.has("trust_scale") else 1
 	for k in pts.keys():
-		trust_points[String(k)] = maxi(0, int(pts[k]))
+		trust_points[String(k)] = maxi(0, int(pts[k]) * scale)
 	# Старое сохранение: был только уровень отношений — переводим в очки.
 	if not data.has("trust_points"):
 		var rel: Dictionary = data.get("relationship", {})

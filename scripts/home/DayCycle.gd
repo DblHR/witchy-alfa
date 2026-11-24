@@ -130,7 +130,9 @@ static func room_texture(room_dir: String, file: String) -> Texture2D:
 	var p := find(room_dir, file)
 	return load(p) as Texture2D if p != "" else null
 
-## Заменить у всех узлов в root картинки из nighttime / daytime на картинки текущего времени суток.
+## Заменить у всех узлов в root картинки на картинки текущего времени суток: и те, что из nighttime /
+## daytime, и те, что лежат прямо в папке комнаты, если для этого времени суток рядом есть своя
+## (например, alchemy/cauldron.png днём -> alchemy/daytime/cauldron.png, ночью — обратно).
 ## Смотрит все свойства-картинки узла (texture, texture_normal, свои @export картинки скриптов…).
 static func apply_textures(root: Node) -> void:
 	if root == null:
@@ -145,8 +147,8 @@ static func apply_textures(root: Node) -> void:
 			if not (t is Texture2D):
 				continue
 			var path := (t as Texture2D).resource_path
-			if path == "" or not is_phased(path):
-				continue
+			if path == "" or path.begins_with("res://assets/characters/"):
+				continue   ## картинки героинь не зависят от времени суток
 			var p := variant(path)
 			if p != path:
 				n.set(prop["name"], load(p))
