@@ -464,14 +464,13 @@ func _update_love_button(npc_id: String) -> void:
 	_love_button.size = r.size
 	move_child(_love_button, -1)
 
+## Взаимодействия в VN; реплики — assets/npc/<id>/love/interactions.json.
 func _on_love_pressed() -> void:
-	if _love_npc == "" or (DialogueManager_ != null and DialogueManager_.is_showing()):
+	if _love_npc == "" or DialogueManager_ == null or DialogueManager_.is_showing():
 		return
-	var at := _love_button.get_global_rect().get_center() + Vector2(0, -_love_button.size.y * 0.5)
-	var npc := _love_npc
-	var menu := InteractionMenu.open(self, npc, Interactions.KIND_CUTE, at)
-	menu.chosen.connect(func(action_id: String) -> void:
-		InteractionMenu.play_cute(self, npc, action_id, at))
+	var lines := Interactions.menu_lines(_love_npc)
+	if not lines.is_empty():
+		DialogueManager_.show_sequence(lines)
 
 # --- Лавка Сессилии ---------------------------------------------------------
 

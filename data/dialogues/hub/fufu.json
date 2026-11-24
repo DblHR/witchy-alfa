@@ -11,7 +11,7 @@
           "emotion": "",
           "text": "О, приветики! Что-то нужно?",
           "characters": [{"id": "fufu"}],
-          "choices": [{"text": "Обнять", "goto": "hub_fufu_hug"}, {"text": "Уйти"}]
+          "choices": [{"interactions": "cute"}, {"text": "Уйти"}]
         }
       ]
     },
@@ -55,35 +55,7 @@
           "emotion": "",
           "text": "О, приветики! Что-то нужно?",
           "cg": "",
-          "choices": [{"text": "Обнять", "goto": "hub_fufu_hug"}, {"text": "Уйти"}],
-          "characters": [{"id": "fufu"}]
-        }
-      ]
-    },
-    {
-      "id": "hub_fufu_hug",
-      "type": "hub_choice",
-      "lines": [
-        {
-          "speaker": "fufu",
-          "speaker_name": "",
-          "emotion": "shy",
-          "text": "Обнимашки? Конечно, иди сюда~",
-          "characters": [{"id": "fufu"}]
-        },
-        {
-          "speaker": "fufu",
-          "speaker_name": "",
-          "emotion": "",
-          "text": "",
-          "cg": "res://assets/characters/fufu/love/fufu_hug_{hero_id}.png",
-          "characters": [{"id": "fufu"}]
-        },
-        {
-          "speaker": "fufu",
-          "speaker_name": "",
-          "emotion": "",
-          "text": "Упс, кажется, тебе придётся потратить лишнее время на стирку~",
+          "choices": [{"interactions": "cute"}, {"text": "Уйти"}],
           "characters": [{"id": "fufu"}]
         }
       ]

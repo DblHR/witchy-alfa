@@ -290,6 +290,13 @@ func resolve_lines(dialogue: Dictionary) -> Array:
 				for cid in cast:
 					chars.append({"id": cid, "emotion": String(faces.get(cid, ""))})
 				line["characters"] = chars
+			# Выбор {"interactions": "cute"} — действия с персонажем этого диалога (Interactions).
+			if line.get("choices") is Array:
+				var chs: Array = line["choices"]
+				for i in chs.size():
+					if chs[i] is Dictionary and (chs[i] as Dictionary).has("interactions") and not (chs[i] as Dictionary).has("with"):
+						line = line.duplicate(true)
+						line["choices"][i]["with"] = String(dialogue.get("npc", ""))
 			out.append(_resolve_line(line))
 	return out
 

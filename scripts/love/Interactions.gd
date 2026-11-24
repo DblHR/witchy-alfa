@@ -1,11 +1,14 @@
 class_name Interactions
 extends RefCounted
 ## Взаимодействия с персонажами: какие есть, когда открыты, откат «раз в день», сколько дают доверия.
-## Сами действия и тексты сценок — data/interactions/interactions.json.
+## Действия (названия, уровни, доверие) — data/interactions/interactions.json;
+## реплики сценок — в папке love каждого персонажа (см. LOVE_FILES ниже).
 ##
-##  Несексуальные (kind "cute"): обнимашки, погладить, щёки, ручки.
-##    - героини-вайфу (все, кроме главных героев MAIN_HEROES): клик по чибику в доме — меню действий;
-##    - НПС (NpcTrust.NPC_IDS): сердечко рядом с НПС в его комнате.
+##  Несексуальные (kind "cute"): обнимашки, погладить, щёки, ручки — через VN (окно диалога):
+##    - героини-вайфу (все, кроме главных героев MAIN_HEROES): клик по чибику в доме — разговор,
+##      в нём выбор действия (в диалогах — вариант {"interactions": "cute"}; если разговора нет —
+##      menu_lines: приветствие из папки love и выбор);
+##    - НПС (NpcTrust.NPC_IDS): сердечко рядом с НПС в его комнате — то же меню в VN.
 ##    Открываются по уровню доверия (unlock), дают немного доверия, каждое — раз в день.
 ##  Сексуальные (kind "lewd"): поцелуй, тити, минет/дрочка/пайзури, прелюдия, секс.
 ##    - только героини-вайфу, с 5 уровня доверия; меню — кнопка SEX на экране отношений
@@ -39,6 +42,7 @@ static func _ensure() -> void:
 
 static func reload() -> void:
 	_data = {}
+	_love = {}
 	_ensure()
 
 # --- Кто и что -----------------------------------------------------------------------
@@ -108,25 +112,78 @@ static func perform(char_id: String, action_id: String) -> int:
 		UnitRoster_.add_trust(char_id, amount)
 	return amount
 
-# --- Сценки -------------------------------------------------------------------------
+# --- Сценки (VN) -----------------------------------------------------------------------
+## Реплики — в папке love персонажа: assets/characters/<id>/love/interactions.json (героини)
+## или assets/npc/<id>/love/interactions.json (НПС). Ключи: greeting — реплики перед выбором
+## действия, hug / pat / cheeks / hands — сценки действий.
+const LOVE_FILES := ["res://assets/characters/%s/love/interactions.json", "res://assets/npc/%s/love/interactions.json"]
+## Если у персонажа нет файла или в нём нет приветствия.
+const DEFAULT_GREETING := "Что-то нужно?"
 
-## Реплики сценки (уже готовые для DialogueManager_.show_sequence). Пусто — сценки нет.
-static func scene_lines(char_id: String, action_id: String) -> Array:
-	_ensure()
-	var scenes: Dictionary = _data.get("scenes", {})
-	var raw = (scenes.get(char_id, {}) as Dictionary).get(action_id, null)
-	if not (raw is Array):
-		raw = (scenes.get("default", {}) as Dictionary).get(action_id, [])
-	var who := StoryDialogueDB_.get_character_name(char_id) if StoryDialogueDB_ != null else char_id
-	var lines: Array = []
-	for l in raw:
-		if not (l is Dictionary):
-			continue
-		var line: Dictionary = (l as Dictionary).duplicate(true)
-		if String(line.get("speaker", "")) == "{who}":
-			line["speaker"] = char_id
-		line["text"] = String(line.get("text", "")).replace("{who}", who)
-		lines.append(line)
+static var _love: Dictionary = {}
+
+## Путь файла реплик персонажа ("" — нет).
+static func love_file(char_id: String) -> String:
+	for f in LOVE_FILES:
+		var p := String(f) % char_id
+		if FileAccess.file_exists(p):
+			return p
+	return ""
+
+static func _love_data(char_id: String) -> Dictionary:
+	if _love.has(char_id):
+		return _love[char_id]
+	var d: Dictionary = {}
+	var p := love_file(char_id)
+	if p != "":
+		var parsed = JSON.parse_string(FileAccess.get_file_as_string(p))
+		if parsed is Dictionary:
+			d = parsed
+	_love[char_id] = d
+	return d
+
+static func _raw_lines(char_id: String, key: String) -> Array:
+	var raw = _love_data(char_id).get(key, [])
+	return raw if raw is Array else []
+
+static func _resolve(char_id: String, key: String, lines: Array) -> Array:
 	if lines.is_empty() or StoryDialogueDB_ == null:
 		return []
-	return StoryDialogueDB_.resolve_lines({"id": "interaction_%s_%s" % [char_id, action_id], "lines": lines})
+	return StoryDialogueDB_.resolve_lines({"id": "interaction_%s_%s" % [char_id, key], "npc": char_id, "lines": lines})
+
+## Реплики сценки действия (готовые для DialogueManager_.show_sequence). Нет своих — одна строка-ремарка.
+static func scene_lines(char_id: String, action_id: String) -> Array:
+	var lines: Array = []
+	for l in _raw_lines(char_id, action_id):
+		if l is Dictionary:
+			lines.append((l as Dictionary).duplicate(true))
+	if lines.is_empty():
+		lines.append({"speaker": "hero", "text": "*%s*" % title(action_id)})
+	return _resolve(char_id, action_id, lines)
+
+## VN-меню взаимодействий: приветствие персонажа, а в последней реплике — выбор действий и «Уйти».
+static func menu_lines(char_id: String) -> Array:
+	var lines: Array = []
+	for l in _raw_lines(char_id, "greeting"):
+		if l is Dictionary:
+			lines.append((l as Dictionary).duplicate(true))
+	if lines.is_empty():
+		lines.append({"speaker": char_id, "text": DEFAULT_GREETING})
+	lines[lines.size() - 1]["choices"] = [{"interactions": KIND_CUTE, "with": char_id}, {"text": "Уйти"}]
+	return _resolve(char_id, "greeting", lines)
+
+## Строки выбора в VN вместо {"interactions": "cute", "with": id}: по одной на действие.
+## {text, interaction, with, disabled}. Закрытые — «(с N ур.)», сделанные сегодня — «(завтра)».
+static func choice_entries(char_id: String, kind: String = KIND_CUTE) -> Array:
+	var out: Array = []
+	for a in actions(kind):
+		var id := String(a["id"])
+		var st := state(char_id, id)
+		var text := "%s   +%d ♥" % [String(a.get("title", id)), int(a.get("trust", 0))]
+		match st:
+			State.LOCKED:
+				text = "%s   (с %d ур.)" % [String(a.get("title", id)), int(a.get("unlock", 0))]
+			State.USED_TODAY:
+				text = "%s   (завтра)" % String(a.get("title", id))
+		out.append({"text": text, "interaction": id, "with": char_id, "disabled": st != State.OK})
+	return out

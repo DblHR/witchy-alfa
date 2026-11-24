@@ -45,6 +45,9 @@ const BOX_BORDER := Color(1.0, 0.80, 0.90, 0.55)
 const BTN_BG := Color(0.14, 0.07, 0.19, 0.9)
 const BTN_HOVER := Color(0.42, 0.20, 0.46, 1.0)
 const BTN_ON := Color(0.80, 0.30, 0.56, 1.0)
+const BTN_DISABLED := Color(0.14, 0.07, 0.19, 0.45)
+## Ширина кнопок выбора взаимодействий (обнимашки и т.п.).
+const INTERACTION_CHOICE_W := 540.0
 
 @onready var blur_rect: ColorRect = %BlurRect
 
@@ -78,6 +81,8 @@ var _ui_hidden := false
 var _time := 0.0
 ## Выбор вариантов: у реплики поле "choices": [{"text": "Обнять", "goto": "id диалога"}, {"text": "Уйти"}].
 ## goto — какой диалог играть дальше (пусто — разговор закончен); on_choose — эффекты, как on_finish.
+## {"interactions": "cute"} — на его месте варианты действий с персонажем диалога (обнимашки и т.п.,
+## Interactions): закрытые и сделанные сегодня — серые; выбрали — доверие и сценка из папки love персонажа.
 ## CG: "cg": "res://...png" — с этой реплики показывается картинка во весь экран (поверх персонажей);
 ## "cg": "" — убрать. Реплика с CG и пустым текстом — только картинка, без окна (клик — дальше).
 var _cg: TextureRect
@@ -578,20 +583,30 @@ func _on_line_shown() -> void:
 
 func _show_choices(choices: Array) -> void:
 	_clear_choices()
-	_choices = choices.duplicate()
+	_choices = []
+	for c in choices:
+		if c is Dictionary and (c as Dictionary).has("interactions"):
+			_choices.append_array(_interactions().choice_entries(String(c.get("with", "")), String(c.get("interactions", "cute"))))
+		else:
+			_choices.append(c)
 	if _choice_box == null:
 		_choice_box = VBoxContainer.new()
 		_choice_box.position = CHOICES_POS
 		_choice_box.add_theme_constant_override("separation", 14)
 		_ui.add_child(_choice_box)
 	_choice_box.visible = true
+	# Много вариантов — столбик выше, чтобы не налезал на окно текста.
+	_choice_box.position = CHOICES_POS - Vector2(0, maxi(0, _choices.size() - 4) * (CHOICE_SIZE.y + 14.0))
 	_arrow.visible = false
 	for i in range(_choices.size()):
 		var c = _choices[i]
 		var b := _make_button(String(c.get("text", "…")) if c is Dictionary else String(c))
-		b.custom_minimum_size = CHOICE_SIZE
-		b.size = CHOICE_SIZE
-		b.pivot_offset = CHOICE_SIZE * 0.5
+		var csize := CHOICE_SIZE
+		if c is Dictionary and (c as Dictionary).has("interaction"):
+			csize.x = maxf(csize.x, INTERACTION_CHOICE_W)   ## «Погладить по голове   (с 1 ур.)» — длиннее
+		b.custom_minimum_size = csize
+		b.size = csize
+		b.pivot_offset = csize * 0.5
 		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
 		b.add_theme_font_size_override("font_size", 28)
 		b.add_theme_constant_override("h_separation", 0)
@@ -601,6 +616,12 @@ func _show_choices(choices: Array) -> void:
 		var sh := _button_style(BTN_HOVER)
 		sh.content_margin_left = 30
 		b.add_theme_stylebox_override("hover", sh)
+		if c is Dictionary and bool(c.get("disabled", false)):
+			b.disabled = true
+			var sd := _button_style(BTN_DISABLED)
+			sd.content_margin_left = 30
+			b.add_theme_stylebox_override("disabled", sd)
+			b.add_theme_color_override("font_disabled_color", Color(1, 1, 1, 0.45))
 		var choice_index := i
 		b.pressed.connect(func() -> void: _on_choice(choice_index))
 		_choice_box.add_child(b)
@@ -658,6 +679,9 @@ func _on_choice(i: int) -> void:
 	var goto := String(c.get("goto", "")) if c is Dictionary else ""
 	if c is Dictionary and StoryDialogueDB_ != null:
 		StoryDialogueDB_.apply_effects(c.get("on_choose", {}))
+	if c is Dictionary and (c as Dictionary).has("interaction"):
+		_play_interaction(String(c.get("with", "")), String(c["interaction"]))
+		return
 	if goto == "" or StoryDialogueDB_ == null:
 		_finish_sequence()
 		return
@@ -673,6 +697,37 @@ func _on_choice(i: int) -> void:
 	var branch := StoryDialogueDB_.resolve_lines(d)
 	_lines = _lines.slice(0, _index + 1) + branch
 	_show_next_line()
+
+## Выбрали действие (обнимашки и т.п.): доверие + «раз в день», затем сценка из папки love персонажа.
+func _play_interaction(who: String, action_id: String) -> void:
+	var gained: int = _interactions().perform(who, action_id)
+	if gained < 0:
+		_finish_sequence()
+		return
+	_toast("+%d ♥ доверие" % gained)
+	_lines = _lines.slice(0, _index + 1) + _interactions().scene_lines(who, action_id)
+	_show_next_line()
+
+## Interactions — через load: окну диалога (живёт в автозагрузке) не нужна прямая ссылка на класс.
+func _interactions() -> GDScript:
+	return load("res://scripts/love/Interactions.gd") as GDScript
+
+## Короткая надпись над окном диалога (поднимается и тает).
+func _toast(text: String) -> void:
+	var l := Label.new()
+	l.text = text
+	l.add_theme_font_size_override("font_size", 38)
+	l.add_theme_color_override("font_color", Color(1.0, 0.55, 0.8))
+	l.add_theme_color_override("font_outline_color", Color(0.3, 0.05, 0.25))
+	l.add_theme_constant_override("outline_size", 8)
+	l.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_ui.add_child(l)
+	l.reset_size()
+	l.position = Vector2(960.0 - l.size.x * 0.5, 690.0)
+	var t := l.create_tween().set_parallel(true)
+	t.tween_property(l, "position:y", 600.0, 1.6).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	t.tween_property(l, "modulate:a", 0.0, 0.6).set_delay(1.1)
+	t.chain().tween_callback(l.queue_free)
 
 func _process(delta: float) -> void:
 	if not visible:

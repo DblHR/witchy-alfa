@@ -612,13 +612,13 @@ const CLICK_SPRITE_PATH := "res://assets/characters/%s/%s_click.png"
 ## Клик по персонажу: с кем есть разговор — разговор (пока только Фуфу), остальные подпрыгивают
 ## (на кровати — нет) и на время прыжка показывают картинку <id>_click (нет её — ведьмочка «фаза 2»).
 func _click(w: HomeWalker) -> void:
-	# Героини (кроме главных героев) — меню взаимодействий (Interactions): обнимашки и т.п.,
-	# сверху «Поговорить», если есть разговор.
-	if Interactions.supports(w.unit_id, Interactions.KIND_CUTE):
-		_open_interactions(w)
-		return
+	# Героини (кроме главных героев): разговор, если есть, — в нём выбор взаимодействий
+	# ({"interactions": "cute"}); если разговора нет — VN-меню взаимодействий (Interactions.menu_lines).
 	if _can_talk(w.unit_id):
 		talk_to(w.unit_id)
+		return
+	if Interactions.supports(w.unit_id, Interactions.KIND_CUTE):
+		_open_interactions(w)
 		return
 	if w.on_bed():
 		return
@@ -631,25 +631,17 @@ func _click(w: HomeWalker) -> void:
 	else:
 		w.poke()
 
-## Меню несексуальных взаимодействий над героиней. Выбрали — короткая сценка и «+N ♥».
+## VN-меню взаимодействий с героиней: её приветствие (папка love) и выбор действия.
 func _open_interactions(w: HomeWalker) -> void:
-	var id := w.unit_id
-	var extra: Array = []
-	if _can_talk(id):
-		extra.append({"title": "Поговорить", "badge": true, "callback": func() -> void: talk_to(id)})
-	if not w.on_bed():
-		w.poke()
+	var lines := Interactions.menu_lines(w.unit_id)
+	if lines.is_empty():
+		return
+	_talking = w.unit_id
 	w.set_hover(false)
+	w.set_frozen(true)
 	_hovered = null
-	var at := w.head_anchor().global_position
-	var menu := InteractionMenu.open(self, id, Interactions.KIND_CUTE, at, extra)
-	menu.chosen.connect(func(action_id: String) -> void:
-		_talking = id
-		w.set_frozen(true)
-		InteractionMenu.play_cute(self, id, action_id, w.head_anchor().global_position, func() -> void:
-			if is_instance_valid(w):
-				w.set_frozen(false)
-			_talking = ""))
+	Input.set_default_cursor_shape(Input.CURSOR_ARROW)
+	DialogueManager_.show_sequence(lines, Callable(self, "_on_talk_finished").bind({}))
 
 func _can_talk(id: String) -> bool:
 	return StoryDialogueDB_ != null and not StoryDialogueDB_.pick_npc_dialogue(id, HUB_TALK_TYPE).is_empty()
@@ -675,7 +667,7 @@ func _on_talk_finished(dialogue: Dictionary) -> void:
 	if w != null and is_instance_valid(w):
 		w.set_frozen(false)
 	_talking = ""
-	if StoryState_ != null:
+	if StoryState_ != null and String(dialogue.get("id", "")) != "":
 		StoryState_.mark_dialogue_seen(String(dialogue.get("id", "")))
 	if StoryDialogueDB_ != null:
 		StoryDialogueDB_.apply_effects(dialogue.get("on_finish", {}))

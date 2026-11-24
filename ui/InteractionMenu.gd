@@ -1,14 +1,11 @@
 extends Control
 class_name InteractionMenu
-## Всплывающее меню взаимодействий с персонажем (Interactions):
-##   - клик по чибику героини в доме (несексуальные + «Поговорить», если есть разговор);
-##   - сердечко рядом с НПС в его комнате (несексуальные);
-##   - кнопка SEX на экране отношений (сексуальные).
+## Всплывающее меню сексуальных взаимодействий (Interactions, kind "lewd") — кнопка SEX на экране
+## отношений. (Несексуальные — в окне диалога, VN: см. Interactions.menu_lines / DialogueOverlay.)
 ## Открывается возле точки anchor; клик мимо или Esc — закрыть.
 ## Строка действия: «Обнимашки  +5♥»; закрытое — «с 2 ур.», сделанное сегодня — «завтра».
 ##
-## open(...) возвращает меню; выбор — сигнал chosen(action_id) (для «Поговорить» и других
-## доп. пунктов — их собственный callback). play_cute(...) — сыграть короткую сценку и дать доверие.
+## open(...) возвращает меню; выбор — сигнал chosen(action_id) (у доп. пунктов — их callback).
 
 signal chosen(action_id: String)
 signal closed
@@ -143,27 +140,6 @@ func _row(text: String, right: String, enabled: bool) -> Button:
 	b.add_theme_color_override("font_pressed_color", Color.WHITE)
 	b.add_theme_color_override("font_disabled_color", Color(1, 1, 1, 0.8))
 	return b
-
-# --- Короткая сценка (несексуальные) ---------------------------------------------------
-
-## Засчитать действие (доверие, откат) и показать сценку; в конце — «+N ♥» над точкой float_at.
-## on_done — после сценки.
-static func play_cute(host: Node, p_char_id: String, action_id: String, float_at: Vector2, on_done: Callable = Callable()) -> void:
-	var gained := Interactions.perform(p_char_id, action_id)
-	if gained < 0:
-		if on_done.is_valid():
-			on_done.call()
-		return
-	var finish := func() -> void:
-		if is_instance_valid(host):
-			float_text(host, float_at, "+%d ♥ доверие" % gained)
-		if on_done.is_valid():
-			on_done.call()
-	var lines := Interactions.scene_lines(p_char_id, action_id)
-	if lines.is_empty() or DialogueManager_ == null:
-		finish.call()
-		return
-	DialogueManager_.show_sequence(lines, finish)
 
 ## Всплывающая надпись (поднимается и тает).
 static func float_text(host: Node, at: Vector2, text: String) -> void:

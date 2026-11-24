@@ -54,14 +54,14 @@ func _ready() -> void:
 		love.pressed.connect(_on_love_pressed.bind(love))
 	call_deferred("_show_rikka_greeting")
 
-## Сердечко рядом с Риккой: несексуальные взаимодействия (Interactions) — доверие Рикки.
-func _on_love_pressed(btn: Control) -> void:
-	if DialogueManager_ != null and DialogueManager_.is_showing():
+## Сердечко рядом с Риккой: несексуальные взаимодействия (Interactions) в VN — доверие Рикки.
+## Реплики — assets/npc/rikka/love/interactions.json.
+func _on_love_pressed(_btn: Control) -> void:
+	if DialogueManager_ == null or DialogueManager_.is_showing():
 		return
-	var at := btn.get_global_rect().get_center() + Vector2(0, -btn.size.y * 0.5)
-	var menu := InteractionMenu.open(self, "rikka", Interactions.KIND_CUTE, at)
-	menu.chosen.connect(func(action_id: String) -> void:
-		InteractionMenu.play_cute(self, "rikka", action_id, at))
+	var lines := Interactions.menu_lines("rikka")
+	if not lines.is_empty():
+		DialogueManager_.show_sequence(lines)
 
 func _exit_tree() -> void:
 	if DungRun != null and DungRun.changed.is_connected(_refresh):
