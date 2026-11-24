@@ -426,6 +426,7 @@ func _rebuild() -> void:
 	_chest_pic.visible = false
 	_npc.texture = null
 	ShopUi.set_npc(_npc_sprite, "sessilia" if event_id == "shop" else ("noctris" if event_id == "noctris" else ""))
+	_update_love_button(_event_npc_id() if event_id in ["shop", "noctris"] else "")
 	_continue.text = "ИДТИ ДАЛЬШЕ"
 	_continue.visible = true
 	_continue.disabled = _image_open
@@ -434,6 +435,43 @@ func _rebuild() -> void:
 		"noctris": _build_noctris()
 		"chest": _build_chest()
 		"statue": _build_statue()
+
+# --- Сердечко рядом с НПС: несексуальные взаимодействия (доверие НПС) ---------
+## Где сердечко у каждого НПС (координаты экрана).
+const LOVE_BUTTON_RECTS := {
+	"sessilia": Rect2(1680, 330, 120, 120),
+	"noctris": Rect2(1680, 330, 120, 120),
+}
+const LOVE_BUTTON_TEXTURE := "res://assets/ui/buttons/loveButton.png"
+var _love_button: TextureButton
+var _love_npc := ""
+
+func _update_love_button(npc_id: String) -> void:
+	_love_npc = NpcTrust.normalize(npc_id)
+	if _love_button == null:
+		_love_button = TextureButton.new()
+		_love_button.name = "LoveButton"
+		_love_button.texture_normal = load(LOVE_BUTTON_TEXTURE) as Texture2D
+		_love_button.ignore_texture_size = true
+		_love_button.stretch_mode = TextureButton.STRETCH_KEEP_ASPECT_CENTERED
+		_love_button.focus_mode = Control.FOCUS_NONE
+		_love_button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+		_love_button.pressed.connect(_on_love_pressed)
+		add_child(_love_button)
+	var r: Rect2 = LOVE_BUTTON_RECTS.get(_love_npc, Rect2())
+	_love_button.visible = r.has_area() and _npc_sprite != null and _npc_sprite.visible
+	_love_button.position = r.position
+	_love_button.size = r.size
+	move_child(_love_button, -1)
+
+func _on_love_pressed() -> void:
+	if _love_npc == "" or (DialogueManager_ != null and DialogueManager_.is_showing()):
+		return
+	var at := _love_button.get_global_rect().get_center() + Vector2(0, -_love_button.size.y * 0.5)
+	var npc := _love_npc
+	var menu := InteractionMenu.open(self, npc, Interactions.KIND_CUTE, at)
+	menu.chosen.connect(func(action_id: String) -> void:
+		InteractionMenu.play_cute(self, npc, action_id, at))
 
 # --- Лавка Сессилии ---------------------------------------------------------
 
@@ -476,6 +514,7 @@ func _on_noctris_card() -> void:
 	if not bool(battle.call("run_spend_gold", NOCTRIS_CARD_PRICE)):
 		_say("Не хватает золота.")
 		return
+	NpcTrust.add_gold("noctris", NOCTRIS_CARD_PRICE)   ## доверие Ноктрис за услуги
 	battle.call("run_add_card", NOCTRIS_CARD_ID)
 	room["used"] = true
 	_rebuild()
@@ -500,6 +539,7 @@ func _on_noctris_target(hero_id: String, hero_name: String, revive: bool) -> voi
 	if not bool(battle.call("run_spend_gold", NOCTRIS_REVIVE_PRICE if revive else NOCTRIS_HEAL_PRICE)):
 		_say("Не хватает золота.")
 		return
+	NpcTrust.add_gold("noctris", NOCTRIS_REVIVE_PRICE if revive else NOCTRIS_HEAL_PRICE)
 	if revive:
 		battle.call("run_revive_hero", hero_id, NOCTRIS_REVIVE_PERCENT)
 	else:

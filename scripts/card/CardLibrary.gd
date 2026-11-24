@@ -18,6 +18,13 @@ const COLOR_NOCTRIS := Color(0.36, 0.62, 0.72, 1.0)
 
 const COLOR_FILLER := Color(0.45, 0.45, 0.50, 1.0)
 
+## Карты НПС за максимальное доверие (NpcTrust.NPC_CARDS): id карты -> [ресурс, цвет, подпись].
+const NPC_CARD_DEFS := {
+	"rikka_gold": ["res://resources/cards/npc/rikka_gold.tres", Color(0.86, 0.62, 0.3, 1.0), "Рикка"],
+	"noctris_call": ["res://resources/cards/npc/noctris_call.tres", Color(0.36, 0.62, 0.72, 1.0), "Ноктрис"],
+	"sessilia_potion": ["res://resources/cards/npc/sessilia_potion.tres", Color(0.55, 0.42, 0.78, 1.0), "Сессилия"],
+}
+
 ## --- Ключи карт: дубль карты — отдельная карта с ключом "<id>#2" ---
 const DUPE_SUFFIX := "#2"
 
@@ -163,6 +170,10 @@ static func _build_index() -> void:
 	_index.clear()
 	for d in [FILLER_STRIKE, FILLER_SHIELD, NOCTRIS_HEAL]:
 		_index[d.id] = [d, ""]
+	for npc_card_id in NPC_CARD_DEFS:
+		var nd := load(String(NPC_CARD_DEFS[npc_card_id][0])) as CardDef
+		if nd != null:
+			_index[nd.id] = [nd, ""]
 	if CharDB == null:
 		return
 	for data in CharDB.by_id.values():
@@ -193,6 +204,9 @@ static func card_by_id(card_id: String, owner: Unit = null) -> CardInstance:
 		return null
 	if d == NOCTRIS_HEAL:
 		return CardInstance.from_def(d, null, COLOR_NOCTRIS, "Ноктрис")
+	if NPC_CARD_DEFS.has(card_id):
+		var info: Array = NPC_CARD_DEFS[card_id]
+		return CardInstance.from_def(d, null, info[1], String(info[2]))
 	if owner_of(card_id) == "":
 		return CardInstance.from_def(d, null, COLOR_FILLER, "Общая")
 	if owner == null:

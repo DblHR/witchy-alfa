@@ -1,0 +1,55 @@
+{
+  "_readme": [
+    "Взаимодействия с персонажами. Логика — scripts/love/Interactions.gd, доверие НПС — scripts/love/NpcTrust.gd.",
+    "actions: id -> {title, kind, unlock, trust, order}.",
+    "  kind: cute — несексуальные (клик по чибику в доме; у НПС — сердечко в его комнате), с героинями-вайфу и НПС;",
+    "        lewd — сексуальные (меню по кнопке SEX на экране отношений героини), только героини-вайфу.",
+    "  unlock — с какого уровня доверия открыто; trust — сколько доверия даёт; каждое действие — 1 раз в день (DayCycle).",
+    "scenes: короткие сценки несексуальных действий: scenes.<id персонажа>.<id действия> — список реплик",
+    "  (как в диалогах: speaker, text, emotion, cg). Нет своей у персонажа — берётся scenes.default.",
+    "  В тексте {who} — имя персонажа, speaker \"{who}\" — говорит сам персонаж, \"hero\" — главный герой.",
+    "Сексуальные сцены пока не сделаны: действие засчитывается (доверие и откат), а сама сцена — заглушка на экране отношений."
+  ],
+  "actions": {
+    "hug":     {"title": "Обнимашки",           "kind": "cute", "unlock": 0, "trust": 5,  "order": 1},
+    "pat":     {"title": "Погладить по голове", "kind": "cute", "unlock": 1, "trust": 10, "order": 2},
+    "cheeks":  {"title": "Потрогать за щёки",   "kind": "cute", "unlock": 2, "trust": 15, "order": 3},
+    "hands":   {"title": "Держаться за ручки",  "kind": "cute", "unlock": 3, "trust": 25, "order": 4},
+
+    "kiss":    {"title": "Поцелуй",                 "kind": "lewd", "unlock": 5, "trust": 40,  "order": 1},
+    "breasts": {"title": "Потрогать тити",          "kind": "lewd", "unlock": 5, "trust": 50,  "order": 2},
+    "oral":    {"title": "Минет / Дрочка / Пайзури", "kind": "lewd", "unlock": 5, "trust": 60,  "order": 3},
+    "foreplay":{"title": "Прелюдия",                "kind": "lewd", "unlock": 5, "trust": 70,  "order": 4},
+    "sex":     {"title": "Секс",                    "kind": "lewd", "unlock": 5, "trust": 100, "order": 5}
+  },
+  "scenes": {
+    "default": {
+      "pat": [
+        {"speaker": "hero", "text": "Иди-ка сюда… *гладит {who} по голове*"},
+        {"speaker": "{who}", "text": "Мм… ещё чуть-чуть. Вот так."}
+      ],
+      "hug": [
+        {"speaker": "hero", "text": "Обнимашки!"},
+        {"speaker": "{who}", "text": "Ох… тепло. Не отпускай пока."}
+      ],
+      "cheeks": [
+        {"speaker": "hero", "text": "*тянет {who} за щёки*"},
+        {"speaker": "{who}", "text": "Эй! Ну что ты делаешь… Ладно, можно."}
+      ],
+      "hands": [
+        {"speaker": "hero", "text": "Дай руку. Просто посидим так."},
+        {"speaker": "{who}", "text": "…Хорошо. Мне нравится."}
+      ]
+    },
+    "fufu": {
+      "pat": [
+        {"speaker": "hero", "text": "*гладит Фуфу по голове — ладонь чуть утопает в слизи*"},
+        {"speaker": "fufu", "text": "Мур… Ты же знаешь, что теперь рука липкая?~"}
+      ],
+      "hug": [
+        {"speaker": "hero", "text": "Иди обниму."},
+        {"speaker": "fufu", "text": "Осторожно, милашка, а то затяну внутрь~"}
+      ]
+    }
+  }
+}

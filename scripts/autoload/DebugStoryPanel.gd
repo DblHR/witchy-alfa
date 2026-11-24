@@ -57,6 +57,9 @@ func _build_ui() -> void:
 	_add_button(box, "Reset quest: find_warrior", _reset_find_warrior)
 	_add_button(box, "Set party level to 3", _set_party_level_3)
 	_add_button(box, "Day / night: next (DayCycle)", _next_day_phase)
+	_add_button(box, "NPC trust +100: Rikka", _npc_trust.bind("rikka"))
+	_add_button(box, "NPC trust +100: Noctris", _npc_trust.bind("noctris"))
+	_add_button(box, "NPC trust +100: Sessilia", _npc_trust.bind("sessilia"))
 	_add_button(box, "Refresh status", _refresh_status)
 	_add_button(box, "Close", _toggle)
 
@@ -78,6 +81,11 @@ func _add_button(parent: Node, text: String, callback: Callable) -> void:
 	b.custom_minimum_size = Vector2(520, 38)
 	b.pressed.connect(callback)
 	parent.add_child(b)
+
+func _npc_trust(npc_id: String) -> void:
+	NpcTrust.add(npc_id, 100)
+	print("[NpcTrust] ", npc_id, ": ", NpcTrust.points(npc_id), " очков, уровень ", NpcTrust.level(npc_id))
+	_refresh_status()
 
 func _refresh_status() -> void:
 	var sessilia_status := ""

@@ -22,6 +22,8 @@ var pending_next_index: int = -1
 
 # session meta
 var gold: int = 0
+## Золото, заработанное в текущем забеге (для карты Рикки; обнуляется в начале забега и картой).
+var run_gold_earned: int = 0
 var xp: int = 0
 
 var custom_potion_charges: int = 0
@@ -344,6 +346,7 @@ func buy_ground_shop_item(slot_idx: int) -> String:
 	if RunItems.is_home_upgrade(item_id):
 		RunItems.apply_home_upgrade(item_id)
 		ground_shop_item_ids[slot_idx] = ""
+		_npc_gold("rikka", price)   ## доверие Рикки за покупки
 		emit_changed()
 		return item_id
 	if RunItems.is_unique_item(item_id) and Inventory_ != null and Inventory_.has_item(item_id):
@@ -353,6 +356,7 @@ func buy_ground_shop_item(slot_idx: int) -> String:
 		gain_gold(price)
 		return ""
 	ground_shop_item_ids[slot_idx] = ""
+	_npc_gold("rikka", price)
 	emit_changed()
 	return item_id
 
@@ -374,10 +378,15 @@ func ground_shop_rerolled_today() -> bool:
 	return StoryState_ != null and StoryState_.has_flag(RIKKA_REROLL_FLAG)
 
 ## true — товар обновлён (золото списано).
+## Доверие НПС за потраченное золото (NpcTrust; через load — автозагрузке не нужна прямая ссылка).
+func _npc_gold(npc_id: String, amount: int) -> void:
+	load("res://scripts/love/NpcTrust.gd").add_gold(npc_id, amount)
+
 func reroll_ground_shop() -> bool:
 	if not can_reroll_ground_shop():
 		return false
 	gold -= RIKKA_REROLL_PRICE
+	_npc_gold("rikka", RIKKA_REROLL_PRICE)
 	if StoryState_ != null:
 		StoryState_.set_flag(RIKKA_REROLL_FLAG, true)
 	refresh_ground_shop(true)

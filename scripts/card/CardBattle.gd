@@ -187,6 +187,7 @@ func _ready() -> void:
 	_combat.discard_requested.connect(_on_discard_requested)
 	_combat.status_added.connect(_on_status_added)
 	_combat.lure_kill.connect(_on_lure_kill)
+	_combat.npc_card_played.connect(_on_npc_card)
 	_combat.healed.connect(_on_unit_healed)
 	_combat.shielded.connect(_on_unit_shielded)
 
@@ -212,6 +213,7 @@ func _ready() -> void:
 	_combat.relics = _relics
 	_combat.stats = _stats
 	_stats.gold_start = DungRun.gold
+	DungRun.run_gold_earned = 0
 	_potions.assign(DungRun.selected_potion_ids)
 	_ui_layer = hud.get_parent()
 	_build_run_hud()
@@ -573,6 +575,11 @@ func _build_battle_deck() -> Array[CardInstance]:
 		var bonus := CardLibrary.card_by_id(card_id, owner)
 		if bonus != null:
 			cards.append(bonus)
+	# Карты НПС за максимальное доверие (NpcTrust) — в каждом бою.
+	for npc_card_id in NpcTrust.owned_cards():
+		var npc_card := CardLibrary.card_by_id(npc_card_id)
+		if npc_card != null:
+			cards.append(npc_card)
 	# Приманка: одна на забег, пока не разыграна (потом сгорает до конца забега).
 	if DungRun.take_lure and Inventory_.has_item(DungRun.LURE_ITEM):
 		cards.append(CardLibrary.lure_card())
@@ -1136,6 +1143,7 @@ func _on_enemy_killed(enemy: Unit) -> void:
 	_stats.on_enemy_killed(enemy.enemy_def.id if enemy.enemy_def != null else enemy.data.id)
 	var xp_gain := CardBalance.xp_for_kill(rank, _run.floor_no)
 	DungRun.gain_gold(gold_gain)
+	DungRun.run_gold_earned += gold_gain
 	_run.xp_gained += xp_gain
 	_room_loot["gold"] = int(_room_loot.get("gold", 0)) + gold_gain
 	_room_loot["xp"] = int(_room_loot.get("xp", 0)) + xp_gain
@@ -1905,6 +1913,10 @@ func _on_buff_pressed(key: String) -> void:
 		refresh_run_hud()
 		return
 	_potions[slot] = ""
+	_apply_potion(pid)
+
+## Действие зелья (из слота или от карты Сессилии).
+func _apply_potion(pid: String) -> void:
 	_float_stack.clear()
 	match pid:
 		"heal_potion":
@@ -1920,6 +1932,20 @@ func _on_buff_pressed(key: String) -> void:
 		"battle_potion":
 			_relics.rage_active = true
 	_refresh_all_actors()
+	refresh_run_hud()
+
+## Карта НПС разыграна (CardCombat.npc_card_played).
+const NPC_CARD_POTIONS := ["heal_potion", "energy_potion", "battle_potion"]
+func _on_npc_card(kind: String) -> void:
+	match kind:
+		"noctris":
+			_run.extra_nurse_next = true
+		"sessilia":
+			var pid: String = NPC_CARD_POTIONS[_run.rng.randi_range(0, NPC_CARD_POTIONS.size() - 1)]
+			_apply_potion(pid)
+			var front := _combat.front_hero()
+			if front != null:
+				_combat.floated.emit(front, RunItems.get_potion_name(pid), Color(0.75, 0.6, 1.0), 30)
 	refresh_run_hud()
 
 func _setup_banter() -> void:
@@ -2103,6 +2129,7 @@ func run_gold() -> int:
 
 func run_gain_gold(amount: int) -> void:
 	DungRun.gain_gold(amount)
+	DungRun.run_gold_earned += maxi(0, amount)
 	refresh_run_hud()
 
 func run_spend_gold(amount: int) -> bool:
@@ -2200,6 +2227,7 @@ func run_buy_offer(offer: Dictionary) -> bool:
 		return false
 	Inventory_.add_item(String(offer["id"]), int(offer.get("count", 1)))
 	offer["sold"] = true
+	NpcTrust.add_gold("sessilia", int(offer.get("price", 0)))   ## доверие Сессилии за покупки
 	return true
 
 ## Сундук: золото всегда; кварц, лут с мобов этажа, семена и (редко) неоткрытый рецепт еды —

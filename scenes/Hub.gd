@@ -200,8 +200,9 @@ var _door_hot := ""                ## значок под курсором
 var _door_tween: Tween
 
 func _build_door_hint() -> void:
-	var total := DOOR_ICON_SIZE.x * DOOR_ICONS.size() + DOOR_ICON_GAP * (DOOR_ICONS.size() - 1)
-	var x := DOOR_RECT.get_center().x - total * 0.5
+	# Значки — столбиком по центру проёма, сверху вниз в порядке DOOR_ICONS.
+	var x := DOOR_RECT.get_center().x - DOOR_ICON_SIZE.x * 0.5
+	var row := 0
 	for d in DOOR_ICONS:
 		var icon := TextureRect.new()
 		icon.name = "Door_" + String(d[0])
@@ -211,16 +212,17 @@ func _build_door_hint() -> void:
 		icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		icon.size = DOOR_ICON_SIZE
 		icon.pivot_offset = DOOR_ICON_SIZE * 0.5
-		icon.position = Vector2(x, _door_icon_y(false))
+		icon.set_meta("row", row)
+		icon.position = Vector2(x, _door_icon_y(false, row))
 		icon.modulate.a = 0.0
 		icon.visible = false
 		add_child(icon)
 		move_child(icon, foreground.get_index() + 1)
 		_door_icons[String(d[0])] = icon
-		x += DOOR_ICON_SIZE.x + DOOR_ICON_GAP
+		row += 1
 
-func _door_icon_y(shown: bool) -> float:
-	return DOOR_RECT.position.y + (40.0 if shown else 60.0)
+func _door_icon_y(shown: bool, row: int = 0) -> float:
+	return DOOR_RECT.position.y + (40.0 if shown else 60.0) + row * (DOOR_ICON_SIZE.y + DOOR_ICON_GAP)
 
 ## Курсор на проёме (значки показываются).
 func _door_at(p: Vector2) -> bool:
@@ -246,7 +248,7 @@ func _set_door_hover(on: bool) -> void:
 			if on:
 				icon.visible = true
 			_door_tween.tween_property(icon, "modulate:a", 1.0 if on else 0.0, 0.15)
-			_door_tween.tween_property(icon, "position:y", _door_icon_y(on), 0.15)
+			_door_tween.tween_property(icon, "position:y", _door_icon_y(on, int(icon.get_meta("row", 0))), 0.15)
 		if not on:
 			_door_tween.chain().tween_callback(func() -> void:
 				for icon: TextureRect in _door_icons.values():
@@ -610,6 +612,11 @@ const CLICK_SPRITE_PATH := "res://assets/characters/%s/%s_click.png"
 ## Клик по персонажу: с кем есть разговор — разговор (пока только Фуфу), остальные подпрыгивают
 ## (на кровати — нет) и на время прыжка показывают картинку <id>_click (нет её — ведьмочка «фаза 2»).
 func _click(w: HomeWalker) -> void:
+	# Героини (кроме главных героев) — меню взаимодействий (Interactions): обнимашки и т.п.,
+	# сверху «Поговорить», если есть разговор.
+	if Interactions.supports(w.unit_id, Interactions.KIND_CUTE):
+		_open_interactions(w)
+		return
 	if _can_talk(w.unit_id):
 		talk_to(w.unit_id)
 		return
@@ -623,6 +630,26 @@ func _click(w: HomeWalker) -> void:
 		w.poke(alt if alt != w.base_tex else null)
 	else:
 		w.poke()
+
+## Меню несексуальных взаимодействий над героиней. Выбрали — короткая сценка и «+N ♥».
+func _open_interactions(w: HomeWalker) -> void:
+	var id := w.unit_id
+	var extra: Array = []
+	if _can_talk(id):
+		extra.append({"title": "Поговорить", "badge": true, "callback": func() -> void: talk_to(id)})
+	if not w.on_bed():
+		w.poke()
+	w.set_hover(false)
+	_hovered = null
+	var at := w.head_anchor().global_position
+	var menu := InteractionMenu.open(self, id, Interactions.KIND_CUTE, at, extra)
+	menu.chosen.connect(func(action_id: String) -> void:
+		_talking = id
+		w.set_frozen(true)
+		InteractionMenu.play_cute(self, id, action_id, w.head_anchor().global_position, func() -> void:
+			if is_instance_valid(w):
+				w.set_frozen(false)
+			_talking = ""))
 
 func _can_talk(id: String) -> bool:
 	return StoryDialogueDB_ != null and not StoryDialogueDB_.pick_npc_dialogue(id, HUB_TALK_TYPE).is_empty()

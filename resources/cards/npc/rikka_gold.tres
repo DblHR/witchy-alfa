@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="CardDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/card/effects/CardEffect.gd" id="1_eff"]
+[ext_resource type="Script" path="res://scripts/card/effects/EffGoldStrike.gd" id="2_gold"]
+[ext_resource type="Script" path="res://scripts/card/data/CardDef.gd" id="3_def"]
+
+[sub_resource type="Resource" id="Resource_gold"]
+script = ExtResource("2_gold")
+gold_ratio = 1.0
+
+[resource]
+script = ExtResource("3_def")
+id = "rikka_gold"
+title = "Кошелёк Рикки"
+cost = 3
+target = 0
+tags = PackedStringArray("attack")
+description = "Наносит [d]{0}[/d] урона — столько, сколько золота заработано за этот забег.
+[e]Тратит это золото.[/e]"
+effects = Array[ExtResource("1_eff")]([SubResource("Resource_gold")])

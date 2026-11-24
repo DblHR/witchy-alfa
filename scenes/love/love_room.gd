@@ -5,7 +5,8 @@ extends Control
 ## Интерактив добавлять прямо в сцену персонажа.
 
 @export var unit_id := ""
-## Кнопка SexButton (если есть в сцене): от персонажа вылетает сердечко (из точки HeartFrom)
+## Кнопка SexButton (если есть в сцене): меню сексуальных взаимодействий (InteractionMenu).
+## Пока сцены не сделаны — от персонажа вылетает сердечко (из точки HeartFrom)
 ## и пузырь со случайной фразой отсюда (низ пузыря — точка BubbleAt).
 @export var sex_lines: PackedStringArray = PackedStringArray(["И это всё?", "Уже закончили?", "Так быстро?"])
 @export var heart_texture: Texture2D = preload("res://assets/ui/buttons/loveButton.png")
@@ -34,8 +35,28 @@ func _ready() -> void:
 		_bubbles.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		add_child(_bubbles)
 
-## Нажали «SEX»: сердечко от персонажа и одна из фраз (не та же, что в прошлый раз).
+## Нажали «SEX»: меню сексуальных взаимодействий (Interactions, kind "lewd"): открыты с 5 уровня
+## доверия, каждое раз в день, дают доверие.
 func _on_sex() -> void:
+	var at := sex_button.get_global_rect().get_center() + Vector2(sex_button.size.x * 0.5 + 230.0, 0.0)
+	var menu := InteractionMenu.open(self, unit_id, Interactions.KIND_LEWD, at)
+	menu.chosen.connect(_on_lewd_chosen)
+
+func _on_lewd_chosen(action_id: String) -> void:
+	var gained := Interactions.perform(unit_id, action_id)
+	if gained < 0:
+		return
+	play_lewd_scene(action_id)
+	var at := heart_from.position if heart_from != null else size * 0.5
+	InteractionMenu.float_text(self, at + Vector2(0, -40), "+%d ♥ доверие" % gained)
+
+## Сама сцена (поцелуй, тити, …). ПОКА ЗАГЛУШКА: сердечко и фраза в пузыре.
+## Сюда подключать настоящие интерактивные сцены (action_id — id из data/interactions/interactions.json).
+func play_lewd_scene(_action_id: String) -> void:
+	_heart_and_line()
+
+## Сердечко от персонажа и одна из фраз (не та же, что в прошлый раз).
+func _heart_and_line() -> void:
 	_fly_heart()
 	if _bubbles == null or bubble_at == null or sex_lines.is_empty():
 		return

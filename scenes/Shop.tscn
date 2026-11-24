@@ -3,6 +3,7 @@
 [ext_resource type="Texture2D" uid="uid://cd7ouptpn7shi" path="res://assets/backgrounds/rooms/ShopBG.png" id="1_rgcs7"]
 [ext_resource type="Script" uid="uid://dukrop4adpe2s" path="res://scenes/Shop.gd" id="1_yltc6"]
 [ext_resource type="Texture2D" uid="uid://dlqg5fpxvh5f3" path="res://assets/ui/buttons/goldStatus.png" id="2_gold"]
+[ext_resource type="Texture2D" path="res://assets/ui/buttons/loveButton.png" id="9_love"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_yltc6"]
 content_margin_left = 0.0
@@ -117,3 +118,16 @@ offset_right = 1049.0
 offset_bottom = 397.0
 text = "Обновить
 20"
+
+[node name="LoveButton" type="TextureButton" parent="."]
+unique_name_in_owner = true
+offset_left = 1250.0
+offset_top = 120.0
+offset_right = 1370.0
+offset_bottom = 240.0
+tooltip_text = "Взаимодействия с Риккой"
+focus_mode = 0
+mouse_default_cursor_shape = 2
+texture_normal = ExtResource("9_love")
+ignore_texture_size = true
+stretch_mode = 5

@@ -28,6 +28,8 @@ signal healed(unit: Unit, amount: int)
 signal shielded(unit: Unit, amount: int)
 ## Приманка добила врага (EffLure) — CardBattle решает, поймана ли героиня.
 signal lure_kill(unit: Unit)
+## Разыграна карта НПС (EffNpcCard / EffGoldStrike): "rikka" | "noctris" | "sessilia" — дальше делает бой.
+signal npc_card_played(kind: String)
 
 const LOW_HP_RATIO := 0.5          ## «мало HP» = не больше половины
 

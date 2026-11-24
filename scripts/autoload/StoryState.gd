@@ -94,8 +94,12 @@ func start_quest(quest_id: String) -> void:
 func complete_quest(quest_id: String) -> void:
 	if quest_id == "":
 		return
+	var first := get_quest_status(quest_id) != "completed"
 	quests[quest_id] = "completed"
 	changed.emit()
+	if first:
+		# Доверие НПС, который дал квест (NpcTrust; через load — автозагрузке не нужна прямая ссылка).
+		load("res://scripts/love/NpcTrust.gd").on_quest_completed(quest_id)
 
 func fail_quest(quest_id: String) -> void:
 	if quest_id == "":

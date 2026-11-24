@@ -69,6 +69,8 @@ var burned_for_run: Array[String] = []
 
 func burned_count(card_id: String) -> int:
 	return burned_for_run.count(card_id)
+## Карта Ноктрис: в следующем выборе комнаты — лишняя карта комнаты медсестры.
+var extra_nurse_next := false
 ## Статуи: сколько ближайших побед действует дар.
 var white_charges: int = 0   ## лечение после победы
 var black_charges: int = 0   ## +урон картам в бою
@@ -204,6 +206,7 @@ func prepare_choices() -> void:
 	var n := rooms.size()
 	if next_i >= n - 2:
 		pending_choices.append(make_room(next_i))
+		_add_extra_nurse()
 		return
 	if not quest_placed and quest_due() and (next_i >= QUEST_FORCE_ROOM or rng.randf() < QUEST_ROOM_CHANCE):
 		quest_placed = true
@@ -250,6 +253,18 @@ func prepare_choices() -> void:
 	# Колода не дала нужного числа карт (кончились бои) — добираем обычными боями.
 	while pending_choices.size() < count:
 		pending_choices.append(_battle_room(next_i, n))
+	_add_extra_nurse()
+
+## Карта Ноктрис: к выбору добавляется комната медсестры (сверх колоды комнат; из колоды не берётся).
+## Не перед боссом — тогда ждёт следующего выбора.
+func _add_extra_nurse() -> void:
+	if not extra_nurse_next or index + 1 >= rooms.size() - 1:
+		return
+	extra_nurse_next = false
+	var room := _event_room("noctris")
+	room["deck_card"] = ""
+	room["extra"] = true
+	pending_choices.append(room)
 
 func choose(choice_index: int) -> Dictionary:
 	if pending_choices.is_empty():

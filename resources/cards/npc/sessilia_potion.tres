@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="CardDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/card/effects/CardEffect.gd" id="1_eff"]
+[ext_resource type="Script" path="res://scripts/card/effects/EffNpcCard.gd" id="2_npc"]
+[ext_resource type="Script" path="res://scripts/card/data/CardDef.gd" id="3_def"]
+
+[sub_resource type="Resource" id="Resource_npc"]
+script = ExtResource("2_npc")
+npc_kind = "sessilia"
+
+[resource]
+script = ExtResource("3_def")
+id = "sessilia_potion"
+title = "Пробник Сессилии"
+cost = 1
+target = 0
+tags = PackedStringArray("support")
+exhaust = 1
+description = "Случайное [e]зелье[/e] сразу срабатывает.
+[e]Сгорает до конца боя.[/e]"
+effects = Array[ExtResource("1_eff")]([SubResource("Resource_npc")])

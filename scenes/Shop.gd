@@ -49,7 +49,19 @@ func _ready() -> void:
 	_build_stock_grid()
 	_build_flower()
 	_refresh()
+	var love := get_node_or_null("%LoveButton") as TextureButton
+	if love != null:
+		love.pressed.connect(_on_love_pressed.bind(love))
 	call_deferred("_show_rikka_greeting")
+
+## Сердечко рядом с Риккой: несексуальные взаимодействия (Interactions) — доверие Рикки.
+func _on_love_pressed(btn: Control) -> void:
+	if DialogueManager_ != null and DialogueManager_.is_showing():
+		return
+	var at := btn.get_global_rect().get_center() + Vector2(0, -btn.size.y * 0.5)
+	var menu := InteractionMenu.open(self, "rikka", Interactions.KIND_CUTE, at)
+	menu.chosen.connect(func(action_id: String) -> void:
+		InteractionMenu.play_cute(self, "rikka", action_id, at))
 
 func _exit_tree() -> void:
 	if DungRun != null and DungRun.changed.is_connected(_refresh):
