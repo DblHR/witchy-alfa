@@ -24,6 +24,18 @@
 [ext_resource type="Texture2D" uid="uid://bqp6pwaeegw8s" path="res://assets/hub/night_hub/homeMoon1.png" id="22_moon"]
 [ext_resource type="Texture2D" uid="uid://txtm116hi1fi" path="res://assets/hub/night_hub/homeClouds.png" id="23_clouds"]
 [ext_resource type="Texture2D" uid="uid://dg66x78vukw6o" path="res://assets/hub/night_hub/homeTrees.png" id="24_trees"]
+[ext_resource type="Texture2D" uid="uid://dv306vb64vp81" path="res://assets/hub/night_hub/bed.png" id="30_bed"]
+[ext_resource type="Texture2D" uid="uid://85fqhxdy01su" path="res://assets/hub/night_hub/cauldronUpgrade.png" id="31_up1"]
+[ext_resource type="Texture2D" uid="uid://6jpqrolvt6no" path="res://assets/hub/night_hub/cauldronUpgrade2.png" id="32_up2"]
+[ext_resource type="Texture2D" uid="uid://dtuyrsiykb3iu" path="res://assets/hub/night_hub/doorCobweb.png" id="33_door"]
+[ext_resource type="Texture2D" uid="uid://cyta6242ygd01" path="res://assets/hub/night_hub/fireplaceCobweb.png" id="34_fire"]
+[ext_resource type="Texture2D" uid="uid://dn3svrnbhqs6u" path="res://assets/hub/night_hub/floormess.png" id="35_floor"]
+[ext_resource type="Texture2D" uid="uid://bcctadfsw8rst" path="res://assets/hub/night_hub/floormess2.png" id="36_floor2"]
+[ext_resource type="Texture2D" uid="uid://pvhaulckw1wt" path="res://assets/hub/night_hub/pumpkinCobweb.png" id="37_pump"]
+[ext_resource type="Texture2D" uid="uid://f8sv12pyejgo" path="res://assets/hub/night_hub/starsCobweb.png" id="38_stars"]
+[ext_resource type="Texture2D" uid="uid://ca4c2t57ojoaj" path="res://assets/hub/night_hub/wallmess.png" id="39_wall"]
+[ext_resource type="Texture2D" uid="uid://lxu6b861jofd" path="res://assets/hub/night_hub/windowCobweb.png" id="40_window"]
+[ext_resource type="Script" uid="uid://buh504wxnqf73" path="res://scripts/home/HubMess.gd" id="41_mess"]
 
 [node name="Control" type="Control" unique_id=391545454]
 custom_minimum_size = Vector2(1920, 1080)
@@ -102,6 +114,38 @@ texture = ExtResource("1_hnc56")
 expand_mode = 1
 stretch_mode = 5
 
+[node name="Bed" type="TextureRect" parent="." unique_id=892033507]
+layout_mode = 0
+offset_left = 212.0
+offset_top = 340.0
+offset_right = 672.0
+offset_bottom = 560.0
+mouse_filter = 2
+texture = ExtResource("30_bed")
+expand_mode = 1
+
+[node name="CauldronUpgrade1" type="TextureRect" parent="." unique_id=477686247]
+visible = false
+layout_mode = 0
+offset_left = 970.0
+offset_top = 508.0
+offset_right = 1920.0
+offset_bottom = 938.0
+mouse_filter = 2
+texture = ExtResource("31_up1")
+expand_mode = 1
+
+[node name="CauldronUpgrade2" type="TextureRect" parent="." unique_id=1876172932]
+visible = false
+layout_mode = 0
+offset_left = 600.0
+offset_top = 622.0
+offset_right = 750.0
+offset_bottom = 772.0
+mouse_filter = 2
+texture = ExtResource("32_up2")
+expand_mode = 1
+
 [node name="Fireplace" type="Control" parent="." unique_id=1509723164]
 anchors_preset = 0
 offset_left = -7.0
@@ -159,6 +203,89 @@ mouse_filter = 2
 texture = ExtResource("12_pon")
 expand_mode = 1
 stretch_mode = 5
+
+[node name="Mess" type="Control" parent="." unique_id=2081088136]
+anchors_preset = 0
+mouse_filter = 2
+
+[node name="FireplaceCobweb" type="TextureRect" parent="Mess" unique_id=387668820]
+layout_mode = 0
+offset_top = 459.0
+offset_right = 498.0
+offset_bottom = 985.0
+mouse_filter = 2
+texture = ExtResource("34_fire")
+expand_mode = 1
+script = ExtResource("41_mess")
+covers = NodePath("../../Fireplace")
+
+[node name="PumpkinCobweb" type="TextureRect" parent="Mess" unique_id=761149940]
+layout_mode = 0
+offset_left = 1722.0
+offset_top = 335.0
+offset_right = 1918.0
+offset_bottom = 705.0
+mouse_filter = 2
+texture = ExtResource("37_pump")
+expand_mode = 1
+script = ExtResource("41_mess")
+covers = NodePath("../../Pumpkin")
+
+[node name="WindowCobweb" type="TextureRect" parent="Mess" unique_id=34797888]
+layout_mode = 0
+offset_left = 347.0
+offset_top = 140.0
+offset_right = 697.0
+offset_bottom = 500.0
+mouse_filter = 2
+texture = ExtResource("40_window")
+expand_mode = 1
+script = ExtResource("41_mess")
+
+[node name="DoorCobweb" type="TextureRect" parent="Mess" unique_id=199786439]
+layout_mode = 0
+offset_left = 1532.0
+offset_top = 184.0
+offset_right = 1627.0
+offset_bottom = 424.0
+mouse_filter = 2
+texture = ExtResource("33_door")
+expand_mode = 1
+script = ExtResource("41_mess")
+clicks = 2
+
+[node name="WallMess" type="TextureRect" parent="Mess" unique_id=1886237826]
+layout_mode = 0
+offset_left = 906.0
+offset_top = 251.0
+offset_right = 1206.0
+offset_bottom = 491.0
+mouse_filter = 2
+texture = ExtResource("39_wall")
+expand_mode = 1
+script = ExtResource("41_mess")
+
+[node name="FloorMess" type="TextureRect" parent="Mess" unique_id=101068021]
+layout_mode = 0
+offset_left = 365.0
+offset_top = 924.0
+offset_right = 895.0
+offset_bottom = 1084.0
+mouse_filter = 2
+texture = ExtResource("35_floor")
+expand_mode = 1
+script = ExtResource("41_mess")
+
+[node name="FloorMess2" type="TextureRect" parent="Mess" unique_id=2109056720]
+layout_mode = 0
+offset_left = 1003.0
+offset_top = 918.0
+offset_right = 1347.0
+offset_bottom = 1078.0
+mouse_filter = 2
+texture = ExtResource("36_floor2")
+expand_mode = 1
+script = ExtResource("41_mess")
 
 [node name="MagicEffect" type="TextureRect" parent="." unique_id=1832556153]
 modulate = Color(1, 1, 1, 0)
@@ -221,6 +348,22 @@ script = ExtResource("19_star")
 texture = ExtResource("15_s2")
 rope_length = 155.0
 radius = 32.0
+
+[node name="MessTop" type="Control" parent="." unique_id=1474446180]
+anchors_preset = 0
+mouse_filter = 2
+
+[node name="StarsCobweb" type="TextureRect" parent="MessTop" unique_id=1341223462]
+layout_mode = 0
+offset_left = 836.0
+offset_top = 43.0
+offset_right = 1066.0
+offset_bottom = 338.0
+mouse_filter = 2
+texture = ExtResource("38_stars")
+expand_mode = 1
+script = ExtResource("41_mess")
+shake = true
 
 [node name="DragLayer" type="Node2D" parent="." unique_id=943281058]
 

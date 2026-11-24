@@ -50,7 +50,7 @@ func _init() -> void:
 	_phase_moves["summon_minis"] = m
 
 	m = EnemyMove.new("swallow", "Проглотить", EnemyMove.Kind.SWALLOW)
-	m.tip = "Выплюнет, если её оглушить или нанести ей %d%% от её здоровья. Иначе на следующем ходу переварит." % roundi(SPIT_DAMAGE_SHARE * 100.0)
+	m.tip = "Как помешать: оглушите или очаруйте Фуфу до её хода (приманка, танец Аки, слизь…) — тогда она пропустит ход.\nЕсли уже проглотила: оглушите или очаруйте её либо нанесите ей %d%% её здоровья — выплюнет. Иначе на следующем ходу переварит (урон сквозь щит)." % roundi(SPIT_DAMAGE_SHARE * 100.0)
 	m.custom = func(api: EnemyApi, me: Unit, _mv: EnemyMove) -> void:
 		swallow(api, me)
 	_phase_moves["swallow"] = m
@@ -151,7 +151,8 @@ func on_hurt(api: EnemyApi, me: Unit, amount: int) -> void:
 			api.reroll(me)
 
 func on_status(api: EnemyApi, me: Unit, status_id: String) -> void:
-	if status_id == CardStatuses.STUN and me.ai.get("swallowed") != null:
+	# Оглушение и очарование — проглоченного выплёвывает.
+	if (status_id == CardStatuses.STUN or status_id == CardStatuses.CHARM) and me.ai.get("swallowed") != null:
 		spit(api, me)
 
 func on_death(api: EnemyApi, me: Unit) -> void:

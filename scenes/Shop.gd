@@ -312,6 +312,31 @@ func _build_stock_grid() -> void:
 	stock_grid.columns = 3
 	stock_grid.add_theme_constant_override("h_separation", ShopUi.CARD_GAP)
 	stock_grid.add_theme_constant_override("v_separation", ShopUi.CARD_GAP)
+	_build_reroll_button()
+
+## Кнопка «Обновить товар» справа от полки: DungRun.RIKKA_REROLL_PRICE золота, раз в день.
+const REROLL_RECT := Rect2(858, 430, 232, 100)
+const COIN_ICON := "res://assets/items/loot/coin.png"
+var _reroll: Button
+
+func _build_reroll_button() -> void:
+	_reroll = Button.new()
+	_reroll.name = "RerollButton"
+	_reroll.text = "Обновить\n%d" % DungRun.RIKKA_REROLL_PRICE
+	_reroll.icon = load(COIN_ICON) as Texture2D if ResourceLoader.exists(COIN_ICON) else null
+	_reroll.expand_icon = false
+	_reroll.add_theme_constant_override("icon_max_width", 40)
+	_reroll.icon_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	_reroll.focus_mode = Control.FOCUS_NONE
+	ShopUi.style_button(_reroll, 26)
+	add_child(_reroll)
+	_reroll.global_position = REROLL_RECT.position
+	_reroll.size = REROLL_RECT.size
+	_reroll.pressed.connect(_on_reroll_pressed)
+
+func _on_reroll_pressed() -> void:
+	if DungRun.reroll_ground_shop():
+		_refresh("Рикка переставила товар на полке.")
 
 func _on_stock_pressed(slot_idx: int) -> void:
 	# Имя заранее: у котла название меняется после покупки (следующий уровень).
@@ -326,6 +351,11 @@ func _on_stock_pressed(slot_idx: int) -> void:
 
 func _refresh(message: String = "") -> void:
 	gold_label.text = "%d" % DungRun.gold
+	if _reroll != null:
+		var used := DungRun.ground_shop_rerolled_today()
+		_reroll.disabled = not DungRun.can_reroll_ground_shop()
+		_reroll.tooltip_text = "Уже обновляли сегодня — новый товар после забега." if used else ("Обновить товар за %d золота (раз в день)." % DungRun.RIKKA_REROLL_PRICE if DungRun.gold >= DungRun.RIKKA_REROLL_PRICE else "Не хватает золота.")
+		_reroll.mouse_default_cursor_shape = Control.CURSOR_ARROW if _reroll.disabled else Control.CURSOR_POINTING_HAND
 	info_label.text = "Товар обновляется после каждого забега."
 	for child in stock_grid.get_children():
 		stock_grid.remove_child(child)

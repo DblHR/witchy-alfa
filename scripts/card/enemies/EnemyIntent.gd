@@ -132,7 +132,7 @@ static func parts(api: EnemyApi, me: Unit, move: EnemyMove) -> Array:
 		EnemyMove.Kind.SPLIT:
 			out.append(_part(ICON_SUMMON, "Делится", "", head + "Противник разделится на части."))
 		EnemyMove.Kind.SWALLOW:
-			out.append(_part(ICON_NEGATIVE, "", "", head + "Противник проглотит переднего персонажа.", COL_NUMBER, CardStatuses.SWALLOWED))
+			out.append(_part(ICON_NEGATIVE, "", "", head + "Противник проглотит переднего персонажа: тот не сможет действовать, а на следующем ходу его переварят.", COL_NUMBER, CardStatuses.SWALLOWED))
 	if out.is_empty():
 		out.append(_part("", move.intent_text(dmg), "", head.strip_edges()))
 	if move.tip != "":

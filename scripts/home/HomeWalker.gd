@@ -339,6 +339,20 @@ func set_frozen(on: bool) -> void:
 		state = State.BED if was == State.BED else State.IDLE
 		_idle_left = randf_range(0.6, 1.5)
 
+## Точка над макушкой (для пузыря реплики) — дочерний узел, едет вместе с персонажем.
+var _head: Node2D
+
+func head_anchor() -> Node2D:
+	if _head == null:
+		_head = Node2D.new()
+		_head.name = "HeadAnchor"
+		add_child(_head)
+	if body != null and body.texture != null:
+		var r := body.get_rect()
+		var top := r.position.y + _top_y(body.texture)
+		_head.position = body.position + Vector2(0, top * body.scale.y - 24.0)
+	return _head
+
 ## Курсор над непрозрачной частью картинки.
 func is_over(global_point: Vector2) -> bool:
 	if body == null or body.texture == null or not visible:

@@ -43,6 +43,7 @@ const ICONS := {
 	NAZHIM: "res://assets/ui/status/pressure_status.png",
 	STICKY_SLIME: "res://assets/ui/status/sticky_slime_status.png",
 	WRAP_SLIME: "res://assets/ui/status/enshroud_slime_status.png",
+	SWALLOWED: "res://assets/ui/battle/intent_apply_negative.png",   ## пока — значок негативного намерения
 }
 const INFO := {
 	WEAK: "Наносит на 25% меньше урона.",
@@ -56,7 +57,7 @@ const INFO := {
 	EMPOWER: "Каждый удар сильнее на число стаков. Спадает, когда вы завершаете ход.",
 	EXPOSED: "Каждые 25 урона по здоровью дают +1 обволакивающую слизь.",
 	HEAT_BODY: "Враг, ударивший по щиту героини, получает Горение 1 на 1 ход.",
-	SWALLOWED: "Внутри босса: не действует, враги не могут ударить.",
+	SWALLOWED: "Внутри босса: не действует, враги не могут его ударить. Босс выплюнет его, если босса оглушить или очаровать либо нанести боссу 10% его здоровья. Иначе на следующем ходу босс переварит его — урон сквозь щит.",
 	LURED: "При добивании цель захватывается.",
 }
 

@@ -358,9 +358,30 @@ func buy_ground_shop_item(slot_idx: int) -> String:
 
 func on_run_finished_refresh_shops() -> void:
 	refresh_ground_shop(true)
-	# Новый день: Рикка снова поздоровается.
+	# Новый день: Рикка снова поздоровается, обновить товар за золото снова можно.
 	if StoryState_ != null:
 		StoryState_.set_flag("rikka_greeted_today", false)
+		StoryState_.set_flag(RIKKA_REROLL_FLAG, false)
+
+## Обновить товар Рикки за золото — раз в день (день = до следующего забега).
+const RIKKA_REROLL_PRICE := 20
+const RIKKA_REROLL_FLAG := "rikka_rerolled_today"
+
+func can_reroll_ground_shop() -> bool:
+	return gold >= RIKKA_REROLL_PRICE and not ground_shop_rerolled_today()
+
+func ground_shop_rerolled_today() -> bool:
+	return StoryState_ != null and StoryState_.has_flag(RIKKA_REROLL_FLAG)
+
+## true — товар обновлён (золото списано).
+func reroll_ground_shop() -> bool:
+	if not can_reroll_ground_shop():
+		return false
+	gold -= RIKKA_REROLL_PRICE
+	if StoryState_ != null:
+		StoryState_.set_flag(RIKKA_REROLL_FLAG, true)
+	refresh_ground_shop(true)
+	return true
 
 ## Опыт до следующего уровня (CardBalance: ~28 забегов на 10 уровней, как доверие).
 func xp_to_next_level(level: int = party_level) -> int:

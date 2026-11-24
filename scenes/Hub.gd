@@ -44,6 +44,7 @@ func _ready() -> void:
 	magic_effect.modulate.a = 0.0
 	_build_cauldron_bubbles()
 	_build_door_hint()
+	_setup_home_props()
 	_refresh_badges()
 	if UnitRoster_ != null and not UnitRoster_.changed.is_connected(_refresh_badges):
 		UnitRoster_.changed.connect(_refresh_badges)
@@ -357,7 +358,9 @@ func _process(delta: float) -> void:
 			over.set_hover(true)
 	_set_cauldron_hover(cauldron)
 	_set_door_hover(door)
-	var hand := over != null or cauldron or _door_hot != "" or _dragging or star or toggle_hot or moon
+	var mess_hot := not _world_locked() and not _ui_blocks() and _mess_at(p) != null
+	_shake_cobweb(delta)
+	var hand := over != null or cauldron or _door_hot != "" or _dragging or star or toggle_hot or moon or mess_hot
 	var drag := _dragging or stars.is_grabbing()
 	Input.set_default_cursor_shape(Input.CURSOR_DRAG if drag else (Input.CURSOR_POINTING_HAND if hand else Input.CURSOR_ARROW))
 
@@ -410,6 +413,11 @@ func _input(event: InputEvent) -> void:
 		return
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
 		var p: Vector2 = event.position
+		# Грязь под курсором — оттираем; клик идёт дальше (камин под паутиной ещё и включится).
+		var mess := _mess_at(p)
+		if mess != null:
+			mess.scrub()
+			get_viewport().set_input_as_handled()
 		var st := stars.star_at(p)
 		if st != null:
 			stars.grab(st, p)
@@ -425,10 +433,7 @@ func _input(event: InputEvent) -> void:
 			SceneRouter_.go_to_alchemy()
 		elif _toggle_at(p) != null:
 			get_viewport().set_input_as_handled()
-			var t := _toggle_at(p)
-			t.toggle()
-			if t == fireplace:
-				_fireplace_first_click()
+			_toggle_at(p).toggle()
 		elif _door_icon_at(p) != "":
 			get_viewport().set_input_as_handled()
 			_go_door(_door_icon_at(p))
@@ -445,21 +450,116 @@ func _moon_at(p: Vector2) -> bool:
 			return false
 	return true
 
-## Первый клик по камину: главный герой находит данго-посох (диалог data/dialogues/hub/home_events.json,
-## "fireplace_dango": реплика с give_item — посох выдаётся и показывается «Получено»). Один раз.
+# --- Уборка: грязь в доме (HubMess в Mess / MessTop) ------------------------------------
+## В начале игры (после обучения) дом грязный: паутина, лужи. Ведьмочка замечает это пузырём.
+## Кликами грязь оттирается (по паутине на звёздах — помотать звёздочки). Убрано всё —
+## главный герой находит данго-посох (диалог "fireplace_dango" из data/dialogues/hub/home_events.json
+## с give_item и «Получено»). В старых сохранениях, где посох уже найден, награды нет.
+const MESS_STARTED_FLAG := "hub_mess_started"
+const MESS_DONE_FLAG := "hub_mess_done"
+const MESS_BUBBLE_FLAG := "hub_mess_bubble_said"
+const MESS_BUBBLE_TEXT := "Как же тут грязно... Кто тут жил до меня?"
 const FIREPLACE_FLAG := "fireplace_dango_found"
 const FIREPLACE_DIALOGUE := "fireplace_dango"
+## Книги и весы на заднем фоне — с улучшениями котла (уровень 2 — книги, 3 — весы).
+@onready var cauldron_upgrade_1: TextureRect = $CauldronUpgrade1
+@onready var cauldron_upgrade_2: TextureRect = $CauldronUpgrade2
+var _messes: Array[HubMess] = []
+var _bubble_layer: BattleSpeechLayer
 
-func _fireplace_first_click() -> void:
-	if StoryState_ == null or StoryDialogueDB_ == null or StoryState_.has_flag(FIREPLACE_FLAG):
+func _setup_home_props() -> void:
+	var lvl := AlchemyDB.cauldron_level()
+	cauldron_upgrade_1.visible = lvl >= 2
+	cauldron_upgrade_2.visible = lvl >= 3
+	_setup_mess()
+
+func mess_active() -> bool:
+	return StoryState_ != null and StoryState_.has_flag(MESS_STARTED_FLAG) and not StoryState_.has_flag(MESS_DONE_FLAG)
+
+func _setup_mess() -> void:
+	for n in find_children("*", "HubMess", true, false):
+		_messes.append(n as HubMess)
+	# Обучение пройдено, а уборки ещё не было — дом грязный.
+	if StoryState_ != null and not StoryState_.has_flag(MESS_STARTED_FLAG) and not StoryState_.has_flag(MESS_DONE_FLAG) \
+			and not StoryState_.tutorial_battle_pending:
+		StoryState_.set_flag(MESS_STARTED_FLAG, true)
+	var active := mess_active()
+	for m in _messes:
+		m.visible = active and not m.is_clean()
+		m.cleaned.connect(_on_mess_cleaned)
+		# Пока предмет под паутиной — он выключен (если его ещё не трогали в этот запуск).
+		if m.visible and not m.covers.is_empty():
+			var t := m.get_node_or_null(m.covers) as HubToggle
+			if t != null and not HubToggle._states.has(String(t.name)):
+				t.is_on = false
+				t._apply(false)
+	if active and not StoryState_.has_flag(MESS_BUBBLE_FLAG):
+		_say_mess_bubble()
+
+func _mess_at(p: Vector2) -> HubMess:
+	if not mess_active():
+		return null
+	for i in range(_messes.size() - 1, -1, -1):
+		var m := _messes[i]
+		if m.visible and not m.is_clean() and m.hit(p):
+			return m
+	return null
+
+## Паутина на звёздах: спадает, если помотать звёздочки (считаем, сколько они «пролетели»).
+func _shake_cobweb(delta: float) -> void:
+	if not mess_active():
 		return
-	if DialogueManager_.is_showing():
+	var amount := 0.0
+	for st in stars.stars():
+		if st.vel.length() > 60.0:   ## только когда правда мотают, а не дрожат в покое
+			amount += st.vel.length() * delta
+	if amount <= 0.5:
 		return
-	var d := StoryDialogueDB_.get_dialogue(FIREPLACE_DIALOGUE)
+	for m in _messes:
+		if m.shake and m.visible and not m.is_clean():
+			m.shake_by(amount)
+
+func _on_mess_cleaned(_m: HubMess) -> void:
+	for m in _messes:
+		if not m.is_clean():
+			return
+	if StoryState_ == null:
+		return
+	StoryState_.set_flag(MESS_DONE_FLAG, true)
+	if StoryState_.has_flag(FIREPLACE_FLAG):
+		return
+	await get_tree().create_timer(0.6).timeout
+	while DialogueManager_.is_showing():
+		await get_tree().process_frame
+	var d := StoryDialogueDB_.get_dialogue(FIREPLACE_DIALOGUE) if StoryDialogueDB_ != null else {}
 	if d.is_empty():
 		return
-	StoryState_.set_flag(FIREPLACE_FLAG, true)   ## сразу: второй клик посреди сцены посох не дублирует
+	StoryState_.set_flag(FIREPLACE_FLAG, true)
 	DialogueManager_.show_sequence(StoryDialogueDB_.resolve_lines(d), Callable(self, "_on_pending_story_dialogue_finished").bind(d))
+
+## Пузырь над ведьмочкой: «Как же тут грязно...» — когда нет диалога на экране.
+func _say_mess_bubble() -> void:
+	await get_tree().create_timer(1.0).timeout
+	while is_inside_tree() and DialogueManager_.is_showing():
+		await get_tree().create_timer(0.3).timeout
+	if not is_inside_tree() or not walkers.has("witch"):
+		return
+	await get_tree().create_timer(0.6).timeout
+	var w: HomeWalker = walkers["witch"]
+	if not is_instance_valid(w):
+		return
+	if _bubble_layer == null:
+		_bubble_layer = BattleSpeechLayer.new()
+		_bubble_layer.name = "HubBubbleLayer"
+		_bubble_layer.bubble_offset = Vector2.ZERO
+		_bubble_layer.bubble_min_width = 300.0
+		_bubble_layer.bubble_max_width = 460.0
+		_bubble_layer.bubble_font_px = 26
+		_bubble_layer.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		_bubble_layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		add_child(_bubble_layer)
+	_bubble_layer.show_line_for_actor(w.head_anchor(), MESS_BUBBLE_TEXT)
+	StoryState_.set_flag(MESS_BUBBLE_FLAG, true)
 
 ## Картинка «по персонажу кликнули»: assets/characters/<id>/<id>_click.png (тот же холст, что _battle).
 const CLICK_SPRITE_PATH := "res://assets/characters/%s/%s_click.png"
