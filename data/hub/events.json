@@ -88,14 +88,14 @@
           "who": "warrior"
         },
         {
-          "wait": 2.6
+          "wait": 1.8
         },
         {
           "say": "Не должно...",
           "who": "witch"
         },
         {
-          "wait": 2.6
+          "wait": 1.8
         }
       ]
     },
@@ -317,7 +317,7 @@
           "who": "warrior",
           "drop": "CauldronDrop",
           "emote": "happy",
-          "say_after": "Шедевр! Герой ещё и повар."
+          "say_after": "Шедевр!"
         },
         {
           "wait": 1.6
