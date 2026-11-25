@@ -321,7 +321,6 @@ func _pill_text_font() -> Font:
 		_pill_font = FontVariation.new()
 		_pill_font.base_font = get_theme_default_font()
 		_pill_font.variation_embolden = 0.9
-		_pill_font.variation_transform = Transform2D(Vector2(1, 0), Vector2(-0.2, 1), Vector2.ZERO)   ## курсив
 	return _pill_font
 
 func _make_pill(text: String, icon_kind: String, icon_color: Color, psize: Vector2) -> Button:

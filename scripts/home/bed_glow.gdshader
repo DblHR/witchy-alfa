@@ -1,5 +1,6 @@
 // Свечение кровати («пора спать», Hub._set_bed_hint): тёплый ореол вокруг силуэта и лёгкий отсвет
 // на самой кровати. Рисуется поверх кровати со сложением цвета; прозрачность пульсирует из кода.
+// Он же — обводка при наведении (Hub._set_bed_outline: узкий spread, sharp = 1, без отсвета).
 shader_type canvas_item;
 render_mode blend_add;
 
@@ -10,6 +11,8 @@ uniform vec2 margin = vec2(0.06, 0.12);
 uniform vec2 spread = vec2(0.035, 0.07);
 // Сколько отсвета на самой кровати.
 uniform float inner_tint = 0.35;
+// 0 — мягкий ореол, 1 — чёткая обводка.
+uniform float sharp = 0.0;
 
 float sample_a(sampler2D tex, vec2 uv) {
 	if (uv.x < 0.0 || uv.y < 0.0 || uv.x > 1.0 || uv.y > 1.0) {
@@ -29,6 +32,7 @@ void fragment() {
 	}
 	near /= 32.0;
 	float inside = sample_a(TEXTURE, uv);
-	float glow = near * (1.0 - inside) + inside * inner_tint;
+	float edge = mix(near, smoothstep(0.02, 0.2, near), sharp);
+	float glow = edge * (1.0 - inside) + inside * inner_tint;
 	COLOR = vec4(glow_color.rgb * glow, 1.0) * vec4(1.0, 1.0, 1.0, COLOR.a);
 }

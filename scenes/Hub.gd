@@ -368,6 +368,7 @@ func _process(delta: float) -> void:
 	var bed_hot := over == null and not star and not cauldron and not toggle_hot and not door and not moon \
 		and not _world_locked() and not _ui_blocks() and _bed_at(p)
 	_shake_cobweb(delta)
+	_set_bed_outline(bed_hot)
 	var hand := over != null or cauldron or _door_hot != "" or _dragging or star or toggle_hot or moon or mess_hot or bed_hot
 	var drag := _dragging or stars.is_grabbing()
 	Input.set_default_cursor_shape(Input.CURSOR_DRAG if drag else (Input.CURSOR_POINTING_HAND if hand else Input.CURSOR_ARROW))
@@ -541,6 +542,37 @@ func _set_bed_hint(on: bool) -> void:
 	_bed_tween = create_tween().set_loops()
 	_bed_tween.tween_property(glow, "modulate:a", BED_HINT_ALPHA, BED_HINT_PERIOD * 0.5).set_trans(Tween.TRANS_SINE)
 	_bed_tween.tween_property(glow, "modulate:a", 0.08, BED_HINT_PERIOD * 0.5).set_trans(Tween.TRANS_SINE)
+
+## Обводка кровати при наведении (ночью кровать кликабельна): цвет и толщина (доля картинки).
+const BED_OUTLINE_COLOR := Color(1.0, 0.93, 0.75)
+const BED_OUTLINE_WIDTH := Vector2(0.008, 0.016)
+func _set_bed_outline(on: bool) -> void:
+	if bed == null:
+		return
+	var ol := bed.get_node_or_null("BedOutline") as TextureRect
+	if ol == null:
+		if not on:
+			return
+		ol = TextureRect.new()
+		ol.name = "BedOutline"
+		ol.expand_mode = bed.expand_mode
+		ol.stretch_mode = bed.stretch_mode
+		ol.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		var mat := ShaderMaterial.new()
+		mat.shader = load(BED_GLOW_SHADER) as Shader
+		var m := Vector2(0.03, 0.06)
+		mat.set_shader_parameter("margin", m)
+		mat.set_shader_parameter("spread", BED_OUTLINE_WIDTH)
+		mat.set_shader_parameter("inner_tint", 0.0)
+		mat.set_shader_parameter("sharp", 1.0)
+		mat.set_shader_parameter("glow_color", BED_OUTLINE_COLOR)
+		ol.material = mat
+		bed.add_child(ol)
+		var full := bed.size / (Vector2.ONE - 2.0 * m)
+		ol.position = -(full - bed.size) * 0.5
+		ol.size = full
+	ol.texture = bed.texture
+	ol.visible = on
 
 ## Экран мягко темнеет, change() меняет время суток, картинки дома меняются, экран светлеет.
 func _phase_transition(change: Callable) -> void:
