@@ -10,6 +10,7 @@ extends Control
 @onready var inv: TextureButton = %InventoryButton
 @onready var walkers_back: Node2D = $WalkersBack
 @onready var walkers_front: Node2D = $WalkersFront
+@onready var piles_root: Node2D = get_node_or_null("Piles")   ## кучки на полу (HubPile)
 @onready var drag_layer: Node2D = $DragLayer
 @onready var routes_root: Node2D = $Routes
 @onready var cauldron_layer: TextureRect = $CauldronLayer
@@ -51,6 +52,7 @@ func _ready() -> void:
 	magic_effect.modulate.a = 0.0
 	_build_cauldron_bubbles()
 	_build_door_hint()
+	_build_piles()
 	_setup_home_props()
 	if StoryState_ != null and StoryState_.has_flag(DayCycle.FLAG_BED_HINT) and DayCycle.is_night():
 		_set_bed_hint(true)
@@ -209,8 +211,21 @@ func _check_returns(delta: float) -> void:
 			var spot := nearest_spot(door.global_position)
 			if spot[0] != null:
 				w.place(spot[0], float(spot[1]))
-		w.modulate.a = 0.0
-		w.fade(1.0, 0.7)
+		var inside := get_node_or_null("Spots/DoorIn") as Node2D
+		if inside != null:
+			w.set_frozen(true)
+			_walk_in.call_deferred(w, inside.global_position)
+		else:
+			w.modulate.a = 0.0
+			w.fade(1.0, 0.7)
+
+## Вернулся: выходит из глубины проёма (Spots/DoorIn) к двери, потом гуляет как обычно.
+func _walk_in(w: HomeWalker, inside: Vector2) -> void:
+	if not is_instance_valid(w):
+		return
+	await w.walk_door(inside, 1.2, true)
+	if is_instance_valid(w):
+		w.set_frozen(false)
 
 ## Сколько персонажей сейчас на кровати.
 func bed_occupants() -> int:
@@ -259,6 +274,50 @@ func _sync_layer(w: HomeWalker) -> void:
 	if w.get_parent() != target:
 		w.reparent(target, true)
 
+# --- Кучки на полу (HubPile): зелья, еда, слизь — клик, чтобы забрать -----------------------
+
+var _piles: Array[HubPile] = []
+
+func _build_piles() -> void:
+	for d in HubPile.all():
+		_spawn_pile(String(d["key"]), String(d["item"]), String(d["who"]), int(d["count"]), d["pos"])
+
+## Положить кучку на пол (запоминается до сбора).
+func drop_pile(item: String, n: int, who: String, pos: Vector2) -> HubPile:
+	var k := HubPile.drop(item, n, who, pos)
+	if k == "":
+		return null
+	for old in _piles:
+		if is_instance_valid(old) and old.key == k:
+			old.queue_free()
+	return _spawn_pile(k, item, who, StoryState_.get_counter(k), pos)
+
+func _spawn_pile(k: String, item: String, who: String, n: int, pos: Vector2) -> HubPile:
+	var pile := HubPile.new()
+	pile.position = pos
+	(piles_root if piles_root != null else self).add_child(pile)
+	pile.setup(k, item, who, n)
+	_piles.append(pile)
+	return pile
+
+func _pile_at(p: Vector2) -> HubPile:
+	if _world_locked() or _ui_blocks():
+		return null
+	for i in range(_piles.size() - 1, -1, -1):
+		var pile := _piles[i]
+		if is_instance_valid(pile) and pile.hit(p):
+			return pile
+	return null
+
+func _update_pile_hover(p: Vector2) -> bool:
+	for i in range(_piles.size() - 1, -1, -1):
+		if not is_instance_valid(_piles[i]):
+			_piles.remove_at(i)
+	var hot := _pile_at(p) if not _dragging and not stars.is_grabbing() else null
+	for pile in _piles:
+		pile.set_hover(pile == hot)
+	return hot != null
+
 # --- Котёл: вход в алхимию -----------------------------------------------------------
 ## Где котёл (клик — алхимия). Дно с ковриком не считается.
 const CAULDRON_RECT := Rect2(780, 755, 260, 235)
@@ -285,6 +344,8 @@ func _set_cauldron_hover(on: bool) -> void:
 const DOOR_RECT := Rect2(1462, 195, 290, 355)
 const DOOR_ICON_SIZE := Vector2(120, 120)
 const DOOR_ICON_GAP := 14.0
+## Сдвиг столбика значков от центра проёма по X (минус — левее).
+const DOOR_ICON_SHIFT_X := -45.0
 ## Значок: картинка и куда ведёт (SceneRouter_).
 const DOOR_ICONS := [
 	["farm", "res://assets/ui/buttons/farmButton.png", "go_to_farm"],
@@ -297,8 +358,8 @@ var _door_hot := ""                ## значок под курсором
 var _door_tween: Tween
 
 func _build_door_hint() -> void:
-	# Значки — столбиком по центру проёма, сверху вниз в порядке DOOR_ICONS.
-	var x := DOOR_RECT.get_center().x - DOOR_ICON_SIZE.x * 0.5
+	# Значки — столбиком у центра проёма (сдвиг DOOR_ICON_SHIFT_X), сверху вниз в порядке DOOR_ICONS.
+	var x := DOOR_RECT.get_center().x - DOOR_ICON_SIZE.x * 0.5 + DOOR_ICON_SHIFT_X
 	var row := 0
 	for d in DOOR_ICONS:
 		var icon := TextureRect.new()
@@ -466,15 +527,21 @@ func _process(delta: float) -> void:
 		and not _world_locked() and not _ui_blocks() and _bed_at(p)
 	_shake_cobweb(delta)
 	_set_bed_outline(bed_hot)
-	var hand := over != null or cauldron or _door_hot != "" or _dragging or star or toggle_hot or moon or mess_hot or bed_hot
+	var pile_hot := _update_pile_hover(p)
+	var hand := pile_hot or over != null or cauldron or _door_hot != "" or _dragging or star or toggle_hot or moon or mess_hot or bed_hot
 	var drag := _dragging or stars.is_grabbing()
 	Input.set_default_cursor_shape(Input.CURSOR_DRAG if drag else (Input.CURSOR_POINTING_HAND if hand else Input.CURSOR_ARROW))
 
 ## Магический круг у котла: курсор на котле дольше MAGIC_DELAY — проявляется за MAGIC_FADE_IN.
+## magic_forced — круг включила ведьмочка (HubEvents, шаг "magic"): проявляется за MAGIC_FORCED_IN.
+const MAGIC_FORCED_IN := 0.8
+var magic_forced := false
 func _update_magic(on_cauldron: bool, delta: float) -> void:
 	if not magic_effect.visible:
 		return
-	if on_cauldron:
+	if magic_forced:
+		magic_effect.modulate.a = move_toward(magic_effect.modulate.a, 1.0, delta / MAGIC_FORCED_IN)
+	elif on_cauldron:
 		_magic_hold += delta
 		var target := clampf((_magic_hold - MAGIC_DELAY) / MAGIC_FADE_IN, 0.0, 1.0)
 		magic_effect.modulate.a = maxf(magic_effect.modulate.a, target)
@@ -526,6 +593,11 @@ func _input(event: InputEvent) -> void:
 		var st := stars.star_at(p)
 		if st != null:
 			stars.grab(st, p)
+			get_viewport().set_input_as_handled()
+			return
+		var pile := _pile_at(p)
+		if pile != null:
+			pile.collect()
 			get_viewport().set_input_as_handled()
 			return
 		var w := _walker_at(p)

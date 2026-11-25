@@ -15,7 +15,7 @@ stack_mode = 1
 script = ExtResource("2_oifux")
 status = "nazhim"
 receiver = 1
-mag_ratio = 0.2
+mag_ratio = 0.45
 
 [resource]
 script = ExtResource("3_erg4e")

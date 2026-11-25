@@ -319,6 +319,8 @@ texture = ExtResource("2_l2")
 expand_mode = 1
 stretch_mode = 5
 
+[node name="Piles" type="Node2D" parent="."]
+
 [node name="WalkersFront" type="Node2D" parent="." unique_id=1317911325]
 y_sort_enabled = true
 
@@ -433,6 +435,12 @@ position = Vector2(1087, 938)
 
 [node name="Door" type="Marker2D" parent="Spots"]
 position = Vector2(1350, 549)
+
+[node name="CauldronDrop" type="Marker2D" parent="Spots"]
+position = Vector2(910, 1040)
+
+[node name="DoorIn" type="Marker2D" parent="Spots"]
+position = Vector2(1545, 528)
 
 [node name="StartRunButton" type="TextureButton" parent="." unique_id=841560713]
 unique_name_in_owner = true

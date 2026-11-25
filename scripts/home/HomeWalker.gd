@@ -523,6 +523,36 @@ func event_move(r: HomeRoute, d: float) -> void:
 	dist = d
 	_last_x = position.x
 
+## Уйти в дверной проём: дойти до точки to (вглубь проёма), уменьшаясь, темнея и растворяясь.
+## back = true — наоборот: появиться в проёме (from = to) и выйти к текущей позиции. await walk_door(...)
+const DOOR_SHRINK := 0.82
+const DOOR_DARK := Color(0.35, 0.33, 0.5, 0.0)
+func walk_door(door: Vector2, time: float = 1.4, back: bool = false) -> void:
+	_kill_tween()
+	var near := position
+	var far := Vector2(door.x, door.y)
+	var big := Vector2(_scale, _scale)
+	var small := big * DOOR_SHRINK
+	_face_right((far.x > near.x) if not back else (near.x > far.x))
+	if back:
+		position = far
+		body.scale = small
+		modulate = DOOR_DARK
+	_tween = create_tween().set_parallel(true)
+	_tween.tween_property(self, "position", near if back else far, time)
+	_tween.tween_property(body, "scale", big if back else small, time)
+	_tween.tween_property(self, "modulate", Color.WHITE if back else DOOR_DARK, time).set_ease(Tween.EASE_IN if not back else Tween.EASE_OUT)
+	# Шаги — покачивание вверх-вниз.
+	var steps := maxi(2, roundi(time / 0.32))
+	var bob := create_tween()
+	for i in steps:
+		bob.tween_property(body, "position:y", -10.0, time / float(steps) * 0.5)
+		bob.tween_property(body, "position:y", 0.0, time / float(steps) * 0.5)
+	await _tween.finished
+	if is_instance_valid(bob):
+		bob.kill()
+	body.position.y = 0.0
+
 ## Повернуться лицом к x.
 func face_toward(x: float) -> void:
 	if absf(x - position.x) > 2.0:

@@ -155,30 +155,6 @@
       ]
     },
     {
-      "id": "warrior_slack",
-      "type": "random",
-      "who": "warrior",
-      "handler": "nap",
-      "chance_per_min": 0.8,
-      "cooldown": 75,
-      "duration": [
-        8,
-        14
-      ],
-      "lines": [
-        "Всё, на сегодня я нагеройствовался.",
-        "Я не сплю. Я экономлю силы для подвига.",
-        "Если кто спросит — я в разведке.",
-        "Пять минуточек… Великому герою положен отдых.",
-        "Работать? Пусть работают те, кому не повезло с удачей."
-      ],
-      "wake": [
-        "…А? Я на посту был. Всё под контролем.",
-        "Ладно-ладно, встаю…",
-        "Приснилось, что я богат и никуда не надо…"
-      ]
-    },
-    {
       "id": "bump",
       "type": "random",
       "who": "*",
@@ -211,6 +187,279 @@
       "lose": [
         "sad",
         "angry"
+      ]
+    },
+    {
+      "id": "witch_cauldron_magic",
+      "type": "spot",
+      "who": "witch",
+      "spot": "Cauldron",
+      "radius": 380,
+      "if": [
+        "cauldron"
+      ],
+      "daily": true,
+      "chance": 0.7,
+      "cooldown": 30,
+      "seek": 0.4,
+      "steps": [
+        {
+          "go": "witch",
+          "to": "CauldronRight"
+        },
+        {
+          "face": "witch",
+          "to": "Cauldron"
+        },
+        {
+          "emote": "idea",
+          "who": "witch"
+        },
+        {
+          "wait": 0.6
+        },
+        {
+          "magic": true
+        },
+        {
+          "wait": 1.2
+        },
+        {
+          "hop": "witch"
+        },
+        {
+          "wait": 0.4
+        },
+        {
+          "hop": "witch"
+        },
+        {
+          "wait": 0.8
+        },
+        {
+          "brew": "witch",
+          "potions": [
+            "slime_potion",
+            "energy_tonic",
+            "rage_phial"
+          ],
+          "chance": [
+            0.3,
+            0.3,
+            0.4,
+            0.5
+          ],
+          "fail": "alchemy_slag",
+          "drop": "CauldronDrop",
+          "good": "happy",
+          "bad": "sweat",
+          "good_say": "Получилось!",
+          "bad_say": "Опять шлак…"
+        },
+        {
+          "wait": 1.6
+        },
+        {
+          "magic": false
+        },
+        {
+          "wait": 0.6
+        }
+      ]
+    },
+    {
+      "id": "warrior_cauldron_cook",
+      "type": "spot",
+      "who": "warrior",
+      "spot": "Cauldron",
+      "radius": 380,
+      "if": [
+        "cauldron"
+      ],
+      "daily": true,
+      "chance": 0.7,
+      "cooldown": 30,
+      "seek": 0.4,
+      "steps": [
+        {
+          "go": "warrior",
+          "to": "CauldronLeft"
+        },
+        {
+          "face": "warrior",
+          "to": "Cauldron"
+        },
+        {
+          "say": "Так… Где тут сковородка?",
+          "who": "warrior"
+        },
+        {
+          "wait": 1.4
+        },
+        {
+          "hop": "warrior"
+        },
+        {
+          "wait": 0.5
+        },
+        {
+          "hop": "warrior"
+        },
+        {
+          "wait": 0.6
+        },
+        {
+          "give": [
+            "jelly",
+            "steak",
+            "apple_pie"
+          ],
+          "who": "warrior",
+          "drop": "CauldronDrop",
+          "emote": "happy",
+          "say_after": "Шедевр! Герой ещё и повар."
+        },
+        {
+          "wait": 1.6
+        }
+      ]
+    },
+    {
+      "id": "slime_trail",
+      "type": "random",
+      "who": [
+        "fufu",
+        "aki",
+        "luisa"
+      ],
+      "handler": "slime",
+      "daily": true,
+      "chance_per_min": 1.0,
+      "cooldown": 10,
+      "count": [
+        2,
+        4
+      ],
+      "skip_routes": [
+        "Stairs"
+      ]
+    },
+    {
+      "id": "luisa_fireplace",
+      "type": "random",
+      "who": "luisa",
+      "handler": "visit",
+      "spot": "Fireplace",
+      "if": [
+        "fireplace_on"
+      ],
+      "chance_per_min": 1.5,
+      "cooldown": 45,
+      "steps": [
+        {
+          "face": "luisa",
+          "to": "Fireplace"
+        },
+        {
+          "say": "Тут так жарко, я скоро растаю…",
+          "who": "luisa"
+        },
+        {
+          "wait": 1.6
+        },
+        {
+          "hop": "luisa"
+        },
+        {
+          "turn_off": "fireplace"
+        },
+        {
+          "wait": 0.4
+        },
+        {
+          "emote": "happy",
+          "who": "luisa"
+        },
+        {
+          "wait": 1.2
+        }
+      ]
+    },
+    {
+      "id": "warrior_flirt",
+      "type": "random",
+      "who": "warrior",
+      "handler": "flirt",
+      "chance_per_min": 1.2,
+      "cooldown": 50,
+      "radius": 600,
+      "distance": 170,
+      "success": 0.1,
+      "line_time": 2.8,
+      "reply_time": 2.0,
+      "lines": [
+        "Ты случайно не сундук? А то я бы тебя открыл… в смысле, узнал получше!",
+        "Ты, наверное, устала — весь день бегаешь у меня в голове.",
+        "Моя удача сегодня на максимуме: я встретил тебя!",
+        "Если бы красота была уроном — ты бы ваншотнула всё подземелье.",
+        "Не хочешь со мной в подземелье? Романтика, темнота, монстры…",
+        "Я бы достал тебе звезду с неба, но они тут на ниточках.",
+        "Я великий искатель приключений. Ищу, кстати, и спутницу жизни.",
+        "Говорят, у героев много поклонниц. Будешь первой?"
+      ],
+      "replies": {
+        "*": [
+          "Нет.",
+          "…Что?",
+          "Ты это всем говоришь?"
+        ],
+        "witch": [
+          "Лучше дров для камина принеси.",
+          "Иди проспись, герой."
+        ],
+        "fufu": [
+          "Сначала устрой мне шоу, потом поговорим~",
+          "Хи-хи, нет~"
+        ],
+        "aki": [
+          "Ты головой не ударялся? Давай полечу.",
+          "Ой… Нет, спасибо!"
+        ],
+        "luisa": [
+          "Ммм… Сначала догони~",
+          "Скучно. Попробуй ещё."
+        ]
+      },
+      "lucky_replies": {
+        "*": [
+          "…Ладно, это было мило."
+        ]
+      },
+      "reactions": {
+        "*": [
+          "dots",
+          "question"
+        ],
+        "witch": [
+          "angry",
+          "dots"
+        ],
+        "fufu": [
+          "note",
+          "happy"
+        ],
+        "aki": [
+          "question",
+          "sweat"
+        ],
+        "luisa": [
+          "dots",
+          "angry"
+        ]
+      },
+      "after": [
+        "sweat",
+        "sad"
       ]
     }
   ]

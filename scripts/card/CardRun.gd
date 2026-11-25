@@ -343,7 +343,7 @@ static func room_hint(r: Dictionary) -> String:
 			return "Кто-то зовёт\nна помощь…"
 		"event":
 			match String(r.get("event", "")):
-				"shop": return "Купить карты\nи лечение"
+				"shop": return "Зелья, еда\nи посохи"
 				"noctris": return "Лечение или\nвоскрешение"
 				"chest": return "Золото и\nдобыча"
 				"statue":

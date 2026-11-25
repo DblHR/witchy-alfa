@@ -172,7 +172,6 @@ func _add_hero_column(data: CharacterData) -> int:
 		holder.mouse_filter = Control.MOUSE_FILTER_STOP
 		holder.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 		holder.modulate = Color(1, 1, 1, 1.0 if in_deck else OUT_ALPHA)
-		holder.tooltip_text = "В бою — нажмите, чтобы убрать" if in_deck else "Не берём — нажмите, чтобы взять"
 		var key := c.key
 		var id := data.id
 		holder.gui_input.connect(func(e: InputEvent) -> void:

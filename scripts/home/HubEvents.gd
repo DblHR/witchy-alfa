@@ -19,7 +19,14 @@ class_name HubEvents
 ##       {"hop": "witch"}                     — подпрыгнуть
 ##       {"go": "warrior", "to": "CauldronLeft"} — дойти до точки (по линии; на другую линию — прыжком)
 ##       {"face": "witch", "to": "Cauldron"}  — повернуться к точке
-##       {"turn_on": "fireplace"} / {"turn_off": "pumpkin"} — включить / выключить камин, тыкву.
+##       {"turn_on": "fireplace"} / {"turn_off": "pumpkin"} — включить / выключить камин, тыкву;
+##       {"magic": true} / {"magic": false}   — включить / погасить магический круг у котла;
+##       {"brew": "witch", ...}               — сварить у котла: с шансом "chance"[уровень котла]
+##           случайное зелье из "potions", иначе "fail" (шлак); кладётся на пол у точки "drop"
+##           (HubPile, кликнуть — забрать); удалось — смайлик "good" и фраза "good_say", нет — "bad" / "bad_say";
+##       {"give": ["jelly", "steak"], "who": "warrior", "drop": "Cauldron"} — положить на пол одно
+##           случайное из списка (можно "count"), смайлик "emote", фраза "say_after".
+##   "daily"     — true: не чаще раза в игровой день (DayCycle); у случайных — раз в день каждому.
 ## Пока идёт событие, его участники не гуляют, а сам дом живёт как обычно.
 ##
 ## Случайные события ("type": "random") — не у места, а «иногда»: "chance_per_min" — шанс за минуту,
@@ -28,7 +35,14 @@ class_name HubEvents
 ##   "stairs_fall" — на лестнице спрыгнуть вбок и полежать "lie" сек ("throw": [x, y] — скорость);
 ##   "eat"         — съесть персонажа рядом ("radius"), через "hold" сек выплюнуть; тот лежит "lie" сек
 ##                   и показывает смайлик из "reactions" (id -> смайлик);
-##   "leave"       — дойти до двери (точка Door) и уйти из дома на "away": [от, до] сек.
+##   "visit"       — сам идёт к точке "spot" (на другую линию — прыжком) и там делает "steps"
+##                   (как у событий на местах); "if" — условия;
+##   "flirt"       — подходит к девочке рядом (та же линия, ближе "radius") и подкатывает: фраза из
+##                   "lines", её ответ — "replies"[id] или "replies"["*"], смайлики — "reactions"[id];
+##                   с шансом "success" ей нравится (heart), иначе он грустит ("after");
+##   "slime"       — идёт и оставляет за собой лужицу слизи (HubPile, "count": [от, до] штук);
+##   "leave"       — дойти до двери (точка Door), зайти в проём (точка DoorIn), растворяясь,
+##                   и уйти из дома на "away": [от, до] сек. Возвращается так же: из проёма к Door.
 ##   У "nap" можно "lines" — фраза перед сном (одна случайная) и "wake" — фраза, когда встаёт.
 ##
 ## События на двоих (тоже "type": "random", второй — кто окажется рядом):
@@ -81,6 +95,8 @@ func _process(delta: float) -> void:
 			if _try_random(ev):
 				return
 			continue
+		if bool(ev.get("daily", false)) and _done_today(id):
+			continue
 		var ws := _participants(ev)
 		if ws.is_empty():
 			continue
@@ -92,8 +108,22 @@ func _process(delta: float) -> void:
 			continue
 		_inside[id] = true
 		if randf() < float(ev.get("chance", 1.0)):
+			if bool(ev.get("daily", false)):
+				_mark_today(id)
 			_run(ev, ws)
 			return
+
+## Раз в день: счётчик StoryState "hub_daily:<событие>[:<кто>]" = номер дня + 1.
+func _daily_key(key: String) -> String:
+	return "hub_daily:" + key
+
+func _done_today(key: String) -> bool:
+	return StoryState_ != null and StoryState_.get_counter(_daily_key(key)) == DayCycle.day_number() + 1
+
+func _mark_today(key: String) -> void:
+	if StoryState_ != null:
+		var k := _daily_key(key)
+		StoryState_.add_counter(k, DayCycle.day_number() + 1 - StoryState_.get_counter(k))
 
 func _busy() -> bool:
 	if DialogueManager_ != null and DialogueManager_.is_showing():
@@ -146,13 +176,16 @@ func _conditions_ok(ev: Dictionary) -> bool:
 func _try_random(ev: Dictionary) -> bool:
 	var who = ev.get("who", "*")
 	var walkers: Dictionary = hub.get("walkers")
-	var ids: Array = walkers.keys() if String(who) == "*" else (who if who is Array else [who])
+	var ids: Array = walkers.keys() if (who is String and String(who) == "*") else (who if who is Array else [who])
 	ids.shuffle()
 	var p := float(ev.get("chance_per_min", 1.0)) * CHECK_EVERY / 60.0
 	var bump := String(ev.get("handler", "")) == "bump"
 	for id in ids:
 		var w: HomeWalker = walkers.get(String(id))
 		if w == null or not _free(w) or w.on_bed() or w.is_lying() or not _random_ok(ev, w):
+			continue
+		var daily := bool(ev.get("daily", false))
+		if daily and _done_today(String(ev.get("id", "")) + ":" + w.unit_id):
 			continue
 		if bump:
 			# Шанс — один раз на встречу этой пары.
@@ -165,6 +198,8 @@ func _try_random(ev: Dictionary) -> bool:
 				continue
 		elif randf() >= p:
 			continue
+		if daily:
+			_mark_today(String(ev.get("id", "")) + ":" + w.unit_id)
 		_run_random(ev, w)
 		return true
 	return false
@@ -183,6 +218,13 @@ func _random_ok(ev: Dictionary, w: HomeWalker) -> bool:
 			return _bump_partner(ev, w) != null
 		"rps":
 			return _rps_partner(ev, w) != null
+		"flirt":
+			return _flirt_partner(ev, w) != null
+		"visit":
+			return spot(String(ev.get("spot", ""))) != null
+		"slime":
+			# Только на ходу и не на лестнице (лужица должна лежать на полу).
+			return w.state == HomeWalker.State.WALK and w.route != null and not (ev.get("skip_routes", ["Stairs"]) as Array).has(String(w.route.name))
 		"leave":
 			var door := spot("Door")
 			if door == null or w.route == null:
@@ -248,6 +290,12 @@ func _run_random(ev: Dictionary, w: HomeWalker) -> void:
 			await _h_bump(ev, w)
 		"rps":
 			await _h_rps(ev, w)
+		"slime":
+			_h_slime(ev, w)
+		"visit":
+			await _h_visit(ev, w)
+		"flirt":
+			await _h_flirt(ev, w)
 		"stairs_fall":
 			await _h_stairs_fall(ev, w)
 		"eat":
@@ -448,7 +496,12 @@ func _h_leave(ev: Dictionary, w: HomeWalker) -> void:
 		return
 	hub.chatter.emote(w, "dots")
 	await get_tree().create_timer(0.6).timeout
-	await w.fade(0.0, 0.6)
+	# Заходит в проём (точка Spots/DoorIn) и растворяется; нет точки — просто тает на месте.
+	var inside := spot("DoorIn")
+	if inside != null and is_instance_valid(w):
+		await w.walk_door(inside.global_position, float(ev.get("exit_time", 1.4)))
+	elif is_instance_valid(w):
+		await w.fade(0.0, 0.6)
 	if is_instance_valid(w):
 		hub.send_away(w, _range(ev, "away", Vector2(90, 180)))
 
@@ -463,6 +516,8 @@ func seek_dist(w: HomeWalker) -> float:
 		if not (ev is Dictionary) or float(ev.get("seek", 0.0)) <= 0.0:
 			continue
 		if float(_cooldown.get(String(ev.get("id", "")), 0.0)) > 0.0 or not _conditions_ok(ev):
+			continue
+		if bool(ev.get("daily", false)) and _done_today(String(ev.get("id", ""))):
 			continue
 		var who = ev.get("who", [])
 		var ids: Array = who if who is Array else [who]
@@ -495,6 +550,12 @@ func _run(ev: Dictionary, ws: Array) -> void:
 				w = walkers[String(st[key])]
 		if st.has("wait"):
 			await get_tree().create_timer(float(st["wait"])).timeout
+		elif st.has("magic"):
+			hub.set("magic_forced", bool(st["magic"]))
+		elif st.has("brew") and walkers.has(String(st["brew"])):
+			await _step_brew(st, walkers[String(st["brew"])])
+		elif st.has("give") and w != null:
+			await _step_give(st, w)
 		elif st.has("emote") and w != null:
 			hub.chatter.emote(w, String(st["emote"]))
 		elif st.has("say") and w != null:
@@ -516,8 +577,142 @@ func _run(ev: Dictionary, ws: Array) -> void:
 			var t = hub.get(String(st.get("turn_on" if on else "turn_off", "")))
 			if t is HubToggle and (t as HubToggle).is_on != on:
 				(t as HubToggle).toggle()
+	hub.set("magic_forced", false)
 	for w in ws:
 		if is_instance_valid(w):
 			(w as HomeWalker).set_frozen(false)
 	_cooldown[String(ev.get("id", ""))] = float(ev.get("cooldown", 30.0))
 	running = false
+
+## Где положить: у точки "drop" (по умолчанию — CauldronDrop) в пределах "spread" px по сторонам;
+## из нескольких случайных мест — самое далёкое от уже лежащих кучек, чтобы не слипались.
+func _drop_pos(st: Dictionary) -> Vector2:
+	var s := spot(String(st.get("drop", "CauldronDrop")))
+	var base := s.global_position if s != null else Vector2(960, 1040)
+	var spread := float(st.get("spread", 120.0))
+	var taken: Array = HubPile.all().map(func(d) -> Vector2: return d["pos"])
+	var best := base
+	var best_gap := -1.0
+	for i in 8:
+		var c := base + Vector2(randf_range(-spread, spread), randf_range(-6.0, 6.0))
+		var gap := 9999.0
+		for t in taken:
+			gap = minf(gap, c.distance_to(t))
+		if gap > best_gap:
+			best_gap = gap
+			best = c
+	return best
+
+## Ведьмочка колдует у котла: зелье или шлак. Шанс — по уровню котла (AlchemyDB.cauldron_level).
+func _step_brew(st: Dictionary, w: HomeWalker) -> void:
+	var chances: Array = st.get("chance", [0.3])
+	var lvl := clampi(AlchemyDB.cauldron_level(), 0, chances.size() - 1)
+	var potions: Array = st.get("potions", ["slime_potion"])
+	var good := randf() < float(chances[lvl]) and not potions.is_empty()
+	var item := String(potions[randi() % potions.size()]) if good else String(st.get("fail", "alchemy_slag"))
+	hub.call("drop_pile", item, 1, w.unit_id, _drop_pos(st))
+	hub.chatter.emote(w, String(st.get("good" if good else "bad", "happy" if good else "sweat")))
+	var line := String(st.get("good_say" if good else "bad_say", ""))
+	if line != "":
+		await get_tree().create_timer(0.6).timeout
+		hub.chatter.say(w, line)
+
+## Положить на пол одно случайное из списка (еда воина).
+func _step_give(st: Dictionary, w: HomeWalker) -> void:
+	var list: Array = st.get("give", [])
+	if list.is_empty():
+		return
+	hub.call("drop_pile", String(list[randi() % list.size()]), int(st.get("count", 1)), w.unit_id, _drop_pos(st))
+	if st.has("emote"):
+		hub.chatter.emote(w, String(st["emote"]))
+	var line := String(st.get("say_after", ""))
+	if line != "":
+		await get_tree().create_timer(0.6).timeout
+		hub.chatter.say(w, line)
+
+## Сам идёт к месту и делает там шаги события (Луиса тушит камин).
+func _h_visit(ev: Dictionary, w: HomeWalker) -> void:
+	var s := spot(String(ev.get("spot", "")))
+	if s == null:
+		return
+	w.set_frozen(true)
+	var n: Array = hub.nearest_spot(s.global_position)
+	if n[0] != null:
+		await w.event_move(n[0], float(n[1]))
+	if not is_instance_valid(w) or w.state != HomeWalker.State.FROZEN or not _conditions_ok(ev):
+		if is_instance_valid(w):
+			w.set_frozen(false)
+		return
+	await _run(ev, [w])
+
+## Девочка рядом с воином (не он сам): та же линия, ближе "radius".
+func _flirt_partner(ev: Dictionary, w: HomeWalker) -> HomeWalker:
+	if w.route == null:
+		return null
+	var best: HomeWalker = null
+	var best_d := float(ev.get("radius", 600.0))
+	var walkers: Dictionary = hub.get("walkers")
+	for o in walkers.values():
+		if o == w or not is_instance_valid(o) or not _free(o):
+			continue
+		var ow := o as HomeWalker
+		if ow.route != w.route or ow.on_bed() or ow.is_lying():
+			continue
+		var d := absf(ow.dist - w.dist)
+		if d < best_d:
+			best_d = d
+			best = ow
+	return best
+
+## Воин подкатывает: подходит, фраза-пикап, ответ и смайлик девочки, его реакция.
+func _h_flirt(ev: Dictionary, w: HomeWalker) -> void:
+	var o := _flirt_partner(ev, w)
+	if o == null:
+		return
+	w.set_frozen(true)
+	o.set_frozen(true)
+	var side := signf(w.dist - o.dist)
+	if side == 0.0:
+		side = 1.0
+	var stand := clampf(o.dist + side * float(ev.get("distance", 170.0)), 0.0, o.route.length())
+	await w.event_move(o.route, stand)
+	if not _still_frozen([w, o]):
+		_unfreeze([w, o])
+		return
+	w.face_toward(o.position.x)
+	await get_tree().create_timer(0.3).timeout
+	o.face_toward(w.position.x)
+	var lines: Array = ev.get("lines", [])
+	if not lines.is_empty():
+		hub.chatter.say(w, String(lines[randi() % lines.size()]))
+	await get_tree().create_timer(float(ev.get("line_time", 2.6))).timeout
+	if not _still_frozen([w, o]):
+		_unfreeze([w, o])
+		return
+	var lucky := randf() < float(ev.get("success", 0.1))
+	var reactions: Dictionary = ev.get("reactions", {})
+	var emo: Array = reactions.get(o.unit_id, reactions.get("*", ["dots"]))
+	hub.chatter.emote(o, "heart" if lucky else (String(emo[randi() % emo.size()]) if not emo.is_empty() else "dots"))
+	var replies: Dictionary = ev.get("lucky_replies" if lucky else "replies", {})
+	var rl: Array = replies.get(o.unit_id, replies.get("*", []))
+	if not rl.is_empty():
+		await get_tree().create_timer(0.5).timeout
+		hub.chatter.say(o, String(rl[randi() % rl.size()]))
+	await get_tree().create_timer(float(ev.get("reply_time", 2.0))).timeout
+	if _still_frozen([w, o]):
+		if lucky:
+			hub.chatter.emote(w, "exclaim")
+			await w.event_hop()
+		else:
+			var after: Array = ev.get("after", ["sweat", "sad"])
+			hub.chatter.emote(w, String(after[randi() % after.size()]) if not after.is_empty() else "sweat")
+		await get_tree().create_timer(1.2).timeout
+	_unfreeze([w, o])
+
+## Слизнедевочка оставляет лужицу слизи у себя под ногами и идёт дальше.
+func _h_slime(ev: Dictionary, w: HomeWalker) -> void:
+	var r: Array = ev.get("count", [2, 4])
+	var n := randi_range(int(r[0]), int(r[r.size() - 1]))
+	hub.call("drop_pile", String(ev.get("item", "slime_goop")), n, w.unit_id, w.global_position + Vector2(0, 2))
+	if ev.has("emote"):
+		hub.chatter.emote(w, String(ev["emote"]))
