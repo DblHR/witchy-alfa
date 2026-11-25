@@ -1,0 +1,23 @@
+{
+  "_readme": [
+    "Фразы и смайлики этого персонажа в доме (scripts/home/HubChatter.gd).",
+    "every — раз во сколько секунд [от, до]; emote_chance — доля смайликов, остальное — фразы.",
+    "emotes — имена картинок из assets/ui/emotes/: heart, angry, exclaim, question, sweat, note, zzz, dots, happy, sad, idea."
+  ],
+  "every": [
+    25,
+    60
+  ],
+  "emote_chance": 0.5,
+  "phrases": [
+    "Тихо тут. Подозрительно тихо.",
+    "Надо бы потренироваться.",
+    "Когда уже в подземелье?",
+    "Хм."
+  ],
+  "emotes": [
+    "exclaim",
+    "dots",
+    "sweat"
+  ]
+}

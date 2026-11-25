@@ -38,6 +38,13 @@ func _ready() -> void:
 	inv.pressed.connect(func(): SceneRouter_.go_to_inventory())
 	_collect_routes()
 	_spawn_walkers()
+	# Фразы и смайлики над чибиками, события на местах и встречи.
+	chatter = HubChatter.new()
+	add_child(chatter)
+	chatter.setup(self)
+	events = HubEvents.new()
+	add_child(events)
+	events.setup(self)
 	# Котла ещё нет (покупается у Рикки) — слоя с котлом (котёл и коврик) не видно, клика нет.
 	cauldron_layer.visible = AlchemyDB.has_cauldron()
 	magic_effect.visible = cauldron_layer.visible
@@ -92,6 +99,16 @@ func connections_at(route: HomeRoute, at_end: bool) -> Array:
 			out.append([r, false])
 	return out
 
+## Брошенный персонаж падает от prev к now: на какую линию он приземлился — [линия, d, y]
+## (верхняя из пересечённых), [] — пока ни на какую.
+func floor_crossing(prev: Vector2, now: Vector2) -> Array:
+	var best: Array = []
+	for r in routes:
+		var c := r.crossing(prev, now)
+		if not c.is_empty() and (best.is_empty() or float(c["y"]) < float(best[2])):
+			best = [r, float(c["d"]), float(c["y"])]
+	return best
+
 ## Ближайшее к точке место маршрута: [линия, расстояние вдоль неё].
 func nearest_spot(p: Vector2) -> Array:
 	var best: HomeRoute = null
@@ -111,6 +128,11 @@ const HOME_UNITS := ["witch", "warrior", "aki", "luisa", "fufu"]
 const SPRITE_PATH := "res://assets/characters/%s/%s_battle.png"
 ## Где персонажи появляются (линии без кровати, случайно).
 var walkers: Dictionary = {}   ## id -> HomeWalker
+var chatter: HubChatter        ## фразы и смайлики над головами (assets/characters/<id>/hub/chatter.json)
+var events: HubEvents          ## события на местах и встречи (data/hub/events.json, точки — Spots)
+
+func event_running() -> bool:
+	return events != null and events.running
 
 var _walker_hider: VnSpriteHider
 
@@ -157,7 +179,7 @@ func _sync_layer(w: HomeWalker) -> void:
 	if not is_instance_valid(w):
 		return
 	var target: Node2D = walkers_front
-	if w.state == HomeWalker.State.DRAG:
+	if w.state in [HomeWalker.State.DRAG, HomeWalker.State.FLY]:
 		target = drag_layer
 	elif w.route != null and w.route.layer == 0:
 		target = walkers_back
@@ -412,9 +434,8 @@ func _input(event: InputEvent) -> void:
 			get_viewport().set_input_as_handled()
 			if _dragging:
 				_dragging = false
-				var spot := nearest_spot(w.position)
-				if spot[0] != null:
-					w.drop(spot[0], float(spot[1]))
+				# Бросок: летит со скоростью курсора, отскакивает и приземляется на линию под собой.
+				w.throw(w.throw_velocity())
 			else:
 				_click(w)
 			return
@@ -684,15 +705,7 @@ func _say_mess_bubble() -> void:
 	if not is_instance_valid(w):
 		return
 	if _bubble_layer == null:
-		_bubble_layer = BattleSpeechLayer.new()
-		_bubble_layer.name = "HubBubbleLayer"
-		_bubble_layer.bubble_offset = Vector2.ZERO
-		_bubble_layer.bubble_min_width = 300.0
-		_bubble_layer.bubble_max_width = 460.0
-		_bubble_layer.bubble_font_px = 26
-		_bubble_layer.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-		_bubble_layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		add_child(_bubble_layer)
+		_bubble_layer = chatter.bubble_layer()
 	_bubble_layer.show_line_for_actor(w.head_anchor(), MESS_BUBBLE_TEXT)
 	StoryState_.set_flag(MESS_BUBBLE_FLAG, true)
 

@@ -57,6 +57,23 @@ func point_at(d: float) -> Vector2:
 			return _pts[i - 1].lerp(_pts[i], clampf(t, 0.0, 1.0))
 	return _pts[_pts.size() - 1]
 
+## Падающий персонаж пересёк линию между точками prev и now (сверху вниз)? {"d", "y"} — где;
+## {} — нет. Почти вертикальные куски линии не считаются (на них не встать).
+func crossing(prev: Vector2, now: Vector2) -> Dictionary:
+	var x := now.x
+	for i in range(1, _pts.size()):
+		var a := _pts[i - 1]
+		var b := _pts[i]
+		var lo := minf(a.x, b.x)
+		var hi := maxf(a.x, b.x)
+		if hi - lo < 4.0 or x < lo or x > hi:
+			continue
+		var t := (x - a.x) / (b.x - a.x)
+		var y := lerpf(a.y, b.y, t)
+		if prev.y <= y + 2.0 and now.y >= y:
+			return {"d": _cum[i - 1] + t * a.distance_to(b), "y": y}
+	return {}
+
 ## Ближайшая точка линии к p: {"d": расстояние вдоль линии, "dist": расстояние до p}.
 func nearest(p: Vector2) -> Dictionary:
 	var best_d := 0.0

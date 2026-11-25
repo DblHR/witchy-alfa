@@ -417,6 +417,20 @@ script = ExtResource("7_route")
 layer = 0
 action = "bed"
 
+[node name="Spots" type="Node2D" parent="."]
+
+[node name="Fireplace" type="Marker2D" parent="Spots"]
+position = Vector2(340, 986)
+
+[node name="Cauldron" type="Marker2D" parent="Spots"]
+position = Vector2(910, 990)
+
+[node name="CauldronLeft" type="Marker2D" parent="Spots"]
+position = Vector2(690, 1036)
+
+[node name="CauldronRight" type="Marker2D" parent="Spots"]
+position = Vector2(1130, 1032)
+
 [node name="StartRunButton" type="TextureButton" parent="." unique_id=841560713]
 unique_name_in_owner = true
 layout_mode = 0

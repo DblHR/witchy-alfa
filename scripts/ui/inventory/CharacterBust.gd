@@ -33,6 +33,27 @@ static func texture(src: Texture2D, char_id: String = "") -> Texture2D:
 	_cache[key] = out
 	return out
 
+## Вся фигура без пустых полей вокруг (картинки НПС нарисованы на целом холсте 1920x1080).
+static func full_figure(src: Texture2D) -> Texture2D:
+	if src == null:
+		return null
+	var key := "%s|full" % src.resource_path
+	if _cache.has(key):
+		return _cache[key]
+	var out: Texture2D = src
+	var img := src.get_image()
+	if img != null:
+		if img.is_compressed():
+			img.decompress()
+		var used := img.get_used_rect()
+		if used.has_area():
+			var at := AtlasTexture.new()
+			at.atlas = src
+			at.region = Rect2(used)
+			out = at
+	_cache[key] = out
+	return out
+
 static func _region(src: Texture2D, char_id: String) -> Rect2:
 	if OVERRIDES.has(char_id):
 		return OVERRIDES[char_id]

@@ -360,14 +360,42 @@ func _build_character_entries() -> Array[Dictionary]:
 			"count": -1,
 			"bust": true,
 		})
+	# НПС (Рикка, Ноктрис, Сессилия) — после героинь: с ними тоже копится доверие (NpcTrust).
+	for npc_id in NpcTrust.NPC_IDS:
+		if not _npc_met(npc_id):
+			continue
+		var portrait := load(NPC_PORTRAIT % [npc_id, npc_id]) as Texture2D if ResourceLoader.exists(NPC_PORTRAIT % [npc_id, npc_id]) else null
+		out.append({
+			"id": NPC_ENTRY_PREFIX + npc_id,
+			"title": StoryDialogueDB_.get_character_name(npc_id) if StoryDialogueDB_ != null else npc_id,
+			"subtitle": "",
+			"icon": CharacterBust.texture(portrait, npc_id),
+			"count": -1,
+			"bust": true,
+		})
 	return out
+
+const NPC_ENTRY_PREFIX := "npc:"
+const NPC_PORTRAIT := "res://assets/npc/%s/%s.png"
+
+## Встречали ли НПС: Рикка — всегда; остальные — есть доверие или был с ними диалог.
+func _npc_met(npc_id: String) -> bool:
+	if npc_id == "rikka" or NpcTrust.points(npc_id) > 0:
+		return true
+	if StoryState_ == null or StoryDialogueDB_ == null:
+		return false
+	for did in StoryState_.seen_dialogues.keys():
+		var d: Dictionary = StoryDialogueDB_.get_dialogue(String(did))
+		if NpcTrust.normalize(String(d.get("npc", ""))) == npc_id:
+			return true
+	return false
 
 func _get_columns_for_section(section: int) -> int:
 	match section:
 		Section.LORE:
 			return 1
 		Section.CHARACTERS:
-			return 2
+			return 3
 		Section.GALLERY:
 			return 2
 		_:
@@ -464,6 +492,10 @@ func _show_character_detail(unit_id: String) -> void:
 	_match_detail_visibility(false, true, false, false)
 	detail_title_label.text = "Карточка персонажа"
 	detail_hint_label.text = ""
+	if unit_id.begins_with(NPC_ENTRY_PREFIX):
+		_show_npc_detail(unit_id.trim_prefix(NPC_ENTRY_PREFIX))
+		return
+	_cards_button.visible = true
 	var data: CharacterData = CharDB.get_by_id(unit_id)
 	if data == null:
 		_show_empty_detail_for_section()
@@ -498,6 +530,41 @@ func _show_character_detail(unit_id: String) -> void:
 	_char_notes_text = "Пока ничего не известно." if facts.is_empty() else "•  " + "\n•  ".join(facts)
 	_show_char_tab(1 if _notes_tab.button_pressed else 0)
 
+## Карточка НПС: портрет, доверие (5 сердечек), карта за максимальное доверие, описание и заметки.
+func _show_npc_detail(npc_id: String) -> void:
+	_current_char_id = ""
+	var who := StoryDialogueDB_.get_character_name(npc_id) if StoryDialogueDB_ != null else npc_id
+	var path := NPC_PORTRAIT % [npc_id, npc_id]
+	character_sprite.texture = CharacterBust.full_figure(load(path) as Texture2D) if ResourceLoader.exists(path) else null
+	character_name.text = who
+	_rank_label.text = "Житель подземелья" if npc_id != "rikka" else "Торговка"
+	_cards_button.visible = false
+	var card_id := String(NpcTrust.NPC_CARDS.get(npc_id, ""))
+	var def := load(NpcTrust.CARD_DIR + card_id + ".tres") as CardDef if card_id != "" and ResourceLoader.exists(NpcTrust.CARD_DIR + card_id + ".tres") else null
+	var stats := ""
+	if def != null:
+		var card_text := def.description.replace("{0}", "X")
+		for tag in ["[d]", "[/d]", "[e]", "[/e]"]:
+			card_text = card_text.replace(tag, "")
+		stats = "[b]Карта за доверие:[/b]\n«%s» — %d эн.\n[font_size=19]%s[/font_size]" % [def.title, def.cost, card_text]
+		if NpcTrust.has_card(npc_id):
+			stats += "\n[color=#7a3f86][b]Уже в колоде.[/b][/color]"
+	character_stats.text = stats
+	var pr := NpcTrust.progress(npc_id)
+	var lvl := int(pr["level"])
+	_fill_hearts(lvl, NpcTrust.MAX_LEVEL)
+	if lvl >= NpcTrust.MAX_LEVEL:
+		_trust_text.text = "[b]Доверие:[/b] максимальное"
+	else:
+		_trust_text.text = "[b]Доверие:[/b] ещё %d до %d уровня" % [int(pr["need"]) - int(pr["into_level"]), lvl + 1]
+		if def != null:
+			_trust_text.text += "\n[b]Следующая награда[/b] — на %d уровне: карта «%s»" % [NpcTrust.MAX_LEVEL, def.title]
+	var desc := LoreData.character_description(npc_id)
+	_char_desc_text = desc if desc != "" else "%s. Доверие растёт, когда вы тратите у неё золото, выполняете её поручения и проводите с ней время (сердечко рядом с ней)." % who
+	var facts := LoreData.character_facts(npc_id)
+	_char_notes_text = "Пока ничего не известно." if facts.is_empty() else "•  " + "\n•  ".join(facts)
+	_show_char_tab(1 if _notes_tab.button_pressed else 0)
+
 ## Вкладки под карточкой: 0 — «Описание», 1 — «Заметки».
 func _show_char_tab(tab: int) -> void:
 	_desc_tab.set_pressed_no_signal(tab == 0)
@@ -505,7 +572,8 @@ func _show_char_tab(tab: int) -> void:
 	_tab_text.text = _char_notes_text if tab == 1 else _char_desc_text
 	_tab_text.scroll_to_line(0)
 
-func _fill_hearts(level: int) -> void:
+## Сердечки: total штук (героини — 10, НПС — 5), заполнены level.
+func _fill_hearts(level: int, total: int = UnitRoster.RELATIONSHIP_MAX) -> void:
 	var tex := _heart_texture()
 	while _hearts.get_child_count() < UnitRoster.RELATIONSHIP_MAX:
 		var h := TextureRect.new()
@@ -517,7 +585,9 @@ func _fill_hearts(level: int) -> void:
 		h.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		_hearts.add_child(h)
 	for i in _hearts.get_child_count():
-		(_hearts.get_child(i) as CanvasItem).modulate = Color.WHITE if i < level else HEART_EMPTY
+		var h := _hearts.get_child(i) as CanvasItem
+		h.visible = i < total
+		h.modulate = Color.WHITE if i < level else HEART_EMPTY
 
 ## Сердечко без пустых полей вокруг (картинка — на целый холст 1920x1080).
 var _heart_tex: Texture2D

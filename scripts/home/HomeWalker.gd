@@ -27,6 +27,18 @@ const HOP_TIME := 0.42
 const BREATH := 0.012
 const BREATH_PERIOD := 2.4
 
+## Бросок (отпустили, пока тащили): летит со скоростью курсора, падает, отскакивает от пола,
+## приземляется на линию маршрута под собой (Hub.floor_crossing).
+const GRAVITY := 3600.0
+const THROW_MAX := 1400.0          ## быстрее не летит, px/с
+const THROW_KEEP := 0.75           ## какая доля скорости курсора достаётся персонажу
+const AIR_DRAG := 1.35             ## торможение в воздухе по горизонтали (доля в секунду)
+const BOUNCE := 0.25               ## отскок от пола: доля вертикальной скорости
+const BOUNCE_MIN_VY := 450.0       ## медленнее — уже не отскакивает, приземляется
+const WALL_BOUNCE := 0.5           ## отскок от краёв экрана
+const AIR_TILT := 0.00028          ## наклон в полёте от горизонтальной скорости
+const FLY_BOUNDS := Rect2(40, -600, 1840, 1720)
+
 signal route_changed(walker: HomeWalker)
 
 var unit_id := ""
@@ -38,7 +50,7 @@ var home: Node                ## Hub: routes, layer_for(route), connections_at(r
 var route: HomeRoute
 var dist := 0.0
 
-enum State { IDLE, WALK, HOP, BED, DRAG, FALL, FROZEN }
+enum State { IDLE, WALK, HOP, BED, DRAG, FALL, FROZEN, FLY }
 var state := State.IDLE
 
 var _scale := 1.0
@@ -52,6 +64,9 @@ var _bed_left := 0.0
 var _hover := false
 var _poke_tex: Texture2D
 var _drag_offset := Vector2.ZERO
+var _vel := Vector2.ZERO
+var _fly_time := 0.0
+var _drag_samples: Array = []   ## [время, точка] — скорость курсора для броска
 var _last_x := 0.0
 
 func setup(p_id: String, tex: Texture2D, p_home: Node) -> void:
@@ -102,6 +117,8 @@ func _process(delta: float) -> void:
 				_decide()
 		State.WALK:
 			_walk_step(delta)
+		State.FLY:
+			_fly_step(delta)
 		State.BED:
 			_bed_left -= delta
 			if bed_tex != null and body.texture == bed_tex:
@@ -141,6 +158,14 @@ func _decide() -> void:
 	if route.action == "bed":
 		_leave_bed()
 		return
+	# Есть событие с этим персонажем на его линии (HubEvents, "seek") — пойти к тому месту.
+	var events = home.get("events") if home != null else null
+	if events != null:
+		var sd: float = events.seek_dist(self)
+		if sd >= 0.0:
+			_go_end = -1
+			_walk_to(sd)
+			return
 	if randf() < CHANCE_GO_TO_END:
 		_go_end = 0 if randf() < 0.5 else 1
 		_walk_to(0.0 if _go_end == 0 else route.length())
@@ -290,15 +315,100 @@ func begin_drag(mouse: Vector2) -> void:
 		body.offset = Vector2(-base_tex.get_width() * 0.5, -_feet_y(base_tex))
 	_poke_tex = null
 	state = State.DRAG
+	_drag_samples.clear()
 	_drag_offset = position - mouse
 	body.position.y = 0.0
 	body.scale = Vector2(_scale, _scale)
 
 func drag_to(mouse: Vector2) -> void:
 	var to := mouse + _drag_offset
+	var now := Time.get_ticks_msec() / 1000.0
+	_drag_samples.append([now, to])
+	while _drag_samples.size() > 2 and now - float(_drag_samples[0][0]) > 0.1:
+		_drag_samples.pop_front()
 	# Покачивается за курсором.
 	body.rotation = lerpf(body.rotation, clampf((to.x - position.x) * 0.012, -0.35, 0.35), 0.3)
 	position = to
+
+## Скорость курсора за последние ~0.1 с (держали неподвижно — 0).
+func throw_velocity() -> Vector2:
+	if _drag_samples.size() < 2:
+		return Vector2.ZERO
+	var now := Time.get_ticks_msec() / 1000.0
+	var last: Array = _drag_samples[_drag_samples.size() - 1]
+	if now - float(last[0]) > 0.08:
+		return Vector2.ZERO
+	var first: Array = _drag_samples[0]
+	var dt := float(last[0]) - float(first[0])
+	if dt <= 0.001:
+		return Vector2.ZERO
+	return ((last[1] as Vector2) - (first[1] as Vector2)) / dt * THROW_KEEP
+
+## Отпустили: полетели (с нулевой скоростью — просто падает вниз).
+func throw(v: Vector2) -> void:
+	_kill_tween()
+	_drag_samples.clear()
+	_vel = v.limit_length(THROW_MAX)
+	_fly_time = 0.0
+	state = State.FLY
+	route_changed.emit(self)
+
+func _fly_step(delta: float) -> void:
+	_fly_time += delta
+	var prev := position
+	_vel.y += GRAVITY * delta
+	_vel.x *= maxf(0.0, 1.0 - AIR_DRAG * delta)
+	position += _vel * delta
+	body.rotation = lerpf(body.rotation, clampf(_vel.x * AIR_TILT, -0.6, 0.6), 0.25)
+	if position.x < FLY_BOUNDS.position.x or position.x > FLY_BOUNDS.end.x:
+		position.x = clampf(position.x, FLY_BOUNDS.position.x, FLY_BOUNDS.end.x)
+		_vel.x = -_vel.x * WALL_BOUNCE
+	if position.y < FLY_BOUNDS.position.y:
+		position.y = FLY_BOUNDS.position.y
+		_vel.y = absf(_vel.y) * WALL_BOUNCE
+	if position.x != prev.x:
+		_face_right(position.x > prev.x)
+	# Упал ниже всего или летает слишком долго — на ближайшее место маршрута.
+	if position.y > FLY_BOUNDS.end.y or _fly_time > 5.0:
+		var spot: Array = home.nearest_spot(position)
+		if spot[0] != null:
+			drop(spot[0], float(spot[1]))
+		return
+	if _vel.y <= 0.0:
+		return
+	var hit: Array = home.floor_crossing(prev, position)
+	if hit.is_empty():
+		return
+	var r: HomeRoute = hit[0]
+	position.y = float(hit[2])
+	if _vel.y > BOUNCE_MIN_VY and r.action != "bed":
+		_vel.y = -_vel.y * BOUNCE
+		_vel.x *= 0.6
+		var tw := create_tween()
+		tw.tween_property(body, "scale", Vector2(_scale * 1.1, _scale * 0.88), 0.05)
+		tw.tween_property(body, "scale", Vector2(_scale, _scale), 0.1)
+		return
+	_land(r, float(hit[1]))
+
+## Приземлился на линию r в точку d: присесть и стоять (на кровати — её действие).
+func _land(r: HomeRoute, d: float) -> void:
+	_vel = Vector2.ZERO
+	route = r
+	dist = r.length() if r.action == "bed" else d
+	position = r.point_at(dist)
+	state = State.FALL
+	route_changed.emit(self)
+	_kill_tween()
+	_tween = create_tween()
+	_tween.tween_property(body, "rotation", 0.0, 0.12)
+	_tween.parallel().tween_property(body, "scale", Vector2(_scale * 1.1, _scale * 0.88), 0.07)
+	_tween.tween_property(body, "scale", Vector2(_scale, _scale), 0.14)
+	_tween.tween_callback(func() -> void:
+		_last_x = position.x
+		if r.action == "bed":
+			_start_bed_action()
+		else:
+			_idle(randf_range(IDLE_MIN, IDLE_MAX)))
 
 ## Отпустили: упасть на ближайшее место маршрута (на кровати — сразу её действие).
 func drop(r: HomeRoute, d: float) -> void:
@@ -324,6 +434,48 @@ func drop(r: HomeRoute, d: float) -> void:
 			_start_bed_action()
 		else:
 			_idle(randf_range(IDLE_MIN, IDLE_MAX)))
+
+# --- Для событий (HubEvents): персонаж «заморожен», двигается по сценарию ---------------
+
+## Подпрыгнуть на месте (не меняя состояния). await event_hop()
+func event_hop() -> void:
+	_kill_tween()
+	body.position.y = 0.0
+	_tween = create_tween()
+	_squash_hop(_tween, HOP_HEIGHT)
+	await _tween.finished
+
+## Дойти до точки d линии r: по своей линии — пешком, на другую — прыжком. await event_move(...)
+func event_move(r: HomeRoute, d: float) -> void:
+	_kill_tween()
+	var from := position
+	var to := r.point_at(d)
+	_face_right(to.x > from.x)
+	if from.distance_to(to) < 4.0:
+		return
+	_tween = create_tween()
+	if r == route:
+		var d0 := dist
+		var t := absf(d - d0) / WALK_SPEED_MAX
+		_tween.tween_method(func(k: float) -> void:
+			dist = lerpf(d0, d, k)
+			position = route.point_at(dist)
+			body.position.y = -absf(sin(k * t * PI / STEP_PERIOD)) * STEP_BOB, 0.0, 1.0, maxf(0.15, t))
+	else:
+		route = r
+		dist = d
+		route_changed.emit(self)
+		_tween.tween_method(func(k: float) -> void:
+			position = from.lerp(to, k) + Vector2(0, -sin(k * PI) * 60.0), 0.0, 1.0, clampf(from.distance_to(to) / 600.0, 0.3, 0.8))
+	await _tween.finished
+	body.position.y = 0.0
+	dist = d
+	_last_x = position.x
+
+## Повернуться лицом к x.
+func face_toward(x: float) -> void:
+	if absf(x - position.x) > 2.0:
+		_face_right(x > position.x)
 
 # --- Разное --------------------------------------------------------------------------
 

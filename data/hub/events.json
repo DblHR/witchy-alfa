@@ -1,0 +1,52 @@
+{
+  "_readme": [
+    "События чибиков в доме. Как устроено — scripts/home/HubEvents.gd (там же все шаги).",
+    "Места — точки в Hub.tscn -> Spots (Marker2D, двигайте в редакторе; новые — просто добавьте точку).",
+    "Пока это тестовые события: шанс высокий, откат маленький — потом уменьшим/увеличим."
+  ],
+  "events": [
+    {
+      "id": "witch_fireplace",
+      "type": "spot",
+      "who": "witch",
+      "spot": "Fireplace",
+      "radius": 170,
+      "if": ["fireplace_off"],
+      "chance": 0.9,
+      "cooldown": 15,
+      "seek": 0.6,
+      "steps": [
+        {"face": "witch", "to": "Fireplace"},
+        {"emote": "angry", "who": "witch"},
+        {"wait": 1.0},
+        {"hop": "witch"},
+        {"turn_on": "fireplace"},
+        {"wait": 0.5},
+        {"emote": "happy", "who": "witch"},
+        {"wait": 1.2}
+      ]
+    },
+    {
+      "id": "warrior_witch_cauldron",
+      "type": "meet",
+      "who": ["warrior", "witch"],
+      "spot": "Cauldron",
+      "radius": 380,
+      "if": ["cauldron"],
+      "chance": 0.9,
+      "cooldown": 30,
+      "seek": 0.4,
+      "steps": [
+        {"go": "warrior", "to": "CauldronLeft"},
+        {"go": "witch", "to": "CauldronRight"},
+        {"face": "warrior", "to": "Cauldron"},
+        {"face": "witch", "to": "Cauldron"},
+        {"wait": 0.4},
+        {"say": "Рванёт?", "who": "warrior"},
+        {"wait": 2.6},
+        {"say": "Не должно...", "who": "witch"},
+        {"wait": 2.6}
+      ]
+    }
+  ]
+}
