@@ -16,8 +16,15 @@ class_name DayCycle
 ## Действия: ACTIONS — сколько действий доступно игроку за день и за ночь (пока ни на что не влияет,
 ## но считается: spend_action() / actions_left()). Подключим, когда решим, что тратит действия.
 ##
-## Пока время суток меняется только вручную: клик по кровати в доме (для тестов) или кнопка в
-## админ-панели (F9).
+## Смена времени суток:
+##   - кровать в доме (только ночью): ночь -> утро следующего дня (sleep());
+##   - запуск забега на подготовке: день -> ночь (on_run_launched()); забег ночью — усталость:
+##     первый раз — героиня предлагает поспать (можно отказаться: в забеге максимум энергии 1),
+##     дальше — максимум энергии 0 (fatigue_for_next_run()). Сон снимает усталость;
+##   - в самом начале игры ночь, а в подземелье ещё не ходили — «Я слишком устала» (Hub);
+##   - кнопка в админ-панели (F9).
+## Ночью: лавка Рикки закрыта, сексуальные взаимодействия доступны. Днём: лавка открыта,
+## на экран отношений не пускают («Лучше приходи ко мне ночью~»). Несексуальные — всегда.
 
 enum Phase { DAY, NIGHT }
 const PHASE_NAMES := ["day", "night"]
@@ -30,6 +37,17 @@ const ACTIONS := {Phase.DAY: 3, Phase.NIGHT: 2}
 const COUNTER_PHASE := "day_phase"            ## 0 — ещё не начинали (= DEFAULT_PHASE), 1 — день, 2 — ночь
 const COUNTER_DAY := "day_number"
 const COUNTER_SPENT := "day_actions_spent"
+## Сколько забегов начато после последнего сна (0 — ещё не ходили; 1 — сходили днём; 2+ — ночью).
+const COUNTER_RUNS := "runs_since_sleep"
+## Тексты (реплики героя) — data/dialogues/story/day_night.json.
+const DLG_TOO_TIRED := "day_night_too_tired"
+const DLG_SHOP_CLOSED := "day_night_shop_closed"
+const DLG_RUN_TIRED := "day_night_run_tired"
+const DLG_RUN_MUMBLE := "day_night_run_mumble"
+## Флаг: в «Сил совсем нет…» выбрали «Нет, не время для сна!».
+const FLAG_PUSH_ON := "fatigue_push_on"
+## Флаг: подсветить кровать (после «Я слишком устала»), снимается сном.
+const FLAG_BED_HINT := "bed_hint"
 
 static func phase() -> Phase:
 	if StoryState_ == null:
@@ -64,6 +82,58 @@ static func advance() -> void:
 		if StoryState_ != null:
 			StoryState_.add_counter(COUNTER_DAY, 1)
 		set_phase(Phase.DAY)
+
+## Ночью лавка Рикки закрыта: герой говорит об этом (VN). true — закрыто (никуда не идём).
+static func shop_closed_say() -> bool:
+	if not is_night():
+		return false
+	if DialogueManager_ != null and not DialogueManager_.is_showing() and StoryDialogueDB_ != null:
+		var d: Dictionary = StoryDialogueDB_.get_dialogue(DLG_SHOP_CLOSED)
+		if not d.is_empty():
+			DialogueManager_.show_sequence(StoryDialogueDB_.resolve_lines(d))
+	return true
+
+# --- Сон и забеги -------------------------------------------------------------------
+
+static func runs_since_sleep() -> int:
+	return StoryState_.get_counter(COUNTER_RUNS) if StoryState_ != null else 0
+
+## Ночь, а в подземелье ещё не ходили (начало игры): идти нельзя — надо выспаться.
+static func too_tired_to_start() -> bool:
+	return is_night() and runs_since_sleep() == 0
+
+## Кровать: ночь -> утро следующего дня, усталость снята. false — сейчас не ночь.
+static func sleep() -> bool:
+	if not is_night() or StoryState_ == null:
+		return false
+	advance()
+	StoryState_.add_counter(COUNTER_RUNS, -runs_since_sleep())
+	StoryState_.set_flag(FLAG_BED_HINT, false)
+	return true
+
+## Усталость для забега, который сейчас запускают: 0 — нет; 1 — уже ходили сегодня
+## (героиня предложит поспать; отказ — максимум энергии 1); 2 — ещё раз (максимум энергии 0).
+static func fatigue_for_next_run() -> int:
+	if not is_night():
+		return 0
+	return clampi(runs_since_sleep(), 0, 2)
+
+## Забег запущен: днём наступает ночь; счётчик забегов после сна +1.
+static func on_run_launched() -> void:
+	if StoryState_ == null:
+		return
+	if not is_night():
+		set_phase(Phase.NIGHT)
+	StoryState_.add_counter(COUNTER_RUNS, 1)
+
+## Максимум энергии в бою при усталости (fatigue 1 -> 1, 2 -> 0; 0 — без ограничения: -1).
+static func fatigue_energy_cap(fatigue: int) -> int:
+	match fatigue:
+		1:
+			return 1
+		2:
+			return 0
+	return -1
 
 # --- Действия (заготовка) -----------------------------------------------------------
 

@@ -1232,4 +1232,25 @@ func _on_start_button_pressed() -> void:
 		return
 	_ensure_default_leader()
 	DungRun.party_level = int(party_level.value)
+	# Ночь после забега — усталость (DayCycle): 1 — «Может, лучше поспать?» (да — домой, нет — в бой
+	# с максимумом энергии 1); 2 — бормотание и в бой с максимумом энергии 0.
+	var fatigue := DayCycle.fatigue_for_next_run()
+	if fatigue == 0:
+		_launch_run(0)
+		return
+	if DialogueManager_.is_showing():
+		return
+	var d := StoryDialogueDB_.get_dialogue(DayCycle.DLG_RUN_TIRED if fatigue == 1 else DayCycle.DLG_RUN_MUMBLE)
+	StoryState_.set_flag(DayCycle.FLAG_PUSH_ON, false)
+	DialogueManager_.show_sequence(StoryDialogueDB_.resolve_lines(d), func() -> void:
+		if fatigue == 1 and not StoryState_.has_flag(DayCycle.FLAG_PUSH_ON):
+			SceneRouter_.go_to_hub()   ## «Да, отличная идея!» — домой, спать
+			return
+		StoryState_.set_flag(DayCycle.FLAG_PUSH_ON, false)
+		_launch_run(fatigue))
+
+## В бой: день сменяется ночью, усталость — на весь забег (DungRun.run_fatigue).
+func _launch_run(fatigue: int) -> void:
+	DungRun.run_fatigue = fatigue
+	DayCycle.on_run_launched()
 	SceneRouter_.go_to_card_battle()

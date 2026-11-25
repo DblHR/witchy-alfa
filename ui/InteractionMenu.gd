@@ -91,6 +91,8 @@ func _build(anchor: Vector2, extra: Array) -> void:
 				right = "с %d ур." % int(a.get("unlock", 0))
 			Interactions.State.USED_TODAY:
 				right = "завтра"
+			Interactions.State.NIGHT_ONLY:
+				right = "ночью"
 		var b := _row(String(a.get("title", id)), right, st == Interactions.State.OK)
 		b.name = "Action_" + id
 		b.pressed.connect(func() -> void:

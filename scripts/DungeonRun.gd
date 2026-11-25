@@ -22,6 +22,8 @@ var pending_next_index: int = -1
 
 # session meta
 var gold: int = 0
+## Усталость в текущем забеге (DayCycle): 0 — нет, 1 — максимум энергии 1, 2 — максимум энергии 0.
+var run_fatigue: int = 0
 ## Золото, заработанное в текущем забеге (для карты Рикки; обнуляется в начале забега и картой).
 var run_gold_earned: int = 0
 var xp: int = 0
@@ -84,6 +86,7 @@ func start_new_run(run_seed: int = -1) -> void:
 	emit_changed()
 
 func reset_to_defaults() -> void:
+	run_fatigue = 0
 	rooms.clear()
 	room_index = 0
 	party_ids = ["witch", "", ""]

@@ -339,7 +339,18 @@ func _hero_id(character_id: String) -> String:
 func _hero_text(text: String) -> String:
 	if text.contains("{hero}"):
 		text = text.replace("{hero}", get_character_name(get_main_hero_id()))
-	return names_text(text)
+	return names_text(hero_forms(text))
+
+## «{устала|устал}» -> первое слово, если главный герой — Ведьмочка, второе — если Воин.
+func hero_forms(text: String) -> String:
+	if not text.contains("|"):
+		return text
+	var re := RegEx.new()
+	re.compile("\\{([^{}|]*)\\|([^{}|]*)\\}")
+	var second := get_main_hero_id() == "warrior"
+	for m in re.search_all(text):
+		text = text.replace(m.get_string(0), m.get_string(2 if second else 1))
+	return text
 
 ## {name:ключ} -> имя, которое придумал игрок (StoryState_.custom_names), например {name:rikka_flower}.
 ## Пока имени нет — подставляется DEFAULT_CUSTOM_NAMES или пусто.

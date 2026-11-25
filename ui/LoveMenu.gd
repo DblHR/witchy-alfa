@@ -75,13 +75,26 @@ func _build() -> void:
 		b.tooltip_text = data.display_name if data != null else ""
 		b.pressed.connect(func() -> void:
 			character_pressed.emit(id)
-			SceneRouter_.go_to_love(id))
+			_open_love(id))
 		add_child(b)
 		_buttons.append(b)
 		_open_pos[b] = Vector2(column.position.x + (column.size.x - BUTTON_SIZE.x) * 0.5,
 			column.position.y + y)
 		y += BUTTON_SIZE.y + GAP
-	heart.visible = true
+	# Пока в отряде нет ни одной героини с экраном отношений — сердечка нет.
+	heart.visible = not _buttons.is_empty()
+
+## Днём на экран отношений не пускают: героиня говорит реплику "day_refusal" из своей папки love
+## (assets/characters/<id>/love/interactions.json). Сексуальные взаимодействия — только ночью.
+func _open_love(id: String) -> void:
+	if DayCycle.is_night():
+		SceneRouter_.go_to_love(id)
+		return
+	if DialogueManager_ == null or DialogueManager_.is_showing():
+		return
+	var lines := Interactions.day_refusal_lines(id)
+	if not lines.is_empty():
+		DialogueManager_.show_sequence(lines)
 
 func character_ids() -> Array[String]:
 	var out: Array[String] = []

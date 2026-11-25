@@ -33,6 +33,9 @@ const _TargetMark := preload("res://scripts/card/TargetMark.gd")
 
 # --- Правила прототипа (все числа тестовые) ----------------------------------
 const ENERGY_PER_TURN := 3
+## Значок усталости в строке посохов и еды (DayCycle: забег без сна).
+const FATIGUE_KEY := "fatigue"
+const FATIGUE_ICON := "res://assets/ui/battle/fatigue.png"
 const HAND_SIZE := 5
 ## Щит держится до начала следующего хода игрока (после удара врагов).
 const SHIELD_EXPIRES_ON_NEW_TURN := true
@@ -598,9 +601,14 @@ func _without_run_burned(cards: Array[CardInstance]) -> Array[CardInstance]:
 		out.append(c)
 	return out
 
+## Энергия на ход. Усталость (забег ночью, DayCycle) опускает максимум до 1 или 0.
+func max_energy() -> int:
+	var cap := DayCycle.fatigue_energy_cap(DungRun.run_fatigue)
+	return ENERGY_PER_TURN if cap < 0 else mini(ENERGY_PER_TURN, cap)
+
 func _begin_player_turn() -> void:
 	_stats.turns += 1
-	_energy = ENERGY_PER_TURN
+	_energy = max_energy()
 	_turn_no += 1
 	_energy += int(_relics.turn_bonus(_turn_no).get("energy", 0))
 	_combat.enemy_phase = false
@@ -620,7 +628,7 @@ func _clear_hand_views() -> void:
 	_refresh_pile_buttons()
 
 func _refresh_energy() -> void:
-	energy_label.text = "Энергия: %d/%d" % [_energy, ENERGY_PER_TURN]
+	energy_label.text = "Энергия: %d/%d" % [_energy, max_energy()]
 	for v in _hand_views:
 		var cost := _combat.effective_cost(v.card)
 		v.set_cost_text(cost, cost > v.card.cost)
@@ -1878,6 +1886,11 @@ func _buff_entries() -> Array:
 		var item_id := RunItems.get_potion_item_id(pid)
 		out.append({"key": "potion:%d" % i, "potion": true, "icon": Inventory_.get_item_icon(item_id),
 			"title": RunItems.get_potion_name(pid), "desc": RunItems.get_potion_desc(pid) + "\nНажмите, чтобы выпить (в свой ход)."})
+	# Усталость — рядом с посохами и едой.
+	if DungRun.run_fatigue > 0:
+		out.append({"key": FATIGUE_KEY, "icon": load(FATIGUE_ICON) as Texture2D if ResourceLoader.exists(FATIGUE_ICON) else null,
+			"title": "Усталость" if DungRun.run_fatigue == 1 else "Сильная усталость",
+			"desc": "Ушли в подземелье, не выспавшись. Максимум энергии на ход: %d.\nВыспитесь дома, чтобы снять." % max_energy()})
 	for id in _relics.items:
 		out.append({"key": id, "icon": Inventory_.get_item_icon(id), "title": RunItems.get_item_name(id),
 			"desc": RunItems.get_item_desc(id), "stats": _relics.stats_text(id)})

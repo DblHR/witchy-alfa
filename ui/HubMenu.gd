@@ -91,6 +91,8 @@ func _go(method: String) -> void:
 	var path := cur.scene_file_path if cur != null else ""
 	if SceneRouter_ == null or path == _scene_path(method):
 		return   ## уже здесь — никуда не идём
+	if method == "go_to_shop" and DayCycle.shop_closed_say():
+		return   ## ночью лавка закрыта
 	SceneRouter_.call(method)
 
 static func _scene_path(method: String) -> String:

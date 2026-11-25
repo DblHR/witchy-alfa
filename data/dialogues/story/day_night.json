@@ -1,0 +1,44 @@
+{
+  "_readme": [
+    "День и ночь (scripts/home/DayCycle.gd): реплики героя игрока.",
+    "{устала|устал} — первое слово для Ведьмочки, второе для Воина (работает в любой реплике)."
+  ],
+  "dialogues": [
+    {
+      "id": "day_night_too_tired",
+      "type": "system",
+      "lines": [
+        {"speaker": "hero", "text": "Я слишком {устала|устал}, надо отдохнуть.", "characters": [{"id": "hero"}]}
+      ]
+    },
+    {
+      "id": "day_night_shop_closed",
+      "type": "system",
+      "lines": [
+        {"speaker": "hero", "text": "Рикка уже закончила работать, надо навестить её днём.", "characters": [{"id": "hero"}]}
+      ]
+    },
+    {
+      "id": "day_night_run_tired",
+      "type": "system",
+      "lines": [
+        {
+          "speaker": "hero",
+          "text": "Сил совсем нет... Может, лучше поспать?",
+          "characters": [{"id": "hero"}],
+          "choices": [
+            {"text": "Да, отличная идея!"},
+            {"text": "Нет, не время для сна!", "on_choose": {"set_flags": ["fatigue_push_on"]}}
+          ]
+        }
+      ]
+    },
+    {
+      "id": "day_night_run_mumble",
+      "type": "system",
+      "lines": [
+        {"speaker": "hero", "text": "*Неразборчивое бормотание*", "characters": [{"id": "hero"}]}
+      ]
+    }
+  ]
+}

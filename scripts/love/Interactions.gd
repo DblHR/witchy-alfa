@@ -26,7 +26,7 @@ const MAIN_HEROES := ["witch", "warrior"]
 ## Счётчик StoryState: в какой день действие делали последний раз.
 const DAY_COUNTER := "interaction_day:%s:%s"
 
-enum State { OK, LOCKED, USED_TODAY }
+enum State { OK, LOCKED, USED_TODAY, NIGHT_ONLY }
 
 static var _data: Dictionary = {}
 
@@ -94,6 +94,9 @@ static func used_today(char_id: String, action_id: String) -> bool:
 static func state(char_id: String, action_id: String) -> State:
 	if level(char_id) < int(action(action_id).get("unlock", 0)):
 		return State.LOCKED
+	# Сексуальные — только ночью (DayCycle).
+	if String(action(action_id).get("kind", KIND_CUTE)) == KIND_LEWD and not DayCycle.is_night():
+		return State.NIGHT_ONLY
 	if used_today(char_id, action_id):
 		return State.USED_TODAY
 	return State.OK
@@ -171,6 +174,17 @@ static func menu_lines(char_id: String) -> Array:
 		lines.append({"speaker": char_id, "text": DEFAULT_GREETING})
 	lines[lines.size() - 1]["choices"] = [{"interactions": KIND_CUTE, "with": char_id}, {"text": "Уйти"}]
 	return _resolve(char_id, "greeting", lines)
+
+## Днём на экран отношений не пускают: реплики "day_refusal" из папки love (нет — общая фраза).
+const DEFAULT_DAY_REFUSAL := "С самого утра? Лучше приходи ко мне ночью~"
+static func day_refusal_lines(char_id: String) -> Array:
+	var lines: Array = []
+	for l in _raw_lines(char_id, "day_refusal"):
+		if l is Dictionary:
+			lines.append((l as Dictionary).duplicate(true))
+	if lines.is_empty():
+		lines.append({"speaker": char_id, "text": DEFAULT_DAY_REFUSAL})
+	return _resolve(char_id, "day_refusal", lines)
 
 ## Строки выбора в VN вместо {"interactions": "cute", "with": id}: по одной на действие.
 ## {text, interaction, with, disabled}. Закрытые — «(с N ур.)», сделанные сегодня — «(завтра)».

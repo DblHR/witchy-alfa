@@ -4,8 +4,9 @@ class_name DialogueOverlay
 ##
 ## Портреты ставятся по правилам VnPortraits (одна высота, голова у верхней линии, тело по центру
 ## места): говорящий — яркий и чуть крупнее, остальные притушены. Появление и уход — плавные.
-## Клик / пробел / Enter: допечатать реплику, затем следующая. Кнопки: История, Авто, Пропустить,
-## Скрыть (посмотреть на картинку; любой клик возвращает окно).
+## Клик / пробел / Enter: допечатать реплику, затем следующая. Кнопки (как в ZZZ): сверху справа
+## «Меню» — раскрывает Пропустить, Авто, История; внизу справа «Скрыть» (посмотреть на картинку;
+## любой клик возвращает окно).
 ##
 ## Реплика — Dictionary (из StoryDialogueDB.resolve_lines): speaker, speaker_name, text,
 ## characters [{id, portrait, slot?}], active_character. Старые ресурсы DialogueLine тоже читаются.
@@ -62,6 +63,18 @@ var _name_label: Label
 var _text: Label
 var _arrow: Label
 var _buttons: Dictionary = {}
+var _menu_button: Button
+var _menu_panel: PanelContainer
+## Кнопки VN (как в ZZZ): размеры, место «Скрыть», цвета значков.
+const MENU_PILL_SIZE := Vector2(230, 56)
+const MENU_ITEM_SIZE := Vector2(260, 56)
+const HIDE_PILL_SIZE := Vector2(210, 52)
+const HIDE_PILL_POS := Vector2(1660, 970)
+const PILL_PURPLE := Color(0.62, 0.36, 1.0)
+const PILL_ORANGE := Color(1.0, 0.45, 0.1)
+const PILL_BLUE := Color(0.16, 0.62, 1.0)
+const PILL_VIOLET := Color(0.55, 0.32, 0.98)
+const PILL_PINK := Color(1.0, 0.45, 0.72)
 var _history_panel: Control
 var _history_text: RichTextLabel
 var _hidden_hint: Label
@@ -234,20 +247,48 @@ func _build() -> void:
 	_arrow.position = BUBBLE_RECT.end - Vector2(62, 50)
 	_ui.add_child(_arrow)
 
-	# Кнопки — в верхней полосе справа (как Skip в ZZZ).
-	var defs := [["skip", "Пропустить"], ["auto", "Авто"], ["log", "История"], ["hide", "Скрыть"]]
-	var x := BUTTONS_RIGHT
-	for d in defs:
-		x -= BUTTON_SIZE.x
-		var b := _make_button(String(d[1]))
-		b.position = Vector2(x, BUTTONS_Y)
-		_ui.add_child(b)
+	# Кнопки как в ZZZ: сверху справа «Меню» (фиолетовый значок с тремя полосками), по нажатию
+	# под ним раскрываются «Пропустить», «Авто», «История»; «Скрыть» — внизу справа.
+	_menu_button = _make_pill("Меню", "menu", PILL_PURPLE, MENU_PILL_SIZE)
+	_menu_button.position = Vector2(BUTTONS_RIGHT - MENU_PILL_SIZE.x, BUTTONS_Y)
+	_menu_button.pressed.connect(func() -> void: _set_menu_open(not _menu_panel.visible))
+	_ui.add_child(_menu_button)
+	_menu_panel = PanelContainer.new()
+	var ps := StyleBoxFlat.new()
+	ps.bg_color = Color(0.04, 0.04, 0.05, 0.94)
+	ps.set_corner_radius_all(26)
+	ps.set_border_width_all(3)
+	ps.border_color = Color(0.28, 0.28, 0.32)
+	ps.set_content_margin_all(14)
+	_menu_panel.add_theme_stylebox_override("panel", ps)
+	_menu_panel.visible = false
+	_ui.add_child(_menu_panel)
+	var col := VBoxContainer.new()
+	col.add_theme_constant_override("separation", 12)
+	_menu_panel.add_child(col)
+	for d in [["skip", "Пропустить", "skip", PILL_ORANGE], ["auto", "Авто", "auto", PILL_BLUE], ["log", "История", "log", PILL_VIOLET]]:
+		var b := _make_pill(String(d[1]), String(d[2]), d[3], MENU_ITEM_SIZE)
+		col.add_child(b)
 		_buttons[String(d[0])] = b
-		x -= 10.0
-	(_buttons["skip"] as Button).pressed.connect(_on_skip_pressed)
-	(_buttons["auto"] as Button).pressed.connect(_on_auto_pressed)
-	(_buttons["log"] as Button).pressed.connect(_on_log_pressed)
-	(_buttons["hide"] as Button).pressed.connect(func() -> void: _set_ui_hidden(true))
+	_menu_panel.reset_size()
+	_menu_panel.position = Vector2(BUTTONS_RIGHT - _menu_panel.size.x + 10.0, BUTTONS_Y + MENU_PILL_SIZE.y + 12.0)
+	_menu_panel.pivot_offset = Vector2(_menu_panel.size.x - 40.0, 0)
+	(_buttons["skip"] as Button).pressed.connect(func() -> void:
+		_set_menu_open(false)
+		_on_skip_pressed())
+	(_buttons["auto"] as Button).pressed.connect(func() -> void:
+		_on_auto_pressed()
+		_set_menu_open(false))
+	(_buttons["log"] as Button).pressed.connect(func() -> void:
+		_set_menu_open(false)
+		_on_log_pressed())
+	var hide_b := _make_pill("Скрыть", "hide", PILL_PINK, HIDE_PILL_SIZE)
+	hide_b.position = HIDE_PILL_POS
+	_ui.add_child(hide_b)
+	_buttons["hide"] = hide_b
+	hide_b.pressed.connect(func() -> void:
+		_set_menu_open(false)
+		_set_ui_hidden(true))
 
 	_hidden_hint = Label.new()
 	_hidden_hint.text = "Клик — вернуть окно"
@@ -261,6 +302,69 @@ func _build() -> void:
 	_frame.add_child(_hidden_hint)
 
 	_build_history()
+
+# --- Кнопки-«пилюли» VN (как в ZZZ): тёмная, с рамкой, слева цветной кружок со значком ---------
+
+func _pill_style(border: Color, bg: Color = Color(0.05, 0.05, 0.06, 0.95)) -> StyleBoxFlat:
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = bg
+	sb.set_corner_radius_all(30)
+	sb.set_border_width_all(3)
+	sb.border_color = border
+	sb.content_margin_left = 58
+	sb.content_margin_right = 18
+	return sb
+
+var _pill_font: FontVariation
+func _pill_text_font() -> Font:
+	if _pill_font == null:
+		_pill_font = FontVariation.new()
+		_pill_font.base_font = get_theme_default_font()
+		_pill_font.variation_embolden = 0.9
+		_pill_font.variation_transform = Transform2D(Vector2(1, 0), Vector2(-0.2, 1), Vector2.ZERO)   ## курсив
+	return _pill_font
+
+func _make_pill(text: String, icon_kind: String, icon_color: Color, psize: Vector2) -> Button:
+	var b := Button.new()
+	b.text = text
+	b.size = psize
+	b.custom_minimum_size = psize
+	b.pivot_offset = psize * 0.5
+	b.focus_mode = Control.FOCUS_NONE
+	b.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	b.add_theme_font_override("font", _pill_text_font())
+	b.add_theme_font_size_override("font_size", 23)
+	b.add_theme_color_override("font_color", Color(1, 1, 1, 0.95))
+	b.add_theme_color_override("font_hover_color", Color.WHITE)
+	b.add_theme_color_override("font_pressed_color", Color.WHITE)
+	b.add_theme_stylebox_override("normal", _pill_style(Color(0.3, 0.3, 0.34)))
+	b.add_theme_stylebox_override("hover", _pill_style(Color(0.85, 0.85, 0.9)))
+	b.add_theme_stylebox_override("pressed", _pill_style(icon_color))
+	b.add_theme_stylebox_override("focus", StyleBoxEmpty.new())
+	var ic := VnPillIcon.new()
+	ic.kind = icon_kind
+	ic.color = icon_color
+	ic.size = Vector2(36, 36)
+	ic.position = Vector2(12, (psize.y - 36.0) * 0.5)
+	ic.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	b.add_child(ic)
+	b.mouse_entered.connect(func() -> void: _tween_scale(b, 1.05))
+	b.mouse_exited.connect(func() -> void: _tween_scale(b, 1.0))
+	b.button_down.connect(func() -> void: _tween_scale(b, 0.95))
+	b.button_up.connect(func() -> void: _tween_scale(b, 1.05 if b.is_hovered() else 1.0))
+	return b
+
+func _set_menu_open(open: bool) -> void:
+	if _menu_panel == null or _menu_panel.visible == open:
+		return
+	_menu_panel.visible = open
+	if open:
+		_menu_panel.modulate.a = 0.0
+		_menu_panel.scale = Vector2(0.92, 0.92)
+		var t := _menu_panel.create_tween().set_parallel(true)
+		t.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+		t.tween_property(_menu_panel, "modulate:a", 1.0, 0.14)
+		t.tween_property(_menu_panel, "scale", Vector2.ONE, 0.16).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 
 func _button_style(color: Color) -> StyleBoxFlat:
 	var sb := StyleBoxFlat.new()
@@ -405,6 +509,9 @@ func _unhandled_key_input(event: InputEvent) -> void:
 
 ## Клик: вернуть скрытое окно -> допечатать реплику -> следующая реплика.
 func _advance() -> void:
+	if _menu_panel != null and _menu_panel.visible:
+		_set_menu_open(false)   ## клик мимо раскрытого «Меню» — просто закрыть его
+		return
 	if _ui_hidden:
 		_set_ui_hidden(false)
 		return
@@ -524,6 +631,12 @@ func _apply_line(line) -> void:
 	_show_characters(_unique_characters(characters), active)
 	_apply_cg(line)
 	_apply_fade(line)
+	# Реплика только убирает картинку ("cg": "", без текста и выбора) — сразу к следующей,
+	# иначе осталось бы пустое окно без текста и кнопок.
+	if body == "" and line is Dictionary and (line as Dictionary).has("cg") and String(line["cg"]) == "" \
+			and not (line as Dictionary).has("choices"):
+		_show_next_line.call_deferred()
+		return
 
 	var color := VnPortraits.name_color(active)
 	var name_col := color.lightened(0.4)
@@ -909,7 +1022,10 @@ func _refresh_auto_button() -> void:
 	if b == null:
 		return
 	b.text = "Авто: вкл" if _auto_mode else "Авто"
-	b.add_theme_stylebox_override("normal", _button_style(BTN_ON if _auto_mode else BTN_BG))
+	b.add_theme_stylebox_override("normal", _pill_style(PILL_BLUE if _auto_mode else Color(0.3, 0.3, 0.34)))
+	# «Меню» подсвечено синим, пока включено «Авто» (сам список закрыт).
+	if _menu_button != null:
+		_menu_button.add_theme_stylebox_override("normal", _pill_style(PILL_BLUE if _auto_mode else Color(0.3, 0.3, 0.34)))
 
 func _on_log_pressed() -> void:
 	var t := ""
@@ -930,3 +1046,37 @@ func _set_ui_hidden(hidden: bool) -> void:
 		_band.visible = not hidden and not _cg.visible
 		_top_band.visible = not hidden
 		_hidden_hint.visible = hidden
+
+## Значок в кружке слева на кнопке VN: menu — три полоски, skip — ▶|, auto — ▶, log — список, hide — глаз.
+class VnPillIcon extends Control:
+	var kind := "menu"
+	var color := Color(0.62, 0.36, 1.0)
+	const INK := Color(0.06, 0.05, 0.08)
+
+	func _draw() -> void:
+		var c := size * 0.5
+		var r := minf(size.x, size.y) * 0.5
+		draw_circle(c, r, color)
+		var u := r / 18.0
+		match kind:
+			"menu":
+				for i in 3:
+					var y := c.y + (float(i) - 1.0) * 6.0 * u
+					draw_line(Vector2(c.x - 7.5 * u, y), Vector2(c.x + 7.5 * u, y), INK, 3.2 * u, true)
+			"skip":
+				draw_colored_polygon(PackedVector2Array([c + Vector2(-8, -7) * u, c + Vector2(3, 0) * u, c + Vector2(-8, 7) * u]), INK)
+				draw_line(c + Vector2(6, -7) * u, c + Vector2(6, 7) * u, INK, 3.4 * u, true)
+			"auto":
+				draw_colored_polygon(PackedVector2Array([c + Vector2(-5, -8) * u, c + Vector2(8, 0) * u, c + Vector2(-5, 8) * u]), INK)
+			"log":
+				for i in 3:
+					var y := c.y + (float(i) - 1.0) * 6.0 * u
+					draw_circle(Vector2(c.x - 7.0 * u, y), 1.8 * u, INK)
+					draw_line(Vector2(c.x - 3.0 * u, y), Vector2(c.x + 8.0 * u, y), INK, 3.0 * u, true)
+			"hide":
+				var pts := PackedVector2Array()
+				for i in 25:
+					var a := TAU * float(i) / 24.0
+					pts.append(c + Vector2(cos(a) * 10.0, sin(a) * 5.5) * u)
+				draw_polyline(pts, INK, 2.6 * u, true)
+				draw_circle(c, 3.2 * u, INK)

@@ -45,6 +45,8 @@ func _ready() -> void:
 	_build_cauldron_bubbles()
 	_build_door_hint()
 	_setup_home_props()
+	if StoryState_ != null and StoryState_.has_flag(DayCycle.FLAG_BED_HINT) and DayCycle.is_night():
+		_set_bed_hint(true)
 	_refresh_badges()
 	if UnitRoster_ != null and not UnitRoster_.changed.is_connected(_refresh_badges):
 		UnitRoster_.changed.connect(_refresh_badges)
@@ -263,6 +265,8 @@ func _set_door_hover(on: bool) -> void:
 func _go_door(id: String) -> void:
 	for d in DOOR_ICONS:
 		if String(d[0]) == id:
+			if String(d[2]) == "go_to_shop" and DayCycle.shop_closed_say():
+				return   ## ночью лавка закрыта
 			SceneRouter_.call(String(d[2]))
 
 # --- Мышь: наведение, клик, перетаскивание ----------------------------------------------
@@ -446,7 +450,7 @@ func _input(event: InputEvent) -> void:
 			sky.click_moon()
 		elif _bed_at(p):
 			get_viewport().set_input_as_handled()
-			switch_day_phase()
+			go_to_sleep()
 
 ## Луна под курсором и её видно (через прозрачные места дома: стены, передний план, котёл не закрывают).
 func _moon_at(p: Vector2) -> bool:
@@ -472,7 +476,7 @@ const FIREPLACE_DIALOGUE := "fireplace_dango"
 @onready var cauldron_upgrade_1: TextureRect = $CauldronUpgrade1
 @onready var bed: TextureRect = $Bed
 
-# --- День и ночь (пока для тестов: клик по кровати) ----------------------------------------
+# --- День и ночь (DayCycle): кровать ночью — спать до утра -----------------------------------
 
 ## Затемнение при смене времени суток: цвет, сколько гаснет и сколько проявляется (секунды).
 const PHASE_FADE_COLOR := Color(0.04, 0.02, 0.08)
@@ -480,12 +484,66 @@ const PHASE_FADE_OUT := 0.35
 const PHASE_FADE_IN := 0.5
 var _phase_switching := false
 
-## Кровать под курсором (по непрозрачным пикселям; передний план её закрывает).
-func _bed_at(p: Vector2) -> bool:
-	return bed != null and bed.visible and not _phase_switching and _opaque(bed, p) and not _opaque(foreground, p)
+## Подсветка кровати («пора спать»): яркость пульса и период (секунды).
+const BED_HINT_ALPHA := 0.9
+## Шейдер свечения (цвет, ширина ореола — его параметры).
+const BED_GLOW_SHADER := "res://scripts/home/bed_glow.gdshader"
+const BED_HINT_PERIOD := 1.4
+var _bed_tween: Tween
 
-## День <-> ночь: экран мягко темнеет, картинки дома меняются, экран светлеет.
+## Кровать под курсором (по непрозрачным пикселям; передний план её закрывает). Только ночью.
+func _bed_at(p: Vector2) -> bool:
+	return bed != null and bed.visible and DayCycle.is_night() and not _phase_switching \
+		and _opaque(bed, p) and not _opaque(foreground, p)
+
+## Кровать: ночь -> утро (DayCycle.sleep), с затемнением.
+func go_to_sleep() -> void:
+	if not DayCycle.is_night():
+		return
+	_set_bed_hint(false)
+	_phase_transition(func() -> void: DayCycle.sleep())
+
+## Админ-панель (F9): день <-> ночь без сна.
 func switch_day_phase() -> void:
+	_phase_transition(DayCycle.advance)
+
+## Кровать мягко пульсирует светом, пока не ляжем спать (флаг DayCycle.FLAG_BED_HINT).
+func _set_bed_hint(on: bool) -> void:
+	if StoryState_ != null:
+		StoryState_.set_flag(DayCycle.FLAG_BED_HINT, on)
+	if _bed_tween != null and _bed_tween.is_valid():
+		_bed_tween.kill()
+	if bed == null:
+		return
+	# Свечение — копия кровати поверх неё со сложением цвета (тёплый отсвет), пульсирует прозрачностью.
+	var glow := bed.get_node_or_null("BedGlow") as TextureRect
+	if glow == null:
+		glow = TextureRect.new()
+		glow.name = "BedGlow"
+		glow.texture = bed.texture
+		glow.expand_mode = bed.expand_mode
+		glow.stretch_mode = bed.stretch_mode
+		glow.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		var mat := ShaderMaterial.new()
+		mat.shader = load(BED_GLOW_SHADER) as Shader
+		glow.material = mat
+		bed.add_child(glow)
+		# Узел больше кровати на поле margin из шейдера — туда выходит ореол.
+		var m: Vector2 = mat.get_shader_parameter("margin") if mat.get_shader_parameter("margin") != null else Vector2(0.06, 0.12)
+		var full := bed.size / (Vector2.ONE - 2.0 * m)
+		glow.position = -(full - bed.size) * 0.5
+		glow.size = full
+	glow.texture = bed.texture   ## день/ночь могли сменить картинку
+	glow.modulate = Color(1, 1, 1, 0.0)
+	glow.visible = on
+	if not on:
+		return
+	_bed_tween = create_tween().set_loops()
+	_bed_tween.tween_property(glow, "modulate:a", BED_HINT_ALPHA, BED_HINT_PERIOD * 0.5).set_trans(Tween.TRANS_SINE)
+	_bed_tween.tween_property(glow, "modulate:a", 0.08, BED_HINT_PERIOD * 0.5).set_trans(Tween.TRANS_SINE)
+
+## Экран мягко темнеет, change() меняет время суток, картинки дома меняются, экран светлеет.
+func _phase_transition(change: Callable) -> void:
 	if _phase_switching:
 		return
 	_phase_switching = true
@@ -501,7 +559,7 @@ func switch_day_phase() -> void:
 	var t := create_tween()
 	t.tween_property(dim, "modulate:a", 1.0, PHASE_FADE_OUT)
 	t.tween_callback(func() -> void:
-		DayCycle.advance()
+		change.call()
 		DayCycle.apply_textures(self)
 		sky.refresh_day_phase())
 	t.tween_property(dim, "modulate:a", 0.0, PHASE_FADE_IN)
@@ -673,8 +731,13 @@ func _on_talk_finished(dialogue: Dictionary) -> void:
 		StoryDialogueDB_.apply_effects(dialogue.get("on_finish", {}))
 
 func _on_start_run() -> void:
-	# Тут логично начинать новый забег (seed, сброс золота и т.д.)
-	# Но если Вы хотите сохранить "старт run" строго в Setup — можно перенести туда.
+	# Начало игры: ночь, а в подземелье ещё не ходили — «Я слишком устала», после — кровать светится.
+	if DayCycle.too_tired_to_start():
+		if DialogueManager_.is_showing():
+			return
+		var d := StoryDialogueDB_.get_dialogue(DayCycle.DLG_TOO_TIRED)
+		DialogueManager_.show_sequence(StoryDialogueDB_.resolve_lines(d), func() -> void: _set_bed_hint(true))
+		return
 	SceneRouter_.go_to_setup()
 
 ## Отложенные сюжетные диалоги: флаг StoryState -> id диалога (первый поднятый флаг играется при входе в хаб).
