@@ -2,7 +2,8 @@
   "_readme": [
     "События чибиков в доме. Как устроено — scripts/home/HubEvents.gd (там же все шаги).",
     "Места — точки в Hub.tscn -> Spots (Marker2D, двигайте в редакторе; новые — просто добавьте точку).",
-    "Пока это тестовые события: шанс высокий, откат маленький — потом уменьшим/увеличим."
+    "Пока это тестовые события: шанс высокий, откат маленький — потом уменьшим/увеличим.",
+    "Случайные события (type random) — шансы пока тестовые, повыше; см. HubEvents.gd."
   ],
   "events": [
     {
@@ -11,41 +12,146 @@
       "who": "witch",
       "spot": "Fireplace",
       "radius": 170,
-      "if": ["fireplace_off"],
+      "if": [
+        "fireplace_off"
+      ],
       "chance": 0.9,
       "cooldown": 15,
       "seek": 0.6,
       "steps": [
-        {"face": "witch", "to": "Fireplace"},
-        {"emote": "angry", "who": "witch"},
-        {"wait": 1.0},
-        {"hop": "witch"},
-        {"turn_on": "fireplace"},
-        {"wait": 0.5},
-        {"emote": "happy", "who": "witch"},
-        {"wait": 1.2}
+        {
+          "face": "witch",
+          "to": "Fireplace"
+        },
+        {
+          "emote": "angry",
+          "who": "witch"
+        },
+        {
+          "wait": 1.0
+        },
+        {
+          "hop": "witch"
+        },
+        {
+          "turn_on": "fireplace"
+        },
+        {
+          "wait": 0.5
+        },
+        {
+          "emote": "happy",
+          "who": "witch"
+        },
+        {
+          "wait": 1.2
+        }
       ]
     },
     {
       "id": "warrior_witch_cauldron",
       "type": "meet",
-      "who": ["warrior", "witch"],
+      "who": [
+        "warrior",
+        "witch"
+      ],
       "spot": "Cauldron",
       "radius": 380,
-      "if": ["cauldron"],
+      "if": [
+        "cauldron"
+      ],
       "chance": 0.9,
       "cooldown": 30,
       "seek": 0.4,
       "steps": [
-        {"go": "warrior", "to": "CauldronLeft"},
-        {"go": "witch", "to": "CauldronRight"},
-        {"face": "warrior", "to": "Cauldron"},
-        {"face": "witch", "to": "Cauldron"},
-        {"wait": 0.4},
-        {"say": "Рванёт?", "who": "warrior"},
-        {"wait": 2.6},
-        {"say": "Не должно...", "who": "witch"},
-        {"wait": 2.6}
+        {
+          "go": "warrior",
+          "to": "CauldronLeft"
+        },
+        {
+          "go": "witch",
+          "to": "CauldronRight"
+        },
+        {
+          "face": "warrior",
+          "to": "Cauldron"
+        },
+        {
+          "face": "witch",
+          "to": "Cauldron"
+        },
+        {
+          "wait": 0.4
+        },
+        {
+          "say": "Рванёт?",
+          "who": "warrior"
+        },
+        {
+          "wait": 2.6
+        },
+        {
+          "say": "Не должно...",
+          "who": "witch"
+        },
+        {
+          "wait": 2.6
+        }
+      ]
+    },
+    {
+      "id": "luisa_nap",
+      "type": "random",
+      "who": "luisa",
+      "handler": "nap",
+      "chance_per_min": 1.0,
+      "cooldown": 60,
+      "duration": [
+        10,
+        18
+      ]
+    },
+    {
+      "id": "aki_stairs_fall",
+      "type": "random",
+      "who": "aki",
+      "handler": "stairs_fall",
+      "route": "Stairs",
+      "chance_per_min": 3.0,
+      "cooldown": 40,
+      "throw": [
+        -420,
+        -520
+      ],
+      "lie": 5
+    },
+    {
+      "id": "fufu_eat",
+      "type": "random",
+      "who": "fufu",
+      "handler": "eat",
+      "radius": 260,
+      "chance_per_min": 1.5,
+      "cooldown": 60,
+      "hold": 2.5,
+      "lie": 2.0,
+      "reactions": {
+        "warrior": "angry",
+        "luisa": "angry",
+        "aki": "heart",
+        "witch": "heart"
+      }
+    },
+    {
+      "id": "leave_home",
+      "type": "random",
+      "who": "*",
+      "handler": "leave",
+      "chance_per_min": 0.4,
+      "cooldown": 90,
+      "away": [
+        90,
+        180
       ]
     }
   ]

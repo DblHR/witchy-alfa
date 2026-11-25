@@ -4,6 +4,8 @@
 [ext_resource type="Script" uid="uid://dukrop4adpe2s" path="res://scenes/Shop.gd" id="1_yltc6"]
 [ext_resource type="Texture2D" uid="uid://dlqg5fpxvh5f3" path="res://assets/ui/buttons/goldStatus.png" id="2_gold"]
 [ext_resource type="Texture2D" uid="uid://bmm6d61n4emyv" path="res://assets/ui/buttons/loveButton.png" id="9_love"]
+[ext_resource type="Script" path="res://ui/BackButton.gd" id="90_back_script"]
+[ext_resource type="Texture2D" path="res://assets/ui/buttons/back.png" id="91_back_tex"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_yltc6"]
 content_margin_left = 0.0
@@ -132,3 +134,13 @@ mouse_default_cursor_shape = 2
 texture_normal = ExtResource("9_love")
 ignore_texture_size = true
 stretch_mode = 5
+
+[node name="BackButton" type="TextureButton" parent="."]
+offset_left = 1680.0
+offset_top = 18.0
+offset_right = 1776.0
+offset_bottom = 114.0
+texture_normal = ExtResource("91_back_tex")
+ignore_texture_size = true
+stretch_mode = 5
+script = ExtResource("90_back_script")

@@ -6,6 +6,8 @@
 [ext_resource type="Texture2D" uid="uid://ce7lupfayylvl" path="res://assets/alchemy/cauldron_potion.png" id="4_potion"]
 [ext_resource type="Texture2D" uid="uid://bioju62n2qrcg" path="res://assets/alchemy/cauldron.png" id="5_cauldron"]
 [ext_resource type="Script" uid="uid://djs8lrqv0wkbg" path="res://scripts/farm/WitchZone.gd" id="6_zone"]
+[ext_resource type="Script" path="res://ui/BackButton.gd" id="90_back_script"]
+[ext_resource type="Texture2D" path="res://assets/ui/buttons/back.png" id="91_back_tex"]
 
 [node name="Control" type="Control"]
 layout_mode = 3
@@ -80,3 +82,13 @@ polygon = PackedVector2Array(940, 0, 1560, 0, 1610, 250, 1570, 500, 1530, 720, 1
 script = ExtResource("6_zone")
 sprite = "alchemy_witch2"
 duration = 1.5
+
+[node name="BackButton" type="TextureButton" parent="."]
+offset_left = 128.0
+offset_top = 18.0
+offset_right = 224.0
+offset_bottom = 114.0
+texture_normal = ExtResource("91_back_tex")
+ignore_texture_size = true
+stretch_mode = 5
+script = ExtResource("90_back_script")

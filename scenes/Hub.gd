@@ -154,7 +154,7 @@ func _spawn_new_walkers() -> void:
 
 ## Один гуляющий персонаж (если он есть в ростере и у него есть картинка). Уже есть — null.
 func _spawn_walker(id: String) -> HomeWalker:
-	if walkers.has(id):
+	if walkers.has(id) or is_away(id):
 		return null
 	if id != "witch" and (UnitRoster_ == null or not UnitRoster_.has_unit(id)):
 		return null
@@ -173,6 +173,79 @@ func _spawn_walker(id: String) -> HomeWalker:
 	w.body.flip_h = randf() < 0.5
 	walkers[id] = w
 	return w
+
+# --- Ушёл из дома на время (HubEvents: «leave») ------------------------------------------
+## id -> до какого времени (секунды Time.get_unix_time_from_system) персонажа нет дома.
+## Помнится, пока запущена игра (между комнатами тоже).
+static var away_until: Dictionary = {}
+var _away_check := 0.0
+
+func is_away(id: String) -> bool:
+	return float(away_until.get(id, 0.0)) > Time.get_unix_time_from_system()
+
+## Персонаж ушёл за дверь: убрать его на seconds секунд.
+func send_away(w: HomeWalker, seconds: float) -> void:
+	away_until[w.unit_id] = Time.get_unix_time_from_system() + seconds
+	walkers.erase(w.unit_id)
+	w.queue_free()
+
+## Вернулся: появиться в дверях (точка Spots/Door).
+func _check_returns(delta: float) -> void:
+	_away_check -= delta
+	if _away_check > 0.0:
+		return
+	_away_check = 1.0
+	for id in away_until.keys():
+		if is_away(String(id)) or walkers.has(String(id)):
+			continue
+		away_until.erase(id)
+		var w := _spawn_walker(String(id))
+		if w == null:
+			continue
+		if _walker_hider != null:
+			_walker_hider.add_item(w)
+		var door := get_node_or_null("Spots/Door") as Node2D
+		if door != null:
+			var spot := nearest_spot(door.global_position)
+			if spot[0] != null:
+				w.place(spot[0], float(spot[1]))
+		w.modulate.a = 0.0
+		w.fade(1.0, 0.7)
+
+## Сколько персонажей сейчас на кровати.
+func bed_occupants() -> int:
+	return walkers.values().filter(func(w) -> bool: return is_instance_valid(w) and (w as HomeWalker).state == HomeWalker.State.BED).size()
+
+# --- Звёздочки толкают персонажей ------------------------------------------------------
+## Быстро летящая звёздочка, задевшая персонажа, отбрасывает его (как бросок).
+const STAR_PUSH_SPEED := 450.0     ## медленнее — не толкает
+const STAR_PUSH_K := 0.8           ## доля скорости звезды, которая достаётся персонажу
+const STAR_PUSH_UP := 350.0        ## и ещё чуть-чуть вверх
+const STAR_PUSH_REACH := 55.0      ## насколько близко к телу (кроме радиуса звезды)
+var _push_cooldown: Dictionary = {}
+
+func _stars_push(delta: float) -> void:
+	for id in _push_cooldown.keys():
+		_push_cooldown[id] = float(_push_cooldown[id]) - delta
+	if stars == null:
+		return
+	for s in stars.stars():
+		if s.vel.length() < STAR_PUSH_SPEED:
+			continue
+		for w in walkers.values():
+			if not is_instance_valid(w) or float(_push_cooldown.get(w.unit_id, 0.0)) > 0.0:
+				continue
+			if not (w.state in [HomeWalker.State.IDLE, HomeWalker.State.WALK, HomeWalker.State.HOP]):
+				continue
+			var head: Vector2 = w.head_anchor().global_position
+			var feet: Vector2 = w.global_position
+			var q := Geometry2D.get_closest_point_to_segment(s.pos, head, feet)
+			if q.distance_to(s.pos) > s.hit_radius() + STAR_PUSH_REACH:
+				continue
+			_push_cooldown[w.unit_id] = 1.2
+			w.throw(s.vel * STAR_PUSH_K + Vector2(0, -STAR_PUSH_UP))
+			if chatter != null:
+				chatter.emote(w, "sweat")
 
 ## Персонаж на линии «за котлом» — под слоем котла, иначе — над ним; пока тащим — поверх всего.
 func _sync_layer(w: HomeWalker) -> void:
@@ -360,6 +433,8 @@ func _toggle_at(p: Vector2) -> HubToggle:
 	return null
 
 func _process(delta: float) -> void:
+	_check_returns(delta)
+	_stars_push(delta)
 	var p := get_viewport().get_mouse_position()
 	var over: HomeWalker = null
 	var cauldron := false
@@ -513,17 +588,18 @@ const BED_GLOW_SHADER := "res://scripts/home/bed_glow.gdshader"
 const BED_HINT_PERIOD := 1.4
 var _bed_tween: Tween
 
-## Кровать под курсором (по непрозрачным пикселям; передний план её закрывает). Только ночью.
+## Кровать под курсором (по непрозрачным пикселям; передний план её закрывает). Днём и ночью.
 func _bed_at(p: Vector2) -> bool:
-	return bed != null and bed.visible and DayCycle.is_night() and not _phase_switching \
+	return bed != null and bed.visible and not _phase_switching \
 		and _opaque(bed, p) and not _opaque(foreground, p)
 
-## Кровать: ночь -> утро (DayCycle.sleep), с затемнением.
+## Кровать: ночью — спать до утра (DayCycle.sleep), днём — валяться до ночи; с затемнением.
 func go_to_sleep() -> void:
-	if not DayCycle.is_night():
-		return
 	_set_bed_hint(false)
-	_phase_transition(func() -> void: DayCycle.sleep())
+	if DayCycle.is_night():
+		_phase_transition(func() -> void: DayCycle.sleep())          ## ночь -> утро
+	else:
+		_phase_transition(func() -> void: DayCycle.rest_until_night())  ## день -> ночь
 
 ## Админ-панель (F9): день <-> ночь без сна.
 func switch_day_phase() -> void:

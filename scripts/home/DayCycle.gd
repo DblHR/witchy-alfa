@@ -17,7 +17,8 @@ class_name DayCycle
 ## но считается: spend_action() / actions_left()). Подключим, когда решим, что тратит действия.
 ##
 ## Смена времени суток:
-##   - кровать в доме (только ночью): ночь -> утро следующего дня (sleep());
+##   - кровать в доме: ночью — спать до утра следующего дня (sleep()), днём — валяться до ночи
+##     (rest_until_night(): отдохнули — ночью в подземелье можно без усталости);
 ##   - запуск забега на подготовке: день -> ночь (on_run_launched()); забег ночью — усталость:
 ##     первый раз — героиня предлагает поспать (можно отказаться: в забеге максимум энергии 1),
 ##     дальше — максимум энергии 0 (fatigue_for_next_run()). Сон снимает усталость;
@@ -98,9 +99,20 @@ static func shop_closed_say() -> bool:
 static func runs_since_sleep() -> int:
 	return StoryState_.get_counter(COUNTER_RUNS) if StoryState_ != null else 0
 
-## Ночь, а в подземелье ещё не ходили (начало игры): идти нельзя — надо выспаться.
+## Флаг: днём повалялись на кровати до ночи — отдохнули, ночью можно в подземелье без усталости.
+const FLAG_RESTED := "rested_till_night"
+
+## Ночь, а в подземелье ещё не ходили и не отдыхали (начало игры): идти нельзя — надо выспаться.
 static func too_tired_to_start() -> bool:
-	return is_night() and runs_since_sleep() == 0
+	return is_night() and runs_since_sleep() == 0 and not (StoryState_ != null and StoryState_.has_flag(FLAG_RESTED))
+
+## Кровать днём: валяемся до ночи (день -> ночь того же дня). false — сейчас не день.
+static func rest_until_night() -> bool:
+	if is_night() or StoryState_ == null:
+		return false
+	set_phase(Phase.NIGHT)
+	StoryState_.set_flag(FLAG_RESTED, true)
+	return true
 
 ## Кровать: ночь -> утро следующего дня, усталость снята. false — сейчас не ночь.
 static func sleep() -> bool:
@@ -109,6 +121,7 @@ static func sleep() -> bool:
 	advance()
 	StoryState_.add_counter(COUNTER_RUNS, -runs_since_sleep())
 	StoryState_.set_flag(FLAG_BED_HINT, false)
+	StoryState_.set_flag(FLAG_RESTED, false)
 	return true
 
 ## Усталость для забега, который сейчас запускают: 0 — нет; 1 — уже ходили сегодня

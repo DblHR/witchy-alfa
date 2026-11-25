@@ -18,6 +18,11 @@ const CHANCE_GO_TO_END := 0.4
 const CHANCE_SWITCH_LINE := 0.65
 ## Шанс, стоя у кровати, запрыгнуть на неё (если линия кровати рядом).
 const CHANCE_BED := 0.5
+## Чем больше народу уже на кровати, тем охотнее туда прыгают: + столько за каждого
+## (и с таким же шансом за каждого идут к краю линии, где кровать).
+const BED_CROWD_BONUS := 0.2
+## На кровати рядом друг с другом: сдвиг по x для каждого следующего.
+const BED_CROWD_SHIFT := 70.0
 const BED_TIME_MIN := 6.0
 const BED_TIME_MAX := 12.0
 const STEP_BOB := 6.0
@@ -166,6 +171,15 @@ func _decide() -> void:
 			_go_end = -1
 			_walk_to(sd)
 			return
+	# Кто-то уже на кровати — тянет туда же (если кровать у края этой линии).
+	var crowd: int = home.bed_occupants() if home != null and home.has_method("bed_occupants") else 0
+	if crowd > 0:
+		for end in [0, 1]:
+			var opts: Array = home.connections_at(route, end == 1)
+			if opts.any(func(o) -> bool: return (o[0] as HomeRoute).action == "bed") and randf() < BED_CROWD_BONUS * crowd:
+				_go_end = end
+				_walk_to(0.0 if end == 0 else route.length())
+				return
 	if randf() < CHANCE_GO_TO_END:
 		_go_end = 0 if randf() < 0.5 else 1
 		_walk_to(0.0 if _go_end == 0 else route.length())
@@ -189,7 +203,8 @@ func _arrived() -> void:
 		var options: Array = home.connections_at(route, at_end)
 		var beds := options.filter(func(o) -> bool: return (o[0] as HomeRoute).action == "bed")
 		var walks := options.filter(func(o) -> bool: return (o[0] as HomeRoute).action != "bed")
-		if not beds.is_empty() and randf() < CHANCE_BED:
+		var crowd: int = home.bed_occupants() if home.has_method("bed_occupants") else 0
+		if not beds.is_empty() and randf() < minf(0.95, CHANCE_BED + BED_CROWD_BONUS * crowd):
 			_go_to_bed(beds[0][0])
 			return
 		if not walks.is_empty() and randf() < CHANCE_SWITCH_LINE:
@@ -252,9 +267,10 @@ func poke(alt: Texture2D = null, hold: float = 1.1) -> void:
 func _go_to_bed(bed: HomeRoute) -> void:
 	_kill_tween()
 	var from := position
+	var crowd: int = home.bed_occupants() if home.has_method("bed_occupants") else 0
 	place(bed, bed.length())
 	position = from
-	var to := bed.end_point()
+	var to := bed.end_point() + Vector2(-BED_CROWD_SHIFT * crowd, 0)
 	_face_right(to.x > from.x)
 	state = State.HOP
 	_tween = create_tween()
@@ -436,6 +452,36 @@ func drop(r: HomeRoute, d: float) -> void:
 			_idle(randf_range(IDLE_MIN, IDLE_MAX)))
 
 # --- Для событий (HubEvents): персонаж «заморожен», двигается по сценарию ---------------
+
+## Лечь (картинка смерти <id>_dead.png; нет её — просто завалиться набок). Встать — stand_up().
+func lie_down() -> void:
+	_kill_tween()
+	body.position.y = 0.0
+	body.scale = Vector2(_scale, _scale)
+	var t: Texture2D = bed_tex if bed_tex != null else CharacterPhases.dead_texture(base_tex)
+	if t != null:
+		body.texture = t
+		body.offset = Vector2(-t.get_width() * 0.5, -_feet_y(t))
+		body.rotation = 0.0
+	else:
+		body.rotation = PI * 0.45 * (1.0 if body.flip_h else -1.0)
+
+func stand_up() -> void:
+	_kill_tween()
+	body.rotation = 0.0
+	if body.texture != base_tex:
+		body.texture = base_tex
+		body.offset = Vector2(-base_tex.get_width() * 0.5, -_feet_y(base_tex))
+	body.scale = Vector2(_scale, _scale)
+	_tween = create_tween()
+	_squash_hop(_tween, HOP_HEIGHT * 0.5)
+
+## Плавно исчезнуть / появиться (ушёл за дверь / вернулся). await fade(...)
+func fade(to_alpha: float, time: float = 0.6) -> void:
+	_kill_tween()
+	_tween = create_tween()
+	_tween.tween_property(self, "modulate:a", to_alpha, time)
+	await _tween.finished
 
 ## Подпрыгнуть на месте (не меняя состояния). await event_hop()
 func event_hop() -> void:

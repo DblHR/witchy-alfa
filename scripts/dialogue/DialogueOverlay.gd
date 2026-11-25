@@ -816,7 +816,8 @@ func _play_interaction(who: String, action_id: String) -> void:
 	if gained < 0:
 		_finish_sequence()
 		return
-	_toast("+%d ♥ доверие" % gained)
+	if gained > 0:   ## 0 — сегодня за это уже давали доверие, сценка всё равно играет
+		_toast("+%d ♥ доверие" % gained)
 	_lines = _lines.slice(0, _index + 1) + _interactions().scene_lines(who, action_id)
 	_show_next_line()
 

@@ -47,8 +47,9 @@ func _on_lewd_chosen(action_id: String) -> void:
 	if gained < 0:
 		return
 	play_lewd_scene(action_id)
-	var at := heart_from.position if heart_from != null else size * 0.5
-	InteractionMenu.float_text(self, at + Vector2(0, -40), "+%d ♥ доверие" % gained)
+	if gained > 0:   ## 0 — сегодня за это уже давали доверие
+		var at := heart_from.position if heart_from != null else size * 0.5
+		InteractionMenu.float_text(self, at + Vector2(0, -40), "+%d ♥ доверие" % gained)
 
 ## Сама сцена (поцелуй, тити, …). ПОКА ЗАГЛУШКА: сердечко и фраза в пузыре.
 ## Сюда подключать настоящие интерактивные сцены (action_id — id из data/interactions/interactions.json).

@@ -21,6 +21,14 @@ class_name HubEvents
 ##       {"face": "witch", "to": "Cauldron"}  — повернуться к точке
 ##       {"turn_on": "fireplace"} / {"turn_off": "pumpkin"} — включить / выключить камин, тыкву.
 ## Пока идёт событие, его участники не гуляют, а сам дом живёт как обычно.
+##
+## Случайные события ("type": "random") — не у места, а «иногда»: "chance_per_min" — шанс за минуту,
+## "who" — id, список или "*" (любой); что делать — "handler" (код ниже, параметры — в самом событии):
+##   "nap"         — лечь спать где стоит (картинка смерти), смайлики zzz; "duration": [от, до] сек;
+##   "stairs_fall" — на лестнице спрыгнуть вбок и полежать "lie" сек ("throw": [x, y] — скорость);
+##   "eat"         — съесть персонажа рядом ("radius"), через "hold" сек выплюнуть; тот лежит "lie" сек
+##                   и показывает смайлик из "reactions" (id -> смайлик);
+##   "leave"       — дойти до двери (точка Door) и уйти из дома на "away": [от, до] сек.
 
 const FILE := "res://data/hub/events.json"
 const CHECK_EVERY := 0.25
@@ -54,6 +62,10 @@ func _process(delta: float) -> void:
 			continue
 		var id := String(ev.get("id", ""))
 		if float(_cooldown.get(id, 0.0)) > 0.0 or not _conditions_ok(ev):
+			continue
+		if String(ev.get("type", "")) == "random":
+			if _try_random(ev):
+				return
 			continue
 		var ws := _participants(ev)
 		if ws.is_empty():
@@ -114,6 +126,162 @@ func _conditions_ok(ev: Dictionary) -> bool:
 				if DayCycle.is_night():
 					return false
 	return true
+
+# --- Случайные события ---------------------------------------------------------------
+
+func _try_random(ev: Dictionary) -> bool:
+	var who = ev.get("who", "*")
+	var walkers: Dictionary = hub.get("walkers")
+	var ids: Array = walkers.keys() if String(who) == "*" else (who if who is Array else [who])
+	ids.shuffle()
+	var p := float(ev.get("chance_per_min", 1.0)) * CHECK_EVERY / 60.0
+	for id in ids:
+		var w: HomeWalker = walkers.get(String(id))
+		if w == null or not _free(w) or w.on_bed() or not _random_ok(ev, w):
+			continue
+		if randf() >= p:
+			continue
+		_run_random(ev, w)
+		return true
+	return false
+
+## Подходит ли персонаж для случайного события прямо сейчас.
+func _random_ok(ev: Dictionary, w: HomeWalker) -> bool:
+	match String(ev.get("handler", "")):
+		"stairs_fall":
+			if w.route == null or String(w.route.name) != String(ev.get("route", "Stairs")):
+				return false
+			var k := w.dist / maxf(1.0, w.route.length())
+			return k > 0.35 and k < 0.9
+		"eat":
+			return _eat_victim(ev, w) != null
+		"leave":
+			var door := spot("Door")
+			if door == null or w.route == null:
+				return false
+			return float(w.route.nearest(door.global_position)["dist"]) < 40.0
+	return true
+
+func _eat_victim(ev: Dictionary, w: HomeWalker) -> HomeWalker:
+	var best: HomeWalker = null
+	var best_d := float(ev.get("radius", 220.0))
+	var walkers: Dictionary = hub.get("walkers")
+	for o in walkers.values():
+		if o == w or not is_instance_valid(o) or not _free(o) or (o as HomeWalker).on_bed():
+			continue
+		var d := (o as HomeWalker).global_position.distance_to(w.global_position)
+		if d < best_d:
+			best_d = d
+			best = o
+	return best
+
+func _run_random(ev: Dictionary, w: HomeWalker) -> void:
+	running = true
+	match String(ev.get("handler", "")):
+		"nap":
+			await _h_nap(ev, w)
+		"stairs_fall":
+			await _h_stairs_fall(ev, w)
+		"eat":
+			await _h_eat(ev, w)
+		"leave":
+			await _h_leave(ev, w)
+	_cooldown[String(ev.get("id", ""))] = float(ev.get("cooldown", 60.0))
+	running = false
+
+func _range(ev: Dictionary, key: String, dflt: Vector2) -> float:
+	var r = ev.get(key, [dflt.x, dflt.y])
+	if r is Array and (r as Array).size() >= 2:
+		return randf_range(float(r[0]), float(r[1]))
+	return float(r)
+
+## Дождаться, пока брошенный персонаж приземлится (не дольше max_time).
+func _await_landing(w: HomeWalker, max_time: float = 4.0) -> void:
+	var t := 0.0
+	while is_instance_valid(w) and w.state in [HomeWalker.State.FLY, HomeWalker.State.FALL] and t < max_time:
+		await get_tree().process_frame
+		t += get_process_delta_time()
+
+## Полежать secs секунд (если не утащили), показывая смайлик every секунд; потом встать.
+func _lie(w: HomeWalker, secs: float, emote_name: String = "", every: float = 0.0) -> void:
+	if not is_instance_valid(w):
+		return
+	w.set_frozen(true)
+	w.lie_down()
+	if emote_name != "":
+		hub.chatter.emote(w, emote_name)
+	var t := 0.0
+	var next := every
+	while t < secs:
+		await get_tree().create_timer(0.25).timeout
+		t += 0.25
+		if not is_instance_valid(w) or w.state != HomeWalker.State.FROZEN:
+			return   ## подняли / утащили — событие кончилось
+		if every > 0.0 and t >= next and emote_name != "":
+			next += every
+			hub.chatter.emote(w, emote_name)
+	w.stand_up()
+	await get_tree().create_timer(0.35).timeout
+	if is_instance_valid(w):
+		w.set_frozen(false)
+
+func _h_nap(ev: Dictionary, w: HomeWalker) -> void:
+	await _lie(w, _range(ev, "duration", Vector2(10, 18)), "zzz", 3.0)
+
+func _h_stairs_fall(ev: Dictionary, w: HomeWalker) -> void:
+	var v: Array = ev.get("throw", [-420, -520])
+	hub.chatter.emote(w, "exclaim")
+	w.throw(Vector2(float(v[0]), float(v[1])))
+	await _await_landing(w)
+	await _lie(w, float(ev.get("lie", 5.0)), "dots")
+
+func _h_eat(ev: Dictionary, w: HomeWalker) -> void:
+	var victim := _eat_victim(ev, w)
+	if victim == null:
+		return
+	w.set_frozen(true)
+	victim.set_frozen(true)
+	await w.event_move(victim.route, victim.dist)
+	if not is_instance_valid(victim):
+		w.set_frozen(false)
+		return
+	victim.visible = false
+	hub.chatter.emote(w, "happy")
+	# Жуёт: покачивается.
+	var chew := w.create_tween().set_loops(int(ceil(float(ev.get("hold", 2.5)) / 0.36)))
+	chew.tween_property(w.body, "scale", w.body.scale * Vector2(1.12, 0.9), 0.18)
+	chew.tween_property(w.body, "scale", w.body.scale, 0.18)
+	await get_tree().create_timer(float(ev.get("hold", 2.5))).timeout
+	chew.kill()
+	if not is_instance_valid(victim):
+		w.set_frozen(false)
+		return
+	victim.visible = true
+	victim.position = w.position + Vector2(0, -40)
+	victim.set_frozen(false)
+	var dir := 1.0 if randf() < 0.5 else -1.0
+	victim.throw(Vector2(dir * 480.0, -620.0))
+	w.set_frozen(false)
+	w.hop()
+	await _await_landing(victim)
+	var reactions: Dictionary = ev.get("reactions", {})
+	await _lie(victim, float(ev.get("lie", 2.0)), String(reactions.get(victim.unit_id, "")))
+
+func _h_leave(ev: Dictionary, w: HomeWalker) -> void:
+	var door := spot("Door")
+	if door == null:
+		return
+	w.set_frozen(true)
+	var n: Array = hub.nearest_spot(door.global_position)
+	if n[0] != null:
+		await w.event_move(n[0], float(n[1]))
+	if not is_instance_valid(w):
+		return
+	hub.chatter.emote(w, "dots")
+	await get_tree().create_timer(0.6).timeout
+	await w.fade(0.0, 0.6)
+	if is_instance_valid(w):
+		hub.send_away(w, _range(ev, "away", Vector2(90, 180)))
 
 # --- Сам пойти к месту ----------------------------------------------------------------
 

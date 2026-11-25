@@ -265,6 +265,12 @@ func _rebuild_entry_grid() -> void:
 		selected_id = String(entries[0].get("id", ""))
 		selected_entry_by_section[current_section] = selected_id
 	for entry in entries:
+		if bool(entry.get("spacer", false)):   ## пустое место (раздел «Персонажи»: группа с новой строки)
+			var gap := Control.new()
+			gap.custom_minimum_size = InventoryEntryButton.BUST_SIZE
+			gap.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			grid_container.add_child(gap)
+			continue
 		var button: InventoryEntryButton = ENTRY_BUTTON_SCENE.instantiate()
 		entry["selected"] = String(entry.get("id", "")) == selected_id
 		grid_container.add_child(button)
@@ -344,36 +350,68 @@ func _build_lore_entries() -> Array[Dictionary]:
 		})
 	return out
 
+## Порядок в разделе «Персонажи» — по строкам (каждая группа с новой строки, без дыр внутри):
+##   1) персонаж игрока, второй главный герой; 2) НПС: Рикка, Сессилия, Ноктрис;
+##   3) героини: Фуфу, Аки, Луиса (и остальные). Кого ещё не встречали — просто нет.
+const CHARACTER_ROWS_HEROINES := ["fufu", "aki", "luisa"]
+const CHARACTER_ROWS_NPC := ["rikka", "sessilia", "noctris"]
+
 func _build_character_entries() -> Array[Dictionary]:
 	var out: Array[Dictionary] = []
 	if UnitRoster_ == null or CharDB == null:
 		return out
-	for unit_id in UnitRoster_.get_unlocked_unit_ids():
-		var data: CharacterData = CharDB.get_by_id(unit_id)
-		if data == null:
+	var unlocked: Array = UnitRoster_.get_unlocked_unit_ids()
+	var main_id := StoryDialogueDB_.get_main_hero_id() if StoryDialogueDB_ != null else "witch"
+	var heroes: Array = [main_id, "warrior" if main_id == "witch" else "witch"]
+	var groups: Array = [[], [], []]
+	for id in heroes:
+		if unlocked.has(id):
+			groups[0].append(_character_entry(String(id)))
+	for npc_id in CHARACTER_ROWS_NPC:
+		if _npc_met(npc_id):
+			groups[1].append(_npc_entry(npc_id))
+	var rest: Array = CHARACTER_ROWS_HEROINES.filter(func(id) -> bool: return unlocked.has(id))
+	for id in unlocked:
+		if not heroes.has(id) and not rest.has(id):
+			rest.append(id)
+	for id in rest:
+		groups[2].append(_character_entry(String(id)))
+	var cols := _get_columns_for_section(Section.CHARACTERS)
+	for g in groups:
+		var group: Array = (g as Array).filter(func(e) -> bool: return not (e as Dictionary).is_empty())
+		if group.is_empty():
 			continue
-		out.append({
-			"id": unit_id,
-			"title": _char_name(data),
-			"subtitle": "",
-			"icon": CharacterBust.texture(_get_character_avatar(data), unit_id),
-			"count": -1,
-			"bust": true,
-		})
-	# НПС (Рикка, Ноктрис, Сессилия) — после героинь: с ними тоже копится доверие (NpcTrust).
-	for npc_id in NpcTrust.NPC_IDS:
-		if not _npc_met(npc_id):
-			continue
-		var portrait := load(NPC_PORTRAIT % [npc_id, npc_id]) as Texture2D if ResourceLoader.exists(NPC_PORTRAIT % [npc_id, npc_id]) else null
-		out.append({
-			"id": NPC_ENTRY_PREFIX + npc_id,
-			"title": StoryDialogueDB_.get_character_name(npc_id) if StoryDialogueDB_ != null else npc_id,
-			"subtitle": "",
-			"icon": CharacterBust.texture(portrait, npc_id),
-			"count": -1,
-			"bust": true,
-		})
+		# Новая группа — с новой строки: добить прошлую строку пустыми местами.
+		while out.size() % cols != 0:
+			out.append({"spacer": true})
+		for e in group:
+			out.append(e)
 	return out
+
+func _character_entry(unit_id: String) -> Dictionary:
+	var data: CharacterData = CharDB.get_by_id(unit_id)
+	if data == null:
+		return {}
+	return {
+		"id": unit_id,
+		"title": _char_name(data),
+		"subtitle": "",
+		"icon": CharacterBust.texture(_get_character_avatar(data), unit_id),
+		"count": -1,
+		"bust": true,
+	}
+
+func _npc_entry(npc_id: String) -> Dictionary:
+	var path := NPC_PORTRAIT % [npc_id, npc_id]
+	var portrait := load(path) as Texture2D if ResourceLoader.exists(path) else null
+	return {
+		"id": NPC_ENTRY_PREFIX + npc_id,
+		"title": StoryDialogueDB_.get_character_name(npc_id) if StoryDialogueDB_ != null else npc_id,
+		"subtitle": "",
+		"icon": CharacterBust.texture(portrait, npc_id),
+		"count": -1,
+		"bust": true,
+	}
 
 const NPC_ENTRY_PREFIX := "npc:"
 const NPC_PORTRAIT := "res://assets/npc/%s/%s.png"

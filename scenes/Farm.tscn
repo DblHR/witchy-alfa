@@ -8,6 +8,8 @@
 [ext_resource type="Texture2D" uid="uid://cwcidm8ocahx1" path="res://assets/farm/background/nighttime/chair.png" id="5_o7qkg"]
 [ext_resource type="PackedScene" uid="uid://cu1a3uu65x45s" path="res://scenes/FarmSlot.tscn" id="5_slot"]
 [ext_resource type="Script" path="res://scripts/farm/MoonLight.gd" id="6_moon"]
+[ext_resource type="Script" path="res://ui/BackButton.gd" id="90_back_script"]
+[ext_resource type="Texture2D" path="res://assets/ui/buttons/back.png" id="91_back_tex"]
 
 [node name="Control" type="Control" unique_id=1417306981]
 layout_mode = 3
@@ -182,3 +184,13 @@ offset_top = 277.0
 offset_right = 1661.0
 offset_bottom = 557.0
 slot_index = 7
+
+[node name="BackButton" type="TextureButton" parent="."]
+offset_left = 20.0
+offset_top = 16.0
+offset_right = 116.0
+offset_bottom = 112.0
+texture_normal = ExtResource("91_back_tex")
+ignore_texture_size = true
+stretch_mode = 5
+script = ExtResource("90_back_script")

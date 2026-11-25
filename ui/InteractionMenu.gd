@@ -90,10 +90,10 @@ func _build(anchor: Vector2, extra: Array) -> void:
 			Interactions.State.LOCKED:
 				right = "с %d ур." % int(a.get("unlock", 0))
 			Interactions.State.USED_TODAY:
-				right = "завтра"
+				right = ""   ## можно ещё раз, но доверие — только завтра
 			Interactions.State.NIGHT_ONLY:
 				right = "ночью"
-		var b := _row(String(a.get("title", id)), right, st == Interactions.State.OK)
+		var b := _row(String(a.get("title", id)), right, Interactions.can_do(char_id, id))
 		b.name = "Action_" + id
 		b.pressed.connect(func() -> void:
 			close()

@@ -101,11 +101,17 @@ static func state(char_id: String, action_id: String) -> State:
 		return State.USED_TODAY
 	return State.OK
 
-## Сделать действие: доверие + отметка «сегодня уже было». Возвращает, сколько доверия дали
-## (-1 — нельзя: закрыто или уже было сегодня).
+## Можно ли сделать действие сейчас (повторять можно сколько угодно — доверие только раз в день).
+static func can_do(char_id: String, action_id: String) -> bool:
+	return state(char_id, action_id) in [State.OK, State.USED_TODAY]
+
+## Сделать действие. Возвращает, сколько доверия дали: 0 — сегодня за него уже давали
+## (сценка всё равно играет), -1 — нельзя (закрыто / не то время суток).
 static func perform(char_id: String, action_id: String) -> int:
-	if state(char_id, action_id) != State.OK or StoryState_ == null:
+	if not can_do(char_id, action_id) or StoryState_ == null:
 		return -1
+	if state(char_id, action_id) == State.USED_TODAY:
+		return 0
 	var key := DAY_COUNTER % [char_id, action_id]
 	StoryState_.add_counter(key, DayCycle.day_number() - StoryState_.get_counter(key))
 	var amount := int(action(action_id).get("trust", 0))
@@ -187,7 +193,8 @@ static func day_refusal_lines(char_id: String) -> Array:
 	return _resolve(char_id, "day_refusal", lines)
 
 ## Строки выбора в VN вместо {"interactions": "cute", "with": id}: по одной на действие.
-## {text, interaction, with, disabled}. Закрытые — «(с N ур.)», сделанные сегодня — «(завтра)».
+## {text, interaction, with, disabled}. Закрытые — «(с N ур.)» и серые; сделанные сегодня —
+## без «+N ♥» (можно ещё, но доверия уже не будет до завтра).
 static func choice_entries(char_id: String, kind: String = KIND_CUTE) -> Array:
 	var out: Array = []
 	for a in actions(kind):
@@ -198,6 +205,6 @@ static func choice_entries(char_id: String, kind: String = KIND_CUTE) -> Array:
 			State.LOCKED:
 				text = "%s   (с %d ур.)" % [String(a.get("title", id)), int(a.get("unlock", 0))]
 			State.USED_TODAY:
-				text = "%s   (завтра)" % String(a.get("title", id))
-		out.append({"text": text, "interaction": id, "with": char_id, "disabled": st != State.OK})
+				text = String(a.get("title", id))
+		out.append({"text": text, "interaction": id, "with": char_id, "disabled": not can_do(char_id, id)})
 	return out
