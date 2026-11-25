@@ -96,6 +96,8 @@ var _time := 0.0
 ## goto — какой диалог играть дальше (пусто — разговор закончен); on_choose — эффекты, как on_finish.
 ## {"interactions": "cute"} — на его месте варианты действий с персонажем диалога (обнимашки и т.п.,
 ## Interactions): закрытые и сделанные сегодня — серые; выбрали — доверие и сценка из папки love персонажа.
+## Под ними — подарки (Gifts, data/interactions/gifts.json), справа — смайлик настроения (Mood);
+## не в настроении персонаж может отказаться (реплика отказа, доверия нет).
 ## CG: "cg": "res://...png" — с этой реплики показывается картинка во весь экран (поверх персонажей);
 ## "cg": "" — убрать. Реплика с CG и пустым текстом — только картинка, без окна (клик — дальше).
 var _cg: TextureRect
@@ -696,9 +698,14 @@ func _on_line_shown() -> void:
 func _show_choices(choices: Array) -> void:
 	_clear_choices()
 	_choices = []
+	var mood_with := ""
 	for c in choices:
 		if c is Dictionary and (c as Dictionary).has("interactions"):
-			_choices.append_array(_interactions().choice_entries(String(c.get("with", "")), String(c.get("interactions", "cute"))))
+			var who_id := String(c.get("with", ""))
+			_choices.append_array(_interactions().choice_entries(who_id, String(c.get("interactions", "cute"))))
+			# Подарки (Gifts) — под действиями; смайлик настроения (Mood) — рядом с меню.
+			_choices.append_array(_gifts().choice_entries(who_id))
+			mood_with = who_id
 		else:
 			_choices.append(c)
 	if _choice_box == null:
@@ -714,7 +721,7 @@ func _show_choices(choices: Array) -> void:
 		var c = _choices[i]
 		var b := _make_button(String(c.get("text", "…")) if c is Dictionary else String(c))
 		var csize := CHOICE_SIZE
-		if c is Dictionary and (c as Dictionary).has("interaction"):
+		if c is Dictionary and ((c as Dictionary).has("interaction") or (c as Dictionary).has("gift")):
 			csize.x = maxf(csize.x, INTERACTION_CHOICE_W)   ## «Погладить по голове   (с 1 ур.)» — длиннее
 		b.custom_minimum_size = csize
 		b.size = csize
@@ -741,6 +748,37 @@ func _show_choices(choices: Array) -> void:
 		b.modulate.a = 0.0
 		var tw := b.create_tween().set_parallel(true)
 		tw.tween_property(b, "modulate:a", 1.0, 0.18).set_delay(0.06 * float(i))
+	_show_mood_icon(mood_with)
+
+## Смайлик настроения персонажа (Mood: радостный / нейтральный / грустный) справа от меню действий.
+## Узел MoodIcon; место — MOOD_ICON_OFFSET от левого верхнего угла столбика вариантов.
+const MOOD_ICON_SIZE := Vector2(120, 120)
+const MOOD_ICON_OFFSET := Vector2(INTERACTION_CHOICE_W + 24.0, -30.0)
+var _mood_icon: TextureRect
+
+func _show_mood_icon(who: String) -> void:
+	var tex: Texture2D = _mood().icon(who) if who != "" and _mood().has_mood(who) else null
+	if tex == null:
+		if _mood_icon != null:
+			_mood_icon.visible = false
+		return
+	if _mood_icon == null:
+		_mood_icon = TextureRect.new()
+		_mood_icon.name = "MoodIcon"
+		_mood_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		_mood_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		_mood_icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_mood_icon.size = MOOD_ICON_SIZE
+		_ui.add_child(_mood_icon)
+	_mood_icon.texture = tex
+	_mood_icon.position = _choice_box.position + MOOD_ICON_OFFSET
+	_mood_icon.visible = true
+	_mood_icon.modulate.a = 0.0
+	_mood_icon.pivot_offset = MOOD_ICON_SIZE * 0.5
+	_mood_icon.scale = Vector2(0.6, 0.6)
+	var tw := _mood_icon.create_tween().set_parallel(true)
+	tw.tween_property(_mood_icon, "modulate:a", 1.0, 0.2)
+	tw.tween_property(_mood_icon, "scale", Vector2.ONE, 0.25).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 
 func _apply_cg(line) -> void:
 	if not (line is Dictionary) or not line.has("cg"):
@@ -776,6 +814,8 @@ func _apply_fade(line) -> void:
 
 func _clear_choices() -> void:
 	_choices.clear()
+	if _mood_icon != null:
+		_mood_icon.visible = false
 	if _choice_box != null:
 		for c in _choice_box.get_children():
 			c.queue_free()
@@ -794,6 +834,9 @@ func _on_choice(i: int) -> void:
 	if c is Dictionary and (c as Dictionary).has("interaction"):
 		_play_interaction(String(c.get("with", "")), String(c["interaction"]))
 		return
+	if c is Dictionary and (c as Dictionary).has("gift"):
+		_play_gift(String(c.get("with", "")), String(c["gift"]))
+		return
 	if goto == "" or StoryDialogueDB_ == null:
 		_finish_sequence()
 		return
@@ -811,7 +854,12 @@ func _on_choice(i: int) -> void:
 	_show_next_line()
 
 ## Выбрали действие (обнимашки и т.п.): доверие + «раз в день», затем сценка из папки love персонажа.
+## Не в настроении — может отказаться (Mood.refuses): реплика отказа, доверия нет.
 func _play_interaction(who: String, action_id: String) -> void:
+	if _interactions().can_do(who, action_id) and _mood().refuses(who):
+		_lines = _lines.slice(0, _index + 1) + _mood().refuse_lines(who)
+		_show_next_line()
+		return
 	var gained: int = _interactions().perform(who, action_id)
 	if gained < 0:
 		_finish_sequence()
@@ -821,9 +869,26 @@ func _play_interaction(who: String, action_id: String) -> void:
 	_lines = _lines.slice(0, _index + 1) + _interactions().scene_lines(who, action_id)
 	_show_next_line()
 
-## Interactions — через load: окну диалога (живёт в автозагрузке) не нужна прямая ссылка на класс.
+## Подарили (Gifts): предмет из сумки, доверие и настроение, реплики благодарности.
+func _play_gift(who: String, item_id: String) -> void:
+	var gained: int = _gifts().give(who, item_id)
+	if gained < 0:
+		_finish_sequence()
+		return
+	if gained > 0:
+		_toast("+%d ♥ доверие" % gained)
+	_lines = _lines.slice(0, _index + 1) + _gifts().lines(who, item_id)
+	_show_next_line()
+
+## Interactions, Mood, Gifts — через load: окну диалога (живёт в автозагрузке) не нужна прямая ссылка на класс.
 func _interactions() -> GDScript:
 	return load("res://scripts/love/Interactions.gd") as GDScript
+
+func _mood() -> GDScript:
+	return load("res://scripts/love/Mood.gd") as GDScript
+
+func _gifts() -> GDScript:
+	return load("res://scripts/love/Gifts.gd") as GDScript
 
 ## Короткая надпись над окном диалога (поднимается и тает).
 func _toast(text: String) -> void:

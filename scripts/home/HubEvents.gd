@@ -29,6 +29,15 @@ class_name HubEvents
 ##   "eat"         — съесть персонажа рядом ("radius"), через "hold" сек выплюнуть; тот лежит "lie" сек
 ##                   и показывает смайлик из "reactions" (id -> смайлик);
 ##   "leave"       — дойти до двери (точка Door) и уйти из дома на "away": [от, до] сек.
+##   У "nap" можно "lines" — фраза перед сном (одна случайная) и "wake" — фраза, когда встаёт.
+##
+## События на двоих (тоже "type": "random", второй — кто окажется рядом):
+##   "bump" — двое идут по одной линии навстречу и сталкиваются (ближе "gap" px): отлетают
+##            ("throw": [x, y]), лежат "lie" сек, встают и идут дальше, куда шли. Здесь вместо
+##            "chance_per_min" — "chance": шанс на каждую такую встречу;
+##   "rps"  — двое рядом (одна линия, ближе "radius") играют в камень-ножницы-бумагу: смайлики
+##            rps_rock / rps_paper / rps_scissors, ничья — переигрывают (до "rounds" раз),
+##            победитель радуется ("win"), проигравший — "lose" (смайлик, один из списка).
 
 const FILE := "res://data/hub/events.json"
 const CHECK_EVERY := 0.25
@@ -39,6 +48,7 @@ var _events: Array = []
 var _cooldown: Dictionary = {}
 var _inside: Dictionary = {}
 var _check := 0.0
+var _met: Dictionary = {}       ## "a|b" -> сек: эта пара уже бросала шанс столкновения
 
 func setup(p_hub: Node) -> void:
 	hub = p_hub
@@ -51,6 +61,10 @@ func setup(p_hub: Node) -> void:
 func _process(delta: float) -> void:
 	for id in _cooldown.keys():
 		_cooldown[id] = float(_cooldown[id]) - delta
+	for k in _met.keys():
+		_met[k] = float(_met[k]) - delta
+		if float(_met[k]) <= 0.0:
+			_met.erase(k)
 	_check -= delta
 	if _check > 0.0 or running or hub == null:
 		return
@@ -135,11 +149,21 @@ func _try_random(ev: Dictionary) -> bool:
 	var ids: Array = walkers.keys() if String(who) == "*" else (who if who is Array else [who])
 	ids.shuffle()
 	var p := float(ev.get("chance_per_min", 1.0)) * CHECK_EVERY / 60.0
+	var bump := String(ev.get("handler", "")) == "bump"
 	for id in ids:
 		var w: HomeWalker = walkers.get(String(id))
-		if w == null or not _free(w) or w.on_bed() or not _random_ok(ev, w):
+		if w == null or not _free(w) or w.on_bed() or w.is_lying() or not _random_ok(ev, w):
 			continue
-		if randf() >= p:
+		if bump:
+			# Шанс — один раз на встречу этой пары.
+			var o := _bump_partner(ev, w)
+			var key := (w.unit_id + "|" + o.unit_id) if w.unit_id < o.unit_id else (o.unit_id + "|" + w.unit_id)
+			if _met.has(key):
+				continue
+			_met[key] = 3.0
+			if randf() >= float(ev.get("chance", 0.5)):
+				continue
+		elif randf() >= p:
 			continue
 		_run_random(ev, w)
 		return true
@@ -155,6 +179,10 @@ func _random_ok(ev: Dictionary, w: HomeWalker) -> bool:
 			return k > 0.35 and k < 0.9
 		"eat":
 			return _eat_victim(ev, w) != null
+		"bump":
+			return _bump_partner(ev, w) != null
+		"rps":
+			return _rps_partner(ev, w) != null
 		"leave":
 			var door := spot("Door")
 			if door == null or w.route == null:
@@ -175,11 +203,51 @@ func _eat_victim(ev: Dictionary, w: HomeWalker) -> HomeWalker:
 			best = o
 	return best
 
+## Идёт навстречу w по той же линии и уже совсем близко.
+func _bump_partner(ev: Dictionary, w: HomeWalker) -> HomeWalker:
+	var dir := w.walk_dir()
+	if dir == 0.0 or w.route == null:
+		return null
+	var walkers: Dictionary = hub.get("walkers")
+	for o in walkers.values():
+		if o == w or not is_instance_valid(o) or not _free(o):
+			continue
+		var ow := o as HomeWalker
+		if ow.route != w.route or ow.walk_dir() != -dir or ow.is_lying():
+			continue
+		var gap := (ow.dist - w.dist) * dir
+		if gap > 0.0 and gap <= float(ev.get("gap", 70.0)):
+			return ow
+	return null
+
+## Свободный персонаж на той же линии рядом (для игры).
+func _rps_partner(ev: Dictionary, w: HomeWalker) -> HomeWalker:
+	if w.route == null:
+		return null
+	var best: HomeWalker = null
+	var best_d := float(ev.get("radius", 320.0))
+	var walkers: Dictionary = hub.get("walkers")
+	for o in walkers.values():
+		if o == w or not is_instance_valid(o) or not _free(o):
+			continue
+		var ow := o as HomeWalker
+		if ow.route != w.route or ow.on_bed() or ow.is_lying():
+			continue
+		var d := absf(ow.dist - w.dist)
+		if d < best_d:
+			best_d = d
+			best = ow
+	return best
+
 func _run_random(ev: Dictionary, w: HomeWalker) -> void:
 	running = true
 	match String(ev.get("handler", "")):
 		"nap":
 			await _h_nap(ev, w)
+		"bump":
+			await _h_bump(ev, w)
+		"rps":
+			await _h_rps(ev, w)
 		"stairs_fall":
 			await _h_stairs_fall(ev, w)
 		"eat":
@@ -204,8 +272,8 @@ func _await_landing(w: HomeWalker, max_time: float = 4.0) -> void:
 
 ## Полежать secs секунд (если не утащили), показывая смайлик every секунд; потом встать.
 func _lie(w: HomeWalker, secs: float, emote_name: String = "", every: float = 0.0) -> void:
-	if not is_instance_valid(w):
-		return
+	if not is_instance_valid(w) or w.state in [HomeWalker.State.DRAG, HomeWalker.State.FLY]:
+		return   ## его как раз держат / бросили
 	w.set_frozen(true)
 	w.lie_down()
 	if emote_name != "":
@@ -226,7 +294,108 @@ func _lie(w: HomeWalker, secs: float, emote_name: String = "", every: float = 0.
 		w.set_frozen(false)
 
 func _h_nap(ev: Dictionary, w: HomeWalker) -> void:
+	var lines: Array = ev.get("lines", [])
+	if not lines.is_empty():
+		w.set_frozen(true)
+		hub.chatter.say(w, String(lines[randi() % lines.size()]))
+		await get_tree().create_timer(float(ev.get("say_time", 1.8))).timeout
+		if not is_instance_valid(w) or w.state != HomeWalker.State.FROZEN:
+			return
 	await _lie(w, _range(ev, "duration", Vector2(10, 18)), "zzz", 3.0)
+	var wake: Array = ev.get("wake", [])
+	if not wake.is_empty() and is_instance_valid(w) and w.state == HomeWalker.State.IDLE:
+		hub.chatter.say(w, String(wake[randi() % wake.size()]))
+
+## Столкнулись лбами: оба отлетают назад, лежат, встают и идут дальше, куда шли.
+func _h_bump(ev: Dictionary, w: HomeWalker) -> void:
+	var o := _bump_partner(ev, w)
+	if o == null:
+		return
+	var plan := [[w, w.route, w.walk_target()], [o, o.route, o.walk_target()]]
+	var v: Array = ev.get("throw", [260, -420])
+	var sx := signf(o.position.x - w.position.x)
+	if sx == 0.0:
+		sx = 1.0
+	hub.chatter.emote(w, "exclaim")
+	hub.chatter.emote(o, "exclaim")
+	w.throw(Vector2(-sx * float(v[0]), float(v[1])))
+	o.throw(Vector2(sx * float(v[0]), float(v[1])))
+	await _await_landing(w)
+	await _await_landing(o)
+	var secs := _range(ev, "lie", Vector2(2.0, 2.0))
+	_lie_and_go(o, secs + randf_range(-0.3, 0.3), plan[1])
+	await _lie_and_go(w, secs, plan[0])
+
+## Полежать (смайлик sweat), встать и пойти дальше по той же линии к прежней цели.
+func _lie_and_go(w: HomeWalker, secs: float, plan: Array) -> void:
+	await _lie(w, secs, "sweat")
+	await get_tree().create_timer(0.2).timeout
+	if is_instance_valid(w) and w.route == plan[1]:
+		w.resume_walk(float(plan[2]))
+
+const RPS := ["rock", "paper", "scissors"]
+## Кто кого бьёт: камень — ножницы, ножницы — бумагу, бумага — камень.
+const RPS_BEATS := {"rock": "scissors", "scissors": "paper", "paper": "rock"}
+
+## Камень-ножницы-бумага: подойти, раз-два-три (подпрыгивают), показать, кто что выбросил.
+func _h_rps(ev: Dictionary, w: HomeWalker) -> void:
+	var o := _rps_partner(ev, w)
+	if o == null:
+		return
+	w.set_frozen(true)
+	o.set_frozen(true)
+	var side := signf(w.dist - o.dist)
+	if side == 0.0:
+		side = 1.0
+	var stand := clampf(o.dist + side * float(ev.get("distance", 150.0)), 0.0, o.route.length())
+	await w.event_move(o.route, stand)
+	if not (is_instance_valid(w) and is_instance_valid(o)):
+		_unfreeze([w, o])
+		return
+	w.face_toward(o.position.x)
+	o.face_toward(w.position.x)
+	hub.chatter.emote(w, "exclaim")
+	await get_tree().create_timer(0.7).timeout
+	var rounds := int(ev.get("rounds", 3))
+	var winner: HomeWalker = null
+	var loser: HomeWalker = null
+	for r in range(rounds):
+		if not _still_frozen([w, o]):
+			_unfreeze([w, o])
+			return
+		hub.chatter.say(w, String(ev.get("shout", "Камень, ножницы, бумага!")) if r == 0 else String(ev.get("again", "Ещё раз!")))
+		for i in range(3):
+			o.event_hop()
+			await w.event_hop()
+		var a: String = RPS[randi() % 3]
+		var b: String = RPS[randi() % 3]
+		hub.chatter.emote(w, "rps_" + a, 1.8)
+		hub.chatter.emote(o, "rps_" + b, 1.8)
+		await get_tree().create_timer(1.9).timeout
+		if a != b:
+			winner = w if RPS_BEATS[a] == b else o
+			loser = o if winner == w else w
+			break
+		hub.chatter.emote(w, "dots")
+		hub.chatter.emote(o, "dots")
+		await get_tree().create_timer(1.0).timeout
+	if winner != null and _still_frozen([winner, loser]):
+		hub.chatter.emote(winner, String(ev.get("win", "happy")))
+		var lose: Array = ev.get("lose", ["sad", "angry"])
+		hub.chatter.emote(loser, String(lose[randi() % lose.size()]) if not lose.is_empty() else "sad")
+		winner.event_hop()
+		await get_tree().create_timer(0.45).timeout
+		await winner.event_hop()
+		await get_tree().create_timer(1.0).timeout
+	_unfreeze([w, o])
+
+func _still_frozen(ws: Array) -> bool:
+	return ws.all(func(x) -> bool: return is_instance_valid(x) and (x as HomeWalker).state == HomeWalker.State.FROZEN)
+
+func _unfreeze(ws: Array) -> void:
+	for x in ws:
+		if is_instance_valid(x):
+			(x as HomeWalker).set_frozen(false)
 
 func _h_stairs_fall(ev: Dictionary, w: HomeWalker) -> void:
 	var v: Array = ev.get("throw", [-420, -520])

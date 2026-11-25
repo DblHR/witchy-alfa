@@ -111,9 +111,11 @@ static func perform(char_id: String, action_id: String) -> int:
 	if not can_do(char_id, action_id) or StoryState_ == null:
 		return -1
 	if state(char_id, action_id) == State.USED_TODAY:
+		Mood.on_talk(char_id)
 		return 0
 	var key := DAY_COUNTER % [char_id, action_id]
 	StoryState_.add_counter(key, DayCycle.day_number() - StoryState_.get_counter(key))
+	Mood.on_talk(char_id)
 	var amount := int(action(action_id).get("trust", 0))
 	if NpcTrust.is_npc(char_id):
 		NpcTrust.add(char_id, amount)
@@ -169,6 +171,18 @@ static func scene_lines(char_id: String, action_id: String) -> Array:
 	if lines.is_empty():
 		lines.append({"speaker": "hero", "text": "*%s*" % title(action_id)})
 	return _resolve(char_id, action_id, lines)
+
+## Реплики по ключу key из папки love персонажа (готовые для show_sequence); нет — fallback.
+static func love_lines(char_id: String, key: String, fallback: Array) -> Array:
+	var lines: Array = []
+	for l in _raw_lines(char_id, key):
+		if l is Dictionary:
+			lines.append((l as Dictionary).duplicate(true))
+	if lines.is_empty():
+		for l in fallback:
+			if l is Dictionary:
+				lines.append((l as Dictionary).duplicate(true))
+	return _resolve(char_id, key, lines)
 
 ## VN-меню взаимодействий: приветствие персонажа, а в последней реплике — выбор действий и «Уйти».
 static func menu_lines(char_id: String) -> Array:

@@ -60,6 +60,9 @@ func _build_ui() -> void:
 	_add_button(box, "NPC trust +100: Rikka", _npc_trust.bind("rikka"))
 	_add_button(box, "NPC trust +100: Noctris", _npc_trust.bind("noctris"))
 	_add_button(box, "NPC trust +100: Sessilia", _npc_trust.bind("sessilia"))
+	_add_button(box, "Give item: 3 carrots (gift)", _give_carrots)
+	_add_button(box, "Mood +30: everyone (Mood)", _mood_shift.bind(30))
+	_add_button(box, "Mood -30: everyone (Mood)", _mood_shift.bind(-30))
 	_add_button(box, "Refresh status", _refresh_status)
 	_add_button(box, "Close", _toggle)
 
@@ -81,6 +84,19 @@ func _add_button(parent: Node, text: String, callback: Callable) -> void:
 	b.custom_minimum_size = Vector2(520, 38)
 	b.pressed.connect(callback)
 	parent.add_child(b)
+
+func _give_carrots() -> void:
+	if Inventory_ != null:
+		Inventory_.add_item("gift", 3)
+	_refresh_status()
+
+## Mood — через load (панель в автозагрузке).
+func _mood_shift(delta: int) -> void:
+	var mood := load("res://scripts/love/Mood.gd") as GDScript
+	for id in mood.all_ids():
+		mood.set_value(id, int(mood.value(id)) + delta)
+		print("[Mood] ", id, ": ", mood.value(id), " (", mood.state(id), ")")
+	_refresh_status()
 
 func _npc_trust(npc_id: String) -> void:
 	NpcTrust.add(npc_id, 100)

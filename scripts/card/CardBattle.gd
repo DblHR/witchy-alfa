@@ -1481,9 +1481,15 @@ func _apply_run_progress() -> PackedStringArray:
 			if data == null:
 				continue
 			var before := UnitRoster_.get_relationship(data.id)
-			UnitRoster_.add_trust(data.id, CardBalance.TRUST_PER_RUN)
+			# Настроение (Mood): радостная — больше доверия, грустная — меньше; после забега — повеселела.
+			var mood := Mood.state(data.id)
+			var gain := roundi(CardBalance.TRUST_PER_RUN * Mood.battle_trust_mult(data.id))
+			UnitRoster_.add_trust(data.id, gain)
+			Mood.on_run(data.id)
 			var after := UnitRoster_.get_relationship(data.id)
-			var t := "%s: доверие +%d" % [data.display_name, CardBalance.TRUST_PER_RUN]
+			var t := "%s: доверие +%d" % [data.display_name, gain]
+			if Mood.has_mood(data.id) and mood != Mood.NEUTRAL:
+				t += " (настроение %s)" % String(Mood.NAMES.get(mood, ""))
 			if after > before:
 				t += " — уровень отношений %d!" % after
 			lines.append(t)

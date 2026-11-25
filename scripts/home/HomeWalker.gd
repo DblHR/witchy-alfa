@@ -73,6 +73,7 @@ var _vel := Vector2.ZERO
 var _fly_time := 0.0
 var _drag_samples: Array = []   ## [время, точка] — скорость курсора для броска
 var _last_x := 0.0
+var _lying := false             ## лежит (lie_down) — встаёт по stand_up, разморозке или если схватили
 
 func setup(p_id: String, tex: Texture2D, p_home: Node) -> void:
 	unit_id = p_id
@@ -326,6 +327,8 @@ func on_bed() -> bool:
 
 func begin_drag(mouse: Vector2) -> void:
 	_kill_tween()
+	_lying = false
+	body.rotation = 0.0
 	if body.texture != base_tex:
 		body.texture = base_tex
 		body.offset = Vector2(-base_tex.get_width() * 0.5, -_feet_y(base_tex))
@@ -456,6 +459,7 @@ func drop(r: HomeRoute, d: float) -> void:
 ## Лечь (картинка смерти <id>_dead.png; нет её — просто завалиться набок). Встать — stand_up().
 func lie_down() -> void:
 	_kill_tween()
+	_lying = true
 	body.position.y = 0.0
 	body.scale = Vector2(_scale, _scale)
 	var t: Texture2D = bed_tex if bed_tex != null else CharacterPhases.dead_texture(base_tex)
@@ -468,6 +472,7 @@ func lie_down() -> void:
 
 func stand_up() -> void:
 	_kill_tween()
+	_lying = false
 	body.rotation = 0.0
 	if body.texture != base_tex:
 		body.texture = base_tex
@@ -525,17 +530,39 @@ func face_toward(x: float) -> void:
 
 # --- Разное --------------------------------------------------------------------------
 
-## Замереть на время разговора и продолжить.
+func is_lying() -> bool:
+	return _lying
+
+## Замереть на время разговора и продолжить. Уже замер (событие) — так и остаётся «как было до
+## события». Лежал (уснул, упал) и его разморозили (например, поговорили) — сначала встаёт.
 func set_frozen(on: bool) -> void:
 	if on:
 		if state == State.WALK:
 			body.position.y = 0.0
-		set_meta("frozen_from", state)
+		if state != State.FROZEN:
+			set_meta("frozen_from", state)
 		state = State.FROZEN
 	elif state == State.FROZEN:
 		var was := int(get_meta("frozen_from", State.IDLE))
 		state = State.BED if was == State.BED else State.IDLE
 		_idle_left = randf_range(0.6, 1.5)
+		if _lying and state != State.BED:
+			stand_up()
+			_idle_left = maxf(_idle_left, 0.8)
+
+## Продолжить идти к точке d своей линии (после события: столкнулись, встали — идут дальше).
+func resume_walk(d: float) -> void:
+	if route == null or state != State.IDLE:
+		return
+	_go_end = -1
+	_walk_to(d)
+
+## Куда идёт по линии: +1 — к концу, -1 — к началу, 0 — стоит.
+func walk_dir() -> float:
+	return signf(_target - dist) if state == State.WALK else 0.0
+
+func walk_target() -> float:
+	return _target
 
 ## Точка над макушкой (для пузыря реплики) — дочерний узел, едет вместе с персонажем.
 var _head: Node2D

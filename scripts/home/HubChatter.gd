@@ -51,7 +51,7 @@ func say(w: HomeWalker, text: String) -> bool:
 	return _bubbles.show_line_for_actor(w.head_anchor(), text)
 
 ## Смайлик над головой: всплывает, чуть покачивается и тает. Прошлый смайлик этого персонажа убирается.
-func emote(w: HomeWalker, emote_name: String) -> bool:
+func emote(w: HomeWalker, emote_name: String, hold: float = EMOTE_HOLD) -> bool:
 	if w == null or not is_instance_valid(w) or _dialogue_open():
 		return false
 	var path := EMOTE_DIR + emote_name + ".png"
@@ -64,7 +64,7 @@ func emote(w: HomeWalker, emote_name: String) -> bool:
 	e.texture = load(path) as Texture2D
 	e.target = w.head_anchor()
 	e.size = EMOTE_SIZE
-	e.hold = EMOTE_HOLD
+	e.hold = hold
 	add_child(e)
 	_emotes[w] = e
 	return true
