@@ -417,19 +417,19 @@ script = ExtResource("7_route")
 layer = 0
 action = "bed"
 
-[node name="Spots" type="Node2D" parent="."]
+[node name="Spots" type="Node2D" parent="." unique_id=1355524244]
 
-[node name="Fireplace" type="Marker2D" parent="Spots"]
+[node name="Fireplace" type="Marker2D" parent="Spots" unique_id=588718025]
 position = Vector2(340, 986)
 
-[node name="Cauldron" type="Marker2D" parent="Spots"]
+[node name="Cauldron" type="Marker2D" parent="Spots" unique_id=305550109]
 position = Vector2(910, 990)
 
-[node name="CauldronLeft" type="Marker2D" parent="Spots"]
-position = Vector2(690, 1036)
+[node name="CauldronLeft" type="Marker2D" parent="Spots" unique_id=1245381984]
+position = Vector2(729, 933)
 
-[node name="CauldronRight" type="Marker2D" parent="Spots"]
-position = Vector2(1130, 1032)
+[node name="CauldronRight" type="Marker2D" parent="Spots" unique_id=844376501]
+position = Vector2(1087, 938)
 
 [node name="StartRunButton" type="TextureButton" parent="." unique_id=841560713]
 unique_name_in_owner = true
