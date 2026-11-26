@@ -58,18 +58,42 @@ func go_to_love(unit_id: String) -> void:
 	get_tree().paused = false
 	get_tree().change_scene_to_file(path)
 
-## Откуда открыли инвентарь — туда «Назад» и вернёт (дом, алхимия…).
+## Инвентарь открывается поверх текущей комнаты (дом, алхимия…): своим слоем INVENTORY_LAYER,
+## фон под ним размыт (Inventory.tscn → Blur). Комната под ним живёт дальше, но клики до неё не доходят.
+## «Назад» / Esc — слой убирается, сигнал inventory_closed (дом обновляет значки).
+## Если открыть некуда (нет текущей сцены) — по-старому отдельной сценой.
+signal inventory_closed
+const INVENTORY_LAYER := 45
 var inventory_return := HUB
+var _inventory_layer: CanvasLayer
 
 func go_to_inventory() -> void:
-	get_tree().paused = false
+	if is_inventory_open():
+		return
 	var cur := get_tree().current_scene
-	var from := cur.scene_file_path if cur != null else ""
-	inventory_return = from if from != "" and from != INVENTORY else HUB
-	get_tree().change_scene_to_file(INVENTORY)
+	if cur == null or cur.scene_file_path == INVENTORY:
+		get_tree().paused = false
+		inventory_return = HUB
+		get_tree().change_scene_to_file(INVENTORY)
+		return
+	var layer := CanvasLayer.new()
+	layer.name = "InventoryOverlay"
+	layer.layer = INVENTORY_LAYER
+	layer.process_mode = Node.PROCESS_MODE_ALWAYS
+	layer.add_child((load(INVENTORY) as PackedScene).instantiate())
+	cur.add_child(layer)
+	_inventory_layer = layer
+
+func is_inventory_open() -> bool:
+	return is_instance_valid(_inventory_layer) and not _inventory_layer.is_queued_for_deletion()
 
 ## «Назад» из инвентаря.
 func leave_inventory() -> void:
+	if is_inventory_open():
+		_inventory_layer.queue_free()
+		_inventory_layer = null
+		inventory_closed.emit()
+		return
 	get_tree().paused = false
 	get_tree().change_scene_to_file(inventory_return if ResourceLoader.exists(inventory_return) else HUB)
 

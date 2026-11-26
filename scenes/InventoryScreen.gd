@@ -30,11 +30,17 @@ const SECTION_TITLES := {
 @onready var detail_hint_label: Label = %DetailHintLabel
 @onready var save_button: Button = %SaveButton
 @onready var back_button: TextureButton = %BackButton
-@onready var alchemy_button: TextureButton = %AlchemyButton
-@onready var general_button: TextureButton = %GeneralButton
-@onready var lore_button: TextureButton = %LoreButton
-@onready var characters_button: TextureButton = %CharactersButton
-@onready var gallery_button: TextureButton = %GalleryButton
+## Вкладки книги (Book): торчат из-под страниц, при наведении выдвигаются (InventoryTab).
+@onready var alchemy_button: InventoryTab = %AlchemyButton
+@onready var general_button: InventoryTab = %GeneralButton
+@onready var lore_button: InventoryTab = %LoreButton
+@onready var characters_button: InventoryTab = %CharactersButton
+@onready var gallery_button: InventoryTab = %GalleryButton
+## Фильтр «Персонажей» по фракциям: вкладки сверху книги. Нажали — остаются только персонажи этой
+## фракции, а вкладка переезжает на красную закладку (FactionPin); ещё раз — снова все. Фильтр один.
+@onready var factions_box: Control = %Factions
+@onready var faction_pin: Control = %FactionPin
+@onready var faction_tabs: Array[InventoryTab] = [%FactionMain, %FactionNpc, %FactionSlimes]
 @onready var item_detail: Control = %ItemDetail
 @onready var item_icon: TextureRect = %ItemIcon
 @onready var item_name: Label = %ItemName
@@ -56,7 +62,9 @@ var selected_entry_by_section: Dictionary = {}
 
 func _ready() -> void:
 	UIThemeHelper.apply_pink_theme(self)
-	get_tree().paused = false
+	# Открыт поверх комнаты (SceneRouter.go_to_inventory) — Esc закрывает.
+	EscClose.register(self, func() -> void: SceneRouter_.leave_inventory())
+	_setup_faction_tabs()
 	_save_default_selection_ids()
 	_save_button_connections()
 	_subscribe_state()
@@ -228,6 +236,7 @@ func _select_section(section: int, reset_status: bool = true) -> void:
 	lore_button.button_pressed = section == Section.LORE
 	characters_button.button_pressed = section == Section.CHARACTERS
 	gallery_button.button_pressed = section == Section.GALLERY
+	factions_box.visible = section == Section.CHARACTERS
 	_gallery_group_box.visible = section == Section.GALLERY
 	if section != Section.GALLERY:
 		_gallery_panel.visible = false
@@ -376,6 +385,10 @@ func _build_character_entries() -> Array[Dictionary]:
 			rest.append(id)
 	for id in rest:
 		groups[2].append(_character_entry(String(id)))
+	if _faction_filter >= 0:
+		for i in groups.size():
+			if i != _faction_filter:
+				groups[i] = []
 	var cols := _get_columns_for_section(Section.CHARACTERS)
 	for g in groups:
 		var group: Array = (g as Array).filter(func(e) -> bool: return not (e as Dictionary).is_empty())
@@ -387,6 +400,32 @@ func _build_character_entries() -> Array[Dictionary]:
 		for e in group:
 			out.append(e)
 	return out
+
+# --- Фильтр по фракциям ---------------------------------------------------------
+## -1 — все; иначе номер группы: 0 — главные герои, 1 — НПС, 2 — слизнедевочки
+## (порядок вкладок faction_tabs).
+var _faction_filter := -1
+
+func _setup_faction_tabs() -> void:
+	for i in faction_tabs.size():
+		var t := faction_tabs[i]
+		t.set_meta("home", t.position)
+		t.pressed.connect(_on_faction_pressed.bind(i))
+
+func _on_faction_pressed(i: int) -> void:
+	_faction_filter = -1 if _faction_filter == i else i
+	_refresh_faction_tabs()
+	if current_section == Section.CHARACTERS:
+		selected_entry_by_section[current_section] = ""
+		_rebuild_entry_grid()
+
+## Активная вкладка — на закладке (FactionPin), остальные — на своих местах.
+func _refresh_faction_tabs(animate: bool = true) -> void:
+	for i in faction_tabs.size():
+		var t := faction_tabs[i]
+		var on := i == _faction_filter
+		t.set_pressed_no_signal(on)
+		t.move_home(faction_pin.position if on else Vector2(t.get_meta("home")), animate)
 
 func _character_entry(unit_id: String) -> Dictionary:
 	var data: CharacterData = CharDB.get_by_id(unit_id)

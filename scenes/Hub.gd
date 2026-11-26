@@ -37,6 +37,7 @@ func _ready() -> void:
 	DayCycle.apply_textures(self)
 	start_run.pressed.connect(_on_start_run)
 	inv.pressed.connect(func(): SceneRouter_.go_to_inventory())
+	SceneRouter_.inventory_closed.connect(_refresh_badges)
 	_collect_routes()
 	_spawn_walkers()
 	# Фразы и смайлики над чибиками, события на местах и встречи.
