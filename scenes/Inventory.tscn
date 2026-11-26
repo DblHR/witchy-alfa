@@ -1,26 +1,31 @@
 [gd_scene format=3 uid="uid://bi4nv1cdnspaw"]
 
 [ext_resource type="Script" uid="uid://dtw8laps2jqik" path="res://scenes/InventoryScreen.gd" id="1"]
-[ext_resource type="Script" path="res://scripts/ui/inventory/InventoryTab.gd" id="tab"]
-[ext_resource type="Shader" path="res://scripts/ui/inventory/inventory_blur.gdshader" id="blur"]
-[ext_resource type="Texture2D" path="res://assets/ui/inventory/inventory_back.png" id="book_back"]
-[ext_resource type="Texture2D" path="res://assets/ui/inventory/inventory_2L.png" id="book_2l"]
-[ext_resource type="Texture2D" path="res://assets/ui/inventory/inventory_3L.png" id="book_3l"]
-[ext_resource type="Texture2D" path="res://assets/ui/inventory/bookmark.png" id="book_mark"]
-[ext_resource type="Texture2D" path="res://assets/ui/inventory/items.png" id="tab_items"]
-[ext_resource type="Texture2D" path="res://assets/ui/inventory/recipes.png" id="tab_recipes"]
-[ext_resource type="Texture2D" path="res://assets/ui/inventory/lore.png" id="tab_lore"]
-[ext_resource type="Texture2D" path="res://assets/ui/inventory/characters.png" id="tab_chars"]
-[ext_resource type="Texture2D" path="res://assets/ui/inventory/gallery.png" id="tab_gallery"]
-[ext_resource type="Texture2D" path="res://assets/ui/inventory/bookmarkMainChar.png" id="fac_main"]
-[ext_resource type="Texture2D" path="res://assets/ui/inventory/bookmarkNPC.png" id="fac_npc"]
-[ext_resource type="Texture2D" path="res://assets/ui/inventory/bookmarkSlimes.png" id="fac_slimes"]
-[ext_resource type="Texture2D" path="res://assets/ui/buttons/back.png" id="btn_back"]
-[ext_resource type="Texture2D" path="res://assets/ui/buttons/goldStatus.png" id="gold_status"]
 [ext_resource type="Script" uid="uid://xkuy1iyqhbwv" path="res://scripts/ui/inventory/LoreDatabase.gd" id="3"]
 [ext_resource type="Resource" path="res://resources/ui/lore/witch_note_test.tres" id="4"]
 [ext_resource type="Script" uid="uid://dd6sbtsthqbsx" path="res://scripts/ui/inventory/LoreEntryData.gd" id="4_5d712"]
 [ext_resource type="Resource" path="res://resources/ui/lore/witch_note_empty.tres" id="5"]
+[ext_resource type="Shader" uid="uid://cnvnn3w1enfm7" path="res://scripts/ui/inventory/inventory_blur.gdshader" id="blur"]
+[ext_resource type="Texture2D" uid="uid://dskmjfxdxmvlu" path="res://assets/ui/inventory/inventory_2L.png" id="book_2l"]
+[ext_resource type="Texture2D" uid="uid://ospg67253wn5" path="res://assets/ui/inventory/inventory_3L.png" id="book_3l"]
+[ext_resource type="Texture2D" uid="uid://dyly6ogfr8daq" path="res://assets/ui/inventory/inventory_back.png" id="book_back"]
+[ext_resource type="Texture2D" uid="uid://cij4twno4angu" path="res://assets/ui/inventory/bookmark.png" id="book_mark"]
+[ext_resource type="Texture2D" uid="uid://bj4a57s2tmdnx" path="res://assets/ui/buttons/back.png" id="btn_back"]
+[ext_resource type="Texture2D" uid="uid://dpt8qu737msk3" path="res://assets/ui/inventory/bookmarkMainChar.png" id="fac_main"]
+[ext_resource type="Texture2D" uid="uid://bvttr774rspsj" path="res://assets/ui/inventory/bookmarkNPC.png" id="fac_npc"]
+[ext_resource type="Texture2D" uid="uid://dj8opsu168kki" path="res://assets/ui/inventory/bookmarkSlimes.png" id="fac_slimes"]
+[ext_resource type="Texture2D" uid="uid://dlqg5fpxvh5f3" path="res://assets/ui/buttons/goldStatus.png" id="gold_status"]
+[ext_resource type="Script" uid="uid://d0uksahqyva3b" path="res://scripts/ui/inventory/InventoryTab.gd" id="tab"]
+[ext_resource type="Texture2D" uid="uid://citgmrqk3pwic" path="res://assets/ui/inventory/characters.png" id="tab_chars"]
+[ext_resource type="Texture2D" uid="uid://dv2krox2uorwl" path="res://assets/ui/inventory/gallery.png" id="tab_gallery"]
+[ext_resource type="Texture2D" uid="uid://cyuc07t1ogd38" path="res://assets/ui/inventory/items.png" id="tab_items"]
+[ext_resource type="Texture2D" uid="uid://5ae11onifaol" path="res://assets/ui/inventory/lore.png" id="tab_lore"]
+[ext_resource type="Texture2D" uid="uid://dovce85d7isfq" path="res://assets/ui/inventory/recipes.png" id="tab_recipes"]
+
+[sub_resource type="ShaderMaterial" id="blur_mat"]
+shader = ExtResource("blur")
+shader_parameter/radius = 10.0
+shader_parameter/tint = Color(0.12, 0.06, 0.14, 0.35)
 
 [sub_resource type="StyleBoxFlat" id="1"]
 bg_color = Color(0.309804, 0.172549, 0.137255, 0.862745)
@@ -36,9 +41,6 @@ corner_radius_top_right = 18
 corner_radius_bottom_right = 18
 corner_radius_bottom_left = 18
 
-[sub_resource type="StyleBoxFlat" id="2"]
-bg_color = Color(0.976471, 0.945098, 0.870588, 0)
-
 [sub_resource type="StyleBoxFlat" id="char_tab"]
 bg_color = Color(0.95, 0.9, 0.82, 0.9)
 border_width_left = 2
@@ -48,21 +50,21 @@ border_color = Color(0.55, 0.38, 0.5, 0.6)
 corner_radius_top_left = 14
 corner_radius_top_right = 14
 
-[sub_resource type="StyleBoxFlat" id="char_tab_hover"]
-bg_color = Color(0.99, 0.93, 0.86, 1)
-border_width_left = 2
-border_width_top = 2
-border_width_right = 2
-border_color = Color(0.55, 0.3, 0.55, 0.9)
-corner_radius_top_left = 14
-corner_radius_top_right = 14
-
 [sub_resource type="StyleBoxFlat" id="char_tab_on"]
 bg_color = Color(0.45, 0.22, 0.47, 1)
 border_width_left = 2
 border_width_top = 2
 border_width_right = 2
 border_color = Color(0.33, 0.16, 0.38, 1)
+corner_radius_top_left = 14
+corner_radius_top_right = 14
+
+[sub_resource type="StyleBoxFlat" id="char_tab_hover"]
+bg_color = Color(0.99, 0.93, 0.86, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_color = Color(0.55, 0.3, 0.55, 0.9)
 corner_radius_top_left = 14
 corner_radius_top_right = 14
 
@@ -84,10 +86,8 @@ corner_radius_bottom_left = 18
 shadow_color = Color(0.2, 0.05, 0.2, 0.12)
 shadow_size = 6
 
-[sub_resource type="ShaderMaterial" id="blur_mat"]
-shader = ExtResource("blur")
-shader_parameter/radius = 10.0
-shader_parameter/tint = Color(0.12, 0.06, 0.14, 0.35)
+[sub_resource type="StyleBoxFlat" id="2"]
+bg_color = Color(0.976471, 0.945098, 0.870588, 0)
 
 [node name="Inventory" type="Control" unique_id=404930842]
 layout_mode = 3
@@ -98,7 +98,7 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1")
 
-[node name="Blur" type="ColorRect" parent="."]
+[node name="Blur" type="ColorRect" parent="." unique_id=853509064]
 material = SubResource("blur_mat")
 layout_mode = 1
 anchors_preset = 15
@@ -107,8 +107,8 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="Book" type="Control" parent="."]
-layout_mode = 0
+[node name="Book" type="Control" parent="." unique_id=748802041]
+anchors_preset = 0
 offset_left = 108.0
 offset_top = 36.0
 offset_right = 2708.0
@@ -116,14 +116,14 @@ offset_bottom = 1616.0
 scale = Vector2(0.655, 0.655)
 mouse_filter = 2
 
-[node name="Cover" type="TextureRect" parent="Book"]
+[node name="Cover" type="TextureRect" parent="Book" unique_id=157671009]
 layout_mode = 0
 offset_right = 2600.0
 offset_bottom = 1580.0
 mouse_filter = 2
 texture = ExtResource("book_back")
 
-[node name="Bookmark" type="TextureRect" parent="Book"]
+[node name="Bookmark" type="TextureRect" parent="Book" unique_id=462410762]
 layout_mode = 0
 offset_left = 200.0
 offset_top = -74.0
@@ -132,7 +132,7 @@ offset_bottom = 1586.0
 mouse_filter = 2
 texture = ExtResource("book_mark")
 
-[node name="GeneralButton" type="TextureButton" parent="Book"]
+[node name="GeneralButton" type="TextureButton" parent="Book" unique_id=2064783996]
 unique_name_in_owner = true
 layout_mode = 0
 offset_left = -84.0
@@ -143,9 +143,8 @@ mouse_default_cursor_shape = 2
 toggle_mode = true
 texture_normal = ExtResource("tab_items")
 script = ExtResource("tab")
-out_dir = Vector2(-1, 0)
 
-[node name="AlchemyButton" type="TextureButton" parent="Book"]
+[node name="AlchemyButton" type="TextureButton" parent="Book" unique_id=488126517]
 unique_name_in_owner = true
 layout_mode = 0
 offset_left = -43.0
@@ -156,9 +155,8 @@ mouse_default_cursor_shape = 2
 toggle_mode = true
 texture_normal = ExtResource("tab_recipes")
 script = ExtResource("tab")
-out_dir = Vector2(-1, 0)
 
-[node name="LoreButton" type="TextureButton" parent="Book"]
+[node name="LoreButton" type="TextureButton" parent="Book" unique_id=46681705]
 unique_name_in_owner = true
 layout_mode = 0
 offset_left = 2235.0
@@ -171,7 +169,7 @@ texture_normal = ExtResource("tab_lore")
 script = ExtResource("tab")
 out_dir = Vector2(1, 0)
 
-[node name="CharactersButton" type="TextureButton" parent="Book"]
+[node name="CharactersButton" type="TextureButton" parent="Book" unique_id=1461878724]
 unique_name_in_owner = true
 layout_mode = 0
 offset_left = 2262.0
@@ -184,38 +182,38 @@ texture_normal = ExtResource("tab_chars")
 script = ExtResource("tab")
 out_dir = Vector2(1, 0)
 
-[node name="GalleryButton" type="TextureButton" parent="Book"]
+[node name="GalleryButton" type="TextureButton" parent="Book" unique_id=344349503]
 unique_name_in_owner = true
 layout_mode = 0
-offset_left = 2463.0
-offset_top = 785.0
-offset_right = 3053.0
-offset_bottom = 1425.0
+offset_left = 2200.0002
+offset_top = 789.313
+offset_right = 2790.0002
+offset_bottom = 1429.313
 mouse_default_cursor_shape = 2
 toggle_mode = true
 texture_normal = ExtResource("tab_gallery")
 script = ExtResource("tab")
 out_dir = Vector2(1, 0)
-wiggle_deg = 5.0
 hover_out = Vector2(20, 36)
+wiggle_deg = 5.0
 
-[node name="Factions" type="Control" parent="Book"]
+[node name="Factions" type="Control" parent="Book" unique_id=1997816163]
 unique_name_in_owner = true
-layout_mode = 0
+anchors_preset = 0
 offset_right = 2600.0
 offset_bottom = 1580.0
 mouse_filter = 2
 
-[node name="FactionPin" type="Control" parent="Book/Factions"]
+[node name="FactionPin" type="Control" parent="Book/Factions" unique_id=1468203770]
 unique_name_in_owner = true
-layout_mode = 0
+anchors_preset = 0
 offset_left = 196.0
 offset_top = -70.0
 offset_right = 366.0
 offset_bottom = 50.0
 mouse_filter = 2
 
-[node name="FactionMain" type="TextureButton" parent="Book/Factions"]
+[node name="FactionMain" type="TextureButton" parent="Book/Factions" unique_id=84051748]
 unique_name_in_owner = true
 layout_mode = 0
 offset_left = 430.0
@@ -231,7 +229,7 @@ hover_out = Vector2(14, 26)
 hover_side = 4.0
 selected_out = 0.0
 
-[node name="FactionNpc" type="TextureButton" parent="Book/Factions"]
+[node name="FactionNpc" type="TextureButton" parent="Book/Factions" unique_id=244158032]
 unique_name_in_owner = true
 layout_mode = 0
 offset_left = 620.0
@@ -247,7 +245,7 @@ hover_out = Vector2(14, 26)
 hover_side = 4.0
 selected_out = 0.0
 
-[node name="FactionSlimes" type="TextureButton" parent="Book/Factions"]
+[node name="FactionSlimes" type="TextureButton" parent="Book/Factions" unique_id=1708816405]
 unique_name_in_owner = true
 layout_mode = 0
 offset_left = 810.0
@@ -263,14 +261,14 @@ hover_out = Vector2(14, 26)
 hover_side = 4.0
 selected_out = 0.0
 
-[node name="PagesUnder" type="TextureRect" parent="Book"]
+[node name="PagesUnder" type="TextureRect" parent="Book" unique_id=1259638390]
 layout_mode = 0
 offset_right = 2600.0
 offset_bottom = 1580.0
 mouse_filter = 2
 texture = ExtResource("book_2l")
 
-[node name="Pages" type="TextureRect" parent="Book"]
+[node name="Pages" type="TextureRect" parent="Book" unique_id=1368150234]
 layout_mode = 0
 offset_right = 2600.0
 offset_bottom = 1580.0
@@ -282,7 +280,7 @@ unique_name_in_owner = true
 script = ExtResource("3")
 entries = Array[ExtResource("4_5d712")]([ExtResource("4"), ExtResource("5")])
 
-[node name="GoldStatus" type="TextureRect" parent="."]
+[node name="GoldStatus" type="TextureRect" parent="." unique_id=1228304954]
 layout_mode = 0
 offset_left = 1524.0
 offset_top = 22.0
@@ -614,13 +612,13 @@ offset_right = 214.0
 offset_bottom = 584.0
 mouse_default_cursor_shape = 2
 theme_override_colors/font_color = Color(0.45, 0.3, 0.42, 1)
-theme_override_colors/font_hover_color = Color(0.33, 0.16, 0.38, 1)
 theme_override_colors/font_pressed_color = Color(1, 0.95, 0.98, 1)
+theme_override_colors/font_hover_color = Color(0.33, 0.16, 0.38, 1)
 theme_override_colors/font_hover_pressed_color = Color(1, 0.95, 0.98, 1)
 theme_override_font_sizes/font_size = 22
 theme_override_styles/normal = SubResource("char_tab")
-theme_override_styles/hover = SubResource("char_tab_hover")
 theme_override_styles/pressed = SubResource("char_tab_on")
+theme_override_styles/hover = SubResource("char_tab_hover")
 theme_override_styles/hover_pressed = SubResource("char_tab_on")
 theme_override_styles/focus = SubResource("char_tab_focus")
 toggle_mode = true
@@ -637,13 +635,13 @@ offset_right = 422.0
 offset_bottom = 584.0
 mouse_default_cursor_shape = 2
 theme_override_colors/font_color = Color(0.45, 0.3, 0.42, 1)
-theme_override_colors/font_hover_color = Color(0.33, 0.16, 0.38, 1)
 theme_override_colors/font_pressed_color = Color(1, 0.95, 0.98, 1)
+theme_override_colors/font_hover_color = Color(0.33, 0.16, 0.38, 1)
 theme_override_colors/font_hover_pressed_color = Color(1, 0.95, 0.98, 1)
 theme_override_font_sizes/font_size = 22
 theme_override_styles/normal = SubResource("char_tab")
-theme_override_styles/hover = SubResource("char_tab_hover")
 theme_override_styles/pressed = SubResource("char_tab_on")
+theme_override_styles/hover = SubResource("char_tab_hover")
 theme_override_styles/hover_pressed = SubResource("char_tab_on")
 theme_override_styles/focus = SubResource("char_tab_focus")
 toggle_mode = true
