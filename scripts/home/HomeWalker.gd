@@ -496,6 +496,48 @@ func event_hop() -> void:
 	_squash_hop(_tween, HOP_HEIGHT)
 	await _tween.finished
 
+## Дойти до точки d линии r пешком по маршрутам: по своей линии, потом по соединённым концами
+## (лестница и т. п.; кровать не в счёт). Пути нет — как event_move (прыжком). await event_walk_to(...)
+func event_walk_to(r: HomeRoute, d: float) -> void:
+	var path := _route_path(r)
+	if path.is_empty():
+		await event_move(r, d)
+		return
+	for step in path:
+		# step = [выйти с конца текущей линии (true — с конца), следующая линия, войти с её начала]
+		await event_move(route, route.length() if bool(step[0]) else 0.0)
+		var nr: HomeRoute = step[1]
+		place(nr, 0.0 if bool(step[2]) else nr.length())
+	await event_move(r, d)
+
+## Путь по линиям от текущей до r (поиск в ширину): [[с конца?, линия, с начала?], …]; уже на ней — [].
+## Пути нет — [] (и route != r).
+func _route_path(r: HomeRoute) -> Array:
+	if route == null or r == null or route == r or home == null:
+		return []
+	var prev: Dictionary = {route: null}
+	var queue: Array = [route]
+	while not queue.is_empty():
+		var cur: HomeRoute = queue.pop_front()
+		if cur == r:
+			break
+		for at_end in [false, true]:
+			for o in home.connections_at(cur, at_end):
+				var nr: HomeRoute = o[0]
+				if nr.action != "" or prev.has(nr):
+					continue
+				prev[nr] = [cur, at_end, bool(o[1])]
+				queue.append(nr)
+	if not prev.has(r):
+		return []
+	var out: Array = []
+	var x: HomeRoute = r
+	while prev[x] != null:
+		var link: Array = prev[x]
+		out.push_front([link[1], x, link[2]])
+		x = link[0]
+	return out
+
 ## Дойти до точки d линии r: по своей линии — пешком, на другую — прыжком. await event_move(...)
 func event_move(r: HomeRoute, d: float) -> void:
 	_kill_tween()

@@ -2,24 +2,14 @@ extends Node2D
 class_name HubPile
 ## Что-то лежит на полу в доме — кликнуть, чтобы забрать в сумку (+N предмета всплывает и тает).
 ## Появляется от дневных дел персонажей (HubEvents): зелье / шлак ведьмочки у котла, еда воина,
-## лужица слизи от слизнедевочек. Лежит, пока не заберут (даже после выхода из игры).
+## слизь от слизнедевочек. Лежит, пока не заберут (даже после выхода из игры).
 ##
 ## Хранится в StoryState: счётчик "hub_pile:<предмет>:<кто>:<x>:<y>" = сколько штук.
 ## Кучки рисуются в узле Hub.tscn → Piles (под гуляющими спереди).
-## Слизь ("slime_goop") — лужица assets/ui/hub/slime_puddle.png цвета того, кто оставил (TINTS),
-## остальное — значок предмета на полу.
+## На полу — значок самого предмета (слизь — спрайт слизи), больше одной штуки — «×N».
 
 const PREFIX := "hub_pile:"
-const PUDDLE := "res://assets/ui/hub/slime_puddle.png"
-const PUDDLE_ITEM := "slime_goop"
 const ICON_SIZE := 72.0
-const PUDDLE_WIDTH := 150.0
-## Цвет лужицы по тому, кто оставил.
-const TINTS := {
-	"fufu": Color(0.62, 1.0, 0.42),
-	"aki": Color(1.0, 0.62, 0.8),
-	"luisa": Color(0.6, 0.82, 1.0),
-}
 
 var item_id := ""
 var count := 1
@@ -58,22 +48,26 @@ func setup(p_key: String, p_item: String, who: String, n: int) -> void:
 	name = "Pile_" + item_id
 	_sprite = Sprite2D.new()
 	add_child(_sprite)
-	if item_id == PUDDLE_ITEM and ResourceLoader.exists(PUDDLE):
-		_sprite.texture = load(PUDDLE) as Texture2D
-		_sprite.self_modulate = TINTS.get(who, Color.WHITE)
-		var k := PUDDLE_WIDTH / maxf(1.0, float(_sprite.texture.get_width()))
-		_sprite.scale = Vector2(k, k)
-		_sprite.position = Vector2(0, -float(_sprite.texture.get_height()) * k * 0.35)
-	else:
-		_sprite.texture = Inventory_.get_item_icon(item_id) if Inventory_ != null else null
-		if _sprite.texture != null:
-			var k2 := ICON_SIZE / maxf(1.0, float(maxi(_sprite.texture.get_width(), _sprite.texture.get_height())))
-			_sprite.scale = Vector2(k2, k2)
-		_sprite.position = Vector2(0, -ICON_SIZE * 0.5)
-		# Чуть покачивается, чтобы было видно, что это можно взять.
-		var tw := create_tween().set_loops()
-		tw.tween_property(_sprite, "position:y", -ICON_SIZE * 0.5 - 6.0, 0.8).set_trans(Tween.TRANS_SINE)
-		tw.tween_property(_sprite, "position:y", -ICON_SIZE * 0.5, 0.8).set_trans(Tween.TRANS_SINE)
+	_sprite.texture = Inventory_.get_item_icon(item_id) if Inventory_ != null else null
+	if _sprite.texture != null:
+		var k2 := ICON_SIZE / maxf(1.0, float(maxi(_sprite.texture.get_width(), _sprite.texture.get_height())))
+		_sprite.scale = Vector2(k2, k2)
+	_sprite.position = Vector2(0, -ICON_SIZE * 0.5)
+	# Чуть покачивается, чтобы было видно, что это можно взять.
+	var tw := create_tween().set_loops()
+	tw.tween_property(_sprite, "position:y", -ICON_SIZE * 0.5 - 6.0, 0.8).set_trans(Tween.TRANS_SINE)
+	tw.tween_property(_sprite, "position:y", -ICON_SIZE * 0.5, 0.8).set_trans(Tween.TRANS_SINE)
+	# Больше одной штуки — «×N» в углу.
+	if count > 1:
+		var lbl := Label.new()
+		lbl.name = "Count"
+		lbl.text = "×%d" % count
+		lbl.add_theme_font_size_override("font_size", 24)
+		lbl.add_theme_color_override("font_color", Color(1.0, 0.97, 0.85))
+		lbl.add_theme_color_override("font_outline_color", Color(0.2, 0.1, 0.25))
+		lbl.add_theme_constant_override("outline_size", 7)
+		lbl.position = Vector2(ICON_SIZE * 0.2, -ICON_SIZE * 0.45)
+		add_child(lbl)
 	# Появление.
 	scale = Vector2(0.2, 0.2)
 	create_tween().tween_property(self, "scale", Vector2.ONE, 0.3).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
@@ -96,6 +90,8 @@ func collect() -> void:
 	if _taken:
 		return
 	_taken = true
+	if has_node("Count"):
+		get_node("Count").hide()
 	if Inventory_ != null:
 		Inventory_.add_item(item_id, count)
 	if StoryState_ != null:

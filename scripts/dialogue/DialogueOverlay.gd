@@ -837,6 +837,14 @@ func _on_choice(i: int) -> void:
 	if c is Dictionary and (c as Dictionary).has("gift"):
 		_play_gift(String(c.get("with", "")), String(c["gift"]))
 		return
+	# Выбор из кода: "then" — что вызвать, "lines" — готовые реплики-ответ сразу после выбора
+	# (вопрос при поимке героини, CardBattle).
+	if c is Dictionary and (c as Dictionary).get("then") is Callable:
+		((c as Dictionary)["then"] as Callable).call()
+	if c is Dictionary and (c as Dictionary).get("lines") is Array:
+		_lines = _lines.slice(0, _index + 1) + ((c as Dictionary)["lines"] as Array)
+		_show_next_line()
+		return
 	if goto == "" or StoryDialogueDB_ == null:
 		_finish_sequence()
 		return

@@ -1281,6 +1281,10 @@ func _check_end() -> bool:
 	var right_alive := _combat.front_enemy() != null
 	if left_alive and right_alive:
 		return false
+	# Героиня ещё отвечает на вопрос поимки — конец боя после ответа.
+	if _quiz_open:
+		_end_after_quiz = true
+		return true
 
 	# Квестовый бой (Фуфу и воин): квест засчитан при любом исходе.
 	if String(_run.room(_room_index).get("kind", "")) == "quest":
@@ -1853,8 +1857,9 @@ func refresh_run_hud() -> void:
 
 # --- Приманка ----------------------------------------------------------------
 
-## Приманка добила врага. Героиня (у врага есть char_id) попадает в отряд, а если уже есть — копия.
-## Фуфу ловится только после первой победы над ней.
+## Приманка добила врага (или добили «на крючке»). Героиня (у врага есть char_id) сначала задаёт
+## вопрос (data/capture/questions.json): ответили как надо — попадает в отряд, а если уже есть — копия;
+## не так — сбегает. Фуфу ловится только после первой победы над ней.
 func _on_lure_kill(u: Unit) -> void:
 	var def := u.enemy_def
 	var char_id := def.char_id if def != null else ""
@@ -1865,6 +1870,10 @@ func _on_lure_kill(u: Unit) -> void:
 		_float_for(u, "Её пока не поймать…", CardCombat.COL_STATUS, 26)
 		return
 	var hero_name := (CharDB.get_by_id(char_id) as CharacterData).display_name
+	if not _ask_capture_question(u, char_id, hero_name):
+		_capture(u, char_id, hero_name)
+
+func _capture(u: Unit, char_id: String, hero_name: String) -> void:
 	if UnitRoster_.has_unit(char_id):
 		var dupe_id := UnitRoster_.add_copy(char_id)
 		_float_for(u, "Копия: %s!" % hero_name, Color(1.0, 0.6, 0.85), 32)
@@ -1878,6 +1887,66 @@ func _on_lure_kill(u: Unit) -> void:
 		_float_for(u, "Поймана: %s!" % hero_name, Color(1.0, 0.6, 0.85), 34)
 		banter("capture", {"target": char_id, "enemy": u.data.id, "enemy_name": hero_name})
 		_captured_lines.append("Поймана: %s — теперь в отряде!" % hero_name)
+
+# --- Вопрос при поимке -------------------------------------------------------
+## data/capture/questions.json: героиня задаёт один случайный вопрос, ответы перемешаны.
+## Пока открыт вопрос, бой не заканчивается (_check_end ждёт ответа).
+const CAPTURE_QUESTIONS := "res://data/capture/questions.json"
+var _quiz_open := false
+var _end_after_quiz := false
+
+## Вопрос героини: {"text", "answers": [{"text", "ok", "reply"}]}; нет — {}.
+func _capture_question(char_id: String) -> Dictionary:
+	if not FileAccess.file_exists(CAPTURE_QUESTIONS):
+		return {}
+	var data = JSON.parse_string(FileAccess.get_file_as_string(CAPTURE_QUESTIONS))
+	if not (data is Dictionary):
+		return {}
+	var qs: Dictionary = (data as Dictionary).get("questions", {})
+	var list: Array = qs.get(char_id, qs.get("*", []))
+	return list[randi() % list.size()] if not list.is_empty() else {}
+
+## Задать вопрос. false — вопроса нет (ловим сразу).
+func _ask_capture_question(u: Unit, char_id: String, hero_name: String) -> bool:
+	var q := _capture_question(char_id)
+	if q.is_empty() or DialogueManager_ == null or StoryDialogueDB_ == null:
+		return false
+	var answers: Array = (q.get("answers", []) as Array).duplicate()
+	answers.shuffle()
+	var result := {"ok": false}
+	var choices: Array = []
+	for a in answers:
+		if not (a is Dictionary):
+			continue
+		var reply: Array = []
+		if String(a.get("reply", "")) != "":
+			reply = StoryDialogueDB_.resolve_lines({"id": "capture_" + char_id, "npc": char_id,
+				"lines": [{"speaker": char_id, "text": String(a["reply"])}]})
+		choices.append({"text": String(a.get("text", "")), "lines": reply,
+			"then": _set_quiz_result.bind(result, bool(a.get("ok", false)))})
+	var lines := StoryDialogueDB_.resolve_lines({"id": "capture_" + char_id, "npc": char_id,
+		"lines": [{"speaker": char_id, "text": String(q.get("text", ""))}]})
+	if lines.is_empty():
+		return false
+	lines[lines.size() - 1]["choices"] = choices
+	_float_for(u, "Клюнула!", Color(1.0, 0.6, 0.85), 30)
+	_quiz_open = true
+	DialogueManager_.show_sequence(lines, _on_capture_answered.bind(u, char_id, hero_name, result))
+	return true
+
+func _set_quiz_result(result: Dictionary, ok: bool) -> void:
+	result["ok"] = ok
+
+func _on_capture_answered(u: Unit, char_id: String, hero_name: String, result: Dictionary) -> void:
+	_quiz_open = false
+	if bool(result.get("ok", false)):
+		_capture(u, char_id, hero_name)
+	else:
+		_float_for(u, "Сбежала!", CardCombat.COL_STATUS, 30)
+		_captured_lines.append("Не вышло уговорить: %s — сбежала." % hero_name)
+	if _end_after_quiz:
+		_end_after_quiz = false
+		_check_end()
 
 # --- Строка зелий и баффов ---------------------------------------------------
 

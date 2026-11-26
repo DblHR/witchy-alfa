@@ -17,7 +17,7 @@ class_name HubEvents
 ##       {"say": "Текст", "who": "warrior"}   — фраза в пузыре
 ##       {"wait": 0.8}                        — пауза, секунд
 ##       {"hop": "witch"}                     — подпрыгнуть
-##       {"go": "warrior", "to": "CauldronLeft"} — дойти до точки (по линии; на другую линию — прыжком)
+##       {"go": "warrior", "to": "CauldronLeft"} — дойти до точки пешком по линиям (пути нет — прыжком)
 ##       {"face": "witch", "to": "Cauldron"}  — повернуться к точке
 ##       {"turn_on": "fireplace"} / {"turn_off": "pumpkin"} — включить / выключить камин, тыкву;
 ##       {"magic": true} / {"magic": false}   — включить / погасить магический круг у котла;
@@ -35,12 +35,12 @@ class_name HubEvents
 ##   "stairs_fall" — на лестнице спрыгнуть вбок и полежать "lie" сек ("throw": [x, y] — скорость);
 ##   "eat"         — съесть персонажа рядом ("radius"), через "hold" сек выплюнуть; тот лежит "lie" сек
 ##                   и показывает смайлик из "reactions" (id -> смайлик);
-##   "visit"       — сам идёт к точке "spot" (на другую линию — прыжком) и там делает "steps"
+##   "visit"       — сам идёт к точке "spot" (пешком по линиям) и там делает "steps"
 ##                   (как у событий на местах); "if" — условия;
 ##   "flirt"       — подходит к девочке рядом (та же линия, ближе "radius") и подкатывает: фраза из
 ##                   "lines", её ответ — "replies"[id] или "replies"["*"], смайлики — "reactions"[id];
 ##                   с шансом "success" ей нравится (heart), иначе он грустит ("after");
-##   "slime"       — идёт и оставляет за собой лужицу слизи (HubPile, "count": [от, до] штук);
+##   "slime"       — идёт и роняет на пол слизь (HubPile, "count": [от, до] штук);
 ##   "leave"       — дойти до двери (точка Door), зайти в проём (точка DoorIn), растворяясь,
 ##                   и уйти из дома на "away": [от, до] сек. Возвращается так же: из проёма к Door.
 ##   У "nap" можно "lines" — фраза перед сном (одна случайная) и "wake" — фраза, когда встаёт.
@@ -223,7 +223,7 @@ func _random_ok(ev: Dictionary, w: HomeWalker) -> bool:
 		"visit":
 			return spot(String(ev.get("spot", ""))) != null
 		"slime":
-			# Только на ходу и не на лестнице (лужица должна лежать на полу).
+			# Только на ходу и не на лестнице (слизь должна лежать на полу).
 			return w.state == HomeWalker.State.WALK and w.route != null and not (ev.get("skip_routes", ["Stairs"]) as Array).has(String(w.route.name))
 		"leave":
 			var door := spot("Door")
@@ -491,7 +491,7 @@ func _h_leave(ev: Dictionary, w: HomeWalker) -> void:
 	w.set_frozen(true)
 	var n: Array = hub.nearest_spot(door.global_position)
 	if n[0] != null:
-		await w.event_move(n[0], float(n[1]))
+		await w.event_walk_to(n[0], float(n[1]))
 	if not is_instance_valid(w):
 		return
 	hub.chatter.emote(w, "dots")
@@ -567,7 +567,7 @@ func _run(ev: Dictionary, ws: Array) -> void:
 			if s != null:
 				var n: Array = hub.nearest_spot(s.global_position)
 				if n[0] != null:
-					await w.event_move(n[0], float(n[1]))
+					await w.event_walk_to(n[0], float(n[1]))
 		elif st.has("face") and w != null:
 			var s2 := spot(String(st.get("to", "")))
 			if s2 != null:
@@ -638,7 +638,7 @@ func _h_visit(ev: Dictionary, w: HomeWalker) -> void:
 	w.set_frozen(true)
 	var n: Array = hub.nearest_spot(s.global_position)
 	if n[0] != null:
-		await w.event_move(n[0], float(n[1]))
+		await w.event_walk_to(n[0], float(n[1]))
 	if not is_instance_valid(w) or w.state != HomeWalker.State.FROZEN or not _conditions_ok(ev):
 		if is_instance_valid(w):
 			w.set_frozen(false)
@@ -709,7 +709,7 @@ func _h_flirt(ev: Dictionary, w: HomeWalker) -> void:
 		await get_tree().create_timer(1.2).timeout
 	_unfreeze([w, o])
 
-## Слизнедевочка оставляет лужицу слизи у себя под ногами и идёт дальше.
+## Слизнедевочка роняет слизь у себя под ногами и идёт дальше.
 func _h_slime(ev: Dictionary, w: HomeWalker) -> void:
 	var r: Array = ev.get("count", [2, 4])
 	var n := randi_range(int(r[0]), int(r[r.size() - 1]))
