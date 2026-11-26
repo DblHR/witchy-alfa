@@ -693,6 +693,13 @@ func _bed_at(p: Vector2) -> bool:
 func go_to_sleep() -> void:
 	_set_bed_hint(false)
 	if DayCycle.is_night():
+		# Ночью может присниться сон (Dreams: шанс и кто — data/dreams/dreams.json).
+		var dream := Dreams.roll()
+		if dream != "":
+			_phase_transition(func() -> void:
+				DayCycle.sleep()
+				SceneRouter_.go_to_dream(dream))
+			return
 		_phase_transition(func() -> void: DayCycle.sleep())          ## ночь -> утро
 	else:
 		_phase_transition(func() -> void: DayCycle.rest_until_night())  ## день -> ночь

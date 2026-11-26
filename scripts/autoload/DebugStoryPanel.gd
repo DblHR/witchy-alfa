@@ -60,6 +60,8 @@ func _build_ui() -> void:
 	_add_button(box, "NPC trust +100: Rikka", _npc_trust.bind("rikka"))
 	_add_button(box, "NPC trust +100: Noctris", _npc_trust.bind("noctris"))
 	_add_button(box, "NPC trust +100: Sessilia", _npc_trust.bind("sessilia"))
+	for dream_id in ["witch", "warrior", "rikka", "sessilia", "aki", "luisa", "fufu"]:
+		_add_button(box, "Dream: %s" % dream_id, _start_dream.bind(dream_id))
 	_add_button(box, "Give item: 3 carrots (gift)", _give_carrots)
 	_add_button(box, "Mood +30: everyone (Mood)", _mood_shift.bind(30))
 	_add_button(box, "Mood -30: everyone (Mood)", _mood_shift.bind(-30))
@@ -84,6 +86,11 @@ func _add_button(parent: Node, text: String, callback: Callable) -> void:
 	b.custom_minimum_size = Vector2(520, 38)
 	b.pressed.connect(callback)
 	parent.add_child(b)
+
+## Сразу сон (Dreams) — проверить мини-игру.
+func _start_dream(dream_id: String) -> void:
+	_panel.visible = false
+	SceneRouter_.go_to_dream(dream_id)
 
 func _give_carrots() -> void:
 	if Inventory_ != null:

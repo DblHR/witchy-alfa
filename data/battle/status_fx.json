@@ -1,0 +1,31 @@
+{
+  "_readme": [
+    "Как статусы видны на самом персонаже в бою (scripts/card/CardStatusFx.gd), пока действуют.",
+    "Под значками статусов (ряд под ногами) теперь тёмная подложка — это в коде, здесь не настраивается.",
+    "aura — мягкое свечение вокруг персонажа цвета его статусов (true / false); aura_alpha — яркость, aura_size — во сколько раз шире и выше персонажа.",
+    "Для каждого статуса (id из CardStatuses): ",
+    "  mode — как летают значки: rise — снизу вверх, fall — сверху вниз, orbit — кружат вокруг головы, none — без значков;",
+    "  amount — сколько значков одновременно; size — размер значка (px); speed — скорость (1 — обычная);",
+    "  color — цвет свечения (#rrggbb), нет — цвет статуса из игры.",
+    "default — для статусов, которых нет в списке."
+  ],
+  "aura": true,
+  "aura_alpha": 0.5,
+  "aura_size": [1.7, 1.25],
+  "default": {"mode": "rise", "amount": 3, "size": 28, "speed": 1.0},
+  "statuses": {
+    "weak": {"mode": "fall", "amount": 3},
+    "vuln": {"mode": "fall", "amount": 3},
+    "burn": {"mode": "rise", "amount": 5, "size": 30, "speed": 1.4, "color": "#ff7a2a"},
+    "stun": {"mode": "orbit", "amount": 3, "size": 30, "speed": 1.2},
+    "charm": {"mode": "orbit", "amount": 3, "size": 30},
+    "nazhim": {"mode": "rise", "amount": 3},
+    "sticky_slime": {"mode": "fall", "amount": 4, "speed": 0.7, "color": "#7ae05a"},
+    "wrap_slime": {"mode": "rise", "amount": 4, "speed": 0.7, "color": "#ff8ac8"},
+    "empower": {"mode": "rise", "amount": 3, "color": "#ffd35a"},
+    "exposed": {"mode": "fall", "amount": 2},
+    "heat_body": {"mode": "rise", "amount": 3, "color": "#ff9a4a"},
+    "swallowed": {"mode": "none"},
+    "lured": {"mode": "orbit", "amount": 2, "color": "#ff7ad0"}
+  }
+}

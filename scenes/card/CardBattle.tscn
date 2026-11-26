@@ -311,3 +311,18 @@ theme_override_colors/font_color = Color(0.875, 0.875, 0.875, 1)
 theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
 theme_override_font_sizes/font_size = 30
 text = "КОНЧИТЬ"
+
+[node name="AutoLayer" type="CanvasLayer" parent="."]
+layer = 3
+
+[node name="AutoBattleButton" type="Button" parent="AutoLayer"]
+unique_name_in_owner = true
+offset_left = 1640.0
+offset_top = 110.0
+offset_right = 1890.0
+offset_bottom = 164.0
+focus_mode = 0
+mouse_default_cursor_shape = 2
+theme_override_font_sizes/font_size = 24
+toggle_mode = true
+text = "Автобой: выкл"

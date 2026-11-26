@@ -90,7 +90,7 @@ func set_interactive(on: bool) -> void:
 func _build_call() -> void:
 	_call = Node2D.new()
 	_call.name = "Call"
-	_call.draw.connect(_draw_call)
+	_call.draw.connect(_draw_call.bind(_call))
 	var add := CanvasItemMaterial.new()
 	add.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD
 	_call.material = add
@@ -128,14 +128,15 @@ func _build_call() -> void:
 	_rays.position = Vector2(0, -10)
 	_rays.z_index = 1   ## лучи поверх статуи (добавляются к узлу после спрайта, см. setup)
 
-func _draw_call() -> void:
+## node — свой узел круга (после клика _call уже null, а старый круг ещё тает и рисуется).
+func _draw_call(node: Node2D) -> void:
 	var pulse := 0.5 + 0.5 * sin(_t * 3.0)
-	_call.draw_set_transform(Vector2.ZERO, 0.0, Vector2(1.0, CIRCLE_RADIUS.y / CIRCLE_RADIUS.x))
+	node.draw_set_transform(Vector2.ZERO, 0.0, Vector2(1.0, CIRCLE_RADIUS.y / CIRCLE_RADIUS.x))
 	for i in range(6):
 		var k := 1.0 - float(i) / 6.0
-		_call.draw_circle(Vector2.ZERO, CIRCLE_RADIUS.x * (0.45 + 0.55 * k), Color(_call_color, (0.05 + 0.07 * pulse) * (1.0 - k * 0.6)))
-	_call.draw_arc(Vector2.ZERO, CIRCLE_RADIUS.x, 0.0, TAU, 64, Color(_call_color, 0.55 + 0.35 * pulse), 4.0, true)
-	_call.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+		node.draw_circle(Vector2.ZERO, CIRCLE_RADIUS.x * (0.45 + 0.55 * k), Color(_call_color, (0.05 + 0.07 * pulse) * (1.0 - k * 0.6)))
+	node.draw_arc(Vector2.ZERO, CIRCLE_RADIUS.x, 0.0, TAU, 64, Color(_call_color, 0.55 + 0.35 * pulse), 4.0, true)
+	node.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
 func _stop_call() -> void:
 	if _call == null or not is_instance_valid(_call):

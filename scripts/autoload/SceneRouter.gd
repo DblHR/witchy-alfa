@@ -58,6 +58,15 @@ func go_to_love(unit_id: String) -> void:
 	get_tree().paused = false
 	get_tree().change_scene_to_file(path)
 
+## Сон (scenes/dreams/Dream.tscn): какой — dream_id (Dreams). После сна — обратно в дом.
+const DREAM := "res://scenes/dreams/Dream.tscn"
+var dream_id := ""
+
+func go_to_dream(id: String) -> void:
+	dream_id = id
+	get_tree().paused = false
+	get_tree().change_scene_to_file(DREAM)
+
 ## Инвентарь открывается поверх текущей комнаты (дом, алхимия…): своим слоем INVENTORY_LAYER,
 ## фон под ним размыт (Inventory.tscn → Blur). Комната под ним живёт дальше, но клики до неё не доходят.
 ## «Назад» / Esc — слой убирается, сигнал inventory_closed (дом обновляет значки).

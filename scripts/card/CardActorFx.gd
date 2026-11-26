@@ -133,6 +133,7 @@ static func refresh_status_icons(actor: BattleActor, pairs: Array, visible: bool
 		cell.set_meta("status_id", st.id)
 		if tex != null:
 			cell.custom_minimum_size = Vector2(STATUS_ICON_SIZE, STATUS_ICON_SIZE)
+			cell.add_child(_status_backing(Vector2(STATUS_ICON_SIZE, STATUS_ICON_SIZE), st.color))
 			var r := TextureRect.new()
 			r.texture = tex
 			r.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
@@ -151,10 +152,29 @@ static func refresh_status_icons(actor: BattleActor, pairs: Array, visible: bool
 			chip.text = st.title + (" x%d" % n if n > 1 else "")
 			chip.visible = true
 			chip.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-			cell.custom_minimum_size = Vector2(chip.get_combined_minimum_size().x + 4.0, STATUS_ICON_SIZE)
+			cell.custom_minimum_size = Vector2(chip.get_combined_minimum_size().x + 14.0, STATUS_ICON_SIZE)
 			chip.size = cell.custom_minimum_size
+			chip.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+			cell.add_child(_status_backing(cell.custom_minimum_size, st.color))
 			cell.add_child(chip)
 		row.add_child(cell)
+
+## Тёмная подложка под значком статуса (чтобы не сливался с фоном) с тонкой рамкой цвета статуса.
+const STATUS_BACK := Color(0.07, 0.04, 0.09, 0.82)
+static func _status_backing(sz: Vector2, border: Color) -> Panel:
+	var back := Panel.new()
+	back.name = "Back"
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = STATUS_BACK
+	sb.set_corner_radius_all(int(minf(sz.x, sz.y) * 0.5))
+	sb.set_border_width_all(2)
+	sb.border_color = Color(border.r, border.g, border.b, 0.9)
+	sb.anti_aliasing = true
+	back.add_theme_stylebox_override("panel", sb)
+	back.position = Vector2(-3, -3)
+	back.size = sz + Vector2(6, 6)
+	back.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	return back
 
 ## Имя врага под ногами (чтобы различать слизней).
 static func name_label(actor: BattleActor) -> Label:

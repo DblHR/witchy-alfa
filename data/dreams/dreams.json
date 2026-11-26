@@ -1,0 +1,54 @@
+{
+  "_readme": [
+    "Сны (scripts/dreams/Dreams.gd): ночью легли спать — с шансом chance снится мини-игра про одного из персонажей.",
+    "Снятся те, кто есть в ростере (ведьмочка — всегда), и знакомые НПС. Ноктрис не снится — она нежить.",
+    "За сон — опыт отряда: очки × xp_per_point, но не больше xp_cap. countdown — секунд подготовки перед игрой.",
+    "Для каждого сна: who — кто (кому должен принадлежать персонаж), title — заголовок, controls — подсказка по кнопкам,",
+    "duration — сколько секунд идёт игра, xp_per_point — опыта за очко; остальное — настройки самой игры."
+  ],
+  "chance": 0.90,
+  "xp_cap": 50,
+  "countdown": 3,
+  "dreams": {
+    "witch": {
+      "who": "witch", "title": "Ведьмочка рисует слизней", "controls": "Стрелки или WASD — по порядку",
+      "duration": 30, "xp_per_point": 5,
+      "elite_chance": 0.3, "arrows_normal": 3, "arrows_elite": 4
+    },
+    "warrior": {
+      "who": "warrior", "title": "Воин убегает от огромной Фуфу", "controls": "Пробел, W или ↑ — прыжок",
+      "duration": 30, "xp_per_point": 5,
+      "speed": 620, "speed_up": 14, "gap": [1.1, 2.0], "jump_speed": 1250, "gravity": 3600
+    },
+    "rikka": {
+      "who": "rikka", "title": "Рикка ловит монетки", "controls": "← → или A D",
+      "duration": 30, "xp_per_point": 1,
+      "move_speed": 900, "spawn_every": 0.45, "fall_speed": [380, 620]
+    },
+    "sessilia": {
+      "who": "sessilia", "title": "Сессилия прибирается", "controls": "Стрелки или WASD — ходить",
+      "duration": 30, "xp_per_point": 5,
+      "move_speed": 520, "items_on_floor": 6
+    },
+    "aki": {
+      "who": "aki", "title": "Аки лечит всех подряд", "controls": "↓ или S — бросить слизь. Фуфу не лечить!",
+      "duration": 40, "xp_per_point": 1, "fufu_penalty": 5,
+      "fufu_chance": 0.22, "walk_speed": [260, 420], "spawn_every": [0.9, 1.6], "throw_speed": 1300
+    },
+    "luisa": {
+      "who": "luisa", "title": "Луисе несут подношения", "controls": "↑ или W — еду взять, ↓ или S — прочее отказать",
+      "duration": 30, "xp_per_point": 1, "food_chance": 0.5
+    },
+    "fufu": {
+      "who": "fufu", "title": "Фуфу хочет есть", "controls": "Стрелки или WASD — бегать и ловить",
+      "duration": 40, "xp_per_point": 1, "move_speed": 560,
+      "prey": {
+        "slime": {"weight": 60, "points": 1},
+        "elite": {"weight": 22, "points": 3},
+        "witch": {"weight": 12, "points": 5},
+        "warrior": {"weight": 6, "points": 10}
+      },
+      "max_prey": 5
+    }
+  }
+}

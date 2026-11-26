@@ -256,6 +256,7 @@ func _ready() -> void:
 	_admin.setup(self)
 
 	_setup_banter()
+	_setup_auto_bot()
 	if _tutorial != null:
 		_tutorial.setup(self)
 		_ui_add(_tutorial)
@@ -403,6 +404,7 @@ func _refresh_actor(actor: BattleActor) -> void:
 		CardActorFx.refresh_intent(actor, parts, has_intent)
 
 	CardActorFx.refresh_status_icons(actor, _combat.status_pairs(unit), not unit.is_dead)
+	CardStatusFx.refresh(actor, _combat.status_pairs(unit), not unit.is_dead)
 	if not _hover_tip_dirty:
 		_hover_tip_dirty = true
 		_hover_status_tip.call_deferred()   ## значки пересобраны — подсказка к новому значку под курсором
@@ -566,6 +568,33 @@ func _start_room(index: int) -> void:
 		BattleBanter_.start_battle(self)
 		banter("battle_start")
 	await _begin_player_turn()
+
+# --- Автобой (CardAutoBot) -----------------------------------------------------
+## Кнопка «Автобой» (CardBattle.tscn → AutoLayer/AutoBattleButton, поверх окон забега):
+## нажали — бот играет за игрока (бои, выбор комнат, медсестра), ещё раз — выключить.
+## В обучении кнопки нет.
+var _bot: CardAutoBot
+
+func _setup_auto_bot() -> void:
+	_bot = CardAutoBot.new()
+	_bot.name = "AutoBot"
+	add_child(_bot)
+	_bot.setup(self)
+	var btn := get_node_or_null("%AutoBattleButton") as Button
+	if btn == null:
+		return
+	btn.visible = _tutorial == null
+	btn.toggled.connect(func(on: bool) -> void: _bot.set_enabled(on))
+	_bot.toggled_bot.connect(_on_bot_toggled)
+	_on_bot_toggled(false)
+
+func _on_bot_toggled(on: bool) -> void:
+	var btn := get_node_or_null("%AutoBattleButton") as Button
+	if btn == null:
+		return
+	btn.set_pressed_no_signal(on)
+	btn.text = "Автобой: вкл" if on else "Автобой: выкл"
+	btn.add_theme_color_override("font_color", Color(0.6, 1.0, 0.65) if on else Color(0.88, 0.88, 0.88))
 
 ## Колода на бой: карты живых героев (выбранные в Setup), общие карты и добытые карты.
 func _build_battle_deck() -> Array[CardInstance]:
