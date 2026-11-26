@@ -13,17 +13,17 @@ script = ExtResource("1_love")
 
 [node name="Column" type="Control" parent="."]
 layout_mode = 0
-offset_left = 0.0
+offset_left = 118.0
 offset_top = 120.0
-offset_right = 136.0
+offset_right = 254.0
 offset_bottom = 720.0
 mouse_filter = 2
 
 [node name="HeartButton" type="TextureButton" parent="."]
 layout_mode = 0
-offset_left = 18.0
+offset_left = 136.0
 offset_top = 8.0
-offset_right = 118.0
+offset_right = 236.0
 offset_bottom = 108.0
 pivot_offset = Vector2(50, 50)
 focus_mode = 0

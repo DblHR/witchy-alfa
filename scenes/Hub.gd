@@ -126,8 +126,8 @@ func nearest_spot(p: Vector2) -> Array:
 	return [best, best_d]
 
 # --- Персонажи ------------------------------------------------------------------------
-## Кто живёт дома (если есть в ростере; ведьмочка — всегда). Картинка — <id>_battle.png.
-const HOME_UNITS := ["witch", "warrior", "aki", "luisa", "fufu"]
+## Кто живёт дома — HubResidents (не больше 5, выбирают кнопкой слева сверху: HubRosterMenu).
+## Картинка — <id>_battle.png.
 const SPRITE_PATH := "res://assets/characters/%s/%s_battle.png"
 ## Где персонажи появляются (линии без кровати, случайно).
 var walkers: Dictionary = {}   ## id -> HomeWalker
@@ -140,7 +140,7 @@ func event_running() -> bool:
 var _walker_hider: VnSpriteHider
 
 func _spawn_walkers() -> void:
-	for id in HOME_UNITS:
+	for id in HubResidents.residents():
 		_spawn_walker(id)
 	# Пока открыт диалог (VN), гуляющие по дому прячутся — на экране только портреты из диалога.
 	_walker_hider = VnSpriteHider.attach(self, walkers.values().map(func(w: HomeWalker) -> CanvasItem: return w))
@@ -149,7 +149,7 @@ func _spawn_walkers() -> void:
 		UnitRoster_.changed.connect(_spawn_new_walkers)
 
 func _spawn_new_walkers() -> void:
-	for id in HOME_UNITS:
+	for id in HubResidents.residents():
 		if not walkers.has(id):
 			var w := _spawn_walker(id)
 			if w != null and _walker_hider != null:
@@ -202,23 +202,28 @@ func _check_returns(delta: float) -> void:
 		if is_away(String(id)) or walkers.has(String(id)):
 			continue
 		away_until.erase(id)
-		var w := _spawn_walker(String(id))
-		if w == null:
+		if not HubResidents.is_resident(String(id)):
 			continue
-		if _walker_hider != null:
-			_walker_hider.add_item(w)
-		var door := get_node_or_null("Spots/Door") as Node2D
-		if door != null:
-			var spot := nearest_spot(door.global_position)
-			if spot[0] != null:
-				w.place(spot[0], float(spot[1]))
-		var inside := get_node_or_null("Spots/DoorIn") as Node2D
-		if inside != null:
-			w.set_frozen(true)
-			_walk_in.call_deferred(w, inside.global_position)
-		else:
-			w.modulate.a = 0.0
-			w.fade(1.0, 0.7)
+		var w := _spawn_walker(String(id))
+		if w != null:
+			_enter_through_door(w)
+
+## Заходит в дом через дверь: из глубины проёма (Spots/DoorIn) к двери (Spots/Door).
+func _enter_through_door(w: HomeWalker) -> void:
+	if _walker_hider != null:
+		_walker_hider.add_item(w)
+	var door := get_node_or_null("Spots/Door") as Node2D
+	if door != null:
+		var spot := nearest_spot(door.global_position)
+		if spot[0] != null:
+			w.place(spot[0], float(spot[1]))
+	var inside := get_node_or_null("Spots/DoorIn") as Node2D
+	if inside != null:
+		w.set_frozen(true)
+		_walk_in.call_deferred(w, inside.global_position)
+	else:
+		w.modulate.a = 0.0
+		w.fade(1.0, 0.7)
 
 ## Вернулся: выходит из глубины проёма (Spots/DoorIn) к двери, потом гуляет как обычно.
 func _walk_in(w: HomeWalker, inside: Vector2) -> void:
@@ -227,6 +232,24 @@ func _walk_in(w: HomeWalker, inside: Vector2) -> void:
 	await w.walk_door(inside, 1.2, true)
 	if is_instance_valid(w):
 		w.set_frozen(false)
+
+## Кнопка «кто живёт дома» (HubRosterMenu): заселить — заходит через дверь; выселить — испаряется.
+## false — нельзя (дома уже HubResidents.MAX).
+func set_resident(id: String, on: bool) -> bool:
+	if not HubResidents.set_resident(id, on):
+		return false
+	if on:
+		away_until.erase(id)
+		var w := _spawn_walker(id)
+		if w != null:
+			_enter_through_door(w)
+	else:
+		away_until.erase(id)
+		var w: HomeWalker = walkers.get(id)
+		walkers.erase(id)
+		if w != null and is_instance_valid(w):
+			w.evaporate()
+	return true
 
 ## Сколько персонажей сейчас на кровати.
 func bed_occupants() -> int:

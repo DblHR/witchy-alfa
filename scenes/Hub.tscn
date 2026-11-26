@@ -9,6 +9,7 @@
 [ext_resource type="Script" uid="uid://2gdt4dpgo5b7" path="res://scripts/home/HomeRoute.gd" id="7_route"]
 [ext_resource type="PackedScene" path="res://scenes/ui/HubMenu.tscn" id="8_menu"]
 [ext_resource type="PackedScene" path="res://scenes/ui/LoveMenu.tscn" id="9_love"]
+[ext_resource type="PackedScene" path="res://scenes/ui/HubRosterMenu.tscn" id="9_roster"]
 [ext_resource type="Texture2D" uid="uid://b3myf51f5xedy" path="res://assets/hub/homeFireplace.png" id="10_fire"]
 [ext_resource type="Texture2D" uid="uid://cxi1udjwph7ja" path="res://assets/hub/homeMagickEffect.png" id="11_magic"]
 [ext_resource type="Texture2D" uid="uid://qggvriai6546" path="res://assets/hub/nighttime/homePumpkinOn.png" id="12_pon"]
@@ -466,6 +467,10 @@ ignore_texture_size = true
 stretch_mode = 5
 
 [node name="LoveMenu" parent="." unique_id=2131735057 instance=ExtResource("9_love")]
+unique_name_in_owner = true
+layout_mode = 0
+
+[node name="HubRosterMenu" parent="." instance=ExtResource("9_roster")]
 unique_name_in_owner = true
 layout_mode = 0
 

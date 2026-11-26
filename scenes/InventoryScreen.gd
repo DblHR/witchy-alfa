@@ -145,12 +145,8 @@ func _build_level_box() -> void:
 	# Кружок с номером уровня.
 	var circle := Panel.new()
 	var csb := StyleBoxFlat.new()
-	csb.bg_color = Color(0.33, 0.16, 0.38, 0.97)
+	csb.bg_color = Color(0.64, 0.13, 0.37)
 	csb.set_corner_radius_all(40)
-	csb.set_border_width_all(4)
-	csb.border_color = Color(1.0, 0.82, 0.36)
-	csb.shadow_color = Color(1.0, 0.7, 0.3, 0.35)
-	csb.shadow_size = 8
 	circle.add_theme_stylebox_override("panel", csb)
 	circle.position = Vector2(0, 4)
 	circle.size = Vector2(80, 80)
@@ -162,15 +158,15 @@ func _build_level_box() -> void:
 	_level_num.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_level_num.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_level_num.add_theme_font_size_override("font_size", 36)
-	_level_num.add_theme_color_override("font_color", Color(1.0, 0.92, 0.6))
+	_level_num.add_theme_color_override("font_color", Color.WHITE)
 	circle.add_child(_level_num)
 	var cap := Label.new()
-	cap.text = "ур."
-	cap.position = Vector2(0, 48)
+	cap.text = "УР."
+	cap.position = Vector2(0, 46)
 	cap.size = Vector2(80, 24)
 	cap.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	cap.add_theme_font_size_override("font_size", 15)
-	cap.add_theme_color_override("font_color", Color(1, 0.9, 1, 0.75))
+	cap.add_theme_font_size_override("font_size", 17)
+	cap.add_theme_color_override("font_color", Color.WHITE)
 	circle.add_child(cap)
 	# Подпись и полоса опыта.
 	var title := Label.new()
@@ -185,10 +181,10 @@ func _build_level_box() -> void:
 	_xp_bar.position = Vector2(96, 34)
 	_xp_bar.size = Vector2(LEVEL_BOX_RECT.size.x - 96, 26)
 	var bg := StyleBoxFlat.new()
-	bg.bg_color = Color(0.2, 0.1, 0.24, 0.85)
+	bg.bg_color = Color(0.84, 0.81, 0.79)
 	bg.set_corner_radius_all(13)
 	var fill := StyleBoxFlat.new()
-	fill.bg_color = Color(0.98, 0.62, 0.86)
+	fill.bg_color = Color(0.64, 0.13, 0.37)
 	fill.set_corner_radius_all(13)
 	_xp_bar.add_theme_stylebox_override("background", bg)
 	_xp_bar.add_theme_stylebox_override("fill", fill)
@@ -201,14 +197,14 @@ func _build_level_box() -> void:
 	_xp_text.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_xp_text.add_theme_font_size_override("font_size", 16)
 	_xp_text.add_theme_color_override("font_color", Color.WHITE)
-	_xp_text.add_theme_color_override("font_outline_color", Color(0.25, 0.08, 0.25))
-	_xp_text.add_theme_constant_override("outline_size", 4)
+	_xp_text.add_theme_color_override("font_outline_color", Color(0.45, 0.08, 0.28))
+	_xp_text.add_theme_constant_override("outline_size", 6)
 	_xp_bar.add_child(_xp_text)
 	_upgrade_hint = Label.new()
 	_upgrade_hint.position = Vector2(96, 62)
 	_upgrade_hint.size = Vector2(LEVEL_BOX_RECT.size.x - 96, 24)
 	_upgrade_hint.add_theme_font_size_override("font_size", 15)
-	_upgrade_hint.add_theme_color_override("font_color", Color(0.45, 0.3, 0.5))
+	_upgrade_hint.add_theme_color_override("font_color", Color(0.55, 0.22, 0.42))
 	box.add_child(_upgrade_hint)
 
 func _refresh_header() -> void:
@@ -270,7 +266,7 @@ func _rebuild_entry_grid() -> void:
 		_show_empty_detail_for_section()
 		return
 	var selected_id := String(selected_entry_by_section.get(current_section, ""))
-	if selected_id == "" or not _entries_have_id(entries, selected_id):
+	if selected_id == "" or not _entries_have_id(entries, selected_id) or selected_id.begins_with(UNKNOWN_PREFIX):
 		selected_id = String(entries[0].get("id", ""))
 		selected_entry_by_section[current_section] = selected_id
 	for entry in entries:
@@ -389,6 +385,13 @@ func _build_character_entries() -> Array[Dictionary]:
 		for i in groups.size():
 			if i != _faction_filter:
 				groups[i] = []
+	else:
+		# Места под будущих персонажей: «?» (пока для проверки интерфейса), только без фильтра.
+		var unknown: Array = []
+		var tex := load(UNKNOWN_ICON) as Texture2D if ResourceLoader.exists(UNKNOWN_ICON) else null
+		for i in UNKNOWN_SLOTS:
+			unknown.append({"id": "%s%d" % [UNKNOWN_PREFIX, i], "title": "???", "icon": tex, "count": -1, "bust": true, "locked": true})
+		groups.append(unknown)
 	var cols := _get_columns_for_section(Section.CHARACTERS)
 	for g in groups:
 		var group: Array = (g as Array).filter(func(e) -> bool: return not (e as Dictionary).is_empty())
@@ -400,6 +403,11 @@ func _build_character_entries() -> Array[Dictionary]:
 		for e in group:
 			out.append(e)
 	return out
+
+## Сколько пустых мест «?» под новых персонажей в конце списка (UNKNOWN_ICON — картинка).
+const UNKNOWN_SLOTS := 18
+const UNKNOWN_PREFIX := "unknown:"
+const UNKNOWN_ICON := "res://assets/ui/inventory/unknown_character.png"
 
 # --- Фильтр по фракциям ---------------------------------------------------------
 ## -1 — все; иначе номер группы: 0 — главные герои, 1 — НПС, 2 — слизнедевочки
@@ -544,6 +552,18 @@ func _show_lore_detail(entry_id: String) -> void:
 	lore_body.text = "[center][b]%s[/b][/center]\n\n%s" % [String(e["title"]), String(e["body"])]
 
 @onready var _rank_label: Label = %RankLabel
+@onready var _species_label: RichTextLabel = %SpeciesLabel
+@onready var _tier_stars: HBoxContainer = %TierStars
+## Картинка-«наклейка» для карточки (класс и ранг нарисованы на ней): <id>_inventory.png.
+const INVENTORY_SPRITE := "res://assets/characters/%s/%s_inventory.png"
+const NPC_INVENTORY_SPRITE := "res://assets/npc/%s/%s_inventory.png"
+## Звёздочки после имени: 1 + сколько поймано копий (не больше TIER_MAX).
+const TIER_STAR := "res://assets/ui/inventory/tierstar.png"
+const TIER_MAX := 5
+const TIER_STAR_SIZE := Vector2(46, 50)
+## Пустые сердечки — светло-серые (gray.gdshader, осветление HEART_EMPTY_LIFT).
+const HEART_EMPTY_LIFT := 0.6
+const GRAY_SHADER := preload("res://ui/gray.gdshader")
 @onready var _cards_button: Button = %AllCardsButton
 @onready var _hearts: HBoxContainer = %Hearts
 @onready var _trust_text: RichTextLabel = %TrustText
@@ -578,15 +598,22 @@ func _show_character_detail(unit_id: String) -> void:
 		_show_empty_detail_for_section()
 		return
 	var stats := data.stats_for_level(max(1, int(DungRun.party_level)))
-	character_sprite.texture = data.battle_texture if data.battle_texture != null else _get_character_avatar(data)
+	var sticker := INVENTORY_SPRITE % [unit_id, unit_id]
+	var has_sticker := ResourceLoader.exists(sticker)
+	if has_sticker:
+		character_sprite.texture = load(sticker) as Texture2D
+	else:
+		character_sprite.texture = data.battle_texture if data.battle_texture != null else _get_character_avatar(data)
 	character_name.text = _char_name(data)
 	_current_char_id = unit_id
 	_rank_label.text = "Ранг %s  •  карт в колоде до %d" % [data.rank, data.card_cap()]
+	_set_species(LoreData.character_species(unit_id), "" if has_sticker else "Ранг %s" % data.rank)
+	_fill_stars(1 + (UnitRoster_.get_copies(unit_id) if UnitRoster_ != null else 0))
 	var owned := _CardLib.owned_defs(data).size()
 	_cards_button.text = "Все карты (%d/%d)" % [owned, data.card_pool.size() + data.unlock_cards.size()]
 	_cards_button.disabled = owned == 0 and data.unlock_cards.is_empty() and data.ult_card == null
-	character_stats.text = "[b]Класс:[/b] %s\n[b]Здоровье:[/b] %d\n[b]Атака:[/b] %d\n[b]Магия:[/b] %d\n[b]Энергия ульты:[/b] %d" % [
-		data.unit_class,
+	# Класс нарисован на наклейке — в тексте только если её нет.
+	character_stats.text = ("" if has_sticker else "[b]Класс:[/b] %s\n" % data.unit_class) + "[b]Здоровье:[/b] %d\n[b]Атака:[/b] %d\n[b]Магия:[/b] %d\n[b]Энергия ульты:[/b] %d" % [
 		int(stats.get("max_hp", data.base_hp)),
 		int(stats.get("attack", data.attack)),
 		int(stats.get("magic", data.magic)),
@@ -612,9 +639,15 @@ func _show_npc_detail(npc_id: String) -> void:
 	_current_char_id = ""
 	var who := StoryDialogueDB_.get_character_name(npc_id) if StoryDialogueDB_ != null else npc_id
 	var path := NPC_PORTRAIT % [npc_id, npc_id]
-	character_sprite.texture = CharacterBust.full_figure(load(path) as Texture2D) if ResourceLoader.exists(path) else null
+	var sticker := NPC_INVENTORY_SPRITE % [npc_id, npc_id]
+	if ResourceLoader.exists(sticker):
+		character_sprite.texture = load(sticker) as Texture2D
+	else:
+		character_sprite.texture = CharacterBust.full_figure(load(path) as Texture2D) if ResourceLoader.exists(path) else null
 	character_name.text = who
 	_rank_label.text = "Житель подземелья" if npc_id != "rikka" else "Торговка"
+	_set_species(LoreData.character_species(npc_id), _rank_label.text)
+	_fill_stars(0)
 	_cards_button.visible = false
 	var card_id := String(NpcTrust.NPC_CARDS.get(npc_id, ""))
 	var def := load(NpcTrust.CARD_DIR + card_id + ".tres") as CardDef if card_id != "" and ResourceLoader.exists(NpcTrust.CARD_DIR + card_id + ".tres") else null
@@ -642,6 +675,29 @@ func _show_npc_detail(npc_id: String) -> void:
 	_char_notes_text = "Пока ничего не известно." if facts.is_empty() else "•  " + "\n•  ".join(facts)
 	_show_char_tab(1 if _notes_tab.button_pressed else 0)
 
+## Строка под кнопкой карт: «Вид: слизень» (lore.json → species); нет вида — fallback (ранг / роль НПС).
+func _set_species(species: String, fallback: String) -> void:
+	if species != "":
+		_species_label.text = "Вид: %s" % species
+	else:
+		_species_label.text = fallback
+	_species_label.visible = _species_label.text != ""
+
+## Звёздочки после имени (tierstar.png), n штук (0 — нет).
+func _fill_stars(n: int) -> void:
+	n = clampi(n, 0, TIER_MAX)
+	var tex := load(TIER_STAR) as Texture2D if ResourceLoader.exists(TIER_STAR) else null
+	while _tier_stars.get_child_count() < TIER_MAX:
+		var st := TextureRect.new()
+		st.texture = tex
+		st.custom_minimum_size = TIER_STAR_SIZE
+		st.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		st.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		st.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_tier_stars.add_child(st)
+	for i in _tier_stars.get_child_count():
+		(_tier_stars.get_child(i) as CanvasItem).visible = i < n
+
 ## Вкладки под карточкой: 0 — «Описание», 1 — «Заметки».
 func _show_char_tab(tab: int) -> void:
 	_desc_tab.set_pressed_no_signal(tab == 0)
@@ -664,7 +720,14 @@ func _fill_hearts(level: int, total: int = UnitRoster.RELATIONSHIP_MAX) -> void:
 	for i in _hearts.get_child_count():
 		var h := _hearts.get_child(i) as CanvasItem
 		h.visible = i < total
-		h.modulate = Color.WHITE if i < level else HEART_EMPTY
+		var full := i < level
+		if h.material == null:
+			var m := ShaderMaterial.new()
+			m.shader = GRAY_SHADER
+			m.set_shader_parameter("lift", HEART_EMPTY_LIFT)
+			h.material = m
+		(h.material as ShaderMaterial).set_shader_parameter("amount", 0.0 if full else 1.0)
+		h.modulate = Color.WHITE
 
 ## Сердечко без пустых полей вокруг (картинка — на целый холст 1920x1080).
 var _heart_tex: Texture2D

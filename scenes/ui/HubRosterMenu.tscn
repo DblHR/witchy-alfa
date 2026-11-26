@@ -1,0 +1,38 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://ui/HubRosterMenu.gd" id="1_roster"]
+[ext_resource type="Texture2D" path="res://assets/ui/buttons/hubRosterButton.png" id="2_btn"]
+
+[node name="HubRosterMenu" type="Control"]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 1920.0
+offset_bottom = 1080.0
+mouse_filter = 2
+script = ExtResource("1_roster")
+
+[node name="Column" type="Control" parent="."]
+layout_mode = 0
+offset_top = 120.0
+offset_right = 136.0
+offset_bottom = 860.0
+mouse_filter = 2
+
+[node name="List" type="Control" parent="Column"]
+layout_mode = 0
+offset_right = 136.0
+offset_bottom = 600.0
+mouse_filter = 2
+
+[node name="RosterButton" type="TextureButton" parent="."]
+layout_mode = 0
+offset_left = 18.0
+offset_top = 8.0
+offset_right = 118.0
+offset_bottom = 108.0
+pivot_offset = Vector2(50, 50)
+focus_mode = 0
+mouse_default_cursor_shape = 2
+texture_normal = ExtResource("2_btn")
+ignore_texture_size = true
+stretch_mode = 5

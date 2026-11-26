@@ -595,6 +595,42 @@ func walk_door(door: Vector2, time: float = 1.4, back: bool = false) -> void:
 		bob.kill()
 	body.position.y = 0.0
 
+## Испариться (выселили из дома): светлеет, вытягивается вверх, тает в облачке пара; потом удаляется.
+func evaporate(time: float = 0.9) -> void:
+	_kill_tween()
+	_lying = false
+	set_meta("frozen_from", State.IDLE)
+	state = State.FROZEN
+	var puff := CPUParticles2D.new()
+	puff.amount = 26
+	puff.lifetime = 0.9
+	puff.one_shot = true
+	puff.explosiveness = 0.6
+	puff.emission_shape = CPUParticles2D.EMISSION_SHAPE_RECTANGLE
+	var r := body.get_rect()
+	puff.emission_rect_extents = Vector2(absf(r.size.x * body.scale.x) * 0.3, absf(r.size.y * body.scale.y) * 0.35)
+	puff.position = body.position + Vector2(0, r.get_center().y * body.scale.y)
+	puff.direction = Vector2.UP
+	puff.spread = 30.0
+	puff.gravity = Vector2(0, -120)
+	puff.initial_velocity_min = 40.0
+	puff.initial_velocity_max = 110.0
+	puff.scale_amount_min = 6.0
+	puff.scale_amount_max = 14.0
+	var ramp := Gradient.new()
+	ramp.set_color(0, Color(1, 1, 1, 0.85))
+	ramp.set_color(1, Color(1, 0.9, 1, 0.0))
+	puff.color_ramp = ramp
+	add_child(puff)
+	puff.emitting = true
+	_tween = create_tween().set_parallel(true)
+	_tween.tween_property(body, "modulate", Color(2.0, 2.0, 2.0, 1.0), time * 0.3)
+	_tween.tween_property(body, "scale", Vector2(body.scale.x * 0.55, body.scale.y * 1.35), time).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+	_tween.tween_property(body, "position:y", body.position.y - 70.0, time).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+	_tween.tween_property(body, "modulate:a", 0.0, time * 0.7).set_delay(time * 0.3)
+	_tween.chain().tween_interval(0.5)
+	_tween.chain().tween_callback(queue_free)
+
 ## Повернуться лицом к x.
 func face_toward(x: float) -> void:
 	if absf(x - position.x) > 2.0:

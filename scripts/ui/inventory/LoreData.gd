@@ -47,6 +47,12 @@ static func character_description(char_id: String) -> String:
 	var c = (_data.get("characters", {}) as Dictionary).get(char_id, {})
 	return String(c.get("description", "")) if c is Dictionary else ""
 
+## «Вид» персонажа (слизень, ведьма…) — characters.<id>.species; нет — "".
+static func character_species(char_id: String) -> String:
+	_ensure()
+	var c = (_data.get("characters", {}) as Dictionary).get(char_id, {})
+	return String(c.get("species", "")) if c is Dictionary else ""
+
 ## Открытые заметки о персонаже (то, что игрок уже видел в диалогах).
 static func character_facts(char_id: String) -> Array[String]:
 	_ensure()

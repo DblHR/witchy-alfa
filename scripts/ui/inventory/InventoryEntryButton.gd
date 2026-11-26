@@ -17,7 +17,7 @@ func _ready() -> void:
 		entry_pressed.emit(entry_id)
 	)
 	mouse_entered.connect(func() -> void:
-		if not button_pressed:
+		if not button_pressed and not disabled:
 			background_panel.modulate = Color(1.0, 0.96, 0.88, 0.92)
 	)
 	mouse_exited.connect(func() -> void:
@@ -105,6 +105,14 @@ func setup(data: Dictionary) -> void:
 		title_label.size = Vector2(WIDE_SIZE.x - 40, 30)
 		subtitle_label.position = Vector2(20, 46)
 		subtitle_label.size = Vector2(WIDE_SIZE.x - 40, 40)
+
+	# Закрытое место («?» под будущего персонажа): не нажимается, полупрозрачное.
+	var locked := bool(data.get("locked", false))
+	disabled = locked
+	mouse_default_cursor_shape = Control.CURSOR_ARROW if locked else Control.CURSOR_POINTING_HAND
+	if locked:
+		title_label.add_theme_color_override("font_color", Color(0.55, 0.48, 0.55))
+		modulate.a = 0.85
 
 	var selected := bool(data.get("selected", false))
 	set_selected(selected)

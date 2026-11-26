@@ -42,49 +42,66 @@ corner_radius_bottom_right = 18
 corner_radius_bottom_left = 18
 
 [sub_resource type="StyleBoxFlat" id="char_tab"]
-bg_color = Color(0.95, 0.9, 0.82, 0.9)
-border_width_left = 2
-border_width_top = 2
-border_width_right = 2
-border_color = Color(0.55, 0.38, 0.5, 0.6)
-corner_radius_top_left = 14
-corner_radius_top_right = 14
+bg_color = Color(0.85, 0.82, 0.8, 1)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
 
 [sub_resource type="StyleBoxFlat" id="char_tab_on"]
-bg_color = Color(0.45, 0.22, 0.47, 1)
-border_width_left = 2
-border_width_top = 2
-border_width_right = 2
-border_color = Color(0.33, 0.16, 0.38, 1)
-corner_radius_top_left = 14
-corner_radius_top_right = 14
+bg_color = Color(0.64, 0.13, 0.37, 1)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
 
 [sub_resource type="StyleBoxFlat" id="char_tab_hover"]
-bg_color = Color(0.99, 0.93, 0.86, 1)
+bg_color = Color(0.9, 0.86, 0.85, 1)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+
+[sub_resource type="StyleBoxFlat" id="cards_btn"]
+bg_color = Color(0.25, 0.14, 0.28, 1)
 border_width_left = 2
 border_width_top = 2
 border_width_right = 2
-border_color = Color(0.55, 0.3, 0.55, 0.9)
-corner_radius_top_left = 14
-corner_radius_top_right = 14
+border_width_bottom = 2
+border_color = Color(0.5, 0.33, 0.52, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="cards_btn_hover"]
+bg_color = Color(0.36, 0.2, 0.4, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.78, 0.5, 0.75, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="cards_btn_off"]
+bg_color = Color(0.55, 0.5, 0.55, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
 
 [sub_resource type="StyleBoxEmpty" id="char_tab_focus"]
 
 [sub_resource type="ButtonGroup" id="char_tabs"]
 
 [sub_resource type="StyleBoxFlat" id="char_tab_panel"]
-bg_color = Color(0.99, 0.96, 0.9, 0.85)
+bg_color = Color(0.995, 0.975, 0.95, 1)
 border_width_left = 3
 border_width_top = 3
 border_width_right = 3
 border_width_bottom = 3
-border_color = Color(0.45, 0.22, 0.47, 1)
-corner_radius_top_left = 6
-corner_radius_top_right = 18
-corner_radius_bottom_right = 18
-corner_radius_bottom_left = 18
-shadow_color = Color(0.2, 0.05, 0.2, 0.12)
-shadow_size = 6
+border_color = Color(0.58, 0.14, 0.37, 1)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
 
 [sub_resource type="StyleBoxFlat" id="2"]
 bg_color = Color(0.976471, 0.945098, 0.870588, 0)
@@ -510,57 +527,95 @@ offset_bottom = 980.0
 [node name="CharacterSprite" type="TextureRect" parent="CharacterDetail" unique_id=1906003248]
 unique_name_in_owner = true
 layout_mode = 0
-offset_left = 4.0
-offset_right = 284.0
-offset_bottom = 390.0
+offset_left = -27.0
+offset_top = -20.0
+offset_right = 354.0
+offset_bottom = 392.0
 mouse_filter = 2
 expand_mode = 1
 stretch_mode = 5
 
-[node name="CharacterName" type="Label" parent="CharacterDetail" unique_id=2041202364]
-unique_name_in_owner = true
+[node name="NameRow" type="HBoxContainer" parent="CharacterDetail"]
 layout_mode = 0
-offset_left = 300.0
-offset_top = 6.0
+offset_left = 330.0
+offset_top = -14.0
 offset_right = 744.0
-offset_bottom = 60.0
-theme_override_colors/font_color = Color(0.33, 0.16, 0.38, 1)
-theme_override_font_sizes/font_size = 42
+offset_bottom = 84.0
+mouse_filter = 2
+theme_override_constants/separation = 4
+
+[node name="CharacterName" type="Label" parent="CharacterDetail/NameRow" unique_id=2041202364]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.55, 0.12, 0.38, 1)
+theme_override_font_sizes/font_size = 66
 text = "Персонаж"
-clip_text = true
+vertical_alignment = 1
+
+[node name="TierStars" type="HBoxContainer" parent="CharacterDetail/NameRow"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+theme_override_constants/separation = -6
 
 [node name="RankLabel" type="Label" parent="CharacterDetail" unique_id=1102938471]
 unique_name_in_owner = true
+visible = false
 layout_mode = 0
 offset_left = 302.0
-offset_top = 62.0
+offset_top = 152.0
 offset_right = 744.0
-offset_bottom = 92.0
+offset_bottom = 176.0
 theme_override_colors/font_color = Color(0.52, 0.32, 0.56, 1)
-theme_override_font_sizes/font_size = 20
+theme_override_font_sizes/font_size = 18
 text = "Ранг"
+
+[node name="SpeciesLabel" type="RichTextLabel" parent="CharacterDetail"]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 300.0
+offset_top = 152.0
+offset_right = 744.0
+offset_bottom = 204.0
+mouse_filter = 2
+theme_override_colors/default_color = Color(0.22, 0.15, 0.18, 1)
+theme_override_font_sizes/normal_font_size = 34
+theme_override_font_sizes/bold_font_size = 34
+bbcode_enabled = true
+text = "Вид: ?"
+scroll_active = false
 
 [node name="AllCardsButton" type="Button" parent="CharacterDetail" unique_id=1102938472]
 unique_name_in_owner = true
 layout_mode = 0
 offset_left = 300.0
-offset_top = 102.0
-offset_right = 610.0
-offset_bottom = 154.0
+offset_top = 98.0
+offset_right = 606.0
+offset_bottom = 146.0
 mouse_default_cursor_shape = 2
-theme_override_font_sizes/font_size = 20
+theme_override_colors/font_color = Color(0.96, 0.9, 0.95, 1)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
+theme_override_colors/font_pressed_color = Color(1, 1, 1, 1)
+theme_override_colors/font_disabled_color = Color(0.9, 0.88, 0.9, 1)
+theme_override_font_sizes/font_size = 19
+theme_override_styles/normal = SubResource("cards_btn")
+theme_override_styles/hover = SubResource("cards_btn_hover")
+theme_override_styles/pressed = SubResource("cards_btn_hover")
+theme_override_styles/disabled = SubResource("cards_btn_off")
+theme_override_styles/focus = SubResource("char_tab_focus")
 text = "Все карты"
 
 [node name="CharacterStats" type="RichTextLabel" parent="CharacterDetail" unique_id=1193579512]
 unique_name_in_owner = true
 layout_mode = 0
 offset_left = 300.0
-offset_top = 170.0
+offset_top = 206.0
 offset_right = 744.0
-offset_bottom = 392.0
+offset_bottom = 396.0
 mouse_filter = 2
-theme_override_colors/default_color = Color(0.24, 0.15, 0.12, 1)
-theme_override_constants/line_separation = 6
+theme_override_colors/default_color = Color(0.22, 0.15, 0.18, 1)
+theme_override_constants/line_separation = 4
 theme_override_font_sizes/normal_font_size = 25
 theme_override_font_sizes/bold_font_size = 25
 bbcode_enabled = true
@@ -573,7 +628,7 @@ offset_left = 6.0
 offset_top = 404.0
 offset_right = 186.0
 offset_bottom = 446.0
-theme_override_colors/font_color = Color(0.33, 0.16, 0.38, 1)
+theme_override_colors/font_color = Color(0.5, 0.14, 0.38, 1)
 theme_override_font_sizes/font_size = 27
 text = "Отношения"
 vertical_alignment = 1
@@ -611,9 +666,9 @@ offset_top = 534.0
 offset_right = 214.0
 offset_bottom = 584.0
 mouse_default_cursor_shape = 2
-theme_override_colors/font_color = Color(0.45, 0.3, 0.42, 1)
+theme_override_colors/font_color = Color(0.55, 0.5, 0.54, 1)
 theme_override_colors/font_pressed_color = Color(1, 0.95, 0.98, 1)
-theme_override_colors/font_hover_color = Color(0.33, 0.16, 0.38, 1)
+theme_override_colors/font_hover_color = Color(0.45, 0.3, 0.42, 1)
 theme_override_colors/font_hover_pressed_color = Color(1, 0.95, 0.98, 1)
 theme_override_font_sizes/font_size = 22
 theme_override_styles/normal = SubResource("char_tab")
@@ -634,9 +689,9 @@ offset_top = 534.0
 offset_right = 422.0
 offset_bottom = 584.0
 mouse_default_cursor_shape = 2
-theme_override_colors/font_color = Color(0.45, 0.3, 0.42, 1)
+theme_override_colors/font_color = Color(0.55, 0.5, 0.54, 1)
 theme_override_colors/font_pressed_color = Color(1, 0.95, 0.98, 1)
-theme_override_colors/font_hover_color = Color(0.33, 0.16, 0.38, 1)
+theme_override_colors/font_hover_color = Color(0.45, 0.3, 0.42, 1)
 theme_override_colors/font_hover_pressed_color = Color(1, 0.95, 0.98, 1)
 theme_override_font_sizes/font_size = 22
 theme_override_styles/normal = SubResource("char_tab")

@@ -15,6 +15,8 @@ const EMOTE_DIR := "res://assets/ui/emotes/"
 const CHATTER_FILE := "res://assets/characters/%s/hub/chatter.json"
 const EMOTE_SIZE := Vector2(96, 96)
 const EMOTE_HOLD := 1.6
+## Насколько пузырь фразы ниже точки над макушкой (плюс — ниже; смайлики не двигает).
+const BUBBLE_DROP := 45.0
 ## Первая фраза — не раньше, чем через столько секунд после входа в дом.
 const FIRST_DELAY := Vector2(6.0, 14.0)
 
@@ -31,7 +33,7 @@ func setup(p_hub: Node) -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_bubbles = BattleSpeechLayer.new()
 	_bubbles.name = "Bubbles"
-	_bubbles.bubble_offset = Vector2.ZERO
+	_bubbles.bubble_offset = Vector2(0, BUBBLE_DROP)
 	_bubbles.bubble_min_width = 220.0
 	_bubbles.bubble_max_width = 420.0
 	_bubbles.bubble_font_px = 26

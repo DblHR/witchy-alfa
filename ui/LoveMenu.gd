@@ -1,7 +1,8 @@
 extends Control
 class_name LoveMenu
-## Сердечко в доме (слева сверху): нажали — вниз выезжает столбик кнопок персонажей,
-## с которыми есть отношения; ещё раз — прячутся (как меню «…» сверху справа).
+## Сердечко в доме (слева сверху, правее кнопки «кто живёт дома»). Пока героиня с отношениями одна —
+## нажатие сразу открывает её экран; когда их больше — вниз выезжает столбик кнопок персонажей,
+## ещё раз — прячутся (как меню «…» сверху справа).
 ## Нажатие на персонажа — его экран отношений (SceneRouter_.go_to_love → scenes/love/<id>_love.tscn).
 ## Кнопки персонажей берутся из папки BUTTONS_DIR: картинка <id>Button.png — кнопка персонажа
 ## <id> (например fufuButton.png → Фуфу). Кнопка видна, только когда персонаж уже в отряде.
@@ -33,6 +34,8 @@ func _ready() -> void:
 	heart.pivot_offset = heart.size * 0.5
 	heart.pressed.connect(_on_heart)
 	_build()
+	if _buttons.size() <= 1:
+		expanded = false
 	_apply(expanded, false)
 
 ## Персонажи с отношениями: [{id, texture}] по картинкам в BUTTONS_DIR (только те, кто в отряде).
@@ -102,7 +105,15 @@ func character_ids() -> Array[String]:
 		out.append(String(b.name).trim_suffix("Button"))
 	return out
 
+## Пока героиня с отношениями одна (Фуфу) — сердечко сразу открывает её экран; больше — столбик.
 func _on_heart() -> void:
+	if _buttons.size() == 1:
+		heart.scale = Vector2(0.86, 0.86)
+		heart.create_tween().tween_property(heart, "scale", Vector2.ONE, SLIDE_TIME * 1.4).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+		var id := character_ids()[0]
+		character_pressed.emit(id)
+		_open_love(id)
+		return
 	expanded = not expanded
 	_apply(expanded, true)
 
