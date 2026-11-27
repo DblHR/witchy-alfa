@@ -120,6 +120,9 @@ func _subscribe_state() -> void:
 
 # --- Уровень отряда: кружок с уровнем + полоса опыта ---------------------------
 const LEVEL_BOX_RECT := Rect2(970, 850, 578, 88)
+## Цвет кружка уровня и полосы опыта — как у кнопки «Карты» (Inventory.tscn, стиль cards_btn).
+const LEVEL_COLOR := Color(0.25, 0.14, 0.28)
+const LEVEL_BORDER := Color(0.5, 0.33, 0.52)
 ## В разделе «Персонажи» правая страница занята карточкой — уровень отряда внизу левой страницы,
 ## а список героинь становится ниже на столько (ENTRIES_BOTTOM_CHARS — нижний край списка).
 const LEVEL_BOX_POS_CHARS := Vector2(262, 872)
@@ -145,7 +148,9 @@ func _build_level_box() -> void:
 	# Кружок с номером уровня.
 	var circle := Panel.new()
 	var csb := StyleBoxFlat.new()
-	csb.bg_color = Color(0.64, 0.13, 0.37)
+	csb.bg_color = LEVEL_COLOR
+	csb.border_color = LEVEL_BORDER
+	csb.set_border_width_all(2)
 	csb.set_corner_radius_all(40)
 	circle.add_theme_stylebox_override("panel", csb)
 	circle.position = Vector2(0, 4)
@@ -184,7 +189,7 @@ func _build_level_box() -> void:
 	bg.bg_color = Color(0.84, 0.81, 0.79)
 	bg.set_corner_radius_all(13)
 	var fill := StyleBoxFlat.new()
-	fill.bg_color = Color(0.64, 0.13, 0.37)
+	fill.bg_color = LEVEL_COLOR
 	fill.set_corner_radius_all(13)
 	_xp_bar.add_theme_stylebox_override("background", bg)
 	_xp_bar.add_theme_stylebox_override("fill", fill)
@@ -197,7 +202,7 @@ func _build_level_box() -> void:
 	_xp_text.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_xp_text.add_theme_font_size_override("font_size", 16)
 	_xp_text.add_theme_color_override("font_color", Color.WHITE)
-	_xp_text.add_theme_color_override("font_outline_color", Color(0.45, 0.08, 0.28))
+	_xp_text.add_theme_color_override("font_outline_color", LEVEL_COLOR)
 	_xp_text.add_theme_constant_override("outline_size", 6)
 	_xp_bar.add_child(_xp_text)
 	_upgrade_hint = Label.new()
@@ -248,7 +253,7 @@ func _select_section(section: int, reset_status: bool = true) -> void:
 	_refresh_upgrade_badges()
 
 ## Значки «!» про очки улучшения: вкладка «Персонажи» (пока не заглянули после новых очков),
-## сами героини и кнопка «Все карты» (пока очки не потрачены).
+## сами героини и кнопка «Карты» (пока очки не потрачены).
 func _refresh_upgrade_badges() -> void:
 	if UnitRoster_ == null:
 		return
@@ -634,7 +639,7 @@ func _show_character_detail(unit_id: String) -> void:
 	_set_species(LoreData.character_species(unit_id), "" if has_sticker else "Ранг %s" % data.rank)
 	_fill_stars(1 + (UnitRoster_.get_copies(unit_id) if UnitRoster_ != null else 0))
 	var owned := _CardLib.owned_defs(data).size()
-	_cards_button.text = "Все карты (%d/%d)" % [owned, data.card_pool.size() + data.unlock_cards.size()]
+	_cards_button.text = "Карты (%d/%d)" % [owned, data.card_pool.size() + data.unlock_cards.size()]
 	_cards_button.disabled = owned == 0 and data.unlock_cards.is_empty() and data.ult_card == null
 	# Класс нарисован на наклейке — в тексте только если её нет.
 	character_stats.text = ("" if has_sticker else "[b]Класс:[/b] %s\n" % data.unit_class) + "[b]Здоровье:[/b] %d\n[b]Атака:[/b] %d\n[b]Магия:[/b] %d\n[b]Энергия ульты:[/b] %d" % [
@@ -730,7 +735,7 @@ func _show_char_tab(tab: int) -> void:
 	_tab_text.scroll_to_line(0)
 
 ## Сердечки: total штук (героини — 10, НПС — 5), заполнено level (дробное: 2.77 — два полных
-## и третье на 77% снизу, ui/heart_fill.gdshader).
+## и третье на 77% справа налево, ui/heart_fill.gdshader, direction).
 func _fill_hearts(level: float, total: int = UnitRoster.RELATIONSHIP_MAX) -> void:
 	var tex := _heart_texture()
 	while _hearts.get_child_count() < UnitRoster.RELATIONSHIP_MAX:
@@ -754,14 +759,17 @@ func _fill_hearts(level: float, total: int = UnitRoster.RELATIONSHIP_MAX) -> voi
 		(h.material as ShaderMaterial).set_shader_parameter("fill", clampf(level - float(i), 0.0, 1.0))
 		h.modulate = Color.WHITE
 
-## Где сердечко по высоте в атласе (картинка — кусок большого холста).
+## Где сердечко в атласе (картинка — кусок большого холста).
 func _heart_uv_range(m: ShaderMaterial, tex: Texture2D) -> void:
 	var at := tex as AtlasTexture
 	if at == null or at.atlas == null:
 		return
 	var h := float(at.atlas.get_height())
+	var w := float(at.atlas.get_width())
 	m.set_shader_parameter("uv_top", at.region.position.y / h)
 	m.set_shader_parameter("uv_bottom", at.region.end.y / h)
+	m.set_shader_parameter("uv_left", at.region.position.x / w)
+	m.set_shader_parameter("uv_right", at.region.end.x / w)
 
 ## Доля уровня: {level, into_level, need} -> 2.77.
 static func _level_fraction(pr: Dictionary) -> float:

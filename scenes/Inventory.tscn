@@ -607,7 +607,7 @@ theme_override_styles/pressed = SubResource("cards_btn_hover")
 theme_override_styles/hover = SubResource("cards_btn_hover")
 theme_override_styles/disabled = SubResource("cards_btn_off")
 theme_override_styles/focus = SubResource("char_tab_focus")
-text = "Все карты"
+text = "Карты"
 
 [node name="CharacterStats" type="RichTextLabel" parent="CharacterDetail" unique_id=1193579512]
 unique_name_in_owner = true

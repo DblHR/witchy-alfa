@@ -18,7 +18,10 @@ void fragment() {
 			edge = max(edge, texture(TEXTURE, UV + off).a);
 		}
 	}
-	float a = max(tex.a, outline_color.a * edge);
-	vec3 rgb = mix(outline_color.rgb, tex.rgb, tex.a);
+	// Картинка поверх контура (обычное наложение). Без контура (width 0) — картинка как есть:
+	// раньше полупрозрачные края подмешивали цвет контура — белые полоски на углах.
+	float oa = outline_color.a * edge;
+	float a = tex.a + oa * (1.0 - tex.a);
+	vec3 rgb = a > 0.0001 ? (tex.rgb * tex.a + outline_color.rgb * oa * (1.0 - tex.a)) / a : tex.rgb;
 	COLOR = vec4(rgb, a) * v_mod;
 }

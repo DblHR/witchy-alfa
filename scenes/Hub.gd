@@ -896,11 +896,20 @@ const CLICK_SPRITE_PATH := "res://assets/characters/%s/%s_click.png"
 func _click(w: HomeWalker) -> void:
 	# Героини (кроме главных героев): разговор, если есть, — в нём выбор взаимодействий
 	# ({"interactions": "cute"}); если разговора нет — VN-меню взаимодействий (Interactions.menu_lines).
+	# Есть экран прикосновений — он вместо обычного разговора-меню; разовые сцены («once»,
+	# например «Доброе утро, милашка» на 3 уровне) по-прежнему идут первыми, в VN.
+	if LoveTouchScreen.supports(w.unit_id) and Interactions.supports(w.unit_id, Interactions.KIND_CUTE) \
+			and not _has_once_talk(w.unit_id):
+		_open_touch(w)
+		return
 	if _can_talk(w.unit_id):
 		talk_to(w.unit_id)
 		return
 	if Interactions.supports(w.unit_id, Interactions.KIND_CUTE):
-		_open_interactions(w)
+		if LoveTouchScreen.supports(w.unit_id):
+			_open_touch(w)   ## экран прикосновений (пока у Фуфу)
+		else:
+			_open_interactions(w)
 		return
 	if w.on_bed():
 		return
@@ -913,6 +922,17 @@ func _click(w: HomeWalker) -> void:
 	else:
 		w.poke()
 
+## Экран прикосновений (LoveTouchScreen): героиня крупно, кнопки действий слева, касания мышью.
+## Пока он открыт, героиня в доме стоит на месте.
+func _open_touch(w: HomeWalker) -> void:
+	_talking = w.unit_id
+	w.set_hover(false)
+	w.set_frozen(true)
+	_hovered = null
+	Input.set_default_cursor_shape(Input.CURSOR_ARROW)
+	var s := LoveTouchScreen.open(self, w.unit_id)
+	s.closed.connect(func() -> void: _on_talk_finished({}))
+
 ## VN-меню взаимодействий с героиней: её приветствие (папка love) и выбор действия.
 func _open_interactions(w: HomeWalker) -> void:
 	var lines := Interactions.menu_lines(w.unit_id)
@@ -924,6 +944,13 @@ func _open_interactions(w: HomeWalker) -> void:
 	_hovered = null
 	Input.set_default_cursor_shape(Input.CURSOR_ARROW)
 	DialogueManager_.show_sequence(lines, Callable(self, "_on_talk_finished").bind({}))
+
+## Есть разовый разговор в доме («once»), который ещё не видели.
+func _has_once_talk(id: String) -> bool:
+	if StoryDialogueDB_ == null:
+		return false
+	var d := StoryDialogueDB_.pick_npc_dialogue(id, HUB_TALK_TYPE)
+	return not d.is_empty() and bool(d.get("once", false))
 
 func _can_talk(id: String) -> bool:
 	return StoryDialogueDB_ != null and not StoryDialogueDB_.pick_npc_dialogue(id, HUB_TALK_TYPE).is_empty()

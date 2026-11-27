@@ -1,0 +1,41 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Texture2D" path="res://assets/characters/fufu/love/background.png" id="1"]
+[ext_resource type="Texture2D" path="res://assets/characters/fufu/love/fufu_love_standart.png" id="2"]
+
+[node name="FufuTouch" type="Node2D"]
+
+[node name="Background" type="Sprite2D" parent="."]
+texture = ExtResource("1")
+
+[node name="Body" type="Sprite2D" parent="."]
+position = Vector2(0, 590)
+texture = ExtResource("2")
+centered = false
+offset = Vector2(-1060, -1180)
+
+[node name="Zones" type="Node2D" parent="Body"]
+
+[node name="head" type="Polygon2D" parent="Body/Zones"]
+color = Color(1, 0.85, 0.2, 0.35)
+polygon = PackedVector2Array(-600, -1180, 640, -1180, 680, -940, 460, -800, 60, -790, -340, -800, -580, -920)
+
+[node name="chin" type="Polygon2D" parent="Body/Zones"]
+color = Color(1, 0.4, 0.4, 0.35)
+polygon = PackedVector2Array(-80, -560, 160, -560, 170, -480, 50, -435, -70, -470)
+
+[node name="cheek_left" type="Polygon2D" parent="Body/Zones"]
+color = Color(1, 0.4, 0.8, 0.35)
+polygon = PackedVector2Array(-270, -690, -50, -690, -40, -540, -160, -500, -260, -570)
+
+[node name="cheek_right" type="Polygon2D" parent="Body/Zones"]
+color = Color(0.6, 0.4, 1, 0.35)
+polygon = PackedVector2Array(110, -690, 330, -690, 320, -565, 230, -510, 110, -540)
+
+[node name="face" type="Polygon2D" parent="Body/Zones"]
+color = Color(0.3, 0.8, 1, 0.25)
+polygon = PackedVector2Array(-320, -790, 380, -790, 380, -580, 220, -480, 40, -435, -160, -480, -300, -600)
+
+[node name="body" type="Polygon2D" parent="Body/Zones"]
+color = Color(0.4, 1, 0.5, 0.25)
+polygon = PackedVector2Array(-400, -500, 380, -490, 660, -380, 700, 0, -660, 0, -640, -380)

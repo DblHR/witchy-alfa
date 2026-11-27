@@ -629,6 +629,9 @@ func _apply_line(line) -> void:
 			characters = _sequence_characters
 		else:
 			active = "_" + String(_read_line_value(line, "active_slot", "none"))
+	# "no_portraits": true — без портретов (персонаж и так на экране: экран прикосновений LoveTouch).
+	if bool(_read_line_value(line, "no_portraits", false)):
+		characters = []
 	_show_characters(_unique_characters(characters), active)
 	_apply_cg(line)
 	_apply_fade(line)
@@ -719,7 +722,9 @@ func _show_choices(choices: Array) -> void:
 	_arrow.visible = false
 	for i in range(_choices.size()):
 		var c = _choices[i]
-		var b := _make_button(String(c.get("text", "…")) if c is Dictionary else String(c))
+		var ctext := String(c.get("text", "…")) if c is Dictionary else String(c)
+		var b := _make_button(ctext)
+		_heart_text().button(b, ctext)   ## «+5 ♥» — сердечко картинкой справа
 		var csize := CHOICE_SIZE
 		if c is Dictionary and ((c as Dictionary).has("interaction") or (c as Dictionary).has("gift")):
 			csize.x = maxf(csize.x, INTERACTION_CHOICE_W)   ## «Погладить по голове   (с 1 ур.)» — длиннее
@@ -898,15 +903,15 @@ func _mood() -> GDScript:
 func _gifts() -> GDScript:
 	return load("res://scripts/love/Gifts.gd") as GDScript
 
+func _heart_text() -> GDScript:
+	return load("res://scripts/ui/HeartText.gd") as GDScript
+
 ## Короткая надпись над окном диалога (поднимается и тает).
 func _toast(text: String) -> void:
-	var l := Label.new()
-	l.text = text
-	l.add_theme_font_size_override("font_size", 38)
-	l.add_theme_color_override("font_color", Color(1.0, 0.55, 0.8))
+	var l: RichTextLabel = _heart_text().rich(text, 38)   ## «♥» — картинкой
+	l.add_theme_color_override("default_color", Color(1.0, 0.55, 0.8))
 	l.add_theme_color_override("font_outline_color", Color(0.3, 0.05, 0.25))
 	l.add_theme_constant_override("outline_size", 8)
-	l.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_ui.add_child(l)
 	l.reset_size()
 	l.position = Vector2(960.0 - l.size.x * 0.5, 690.0)
@@ -998,6 +1003,8 @@ func _collect_sequence_characters(lines: Array) -> Array:
 	var result: Array = []
 	for line in lines:
 		if line == null:
+			continue
+		if bool(_read_line_value(line, "no_portraits", false)):
 			continue
 		var characters = _read_line_value(line, "characters", [])
 		if characters is Array and not characters.is_empty():

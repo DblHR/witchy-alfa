@@ -83,6 +83,35 @@ func _match_optional_resource(resource_key: String, resource: Resource) -> void:
             _apply_custom_cursor()
 
 
+## Курсор-рука над местами, которых можно коснуться (экран прикосновений LoveTouch).
+const TOUCH_CURSOR_PATH := "res://assets/ui/cursor/cursor_interactive.png"
+const TOUCH_CURSOR_SIZE := Vector2i(48, 55)
+const TOUCH_CURSOR_HOTSPOT := Vector2(22, 26)
+var _touch_cursor: Texture2D
+var _touch_on := false
+
+## Включить / выключить курсор-руку (выключить — обычный курсор).
+func set_touch_cursor(on: bool) -> void:
+    if on == _touch_on:
+        return
+    _touch_on = on
+    if not on:
+        if _cursor_texture != null:
+            _apply_custom_cursor()
+        else:
+            Input.set_custom_mouse_cursor(null, Input.CURSOR_ARROW)
+        return
+    if _touch_cursor == null and ResourceLoader.exists(TOUCH_CURSOR_PATH):
+        var img := (load(TOUCH_CURSOR_PATH) as Texture2D).get_image()
+        img.resize(TOUCH_CURSOR_SIZE.x, TOUCH_CURSOR_SIZE.y)
+        _touch_cursor = ImageTexture.create_from_image(img)
+    if _touch_cursor != null:
+        Input.set_custom_mouse_cursor(_touch_cursor, Input.CURSOR_ARROW, TOUCH_CURSOR_HOTSPOT)
+
+func is_touch_cursor() -> bool:
+    return _touch_on
+
+
 func _apply_custom_cursor() -> void:
     if _cursor_texture == null:
         return

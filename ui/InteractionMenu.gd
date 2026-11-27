@@ -125,7 +125,7 @@ func _header_text() -> String:
 
 func _row(text: String, right: String, enabled: bool) -> Button:
 	var b := Button.new()
-	b.text = text if right == "" else "%s   %s" % [text, right]
+	HeartText.button(b, text if right == "" else "%s   %s" % [text, right], 26)
 	b.custom_minimum_size = Vector2(0, ROW_H)
 	b.disabled = not enabled
 	b.focus_mode = Control.FOCUS_NONE
@@ -145,13 +145,10 @@ func _row(text: String, right: String, enabled: bool) -> Button:
 
 ## Всплывающая надпись (поднимается и тает).
 static func float_text(host: Node, at: Vector2, text: String) -> void:
-	var l := Label.new()
-	l.text = text
-	l.add_theme_font_size_override("font_size", 34)
-	l.add_theme_color_override("font_color", Color(1.0, 0.55, 0.8))
+	var l := HeartText.rich(text, 34)   ## «♥» — картинкой
+	l.add_theme_color_override("default_color", Color(1.0, 0.55, 0.8))
 	l.add_theme_color_override("font_outline_color", Color(0.3, 0.05, 0.25))
 	l.add_theme_constant_override("outline_size", 8)
-	l.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	l.z_index = 70
 	host.add_child(l)
 	l.reset_size()

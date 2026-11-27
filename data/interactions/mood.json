@@ -2,7 +2,10 @@
   "_readme": [
     "Настроение персонажей (героини-вайфу и НПС; у главных героев его нет). Логика — scripts/love/Mood.gd.",
     "Настроение — число от 0 до 100, у нового персонажа — start.",
-    "  happy_from и выше — радостное, ниже sad_below — грустное, между ними — нейтральное.",
+    "  love_from и выше — влюблённое, happy_from и выше — радостное, ниже sad_below — грустное,",
+    "  между ними — нейтральное.",
+    "Влюблённое даёт самый большой бафф (battle_trust), но, пока персонаж влюблён, всё, что",
+    "  отнимает decay, умножается на love_decay_mult (2.0 — вдвое).",
     "Каждый новый игровой день (DayCycle) настроение падает за то, чего давно не было:",
     "  decay.<что> = {grace, per_day}: если этого не было больше grace дней — минус per_day за каждый такой день.",
     "  talk — взаимодействия (обнимашки и т.п.), gift — подарки, run — забег в отряде (у НПС не считается).",
@@ -15,9 +18,11 @@
     "  (свои реплики можно положить в папку love персонажа, ключ refuse_<настроение> или refuse)."
   ],
   "start": 60,
+  "love_from": 90,
   "happy_from": 70,
   "sad_below": 35,
   "level_speed": 1.0,
+  "love_decay_mult": 2.0,
   "decay": {
     "talk": {"grace": 1, "per_day": 6},
     "gift": {"grace": 3, "per_day": 4},
@@ -27,14 +32,16 @@
     "talk": 6,
     "run": 8
   },
-  "battle_trust": {"happy": 1.25, "neutral": 1.0, "sad": 0.75},
-  "refuse_chance": {"happy": 0.0, "neutral": 0.05, "sad": 0.3},
+  "battle_trust": {"love": 1.5, "happy": 1.25, "neutral": 1.0, "sad": 0.75},
+  "refuse_chance": {"love": 0.0, "happy": 0.0, "neutral": 0.05, "sad": 0.3},
   "icons": {
-    "happy": "res://assets/ui/emotes/happy.png",
-    "neutral": "res://assets/ui/emotes/neutral.png",
-    "sad": "res://assets/ui/emotes/sad.png"
+    "love": "res://assets/ui/emotes/mood_inlove.png",
+    "happy": "res://assets/ui/emotes/mood_happy.png",
+    "neutral": "res://assets/ui/emotes/mood_neutral.png",
+    "sad": "res://assets/ui/emotes/mood_angry.png"
   },
   "refuse": {
+    "love": "Мур~ Чуть попозже, ладно?",
     "happy": "Хи-хи, не сейчас~",
     "neutral": "Хм… Давай в другой раз.",
     "sad": "Не хочу. Меня совсем забросили…"

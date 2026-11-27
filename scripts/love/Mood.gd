@@ -1,11 +1,13 @@
 class_name Mood
 extends RefCounted
-## Настроение героинь-вайфу и НПС: радостное / нейтральное / грустное. Цифры — data/interactions/mood.json.
+## Настроение героинь-вайфу и НПС: влюблённое / радостное / нейтральное / грустное. Цифры — data/interactions/mood.json.
 ##
 ## Падает, когда с персонажем давно не взаимодействовали, давно ничего не дарили и давно не брали
 ## в забег (у НПС забегов нет). Поднимается от взаимодействий (первое за день), подарков (Gifts) и
 ## забегов в отряде. Чем выше уровень доверия, тем быстрее меняется (и вверх, и вниз).
 ## Влияет на доверие за забег (CardBattle) и на шанс отказа от взаимодействия (окно диалога).
+## Влюблённое (у самого верха, love_from) — самый большой бафф, но пока влюблена, штрафы за то,
+## что давно не было взаимодействий / подарков / забегов, умножаются на love_decay_mult.
 ##
 ## Считается «лениво»: когда настроение спрашивают, за все прошедшие с прошлого раза игровые дни
 ## (DayCycle.day_number) снимается положенное. Хранится в StoryState:
@@ -14,10 +16,11 @@ extends RefCounted
 ##   флаг mood_init:<id> (персонажа уже начали считать).
 
 const FILE := "res://data/interactions/mood.json"
+const LOVE := "love"
 const HAPPY := "happy"
 const NEUTRAL := "neutral"
 const SAD := "sad"
-const NAMES := {HAPPY: "радостное", NEUTRAL: "нейтральное", SAD: "грустное"}
+const NAMES := {LOVE: "влюблённое", HAPPY: "радостное", NEUTRAL: "нейтральное", SAD: "грустное"}
 const FACTORS := ["talk", "gift", "run"]
 ## Дольше этого не пересчитываем (вдруг день прыгнул далеко) — всё равно уже на нуле.
 const MAX_DAYS := 60
@@ -76,13 +79,16 @@ static func _update(id: String) -> void:
 	var v := float(_cnt("mood", id))
 	var k := speed(id)
 	var decay: Dictionary = _cfg().get("decay", {})
+	var love_from := float(_cfg().get("love_from", 101))
+	var love_mult := float(_cfg().get("love_decay_mult", 1.0))
 	for d in range(maxi(from + 1, today - MAX_DAYS + 1), today + 1):
+		var day_k := k * (love_mult if v >= love_from else 1.0)   ## влюблена — штрафы сильнее
 		for f in FACTORS:
 			if f == "run" and NpcTrust.is_npc(id):
 				continue
 			var rule: Dictionary = decay.get(f, {})
 			if d - _cnt("mood_" + String(f), id) > int(rule.get("grace", 1)):
-				v -= float(rule.get("per_day", 0)) * k
+				v -= float(rule.get("per_day", 0)) * day_k
 	_put("mood", id, clampi(roundi(v), 0, 100))
 	_put("mood_day", id, today)
 
@@ -93,11 +99,13 @@ static func value(id: String) -> int:
 	_update(id)
 	return _cnt("mood", id)
 
-## "happy" / "neutral" / "sad".
+## "love" / "happy" / "neutral" / "sad".
 static func state(id: String) -> String:
 	if not has_mood(id):
 		return NEUTRAL
 	var v := value(id)
+	if v >= int(_cfg().get("love_from", 101)):
+		return LOVE
 	if v >= int(_cfg().get("happy_from", 70)):
 		return HAPPY
 	if v < int(_cfg().get("sad_below", 35)):
