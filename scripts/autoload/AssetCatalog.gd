@@ -13,9 +13,9 @@ const UI_TEXTURE_PATHS := {
 	"event_bg_statue_white": "",   ## пусто — фон этажа слоями (FloorBackdrop)
 	"event_bg_statue_black": "",   ## пусто — фон этажа слоями (FloorBackdrop)
 	"event_bg_quest": "",   ## пусто — фон этажа слоями (FloorBackdrop)
-	"farm_btn_home": "res://assets/ui/buttons/homeButton.png",
-	"farm_btn_shop": "res://assets/ui/buttons/shopButton.png",
-	"farm_btn_alchemy": "res://assets/ui/buttons/alchemyButton.png",
+	"farm_btn_home": "res://assets/ui/buttons/menuButtonHome.png",
+	"farm_btn_shop": "res://assets/ui/buttons/menuButtonShop.png",
+	"farm_btn_alchemy": "res://assets/ui/buttons/menuButtonAlchemy.png",
 }
 
 const FARM_TEXTURE_PATHS := {

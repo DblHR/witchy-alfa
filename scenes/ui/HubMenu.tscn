@@ -1,11 +1,12 @@
-[gd_scene load_steps=7 format=3]
+[gd_scene load_steps=8 format=3]
 
 [ext_resource type="Script" path="res://ui/HubMenu.gd" id="1_menu"]
-[ext_resource type="Texture2D" uid="uid://di3ehfr5twx0c" path="res://assets/ui/buttons/miniMenuButton.png" id="2_dots"]
-[ext_resource type="Texture2D" uid="uid://bsueyseydns2j" path="res://assets/ui/buttons/shopButton.png" id="3_shop"]
-[ext_resource type="Texture2D" uid="uid://djbr8wah3ntpc" path="res://assets/ui/buttons/farmButton.png" id="4_farm"]
-[ext_resource type="Texture2D" uid="uid://klsl5qwne66a" path="res://assets/ui/buttons/alchemyButton.png" id="5_alch"]
-[ext_resource type="Texture2D" uid="uid://dj3aaaw5qjbp1" path="res://assets/ui/buttons/homeButton.png" id="6_home"]
+[ext_resource type="Texture2D" path="res://assets/ui/buttons/buttonPanel.png" id="2_panel"]
+[ext_resource type="Texture2D" path="res://assets/ui/buttons/miniMenuButton.png" id="3_dots"]
+[ext_resource type="Texture2D" path="res://assets/ui/buttons/menuButtonShop.png" id="4_shop"]
+[ext_resource type="Texture2D" path="res://assets/ui/buttons/menuButtonFarm.png" id="5_farm"]
+[ext_resource type="Texture2D" path="res://assets/ui/buttons/menuButtonAlchemy.png" id="6_alch"]
+[ext_resource type="Texture2D" path="res://assets/ui/buttons/menuButtonHome.png" id="7_home"]
 
 [node name="HubMenu" type="Control"]
 layout_mode = 3
@@ -22,8 +23,20 @@ offset_top = 18.0
 offset_right = 1451.0
 offset_bottom = 118.0
 focus_mode = 0
-texture_normal = ExtResource("3_shop")
+texture_normal = ExtResource("2_panel")
 ignore_texture_size = true
+stretch_mode = 5
+
+[node name="Icon" type="TextureRect" parent="ShopButton"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("4_shop")
+expand_mode = 1
 stretch_mode = 5
 
 [node name="FarmButton" type="TextureButton" parent="."]
@@ -33,8 +46,20 @@ offset_top = 18.0
 offset_right = 1560.0
 offset_bottom = 118.0
 focus_mode = 0
-texture_normal = ExtResource("4_farm")
+texture_normal = ExtResource("2_panel")
 ignore_texture_size = true
+stretch_mode = 5
+
+[node name="Icon" type="TextureRect" parent="FarmButton"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("5_farm")
+expand_mode = 1
 stretch_mode = 5
 
 [node name="AlchemyButton" type="TextureButton" parent="."]
@@ -44,8 +69,20 @@ offset_top = 18.0
 offset_right = 1669.0
 offset_bottom = 118.0
 focus_mode = 0
-texture_normal = ExtResource("5_alch")
+texture_normal = ExtResource("2_panel")
 ignore_texture_size = true
+stretch_mode = 5
+
+[node name="Icon" type="TextureRect" parent="AlchemyButton"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("6_alch")
+expand_mode = 1
 stretch_mode = 5
 
 [node name="HomeButton" type="TextureButton" parent="."]
@@ -55,8 +92,20 @@ offset_top = 18.0
 offset_right = 1778.0
 offset_bottom = 118.0
 focus_mode = 0
-texture_normal = ExtResource("6_home")
+texture_normal = ExtResource("2_panel")
 ignore_texture_size = true
+stretch_mode = 5
+
+[node name="Icon" type="TextureRect" parent="HomeButton"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("7_home")
+expand_mode = 1
 stretch_mode = 5
 
 [node name="ToggleButton" type="TextureButton" parent="."]
@@ -67,6 +116,18 @@ offset_right = 1907.0
 offset_bottom = 128.0
 pivot_offset = Vector2(60, 60)
 focus_mode = 0
-texture_normal = ExtResource("2_dots")
+texture_normal = ExtResource("2_panel")
 ignore_texture_size = true
+stretch_mode = 5
+
+[node name="Icon" type="TextureRect" parent="ToggleButton"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("3_dots")
+expand_mode = 1
 stretch_mode = 5

@@ -3,9 +3,11 @@ class_name HubMenu
 ## Меню перехода между комнатами дома (сверху справа): большая кнопка «…» разворачивает /
 ## сворачивает ряд кнопок Лавка, Ферма, Алхимия, Дом. Меню одно и то же в доме, на ферме, в алхимии
 ## и в лавке (scenes/ui/HubMenu.tscn — двигайте кнопки там). Открыто/закрыто — запоминается при
-## переходах между этими комнатами. Кнопка текущей комнаты чуть крупнее (CURRENT_SCALE) и не нажимается.
+## переходах между этими комнатами. Кнопка текущей комнаты чуть крупнее (CURRENT_SCALE), её подложка
+## ярко-розовая (CURRENT_TINT, ui/panel_tint.gdshader), и она не нажимается.
+## Кнопка = подложка (TextureButton, buttonPanel.png) + значок (дочерний TextureRect «Icon»).
 ##
-## Новая кнопка: добавить TextureButton в сцену и строку в TARGETS.
+## Новая кнопка: добавить TextureButton с подложкой и Icon в сцену и строку в TARGETS.
 
 const SCENE := "res://scenes/ui/HubMenu.tscn"
 ## Имя кнопки -> куда ведёт (SceneRouter_).
@@ -19,6 +21,9 @@ const SLIDE_TIME := 0.22
 ## Кнопка комнаты, где игрок сейчас: во столько раз крупнее остальных.
 const CURRENT_SCALE := 1.18
 const STAGGER := 0.035
+## Подложка кнопки текущей комнаты.
+const CURRENT_TINT := Color(0.94, 0.27, 0.55)
+const PANEL_TINT_SHADER := preload("res://ui/panel_tint.gdshader")
 
 ## Развёрнуто ли меню (общее для всех комнат, пока игра запущена).
 static var expanded := false
@@ -50,6 +55,10 @@ func _ready() -> void:
 			if _is_current(method):
 				_current = b
 				b.mouse_filter = Control.MOUSE_FILTER_IGNORE   ## тут и так — не нажимается, не подсвечивается
+				var m := ShaderMaterial.new()
+				m.shader = PANEL_TINT_SHADER
+				m.set_shader_parameter("tint", CURRENT_TINT)
+				b.material = m   ## значок (Icon) — своим материалом, не перекрашивается
 	toggle.pressed.connect(_on_toggle)
 	_refresh_locks()
 	_apply(expanded, false)
@@ -74,6 +83,9 @@ func _refresh_locks() -> void:
 	var tint := Color.WHITE if ok else Color(0.45, 0.42, 0.48, 0.85)
 	alch.set_meta("rest_tint", tint)   ## подсветка (ButtonGlow) не «отбеливает» потускневшую кнопку
 	alch.self_modulate = tint
+	var icon := alch.get_node_or_null("Icon") as CanvasItem
+	if icon != null:
+		icon.modulate = tint   ## значок тускнеет вместе с подложкой
 	alch.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND if ok else Control.CURSOR_ARROW
 
 func button(btn_name: String) -> TextureButton:

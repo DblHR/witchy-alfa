@@ -1101,9 +1101,11 @@ func _process(delta: float) -> void:
 	if _bubbles.emitting != on:
 		_bubbles.emitting = on
 	var hand := _dragged == null and z != null and (z.action != "recipes" or on)
-	if hand != _hand_cursor:
+	# Над ведьмочкой — курсор-рука (CursorFx), над котлом — обычный «палец».
+	CursorFx_.set_touch_cursor(hand and z.action != "recipes")
+	if hand != _hand_cursor or hand:
 		_hand_cursor = hand
-		Input.set_default_cursor_shape(Input.CURSOR_POINTING_HAND if hand else Input.CURSOR_ARROW)
+		Input.set_default_cursor_shape(Input.CURSOR_POINTING_HAND if hand and z.action == "recipes" else Input.CURSOR_ARROW)
 
 ## Ведьмочка ненадолго меняет позу (картинка зоны из assets/alchemy/ — с учётом времени суток).
 func witch_react(z: WitchZone) -> void:

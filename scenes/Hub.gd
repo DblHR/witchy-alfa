@@ -370,11 +370,12 @@ const DOOR_ICON_SIZE := Vector2(120, 120)
 const DOOR_ICON_GAP := 14.0
 ## Сдвиг столбика значков от центра проёма по X (минус — левее).
 const DOOR_ICON_SHIFT_X := -45.0
-## Значок: картинка и куда ведёт (SceneRouter_).
+## Значок: картинка значка (на подложке DOOR_ICON_PANEL, как в мини-меню) и куда ведёт (SceneRouter_).
 const DOOR_ICONS := [
-	["farm", "res://assets/ui/buttons/farmButton.png", "go_to_farm"],
-	["shop", "res://assets/ui/buttons/shopButton.png", "go_to_shop"],
+	["farm", "res://assets/ui/buttons/menuButtonFarm.png", "go_to_farm"],
+	["shop", "res://assets/ui/buttons/menuButtonShop.png", "go_to_shop"],
 ]
+const DOOR_ICON_PANEL := "res://assets/ui/buttons/buttonPanel.png"
 const DOOR_ICON_HOVER_SCALE := 1.12
 var _door_icons: Dictionary = {}   ## id -> TextureRect
 var _door_hover := false
@@ -388,7 +389,15 @@ func _build_door_hint() -> void:
 	for d in DOOR_ICONS:
 		var icon := TextureRect.new()
 		icon.name = "Door_" + String(d[0])
-		icon.texture = load(String(d[1])) as Texture2D
+		icon.texture = load(DOOR_ICON_PANEL) as Texture2D
+		var glyph := TextureRect.new()
+		glyph.name = "Icon"
+		glyph.texture = load(String(d[1])) as Texture2D
+		glyph.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		glyph.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		glyph.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		glyph.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		icon.add_child(glyph)
 		icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -554,7 +563,14 @@ func _process(delta: float) -> void:
 	var pile_hot := _update_pile_hover(p)
 	var hand := pile_hot or over != null or cauldron or _door_hot != "" or _dragging or star or toggle_hot or moon or mess_hot or bed_hot
 	var drag := _dragging or stars.is_grabbing()
-	Input.set_default_cursor_shape(Input.CURSOR_DRAG if drag else (Input.CURSOR_POINTING_HAND if hand else Input.CURSOR_ARROW))
+	# Под курсором героиня (не Воин) — курсор-рука (CursorFx), как на экране прикосновений.
+	var girl := not drag and over != null and not HAND_CURSOR_SKIP.has(over.unit_id)
+	if _talking == "":   ## открыт экран прикосновений / разговор — курсором управляет он
+		CursorFx_.set_touch_cursor(girl)
+	Input.set_default_cursor_shape(Input.CURSOR_DRAG if drag else (Input.CURSOR_POINTING_HAND if hand and not girl else Input.CURSOR_ARROW))
+
+## Над кем курсор-рука не появляется (не героини).
+const HAND_CURSOR_SKIP := ["warrior"]
 
 ## Магический круг у котла: курсор на котле дольше MAGIC_DELAY — проявляется за MAGIC_FADE_IN.
 ## magic_forced — круг включила ведьмочка (HubEvents, шаг "magic"): проявляется за MAGIC_FORCED_IN.
@@ -930,6 +946,7 @@ func _open_touch(w: HomeWalker) -> void:
 	w.set_frozen(true)
 	_hovered = null
 	Input.set_default_cursor_shape(Input.CURSOR_ARROW)
+	CursorFx_.set_touch_cursor(false)
 	var s := LoveTouchScreen.open(self, w.unit_id)
 	s.closed.connect(func() -> void: _on_talk_finished({}))
 
@@ -943,6 +960,7 @@ func _open_interactions(w: HomeWalker) -> void:
 	w.set_frozen(true)
 	_hovered = null
 	Input.set_default_cursor_shape(Input.CURSOR_ARROW)
+	CursorFx_.set_touch_cursor(false)
 	DialogueManager_.show_sequence(lines, Callable(self, "_on_talk_finished").bind({}))
 
 ## Есть разовый разговор в доме («once»), который ещё не видели.
@@ -969,6 +987,7 @@ func talk_to(id: String) -> void:
 		w.set_frozen(true)   ## стоит на месте, пока говорим
 	_hovered = null
 	Input.set_default_cursor_shape(Input.CURSOR_ARROW)
+	CursorFx_.set_touch_cursor(false)
 	DialogueManager_.show_sequence(lines, Callable(self, "_on_talk_finished").bind(d))
 
 func _on_talk_finished(dialogue: Dictionary) -> void:

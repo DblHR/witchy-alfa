@@ -96,7 +96,9 @@ func _unhandled_input(event: InputEvent) -> void:
 
 # --- Кнопка паузы на экране и подсветка кнопок ----------------------------------
 
-const PAUSE_BUTTON_TEXTURE := "res://assets/ui/buttons/miniMenuButton.png"
+## Кнопка паузы = подложка + значок «…» (как кнопки мини-меню HubMenu).
+const PAUSE_BUTTON_TEXTURE := "res://assets/ui/buttons/buttonPanel.png"
+const PAUSE_BUTTON_ICON := "res://assets/ui/buttons/miniMenuButton.png"
 const PAUSE_BUTTON_SIZE := Vector2(72, 72)
 ## Где кнопка паузы в каждой сцене (левый верхний угол кнопки, экран 1920×1080).
 ## Нет сцены в списке — PAUSE_BUTTON_DEFAULT_POS.
@@ -120,6 +122,14 @@ func _build_pause_button() -> void:
 	_pause_button.size = PAUSE_BUTTON_SIZE
 	_pause_button.focus_mode = Control.FOCUS_NONE
 	_pause_button.tooltip_text = "Пауза (Esc)"
+	var icon := TextureRect.new()
+	icon.name = "Icon"
+	icon.texture = load(PAUSE_BUTTON_ICON) as Texture2D
+	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	icon.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_pause_button.add_child(icon)
 	_pause_button.visible = false
 	_pause_button.pressed.connect(func() -> void:
 		if not _is_open and _pause_allowed():

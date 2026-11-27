@@ -342,15 +342,28 @@ func _hero_text(text: String) -> String:
 	return names_text(hero_forms(text))
 
 ## «{устала|устал}» -> первое слово, если главный герой — Ведьмочка, второе — если Воин.
+## «{ранена|ранен|ранены}» — третье, если в отряде больше одного персонажа (party_size).
 func hero_forms(text: String) -> String:
 	if not text.contains("|"):
 		return text
 	var re := RegEx.new()
-	re.compile("\\{([^{}|]*)\\|([^{}|]*)\\}")
+	re.compile("\\{([^{}|]*)\\|([^{}|]*)(?:\\|([^{}|]*))?\\}")
 	var second := get_main_hero_id() == "warrior"
+	var many := party_size() > 1
 	for m in re.search_all(text):
-		text = text.replace(m.get_string(0), m.get_string(2 if second else 1))
+		var pick := m.get_string(2 if second else 1)
+		if many and m.get_start(3) >= 0:
+			pick = m.get_string(3)
+		text = text.replace(m.get_string(0), pick)
 	return text
+
+## Сколько персонажей в отряде — для форм {…|…|мн. число}. В бою CardBattle ставит
+## party_size_override (живые в отряде), иначе — отряд забега (DungRun.party_ids).
+var party_size_override := -1
+func party_size() -> int:
+	if party_size_override >= 0:
+		return party_size_override
+	return DungRun.party_ids.size() if DungRun != null else 1
 
 ## {name:ключ} -> имя, которое придумал игрок (StoryState_.custom_names), например {name:rikka_flower}.
 ## Пока имени нет — подставляется DEFAULT_CUSTOM_NAMES или пусто.

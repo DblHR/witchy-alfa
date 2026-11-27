@@ -64,6 +64,9 @@ func _setup_pan() -> void:
 	_pan = _pan_base
 
 func _process(delta: float) -> void:
+	# Курсор ушёл с самой комнаты (на кнопку, окно) — курсор-рука выключается.
+	if CursorFx_.is_touch_cursor() and get_viewport().gui_get_hovered_control() != self:
+		CursorFx_.set_touch_cursor(false)
 	if world == null:
 		return
 	var vs := get_viewport_rect().size
@@ -85,8 +88,8 @@ func _witch_zone_at(global_p: Vector2) -> WitchZone:
 
 func _gui_input(event: InputEvent) -> void:
 	if event is InputEventMouseMotion:
-		var hot := _witch_zone_at((event as InputEventMouseMotion).global_position) != null
-		mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND if hot else Control.CURSOR_ARROW
+		# Над ведьмочкой — курсор-рука (CursorFx).
+		CursorFx_.set_touch_cursor(_witch_zone_at((event as InputEventMouseMotion).global_position) != null)
 	elif event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
 		var z := _witch_zone_at((event as InputEventMouseButton).global_position)
 		if z != null:

@@ -22,6 +22,8 @@ func _ready() -> void:
     _request_optional_resource("cursor")
     set_process(not _optional_resource_pending.is_empty())
     set_process_input(true)
+    # Новая сцена — курсор-рука (наведение на героиню) не должен остаться от прошлой.
+    get_tree().scene_changed.connect(func() -> void: set_touch_cursor(false))
 
 
 func _process(_delta: float) -> void:
@@ -83,7 +85,8 @@ func _match_optional_resource(resource_key: String, resource: Resource) -> void:
             _apply_custom_cursor()
 
 
-## Курсор-рука над местами, которых можно коснуться (экран прикосновений LoveTouch).
+## Курсор-рука над героиней, с которой можно взаимодействовать: экран прикосновений (LoveTouch),
+## персонажи в доме (Hub), ведьмочка на ферме, в алхимии и в главном меню (WitchZone).
 const TOUCH_CURSOR_PATH := "res://assets/ui/cursor/cursor_interactive.png"
 const TOUCH_CURSOR_SIZE := Vector2i(48, 55)
 const TOUCH_CURSOR_HOTSPOT := Vector2(22, 26)

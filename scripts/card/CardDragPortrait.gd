@@ -3,6 +3,8 @@ class_name CardDragPortrait
 ## Портрет героини, выезжающий слева, пока игрок тащит её карту (как в CZN).
 ## Картинка: CharacterData.drag_portrait, а если пусто — res://assets/characters/<id>/<id>_drag.png.
 ## Прозрачные поля картинки обрезаются автоматически (один раз на картинку).
+## from_right = true — то же у врага-«игрока» (Фуфу): портрет выезжает справа, отражённый
+## (CardBattle → _enemy_drag_portrait, show_texture).
 
 const PORTRAIT_DIR := "res://assets/characters/%s/%s_drag.png"
 ## Высота портрета в долях высоты экрана.
@@ -25,6 +27,9 @@ const SWAY_X_PERIOD := 2.6   ## полный цикл, сек
 const BOB_Y := 6.0           ## вверх-вниз, px
 const BOB_Y_PERIOD := 3.4
 const SWAY_ROT_DEG := 0.8    ## лёгкий наклон
+
+## Портрет врага: выезжает из-за правого края, отражён по горизонтали.
+var from_right := false
 
 var _slide: Control      ## выезжает/уезжает
 var _rect: TextureRect   ## внутри _slide, покачивается
@@ -72,11 +77,13 @@ static func warm_up(data: CharacterData) -> void:
 
 ## phase — фаза по HP (CharacterPhases): портрет меняется так же, как чиби на поле.
 func show_for(data: CharacterData, phase: int = 1) -> void:
-	var tex := CharacterPhases.texture(portrait_for(data), phase)
+	show_texture(CharacterPhases.texture(portrait_for(data), phase), "%s#%d" % [data.id, phase])
+
+## Показать картинку tex (key — чтобы не перезапускать, если уже показана та же).
+func show_texture(tex: Texture2D, shown: String) -> void:
 	if tex == null:
 		hide_portrait()
 		return
-	var shown := "%s#%d" % [data.id, phase]
 	if _shown_id == shown and _slide.visible:
 		return
 	_shown_id = shown
@@ -92,9 +99,12 @@ func show_for(data: CharacterData, phase: int = 1) -> void:
 	_rect.position = Vector2.ZERO
 	_rect.rotation = 0.0
 	_rect.pivot_offset = Vector2(w * 0.5, h)   # качается от «ног», а не от центра
+	_rect.flip_h = from_right
 	# Чуть ниже края экрана, чтобы при покачивании вверх не было видно обреза снизу.
 	var target := Vector2(-w * LEFT_OVERHANG, screen.y - h + BOB_Y)
-	_slide.position = target - Vector2(SLIDE_DISTANCE, 0)
+	if from_right:
+		target.x = screen.x - w * (1.0 - LEFT_OVERHANG)
+	_slide.position = target - Vector2(SLIDE_DISTANCE * _side(), 0)
 	_slide.modulate.a = 0.0
 	_slide.visible = true
 	_kill()
@@ -168,12 +178,16 @@ func hide_portrait() -> void:
 		return
 	_kill()
 	_tween = create_tween().set_parallel(true)
-	_tween.tween_property(_slide, "position:x", _slide.position.x - SLIDE_DISTANCE, SLIDE_OUT_TIME).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN)
+	_tween.tween_property(_slide, "position:x", _slide.position.x - SLIDE_DISTANCE * _side(), SLIDE_OUT_TIME).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN)
 	_tween.tween_property(_slide, "modulate:a", 0.0, SLIDE_OUT_TIME)
 	_tween.chain().tween_callback(func() -> void:
 		_slide.visible = false
 		_stop_sway()
 	)
+
+## Откуда выезжает: 1 — слева, -1 — справа.
+func _side() -> float:
+	return -1.0 if from_right else 1.0
 
 func _kill() -> void:
 	if _tween != null and _tween.is_valid():

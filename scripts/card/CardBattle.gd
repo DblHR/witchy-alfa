@@ -132,6 +132,14 @@ var _admin_kill_mode := false
 ## Другие режимы «кликни по цели» админки: "damage" (нанести урон) / "capture" (захватить) / "".
 var _admin_pick := ""
 var _drag_portrait: CardDragPortrait
+var _enemy_drag_portrait: CardDragPortrait
+
+## Враги, которые ходят «как другой игрок» (пока Фуфу-босс): перед своим ходом не сразу, а с
+## задержкой — справа выезжает её портрет, как будто с той стороны вытаскивают карту.
+## Картинка: assets/characters/<char_id>/<char_id>_enemy_drag.png, нет её — <char_id>_drag.png.
+## think — сколько секунд «думает» с портретом до удара, after — сколько портрет держится после.
+const RIVAL_ENEMIES := {"fufu": {"think": 0.9, "after": 0.45}}
+const RIVAL_DRAG_PATHS := ["res://assets/characters/%s/%s_enemy_drag.png", "res://assets/characters/%s/%s_drag.png"]
 
 var _hand_views: Array[CardView] = []
 var _dragging: CardView = null
@@ -245,6 +253,12 @@ func _ready() -> void:
 	hud.move_child(_drag_portrait, hand_layer.get_index())
 	for u in left_team:
 		CardDragPortrait.warm_up(u.data)
+	# Враг-«игрок» (Фуфу): её портрет выезжает справа, пока она «вытаскивает карту».
+	_enemy_drag_portrait = CardDragPortrait.new()
+	_enemy_drag_portrait.name = "EnemyDragPortrait"
+	_enemy_drag_portrait.from_right = true
+	hud.add_child(_enemy_drag_portrait)
+	hud.move_child(_enemy_drag_portrait, hand_layer.get_index())
 
 	# Админ-панель — отдельным слоем поверх всех окон забега (ивенты, лут, выбор комнаты).
 	_admin = CardBattleAdmin.new()
@@ -556,6 +570,8 @@ func _start_room(index: int) -> void:
 	_spawn_enemies(room)
 	_layout_enemy_slots(bool(room.get("boss", false)))
 	_populate_world_slots()
+	if String(room.get("kind", "")) == "elite":
+		await _play_elite_intro(room)
 	_ults.refresh()
 
 	_sleeve.clear()
@@ -1259,6 +1275,12 @@ func _on_end_turn_pressed() -> void:
 			await _wait(0.35)
 			continue
 		var enemy_actor := _find_actor(enemy)
+		var rival := _rival_config(enemy)
+		if not rival.is_empty():
+			await _rival_draw_card(enemy, rival)
+			if not CardCombat.is_alive(enemy) or _ended:
+				_enemy_drag_portrait.hide_portrait()
+				continue
 		if _combat.is_charmed(enemy):
 			# Очарованный враг бьёт ближайшего союзника (следующего живого врага), если ход — удар.
 			var victim := _combat.charm_victim(enemy)
@@ -1274,6 +1296,9 @@ func _on_end_turn_pressed() -> void:
 				enemy_actor.play_attack_bounce(-1)
 			enemy.enemy_def.act(_api, enemy, move)
 		_refresh_all_actors()
+		if not rival.is_empty():
+			await _wait(float(rival.get("after", 0.4)))
+			_enemy_drag_portrait.hide_portrait()
 		await _wait(0.5)
 		if _check_end():
 			return
@@ -1287,6 +1312,26 @@ func _on_end_turn_pressed() -> void:
 	await _begin_player_turn()
 
 # --- Окончание боя -----------------------------------------------------------
+
+## Враг ходит «как игрок» (RIVAL_ENEMIES)? Настройки или {}.
+func _rival_config(enemy: Unit) -> Dictionary:
+	if enemy == null or enemy.enemy_def == null:
+		return {}
+	return RIVAL_ENEMIES.get(enemy.enemy_def.id, {})
+
+## Картинка «вытаскивает карту» для врага-игрока.
+func _rival_drag_texture(enemy: Unit) -> Texture2D:
+	var cid := enemy.enemy_def.char_id if enemy.enemy_def.char_id != "" else enemy.enemy_def.id
+	for p in RIVAL_DRAG_PATHS:
+		var path := String(p) % [cid, cid]
+		if ResourceLoader.exists(path):
+			return load(path) as Texture2D
+	return null
+
+## Враг-игрок «тянет карту»: справа выезжает портрет, пауза think — потом удар.
+func _rival_draw_card(enemy: Unit, cfg: Dictionary) -> void:
+	_enemy_drag_portrait.show_texture(_rival_drag_texture(enemy), "rival:" + enemy.enemy_def.id)
+	await _wait(float(cfg.get("think", 0.8)))
 
 ## Порядок хода врагов: сначала ходы с приоритетом, дальше — по строю.
 func _enemy_turn_order() -> Array[Unit]:
@@ -2122,6 +2167,40 @@ func _play_quest_intro(room: Dictionary) -> void:
 			break
 	if StoryState_ != null:
 		StoryState_.mark_dialogue_seen("find_warrior_room_intro")
+
+## Первая встреча с элитной героиней (Аки / Луиса) — сценка VN, по разу на каждую.
+## Реплики — data/dialogues/story/elite_intro.json (elite_intro_<id>), формы слов — по главному
+## герою и числу живых в отряде ({…|…|мн. число}, StoryDialogueDB.hero_forms).
+func _play_elite_intro(room: Dictionary) -> void:
+	if StoryDialogueDB_ == null or DialogueManager_ == null or StoryState_ == null:
+		return
+	var dlg_id := ""
+	for e in room.get("enemies", []):
+		var id := "elite_intro_" + String(e).trim_suffix("_enemy")
+		if not StoryDialogueDB_.get_dialogue(id).is_empty():
+			dlg_id = id
+	if dlg_id == "" or StoryState_.has_seen_dialogue(dlg_id):
+		return
+	StoryDialogueDB_.party_size_override = _combat.alive_heroes().size()
+	var lines := StoryDialogueDB_.resolve_lines(StoryDialogueDB_.get_dialogue(dlg_id))
+	StoryDialogueDB_.party_size_override = -1
+	StoryState_.mark_dialogue_seen(dlg_id)
+	if lines.is_empty():
+		return
+	_set_battle_ui(false)
+	await _show_lines_and_wait(lines)
+	_set_battle_ui(true)
+
+## Показать реплики и дождаться конца (окно не появилось — не держим игрока).
+func _show_lines_and_wait(lines: Array) -> void:
+	var done := [false]
+	DialogueManager_.show_sequence(lines, func() -> void: done[0] = true)
+	var waited := 0.0
+	while not done[0] and is_inside_tree():
+		await get_tree().process_frame
+		waited += get_process_delta_time()
+		if waited > 0.7 and (DialogueManager_._overlay == null or not is_instance_valid(DialogueManager_._overlay) or not DialogueManager_._overlay.visible):
+			break
 
 ## Героиня квеста встаёт в отряд (впереди) с этого боя и до конца забега: её карты в колоде, ульта в колонке.
 func _quest_add_hero(hero_id: String) -> void:
