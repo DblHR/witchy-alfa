@@ -1,7 +1,7 @@
 extends Control
 
 const GRID_SLOT_COUNT := 6
-## Рикка уже поздоровалась сегодня (сбрасывается после забега — DungRun.on_run_finished_refresh_shops).
+## Рикка уже поздоровалась сегодня (сбрасывается утром — DungRun.on_new_day_refresh_shops).
 const GREETED_FLAG := "rikka_greeted_today"
 
 @onready var gold_label: Label = %GoldLabel
@@ -369,9 +369,9 @@ func _refresh(message: String = "") -> void:
 	if _reroll != null:
 		var used := DungRun.ground_shop_rerolled_today()
 		_reroll.disabled = not DungRun.can_reroll_ground_shop()
-		_reroll.tooltip_text = "Уже обновляли сегодня — новый товар после забега." if used else ("Обновить товар за %d золота (раз в день)." % DungRun.RIKKA_REROLL_PRICE if DungRun.gold >= DungRun.RIKKA_REROLL_PRICE else "Не хватает золота.")
+		_reroll.tooltip_text = "Уже обновляли сегодня — новый товар утром." if used else ("Обновить товар за %d золота (раз в день)." % DungRun.RIKKA_REROLL_PRICE if DungRun.gold >= DungRun.RIKKA_REROLL_PRICE else "Не хватает золота.")
 		_reroll.mouse_default_cursor_shape = Control.CURSOR_ARROW if _reroll.disabled else Control.CURSOR_POINTING_HAND
-	info_label.text = "Товар обновляется после каждого забега."
+	info_label.text = "Товар обновляется каждое утро."
 	for child in stock_grid.get_children():
 		stock_grid.remove_child(child)
 		child.queue_free()

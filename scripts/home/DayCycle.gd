@@ -83,6 +83,9 @@ static func advance() -> void:
 		if StoryState_ != null:
 			StoryState_.add_counter(COUNTER_DAY, 1)
 		set_phase(Phase.DAY)
+		# Прошла ночь — новый товар у Рикки (и снова можно обновить его за золото).
+		if DungRun != null:
+			DungRun.on_new_day_refresh_shops()
 
 ## Ночью лавка Рикки закрыта: герой говорит об этом (VN). true — закрыто (никуда не идём).
 static func shop_closed_say() -> bool:

@@ -13,6 +13,7 @@ const GROUND_Y := 770.0
 const FIELD := Rect2(140, 590, 1640, 220)
 const CHIBI := "res://assets/characters/%s/%s_battle.png"
 const NPC := "res://assets/npc/%s/%s.png"
+const NPC_CHIBI := "res://assets/npc/%s/%s_chibi.png"
 const SLIMES := "res://assets/enemies/slimes/"
 const SLIME_COLORS := ["slime_green", "slime_blue", "slime_pink", "slime_purple"]
 
@@ -92,9 +93,14 @@ func cf_range(key_name: String, def: Vector2) -> float:
 
 static var _crops: Dictionary = {}
 
-## Картинка персонажа: героини — чибик <id>_battle.png, НПС — портрет (обрезан по краям рисунка).
+## Картинка персонажа: героини — чибик <id>_battle.png, НПС — чибик <id>_chibi.png;
+## нет чибика — портрет (обрезан по краям рисунка).
+## Все картинки смотрят влево: flip_h = true — вправо.
 static func char_texture(id: String) -> Texture2D:
 	var p := CHIBI % [id, id]
+	if ResourceLoader.exists(p):
+		return load(p) as Texture2D
+	p = NPC_CHIBI % [id, id]
 	if ResourceLoader.exists(p):
 		return load(p) as Texture2D
 	p = NPC % [id, id]

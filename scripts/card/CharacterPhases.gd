@@ -39,6 +39,15 @@ static func dead_texture(base: Texture2D) -> Texture2D:
 	_cache[key] = out
 	return out
 
+## «Лежит»: картинка смерти, а если её нет — пока фаза 3 (у ведьмочки), чтобы не заваливать
+## обычную картинку набок. Нет и фазы 3 — null (тогда завалится набок, как раньше).
+static func lying_texture(base: Texture2D) -> Texture2D:
+	var t := dead_texture(base)
+	if t != null:
+		return t
+	t = texture(base, 3)
+	return t if t != base else null
+
 static func texture(base: Texture2D, phase: int) -> Texture2D:
 	if base == null or phase <= 1 or base.resource_path == "":
 		return base

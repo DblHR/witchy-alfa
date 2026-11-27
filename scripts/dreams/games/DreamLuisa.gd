@@ -16,7 +16,8 @@ const NOT_FOOD := [
 	"res://assets/items/quest/warm_headphones.png", "res://assets/items/loot/coin.png",
 ]
 const BEARERS := ["slime", "slime", "witch", "warrior", "aki", "fufu", "rikka", "sessilia"]
-const LUISA_POS := Vector2(1560, 780)
+const LUISA_LYING := "res://assets/characters/luisa/luisa_dead.png"
+const LUISA_POS := Vector2(1580, 800)
 const GROUND := 780.0
 const FRONT_X := 1200.0
 const STEP_X := 210.0
@@ -27,10 +28,9 @@ var queue: Array[Node2D] = []
 var _busy := false
 
 func build() -> void:
-	luisa = make_sprite(char_texture("luisa"), 300)
+	## лежит в позе смерти (luisa_dead.png), головой к очереди
+	luisa = make_sprite(load(LUISA_LYING) as Texture2D, 640)
 	luisa.position = LUISA_POS
-	luisa.rotation = -PI * 0.5 * 0.92   ## лежит
-	luisa.position.y += 20
 	for i in QUEUE:
 		_add_bearer(FRONT_X - STEP_X * i)
 
@@ -73,7 +73,7 @@ func key(dir: Vector2i) -> void:
 	if accept:
 		# Подношение улетает Луисе.
 		var tw := item.create_tween().set_parallel(true)
-		tw.tween_property(item, "global_position", luisa.position + Vector2(-40, -120), 0.25)
+		tw.tween_property(item, "global_position", luisa.position + Vector2(-170, -90), 0.25)
 		tw.tween_property(item, "modulate:a", 0.0, 0.25).set_delay(0.15)
 		hop(luisa, 18.0 if food else 6.0, 0.25)
 		hop(h, 30.0, 0.3)

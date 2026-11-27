@@ -456,13 +456,13 @@ func drop(r: HomeRoute, d: float) -> void:
 
 # --- Для событий (HubEvents): персонаж «заморожен», двигается по сценарию ---------------
 
-## Лечь (картинка смерти <id>_dead.png; нет её — просто завалиться набок). Встать — stand_up().
+## Лечь (картинка смерти <id>_dead.png; нет её — фаза 3, нет и её — завалиться набок). Встать — stand_up().
 func lie_down() -> void:
 	_kill_tween()
 	_lying = true
 	body.position.y = 0.0
 	body.scale = Vector2(_scale, _scale)
-	var t: Texture2D = bed_tex if bed_tex != null else CharacterPhases.dead_texture(base_tex)
+	var t: Texture2D = bed_tex if bed_tex != null else CharacterPhases.lying_texture(base_tex)
 	if t != null:
 		body.texture = t
 		body.offset = Vector2(-t.get_width() * 0.5, -_feet_y(t))

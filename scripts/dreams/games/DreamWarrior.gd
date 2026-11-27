@@ -20,10 +20,10 @@ var t := 0.0
 func build() -> void:
 	fufu = make_sprite(char_texture("fufu"), 640)
 	fufu.position = Vector2(FUFU_X, GROUND + 30)
-	fufu.flip_h = false
+	fufu.flip_h = true
 	warrior = make_sprite(char_texture("warrior"), 300)
 	warrior.position = Vector2(RUNNER_X, GROUND)
-	warrior.flip_h = false
+	warrior.flip_h = true
 	speed = cf("speed", 620)
 
 func play(delta: float) -> void:

@@ -7,18 +7,23 @@ class_name CardAutoBot
 ##    щит (если враги собираются бить), статусы; ульта — как только заряжена;
 ##  • сброс по просьбе карты — самые дорогие из оставшихся;
 ##  • добыча — «Дальше»; выбор комнаты — по HEAL_AT: ранены — к медсестре, если она есть, и мимо
-##    элиты; иначе обычный бой → элита → события; лавку обходит (ничего не покупает);
+##    элиты; иначе обычный бой → элита. Комнаты-события (сундук, статуя, лавка, случайные события)
+##    бот не выбирает; если кроме них выбирать нечего — ждёт, комнату выбирает игрок;
 ##  • медсестра (Ноктрис) — воскрешает павшую или лечит самую раненую, если хватает золота;
-##    лавка, сундук, статуя — открыть / принять и идти дальше;
-##  • диалоги — листает; вопросы (поимка) — случайный ответ;
+##    в событие, куда зашёл игрок, бот не вмешивается (только медсестра);
+##  • VN-сцены и диалоги бот не листает и на вопросы не отвечает — это делает игрок;
+##    закрывает только простые уведомления;
 ##  • конец забега — выключается, итог смотрит игрок.
-## Скорость — STEP (секунд между действиями).
+## Скорость — пауза STEP_MIN..STEP_MAX секунд после каждого действия.
 
 signal toggled_bot(on: bool)
 
-const STEP := 0.45
-## Пауза между действиями (тесты могут ускорить).
-var step := STEP
+const STEP_MIN := 1.0
+const STEP_MAX := 1.5
+## Как часто проверять, можно ли что-то сделать, пока ждём (ход врага, анимации, игрок читает).
+const POLL := 0.15
+## Пауза между действиями; >= 0 — постоянная (тесты могут ускорить), < 0 — случайная STEP_MIN..STEP_MAX.
+var step := -1.0
 ## Средний запас HP отряда (доля), ниже которого бот идёт лечиться к медсестре и обходит элиту.
 const HEAL_AT := 0.55
 ## Медсестра: лечить, если у кого-то HP ниже этой доли.
@@ -46,59 +51,48 @@ func _process(delta: float) -> void:
 	_cool -= delta
 	if _cool > 0.0:
 		return
-	_cool = step
+	_cool = POLL
 	_working = true
-	await _tick()
+	var acted: bool = await _tick()
 	_working = false
+	if acted:
+		_cool = step if step >= 0.0 else randf_range(STEP_MIN, STEP_MAX)
 
-func _tick() -> void:
+## Один шаг бота. true — что-то сделал (дальше пауза), false — пока ждёт.
+func _tick() -> bool:
 	if bool(battle.get("_ended")):
 		if battle.end_overlay.visible:
 			set_enabled(false)   ## итог забега — игроку
-		elif DialogueManager_ != null and DialogueManager_.is_showing():
-			_dialogue_step()
-		return
+		return false
 	if DialogueManager_ != null and DialogueManager_.is_showing():
-		_dialogue_step()
-		return
+		return _close_notice()   ## VN-сцены и вопросы — игроку
 	var ui: Node = battle.get("_ui_layer")
 	for c in (ui.get_children() if ui != null else []):
 		if c.is_queued_for_deletion():
 			continue
 		if c is EventScreen:
-			_event_step(c as EventScreen)
-			return
+			return _event_step(c as EventScreen)
 		if c is LootPopup:
 			_press_button_in(c, "Дальше")
-			return
+			return true
 		if c is RoomCardHand:
-			_choose_room(c as RoomCardHand)
-			return
+			return _choose_room(c as RoomCardHand)
 	var shrine := battle.right_world.get_node_or_null("StatueShrine") as StatueShrine
 	if shrine != null and not shrine.is_queued_for_deletion() and shrine.interactive:
-		shrine.set_interactive(false)   ## как клик по статуе
-		shrine.clicked.emit()
-		return
-	await _battle_step()
+		return false   ## статуя — событие, решает игрок
+	return await _battle_step()
 
 # --- Диалоги ----------------------------------------------------------------------
 
-func _dialogue_step() -> void:
+## Простое уведомление поверх (не VN-сцена) — закрыть. true — закрыл.
+func _close_notice() -> bool:
 	var ov = DialogueManager_._overlay
 	if ov == null or not is_instance_valid(ov):
-		return
+		return false
 	if ov._notice != null and is_instance_valid(ov._notice):
 		ov._notice.close()
-		return
-	if ov._name_box != null and is_instance_valid(ov._name_box):
-		ov._name_box._confirm()
-		return
-	if not ov._choices.is_empty():
-		var buttons: Array = ov._choice_box.get_children().filter(func(b) -> bool: return b is Button and not (b as Button).disabled)
-		if not buttons.is_empty():
-			(buttons[randi() % buttons.size()] as Button).pressed.emit()
-		return
-	ov._advance()
+		return true
+	return false
 
 # --- Комнаты ----------------------------------------------------------------------
 
@@ -113,59 +107,52 @@ func _party_hp_ratio() -> float:
 		sum += 0.0 if bool(d["dead"]) else float(d["hp"]) / maxf(1.0, float(d["max_hp"]))
 	return sum / float(heroes.size())
 
+## Ценность комнаты; -INF — бот туда не пойдёт (события; медсестра — только если ранены).
 func _room_score(room: Dictionary, hurt: bool) -> float:
 	var kind := String(room.get("kind", ""))
 	var event := String(room.get("event", ""))
 	match kind:
 		"event":
-			match event:
-				"noctris": return 100.0 if hurt else 5.0
-				"shop": return 1.0
-				"chest": return 40.0
-				"statue": return 30.0
-			return 20.0
+			return 100.0 if event == "noctris" and hurt else -INF
 		"elite": return 5.0 if hurt else 45.0
 		"boss": return 60.0
 		"quest": return 55.0
 	return 50.0 if not hurt else 35.0
 
-func _choose_room(hand: RoomCardHand) -> void:
+## Выбрать комнату. Подходящих нет (одни события) — false: выбирает игрок.
+func _choose_room(hand: RoomCardHand) -> bool:
 	if bool(hand.get("_done")):
-		return
+		return false
 	var rooms: Array = battle.get_run().pending_choices
 	if rooms.is_empty():
-		return
+		return false
 	var hurt := _party_hp_ratio() < HEAL_AT or bool(battle.run_has_dead())
-	var best := 0
+	var best := -1
 	var best_s := -INF
 	for i in rooms.size():
-		var s := _room_score(rooms[i], hurt) + randf() * 3.0
-		if s > best_s:
-			best_s = s
+		var base := _room_score(rooms[i], hurt)
+		if base == -INF:
+			continue
+		var sc := base + randf() * 3.0
+		if sc > best_s:
+			best_s = sc
 			best = i
+	if best < 0:
+		return false
 	hand._choose(best)
+	return true
 
-func _event_step(screen: EventScreen) -> void:
-	if screen.get("_intro_waiting") or screen.get("_leaving"):
-		return
-	if screen.get("_image_open"):
-		# Картинка услуги на весь экран — «кликнуть», чтобы закрыть.
-		for c in screen.get_children():
-			if c is TextureRect and (c as TextureRect).z_index == 50 and (c as TextureRect).mouse_filter == Control.MOUSE_FILTER_STOP:
-				var e := InputEventMouseButton.new()
-				e.button_index = MOUSE_BUTTON_LEFT
-				e.pressed = true
-				(c as TextureRect).gui_input.emit(e)
-				return
-		return
-	if screen.get("_chest_waiting"):
-		screen._on_chest_open()
-		return
+## Событие: бот действует только у медсестры (лечит и уходит); остальные события — игроку.
+func _event_step(screen: EventScreen) -> bool:
+	if screen.get("_intro_waiting") or screen.get("_leaving") or screen.get("_image_open"):
+		return false
 	var room: Dictionary = screen.get("room")
-	if String(room.get("event", "")) == "noctris" and not bool(room.get("used", false)):
-		if _nurse(screen):
-			return
+	if String(room.get("event", "")) != "noctris":
+		return false
+	if not bool(room.get("used", false)) and _nurse(screen):
+		return true
 	screen._on_continue_pressed()
+	return true
 
 ## Медсестра: воскресить павшую, иначе вылечить самую раненую (если ранена заметно). true — что-то сделала.
 func _nurse(screen: EventScreen) -> bool:
@@ -197,30 +184,31 @@ func _press_button_in(root: Node, text: String) -> void:
 
 # --- Бой --------------------------------------------------------------------------
 
-func _battle_step() -> void:
+func _battle_step() -> bool:
 	if int(battle.get("_discard_left")) > 0:
 		_discard_one()
-		return
+		return true
 	if bool(battle.get("_quiz_open")) or not battle._can_act():
-		return
+		return false
 	if _actions >= MAX_ACTIONS_PER_TURN:
 		_actions = 0
 		battle._on_end_turn_pressed()
-		return
+		return true
 	# Ульта — как только заряжена.
 	for btn in battle._ults.get("_buttons"):
 		var ub := btn as UltButton
 		if ub != null and ub.unit != null and not ub.unit.is_dead and ub.is_ready() and not battle._combat.hero_disabled(ub.unit):
 			_actions += 1
 			await battle._on_ult_pressed(ub)
-			return
+			return true
 	var best := _best_play()
 	if best.is_empty():
 		_actions = 0
 		battle._on_end_turn_pressed()
-		return
+		return true
 	_actions += 1
 	battle._play_card(best["view"], best["targets"])
+	return true
 
 ## Сброс: самая дорогая из оставшихся карт.
 func _discard_one() -> void:

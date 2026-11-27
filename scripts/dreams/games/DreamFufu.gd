@@ -26,7 +26,7 @@ func play(delta: float) -> void:
 	var p := fufu.position + d * speed * delta
 	fufu.position = Vector2(clampf(p.x, FIELD.position.x, FIELD.end.x), clampf(p.y, FIELD.position.y + 40, FIELD.end.y))
 	if d.x != 0.0:
-		fufu.flip_h = d.x < 0.0
+		fufu.flip_h = d.x > 0.0
 	fufu.scale = _fufu_scale * _depth(fufu.position.y)
 	fufu.z_index = int(fufu.position.y)
 	next_in -= delta
@@ -51,7 +51,7 @@ func play(delta: float) -> void:
 		s.scale = Vector2(s.get_meta("base")) * _depth(s.position.y)
 		s.z_index = int(s.position.y)
 		if v.x != 0.0:
-			s.flip_h = v.x < 0.0
+			s.flip_h = v.x > 0.0
 		if s.position.distance_to(fufu.position) < EAT_DIST:
 			_eat(s)
 

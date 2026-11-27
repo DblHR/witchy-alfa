@@ -24,6 +24,7 @@ var _slime_scale := Vector2.ONE
 func build() -> void:
 	witch = make_sprite(char_texture("witch"), 340)
 	witch.position = Vector2(560, 760)
+	witch.flip_h = true   ## смотрит на слизня
 	_next_slime()
 
 func play(delta: float) -> void:

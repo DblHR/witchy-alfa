@@ -54,7 +54,7 @@ func _spawn() -> void:
 	p.set_meta("v", v if from_left else -v)
 	p.set_meta("kind", kind)
 	p.set_meta("healed", false)
-	p.flip_h = not from_left
+	p.flip_h = from_left
 	patients.append(p)
 
 func key(dir: Vector2i) -> void:

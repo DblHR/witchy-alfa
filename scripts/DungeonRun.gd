@@ -244,10 +244,10 @@ func ensure_ground_shop_stock() -> void:
 		refresh_ground_shop(true)
 
 ## Лавка Рикки (дом): кварц и семена всегда, остальное — случайно из еды, обычных посохов,
-## неоткрытых рецептов и ингредиентов для еды. Обновляется после каждого забега.
+## неоткрытых рецептов и ингредиентов для еды. Обновляется каждое утро (DayCycle.advance: ночь -> день).
 const RIKKA_SEEDS: Array[String] = ["slimeflower_seed", "witchflower_seed", "meatflower_seed", "vegetableflower_seed", "sweetflower_seed", "fruitflower_seed"]
 const RIKKA_FOOD_INGREDIENTS: Array[String] = ["meat_fruit", "vegetable_fruit", "sweet_fruit", "fruit_fruit"]
-## Шанс, что у Рикки после забега на полке горшок / котёл получше.
+## Шанс, что у Рикки утром на полке горшок / котёл получше.
 const RIKKA_POT_CHANCE := 0.5
 const RIKKA_CAULDRON_CHANCE := 0.35
 
@@ -363,14 +363,15 @@ func buy_ground_shop_item(slot_idx: int) -> String:
 	emit_changed()
 	return item_id
 
-func on_run_finished_refresh_shops() -> void:
+## Новый день (прошла ночь — DayCycle.advance): новый товар у Рикки.
+func on_new_day_refresh_shops() -> void:
 	refresh_ground_shop(true)
 	# Новый день: Рикка снова поздоровается, обновить товар за золото снова можно.
 	if StoryState_ != null:
 		StoryState_.set_flag("rikka_greeted_today", false)
 		StoryState_.set_flag(RIKKA_REROLL_FLAG, false)
 
-## Обновить товар Рикки за золото — раз в день (день = до следующего забега).
+## Обновить товар Рикки за золото — раз в день (до следующего утра).
 const RIKKA_REROLL_PRICE := 20
 const RIKKA_REROLL_FLAG := "rikka_rerolled_today"
 

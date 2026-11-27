@@ -22,7 +22,7 @@ class_name CardBattle
 ## party_slot_count).
 ## Опыт и доверие копятся за забег и начисляются только в конце (победа или поражение);
 ## выход из забега кнопкой «Выйти» их не даёт.
-## Конец забега: FarmState_.advance_day() -> DungRun.on_run_finished_refresh_shops() -> хаб.
+## Конец забега: FarmState_.advance_day() -> хаб (товар у Рикки обновляется утром — DayCycle.advance).
 ## BattleActor используется как «тупой» виджет (читает только Unit/CharacterData).
 
 const BATTLE_ACTOR_SCENE: PackedScene = preload("res://scenes/BattleActor.tscn")
@@ -1605,7 +1605,6 @@ func _on_end_button_pressed() -> void:
 	if not _ended:
 		return
 	FarmState_.advance_day()
-	DungRun.on_run_finished_refresh_shops()
 	SceneRouter_.go_to_hub()
 
 func _on_exit_pressed() -> void:

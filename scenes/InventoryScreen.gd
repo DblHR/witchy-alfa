@@ -267,7 +267,7 @@ func _rebuild_entry_grid() -> void:
 		return
 	var selected_id := String(selected_entry_by_section.get(current_section, ""))
 	if selected_id == "" or not _entries_have_id(entries, selected_id) or selected_id.begins_with(UNKNOWN_PREFIX):
-		selected_id = String(entries[0].get("id", ""))
+		selected_id = _first_open_id(entries)
 		selected_entry_by_section[current_section] = selected_id
 	for entry in entries:
 		if bool(entry.get("spacer", false)):   ## пустое место (раздел «Персонажи»: группа с новой строки)
@@ -281,9 +281,24 @@ func _rebuild_entry_grid() -> void:
 		grid_container.add_child(button)
 		button.setup(entry)
 		button.entry_pressed.connect(_on_entry_pressed)
-		if current_section == Section.CHARACTERS and UnitRoster_ != null:
+		if current_section == Section.CHARACTERS and UnitRoster_ != null and _has_cards(entry):
 			NotifyBadge.attach(button, UnitRoster_.upgrade_points_left(String(entry.get("id", ""))) > 0)
-	_show_entry_detail(selected_id)
+	if selected_id == "":
+		_show_empty_detail_for_section()
+	else:
+		_show_entry_detail(selected_id)
+
+## Первая открытая запись (не «?» и не пустое место); нет таких — "".
+func _first_open_id(entries: Array[Dictionary]) -> String:
+	for e in entries:
+		if not bool(e.get("spacer", false)) and not bool(e.get("locked", false)):
+			return String(e.get("id", ""))
+	return ""
+
+## «!» про улучшение карт — только у открытых героинь (у НПС и «?» карт для прокачки нет).
+func _has_cards(entry: Dictionary) -> bool:
+	var id := String(entry.get("id", ""))
+	return not bool(entry.get("locked", false)) and not id.begins_with(NPC_ENTRY_PREFIX) and not id.begins_with(UNKNOWN_PREFIX)
 
 func _entries_have_id(entries: Array[Dictionary], entry_id: String) -> bool:
 	for entry in entries:
@@ -357,9 +372,15 @@ func _build_lore_entries() -> Array[Dictionary]:
 
 ## Порядок в разделе «Персонажи» — по строкам (каждая группа с новой строки, без дыр внутри):
 ##   1) персонаж игрока, второй главный герой; 2) НПС: Рикка, Сессилия, Ноктрис;
-##   3) героини: Фуфу, Аки, Луиса (и остальные). Кого ещё не встречали — просто нет.
+##   3) героини: Фуфу, Аки, Луиса (и остальные).
+## Кого ещё не открыли — на его месте «?». В конце — «?» под будущих персонажей, чтобы всего
+## мест было TOTAL_CHARACTERS (только без фильтра по фракциям).
 const CHARACTER_ROWS_HEROINES := ["fufu", "aki", "luisa"]
 const CHARACTER_ROWS_NPC := ["rikka", "sessilia", "noctris"]
+## Сколько всего персонажей в игре (мест в разделе «Персонажи», вместе с «?»).
+const TOTAL_CHARACTERS := 26
+const UNKNOWN_PREFIX := "unknown:"
+const UNKNOWN_ICON := "res://assets/ui/inventory/unknown_character.png"
 
 func _build_character_entries() -> Array[Dictionary]:
 	var out: Array[Dictionary] = []
@@ -370,31 +391,34 @@ func _build_character_entries() -> Array[Dictionary]:
 	var heroes: Array = [main_id, "warrior" if main_id == "witch" else "witch"]
 	var groups: Array = [[], [], []]
 	for id in heroes:
-		if unlocked.has(id):
-			groups[0].append(_character_entry(String(id)))
+		groups[0].append(_character_entry(String(id)) if unlocked.has(id) else {})
 	for npc_id in CHARACTER_ROWS_NPC:
-		if _npc_met(npc_id):
-			groups[1].append(_npc_entry(npc_id))
-	var rest: Array = CHARACTER_ROWS_HEROINES.filter(func(id) -> bool: return unlocked.has(id))
+		groups[1].append(_npc_entry(npc_id) if _npc_met(npc_id) else {})
+	for id in CHARACTER_ROWS_HEROINES:
+		groups[2].append(_character_entry(String(id)) if unlocked.has(id) else {})
 	for id in unlocked:
-		if not heroes.has(id) and not rest.has(id):
-			rest.append(id)
-	for id in rest:
-		groups[2].append(_character_entry(String(id)))
+		if not heroes.has(id) and not CHARACTER_ROWS_HEROINES.has(id):
+			groups[2].append(_character_entry(String(id)))
+	# Не открытые (и без данных) — «?» на своём месте.
+	var count := 0
+	for g in groups:
+		var arr: Array = g
+		for i in arr.size():
+			if (arr[i] as Dictionary).is_empty():
+				arr[i] = _unknown_entry(count)
+			count += 1
 	if _faction_filter >= 0:
 		for i in groups.size():
 			if i != _faction_filter:
 				groups[i] = []
 	else:
-		# Места под будущих персонажей: «?» (пока для проверки интерфейса), только без фильтра.
-		var unknown: Array = []
-		var tex := load(UNKNOWN_ICON) as Texture2D if ResourceLoader.exists(UNKNOWN_ICON) else null
-		for i in UNKNOWN_SLOTS:
-			unknown.append({"id": "%s%d" % [UNKNOWN_PREFIX, i], "title": "???", "icon": tex, "count": -1, "bust": true, "locked": true})
-		groups.append(unknown)
+		var future: Array = []
+		for i in maxi(0, TOTAL_CHARACTERS - count):
+			future.append(_unknown_entry(count + i))
+		groups.append(future)
 	var cols := _get_columns_for_section(Section.CHARACTERS)
 	for g in groups:
-		var group: Array = (g as Array).filter(func(e) -> bool: return not (e as Dictionary).is_empty())
+		var group: Array = g
 		if group.is_empty():
 			continue
 		# Новая группа — с новой строки: добить прошлую строку пустыми местами.
@@ -404,10 +428,10 @@ func _build_character_entries() -> Array[Dictionary]:
 			out.append(e)
 	return out
 
-## Сколько пустых мест «?» под новых персонажей в конце списка (UNKNOWN_ICON — картинка).
-const UNKNOWN_SLOTS := 18
-const UNKNOWN_PREFIX := "unknown:"
-const UNKNOWN_ICON := "res://assets/ui/inventory/unknown_character.png"
+## Место «?»: серый силуэт, не нажимается.
+func _unknown_entry(n: int) -> Dictionary:
+	var tex := load(UNKNOWN_ICON) as Texture2D if ResourceLoader.exists(UNKNOWN_ICON) else null
+	return {"id": "%s%d" % [UNKNOWN_PREFIX, n], "title": "???", "icon": tex, "count": -1, "bust": true, "locked": true}
 
 # --- Фильтр по фракциям ---------------------------------------------------------
 ## -1 — все; иначе номер группы: 0 — главные герои, 1 — НПС, 2 — слизнедевочки
@@ -563,7 +587,7 @@ const TIER_MAX := 5
 const TIER_STAR_SIZE := Vector2(46, 50)
 ## Пустые сердечки — светло-серые (gray.gdshader, осветление HEART_EMPTY_LIFT).
 const HEART_EMPTY_LIFT := 0.6
-const GRAY_SHADER := preload("res://ui/gray.gdshader")
+const HEART_SHADER := preload("res://ui/heart_fill.gdshader")
 @onready var _cards_button: Button = %AllCardsButton
 @onready var _hearts: HBoxContainer = %Hearts
 @onready var _trust_text: RichTextLabel = %TrustText
@@ -619,7 +643,7 @@ func _show_character_detail(unit_id: String) -> void:
 		int(stats.get("magic", data.magic)),
 		data.max_energy,
 	]
-	_fill_hearts(UnitRoster_.get_relationship(unit_id) if UnitRoster_ != null else 0)
+	_fill_hearts(_level_fraction(UnitRoster_.trust_progress(unit_id)) if UnitRoster_ != null else 0.0)
 	_trust_text.text = _trust_text_for(data)
 	# Описание и заметки — из data/lore/lore.json ("characters"); заметки открываются диалогами.
 	var desc := LoreData.character_description(unit_id)
@@ -662,7 +686,7 @@ func _show_npc_detail(npc_id: String) -> void:
 	character_stats.text = stats
 	var pr := NpcTrust.progress(npc_id)
 	var lvl := int(pr["level"])
-	_fill_hearts(lvl, NpcTrust.MAX_LEVEL)
+	_fill_hearts(_level_fraction(pr), NpcTrust.MAX_LEVEL)
 	if lvl >= NpcTrust.MAX_LEVEL:
 		_trust_text.text = "[b]Доверие:[/b] максимальное"
 	else:
@@ -705,8 +729,9 @@ func _show_char_tab(tab: int) -> void:
 	_tab_text.text = _char_notes_text if tab == 1 else _char_desc_text
 	_tab_text.scroll_to_line(0)
 
-## Сердечки: total штук (героини — 10, НПС — 5), заполнены level.
-func _fill_hearts(level: int, total: int = UnitRoster.RELATIONSHIP_MAX) -> void:
+## Сердечки: total штук (героини — 10, НПС — 5), заполнено level (дробное: 2.77 — два полных
+## и третье на 77% снизу, ui/heart_fill.gdshader).
+func _fill_hearts(level: float, total: int = UnitRoster.RELATIONSHIP_MAX) -> void:
 	var tex := _heart_texture()
 	while _hearts.get_child_count() < UnitRoster.RELATIONSHIP_MAX:
 		var h := TextureRect.new()
@@ -720,14 +745,31 @@ func _fill_hearts(level: int, total: int = UnitRoster.RELATIONSHIP_MAX) -> void:
 	for i in _hearts.get_child_count():
 		var h := _hearts.get_child(i) as CanvasItem
 		h.visible = i < total
-		var full := i < level
 		if h.material == null:
 			var m := ShaderMaterial.new()
-			m.shader = GRAY_SHADER
+			m.shader = HEART_SHADER
 			m.set_shader_parameter("lift", HEART_EMPTY_LIFT)
+			_heart_uv_range(m, tex)
 			h.material = m
-		(h.material as ShaderMaterial).set_shader_parameter("amount", 0.0 if full else 1.0)
+		(h.material as ShaderMaterial).set_shader_parameter("fill", clampf(level - float(i), 0.0, 1.0))
 		h.modulate = Color.WHITE
+
+## Где сердечко по высоте в атласе (картинка — кусок большого холста).
+func _heart_uv_range(m: ShaderMaterial, tex: Texture2D) -> void:
+	var at := tex as AtlasTexture
+	if at == null or at.atlas == null:
+		return
+	var h := float(at.atlas.get_height())
+	m.set_shader_parameter("uv_top", at.region.position.y / h)
+	m.set_shader_parameter("uv_bottom", at.region.end.y / h)
+
+## Доля уровня: {level, into_level, need} -> 2.77.
+static func _level_fraction(pr: Dictionary) -> float:
+	var need := int(pr.get("need", 0))
+	var lvl := float(pr.get("level", 0))
+	if need <= 0:
+		return lvl
+	return lvl + clampf(float(pr.get("into_level", 0)) / float(need), 0.0, 0.999)
 
 ## Сердечко без пустых полей вокруг (картинка — на целый холст 1920x1080).
 var _heart_tex: Texture2D
