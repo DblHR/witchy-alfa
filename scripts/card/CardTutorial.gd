@@ -234,7 +234,7 @@ func _target_rects(target: String) -> Array[Rect2]:
 			if v != null:
 				out.append(v.get_global_rect())
 		"energy":
-			out.append(battle.energy_label.get_global_rect())
+			out.append(battle.energy_orb.get_global_rect())
 		"discard":
 			out.append(battle.discard_button.get_global_rect())
 		"deck":

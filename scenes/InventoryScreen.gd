@@ -643,6 +643,8 @@ func _show_character_detail(unit_id: String) -> void:
 	var owned := _CardLib.owned_defs(data).size()
 	_cards_button.text = "Карты (%d/%d)" % [owned, data.card_pool.size() + data.unlock_cards.size()]
 	_cards_button.disabled = owned == 0 and data.unlock_cards.is_empty() and data.ult_card == null
+	# «!» на «Карты» — для этой героини (раньше оставался от прошлой выбранной).
+	_refresh_upgrade_badges()
 	# Класс нарисован на наклейке — в тексте только если её нет.
 	character_stats.text = ("" if has_sticker else "[b]Класс:[/b] %s\n" % data.unit_class) + "[b]Здоровье:[/b] %d\n[b]Атака:[/b] %d\n[b]Магия:[/b] %d\n[b]Энергия ульты:[/b] %d" % [
 		int(stats.get("max_hp", data.base_hp)),

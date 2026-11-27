@@ -81,7 +81,7 @@ const TUTORIAL_SKIP_LAYER := 60
 @onready var deck_button: Button = %DeckButton
 @onready var discard_button: Button = %DiscardButton
 @onready var end_turn_button: TextureButton = %EndTurnButton   ## «END» (assets/ui/battle/end_turn.png)
-@onready var energy_label: Label = %EnergyLabel
+@onready var energy_orb: EnergyOrb = %EnergyOrb   ## жёлтый кругляшок с ячейками энергии
 @onready var end_overlay: Control = %EndOverlay
 @onready var end_image: TextureRect = %EndImage
 @onready var end_text: Label = %EndText
@@ -118,7 +118,9 @@ var _potions: Array[String] = []
 ## Баффы забега (под золотом) и слоты зелий (внизу слева, над колодой).
 var _buff_bar: CardBuffBar
 var _potion_bar: CardBuffBar
-const POTION_BAR_POS := Vector2(8, 834)   ## над колодой добора (она в левом нижнем углу)
+const POTION_BAR_POS := Vector2(24, 796)   ## слева внизу, над кнопкой автобоя
+## Кнопки зелий — размера кнопок ульт (UltButton.BUTTON_SIZE).
+const POTION_ICON := Vector2(96, 96)
 ## Зелья забега: сила (числа — тут, описание — RunItems.POTION_DEFS).
 const POTION_HEAL := 0.40
 const POTION_ENERGY := 2
@@ -550,7 +552,7 @@ func _start_room(index: int) -> void:
 	_clear_hand_views()
 	_room_index = index
 	var room := _run.room(index)
-	room_label.text = "Комната %d / %d" % [index + 1, _run.total_rooms()]
+	room_label.text = "%d / %d" % [index + 1, _run.total_rooms()]
 
 	_combat.reset()
 	_float_stack.clear()
@@ -673,7 +675,7 @@ func _clear_hand_views() -> void:
 	_refresh_pile_buttons()
 
 func _refresh_energy() -> void:
-	energy_label.text = "Энергия: %d/%d" % [_energy, max_energy()]
+	energy_orb.set_energy(_energy, max_energy())
 	for v in _hand_views:
 		var cost := _combat.effective_cost(v.card)
 		v.set_cost_text(cost, cost > v.card.cost)
@@ -1906,6 +1908,7 @@ func _build_run_hud() -> void:
 	_potion_bar = CardBuffBar.new()
 	_potion_bar.name = "PotionBar"
 	_potion_bar.position = POTION_BAR_POS
+	_potion_bar.icon_size = POTION_ICON
 	_potion_bar.tip_above = true
 	hud.add_child(_potion_bar)
 	_potion_bar.entry_pressed.connect(_on_buff_pressed)
@@ -2123,7 +2126,7 @@ func _setup_banter() -> void:
 
 ## Показывает/прячет всё боевое: рука, энергия, колода, ульты, рукав. В лагере остаются только герои и окна.
 func _set_battle_ui(on: bool) -> void:
-	for c in [hand_layer, end_turn_button, energy_label, deck_button, discard_button, _ults, _sleeve, _potion_bar]:
+	for c in [hand_layer, end_turn_button, energy_orb, deck_button, discard_button, _ults, _sleeve, _potion_bar]:
 		if c != null:
 			c.visible = on
 

@@ -110,6 +110,8 @@ var _fade: ColorRect
 var _choice_box: VBoxContainer
 var _choices: Array = []
 const CHOICES_POS := Vector2(70, 470)
+## Значок у варианта ответа ("icon" в выборе) — ширина, px.
+const CHOICE_ICON_PX := 44
 const CHOICE_SIZE := Vector2(440, 66)
 
 func _ready() -> void:
@@ -735,6 +737,13 @@ func _show_choices(choices: Array) -> void:
 		var ctext := String(c.get("text", "…")) if c is Dictionary else String(c)
 		var b := _make_button(ctext)
 		_heart_text().button(b, ctext)   ## «+5 ♥» — сердечко картинкой справа
+		# "icon": "res://...png" у варианта — значок слева от текста (куда ведёт выбор).
+		if c is Dictionary and String(c.get("icon", "")) != "" and ResourceLoader.exists(String(c["icon"])):
+			b.icon = load(String(c["icon"])) as Texture2D
+			b.icon_alignment = HORIZONTAL_ALIGNMENT_LEFT
+			b.expand_icon = false
+			b.add_theme_constant_override("icon_max_width", CHOICE_ICON_PX)
+			b.add_theme_constant_override("h_separation", 14)
 		var csize := CHOICE_SIZE
 		if c is Dictionary and ((c as Dictionary).has("interaction") or (c as Dictionary).has("gift")):
 			csize.x = maxf(csize.x, INTERACTION_CHOICE_W)   ## «Погладить по голове   (с 1 ур.)» — длиннее
@@ -765,10 +774,14 @@ func _show_choices(choices: Array) -> void:
 		tw.tween_property(b, "modulate:a", 1.0, 0.18).set_delay(0.06 * float(i))
 	_show_mood_icon(mood_with)
 
-## Смайлик настроения персонажа (Mood: радостный / нейтральный / грустный) справа от меню действий.
-## Узел MoodIcon; место — MOOD_ICON_OFFSET от левого верхнего угла столбика вариантов.
-const MOOD_ICON_SIZE := Vector2(120, 120)
-const MOOD_ICON_OFFSET := Vector2(INTERACTION_CHOICE_W + 24.0, -30.0)
+## Смайлик настроения персонажа (Mood) — в правой части экрана, пока открыто меню действий
+## (как на экране прикосновений LoveTouch). Узел MoodIcon; место — MOOD_ICON_POS.
+## ВРЕМЕННО (отладка): клик по смайлику — на пару секунд под ним «72 / 100».
+const MOOD_ICON_SIZE := Vector2(150, 150)
+const MOOD_ICON_POS := Vector2(1730, 90)
+const MOOD_DEBUG_TIME := 2.5
+var _mood_who := ""
+var _mood_debug: Label
 var _mood_icon: TextureRect
 
 func _show_mood_icon(who: String) -> void:
@@ -782,11 +795,31 @@ func _show_mood_icon(who: String) -> void:
 		_mood_icon.name = "MoodIcon"
 		_mood_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		_mood_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		_mood_icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_mood_icon.mouse_filter = Control.MOUSE_FILTER_STOP
+		_mood_icon.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 		_mood_icon.size = MOOD_ICON_SIZE
 		_ui.add_child(_mood_icon)
+		_mood_icon.gui_input.connect(func(ev: InputEvent) -> void:
+			if ev is InputEventMouseButton and (ev as InputEventMouseButton).pressed \
+					and (ev as InputEventMouseButton).button_index == MOUSE_BUTTON_LEFT:
+				_mood_icon.accept_event()
+				show_mood_debug())
+		_mood_debug = Label.new()
+		_mood_debug.name = "MoodDebug"
+		_mood_debug.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_mood_debug.position = Vector2(-40, MOOD_ICON_SIZE.y + 2)
+		_mood_debug.size = Vector2(MOOD_ICON_SIZE.x + 80, 44)
+		_mood_debug.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		_mood_debug.add_theme_font_size_override("font_size", 32)
+		_mood_debug.add_theme_color_override("font_color", Color.WHITE)
+		_mood_debug.add_theme_color_override("font_outline_color", Color(0.3, 0.05, 0.25))
+		_mood_debug.add_theme_constant_override("outline_size", 8)
+		_mood_debug.visible = false
+		_mood_icon.add_child(_mood_debug)
+	_mood_who = who
+	_mood_debug.visible = false
 	_mood_icon.texture = tex
-	_mood_icon.position = _choice_box.position + MOOD_ICON_OFFSET
+	_mood_icon.position = MOOD_ICON_POS
 	_mood_icon.visible = true
 	_mood_icon.modulate.a = 0.0
 	_mood_icon.pivot_offset = MOOD_ICON_SIZE * 0.5
@@ -794,6 +827,18 @@ func _show_mood_icon(who: String) -> void:
 	var tw := _mood_icon.create_tween().set_parallel(true)
 	tw.tween_property(_mood_icon, "modulate:a", 1.0, 0.2)
 	tw.tween_property(_mood_icon, "scale", Vector2.ONE, 0.25).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+
+## Отладка: настроение числом под смайликом на MOOD_DEBUG_TIME секунд.
+func show_mood_debug() -> void:
+	if _mood_debug == null or _mood_who == "":
+		return
+	_mood_debug.text = "%d / %d" % [int(_mood().value(_mood_who)), int(_mood().MAX_VALUE)]
+	_mood_debug.visible = true
+	_mood_debug.modulate.a = 1.0
+	var tw := _mood_debug.create_tween()
+	tw.tween_interval(MOOD_DEBUG_TIME)
+	tw.tween_property(_mood_debug, "modulate:a", 0.0, 0.3)
+	tw.tween_callback(func() -> void: _mood_debug.visible = false)
 
 func _apply_cg(line) -> void:
 	if not (line is Dictionary) or not line.has("cg"):

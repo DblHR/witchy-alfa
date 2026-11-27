@@ -16,6 +16,8 @@ const BORDER := Color(1.0, 0.85, 0.55, 0.55)
 const TIP_WIDTH := 420.0
 ## Всплывашка над иконками (для строки внизу экрана), а не под ними.
 var tip_above := false
+## Размер кнопки (зелья в бою — как кнопки ульт).
+var icon_size := ICON
 
 var _row: HBoxContainer
 var _tip: PanelContainer
@@ -77,7 +79,7 @@ func set_entries(entries: Array) -> void:
 			potions_done = true
 			if _row.get_child_count() > 0:
 				var sep := Control.new()
-				sep.custom_minimum_size = Vector2(10, ICON.y)
+				sep.custom_minimum_size = Vector2(10, icon_size.y)
 				sep.mouse_filter = Control.MOUSE_FILTER_IGNORE
 				_row.add_child(sep)
 		_row.add_child(_make_slot(d))
@@ -87,13 +89,13 @@ func _make_slot(d: Dictionary) -> Control:
 	var potion := bool(d.get("potion", false))
 	var empty := bool(d.get("empty", false))
 	var slot := Panel.new()
-	slot.custom_minimum_size = ICON
+	slot.custom_minimum_size = icon_size
 	slot.mouse_filter = Control.MOUSE_FILTER_STOP
 	if potion and not empty:
 		slot.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	var sb := StyleBoxFlat.new()
 	sb.bg_color = POTION_BG if potion else BUFF_BG
-	sb.set_corner_radius_all(int(ICON.x * 0.5) if potion else 12)
+	sb.set_corner_radius_all(int(icon_size.x * 0.5) if potion else 12)
 	sb.set_border_width_all(2)
 	sb.border_color = Color(1, 1, 1, 0.18) if empty else BORDER
 	slot.add_theme_stylebox_override("panel", sb)
@@ -105,7 +107,7 @@ func _make_slot(d: Dictionary) -> Control:
 		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		icon.texture = tex
 		icon.position = Vector2(5, 5)
-		icon.size = ICON - Vector2(10, 10)
+		icon.size = icon_size - Vector2(10, 10)
 		icon.clip_contents = true
 		icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		slot.add_child(icon)
@@ -113,7 +115,7 @@ func _make_slot(d: Dictionary) -> Control:
 	if badge != "":
 		var b := Label.new()
 		b.text = badge
-		b.position = Vector2(ICON.x - 26, ICON.y - 26)
+		b.position = Vector2(icon_size.x - 26, icon_size.y - 26)
 		b.size = Vector2(24, 24)
 		b.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 		b.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -138,5 +140,5 @@ func _show_tip(slot: Control, d: Dictionary) -> void:
 	_tip_stats.visible = stats != ""
 	_tip.reset_size()
 	var tip_h := _tip.get_combined_minimum_size().y
-	_tip.position = Vector2(slot.position.x, -tip_h - 10.0 if tip_above else ICON.y + 10.0)
+	_tip.position = Vector2(slot.position.x, -tip_h - 10.0 if tip_above else icon_size.y + 10.0)
 	_tip.visible = true

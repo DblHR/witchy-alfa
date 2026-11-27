@@ -12,7 +12,8 @@ extends CanvasLayer
 ##  • Касания мышью по зонам на картинке (touch.json -> touches, зоны — сцена <id>_touch.tscn):
 ##    над зоной, которой можно коснуться, курсор — рука. Сколько рук — кругляшки справа внизу.
 ##    Поза держится, пока не сменить число рук или не кликнуть мимо зон. Щёки двумя руками:
-##    зажать и потянуть в сторону — pull_pose, отпустить или вернуть курсор — снова pose.
+##    зажать на лице и увести курсор за пределы лица — pull_pose, вернуть на лицо или
+##    отпустить — снова pose.
 ##  • Кнопка-глаз — спрятать / показать кнопки.
 ##  • Влюблённое настроение (Mood.LOVE) — снизу вверх по экрану летят сердечки (hearts_*).
 ##  • ВРЕМЕННО (отладка): клик по смайлику настроения — на пару секунд «72 / 100».
@@ -291,14 +292,21 @@ func release() -> void:
 	if not _touch.is_empty() and pose == String(_touch.get("pull_pose", "")):
 		_set_pose(String(_touch.get("pose", STANDARD)))
 
-## Тянут с зажатой кнопкой: отвели в сторону дальше pull_distance — pull_pose, вернули — pose.
+## Тянут с зажатой кнопкой: увели курсор за пределы зоны (лица) — pull_pose, вернули в зону — pose.
 func drag_to(pos: Vector2) -> void:
 	if not _pressing or not _touch.has("pull_pose") or _busy():
 		return
-	var far := absf(pos.x - _press_pos.x) >= float(_cfg.get("pull_distance", 45))
+	var far := not _in_zone(String(_touch.get("zone", "")), pos)
 	var want := String(_touch["pull_pose"]) if far else String(_touch.get("pose", STANDARD))
 	if pose != want:
 		_set_pose(want)
+
+## Точка экрана внутри зоны касания zone_name?
+func _in_zone(zone_name: String, pos: Vector2) -> bool:
+	var z := _zones.get_node_or_null(zone_name) as Polygon2D if _zones != null else null
+	if z == null:
+		return false
+	return Geometry2D.is_point_in_polygon(z.get_global_transform().affine_inverse() * pos, z.polygon)
 
 ## Какое касание в точке (с учётом числа рук и открытых действий); нет — {}.
 func touch_at(pos: Vector2) -> Dictionary:

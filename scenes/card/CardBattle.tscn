@@ -6,6 +6,7 @@
 [ext_resource type="Texture2D" path="res://assets/ui/battle/draw_pile.png" id="draw_pile"]
 [ext_resource type="Texture2D" path="res://assets/ui/battle/discard_pile.png" id="discard_pile"]
 [ext_resource type="Texture2D" path="res://assets/ui/battle/end_turn.png" id="end_turn"]
+[ext_resource type="Script" path="res://scripts/card/EnergyOrb.gd" id="energy_orb"]
 
 [node name="CardBattle" type="Node2D" unique_id=2051366954]
 script = ExtResource("1_cardbattle")
@@ -125,28 +126,23 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 
-[node name="EnergyLabel" type="Label" parent="UI/Hud" unique_id=1082248847]
+[node name="EnergyOrb" type="Control" parent="UI/Hud" unique_id=1082248847]
 unique_name_in_owner = true
 layout_mode = 0
-offset_left = 810.0
-offset_top = 786.0
-offset_right = 1110.0
-offset_bottom = 842.0
-theme_override_colors/font_color = Color(1, 0.95, 0.55, 1)
-theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
-theme_override_constants/outline_size = 6
-theme_override_font_sizes/font_size = 30
-text = "Энергия: 3/3"
-horizontal_alignment = 1
-vertical_alignment = 1
+offset_left = 912.0
+offset_top = 742.0
+offset_right = 1008.0
+offset_bottom = 838.0
+mouse_filter = 2
+script = ExtResource("energy_orb")
 
 [node name="DeckButton" type="Button" parent="UI/Hud" unique_id=580738439]
 unique_name_in_owner = true
 layout_mode = 0
-offset_left = 384.0
-offset_top = 888.0
-offset_right = 488.0
-offset_bottom = 1058.0
+offset_left = 300.0
+offset_top = 884.0
+offset_right = 404.0
+offset_bottom = 1054.0
 tooltip_text = "Колода"
 focus_mode = 0
 mouse_default_cursor_shape = 2
@@ -177,10 +173,10 @@ vertical_alignment = 1
 [node name="DiscardButton" type="Button" parent="UI/Hud" unique_id=892902793]
 unique_name_in_owner = true
 layout_mode = 0
-offset_left = 1446.0
-offset_top = 888.0
-offset_right = 1550.0
-offset_bottom = 1058.0
+offset_left = 414.0
+offset_top = 884.0
+offset_right = 518.0
+offset_bottom = 1054.0
 tooltip_text = "Сброс"
 focus_mode = 0
 mouse_default_cursor_shape = 2
@@ -323,10 +319,10 @@ layer = 3
 
 [node name="AutoBattleButton" type="Button" parent="AutoLayer"]
 unique_name_in_owner = true
-offset_left = 1640.0
-offset_top = 110.0
-offset_right = 1890.0
-offset_bottom = 164.0
+offset_left = 24.0
+offset_top = 912.0
+offset_right = 274.0
+offset_bottom = 966.0
 focus_mode = 0
 mouse_default_cursor_shape = 2
 theme_override_font_sizes/font_size = 24

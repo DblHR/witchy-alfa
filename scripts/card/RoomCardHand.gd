@@ -98,7 +98,10 @@ func _make_card(room: Dictionary) -> Control:
 
 	var art_rect := Rect2(14, 52, CARD_SIZE.x - 28, 132)
 	var tex := _room_art(room)
-	if tex != null:
+	var crowd := _crowd_arts(room)
+	if crowd.size() > 1:
+		_add_crowd(card, art_rect, crowd, color)
+	elif tex != null:
 		var frame := Control.new()
 		frame.position = art_rect.position
 		frame.size = art_rect.size
@@ -131,6 +134,91 @@ func _make_card(room: Dictionary) -> Control:
 	hint.add_theme_constant_override("line_spacing", -2)
 	card.add_child(hint)
 	return card
+
+## Врагов в комнате несколько — рисуем всех: главный (в элите — героиня, иначе передний) впереди
+## и крупнее, остальные — за ним по бокам, мельче и темнее; в углу — «×N».
+const CROWD_BACK_SCALE := 0.72
+const CROWD_BACK_TINT := Color(0.78, 0.74, 0.86)
+
+## [главный, остальные...] — картинки врагов комнаты (пусто — не бой).
+static func _crowd_arts(room: Dictionary) -> Array[Texture2D]:
+	var out: Array[Texture2D] = []
+	if not ["battle", "elite", "boss"].has(String(room.get("kind", ""))):
+		return out
+	var enemies: Array = (room.get("enemies", []) as Array).duplicate()
+	if enemies.is_empty():
+		return out
+	if String(room.get("kind", "")) == "elite":
+		enemies.reverse()   ## героиня (последняя) — главная
+	for e in enemies:
+		var t := _enemy_art(String(e))
+		if t != null:
+			out.append(t)
+	return out
+
+func _add_crowd(card: Control, art_rect: Rect2, arts: Array[Texture2D], color: Color) -> void:
+	var frame := Control.new()
+	frame.position = art_rect.position
+	frame.size = art_rect.size
+	frame.clip_contents = true
+	frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	card.add_child(frame)
+	var n := arts.size()
+	var back := n - 1
+	# Задние — по бокам от центра (поочерёдно слева / справа), передний — в центре, поверх.
+	for i in range(1, n):
+		var side := -1.0 if i % 2 == 1 else 1.0
+		var step := float(floori((i + 1) / 2.0))
+		var h := art_rect.size.y * CROWD_BACK_SCALE
+		var r := TextureRect.new()
+		r.texture = arts[i]
+		r.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		r.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		r.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
+		r.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		r.modulate = CROWD_BACK_TINT
+		r.size = Vector2(art_rect.size.x * 0.5, h)
+		var shift := art_rect.size.x * (0.27 if back <= 2 else 0.2) * step * side
+		r.position = Vector2((art_rect.size.x - r.size.x) * 0.5 + shift, art_rect.size.y - h)
+		frame.add_child(r)
+	var main := TextureRect.new()
+	main.texture = arts[0]
+	main.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	main.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	main.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
+	main.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	main.size = Vector2(art_rect.size.x * 0.62, art_rect.size.y)
+	main.position = Vector2((art_rect.size.x - main.size.x) * 0.5, 0)
+	frame.add_child(main)
+	var badge := RunUiKit.make_label("×%d" % n, 24, color)
+	badge.position = art_rect.position + Vector2(art_rect.size.x - 54, art_rect.size.y - 32)
+	badge.size = Vector2(52, 30)
+	badge.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	badge.add_theme_constant_override("outline_size", 6)
+	card.add_child(badge)
+
+## Картинка врага по id (обрезана по видимой части, в кэше).
+static func _enemy_art(key: String) -> Texture2D:
+	if _art_cache.has(key):
+		return _art_cache[key]
+	var def := EnemyDefs.get_def(key)
+	if def == null or def.char_data() == null or def.char_data().battle_texture == null:
+		return null
+	return _cropped(key, def.char_data().battle_texture)
+
+static func _cropped(key: String, tex: Texture2D) -> Texture2D:
+	var out: Texture2D = tex
+	var img := tex.get_image()
+	if img != null:
+		if img.is_compressed():
+			img.decompress()
+		var used := img.get_used_rect()
+		if used.size.x > 0 and used.size.y > 0 and used.size != img.get_size():
+			var region := img.get_region(used)
+			region.generate_mipmaps()
+			out = ImageTexture.create_from_image(region)
+	_art_cache[key] = out
+	return out
 
 ## Рисунок карты: главный враг комнаты или NPC ивента (обрезан по видимой части).
 static func _room_art(room: Dictionary) -> Texture2D:
