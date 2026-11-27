@@ -10,7 +10,7 @@ signal card_clicked(card: CardInstance)
 ## Сколько карт можно отложить (растёт с метапрогрессией).
 const SLOTS := 1
 ## Рукав на 35% меньше прежнего (190×262): картинка и карта в нём.
-const RECT := Rect2(1428, 882, 124, 170)
+const RECT := Rect2(1722, 416, 124, 170)
 ## Карта в рукаве уменьшена (CARD_SCALE) и стоит по центру картинки.
 const CARD_SCALE := 0.65
 const CARD_OFFSET := Vector2(13, 17)

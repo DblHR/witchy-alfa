@@ -68,8 +68,10 @@ var _menu_panel: PanelContainer
 ## Кнопки VN (как в ZZZ): размеры, место «Скрыть», цвета значков.
 const MENU_PILL_SIZE := Vector2(230, 56)
 const MENU_ITEM_SIZE := Vector2(260, 56)
-const HIDE_PILL_SIZE := Vector2(210, 52)
-const HIDE_PILL_POS := Vector2(1660, 970)
+## «Скрыть» — кнопка-глаз (assets/ui/buttons/hideButton.png), внизу справа.
+const HIDE_BUTTON_TEXTURE := "res://assets/ui/buttons/hideButton.png"
+const HIDE_PILL_SIZE := Vector2(92, 92)
+const HIDE_PILL_POS := Vector2(1778, 950)
 const PILL_PURPLE := Color(0.62, 0.36, 1.0)
 const PILL_ORANGE := Color(1.0, 0.45, 0.1)
 const PILL_BLUE := Color(0.16, 0.62, 1.0)
@@ -284,7 +286,15 @@ func _build() -> void:
 	(_buttons["log"] as Button).pressed.connect(func() -> void:
 		_set_menu_open(false)
 		_on_log_pressed())
-	var hide_b := _make_pill("Скрыть", "hide", PILL_PINK, HIDE_PILL_SIZE)
+	var hide_b := TextureButton.new()
+	hide_b.name = "HideButton"
+	hide_b.texture_normal = load(HIDE_BUTTON_TEXTURE) as Texture2D
+	hide_b.ignore_texture_size = true
+	hide_b.stretch_mode = TextureButton.STRETCH_KEEP_ASPECT_CENTERED
+	hide_b.size = HIDE_PILL_SIZE
+	hide_b.focus_mode = Control.FOCUS_NONE
+	hide_b.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	hide_b.tooltip_text = "Скрыть"
 	hide_b.position = HIDE_PILL_POS
 	_ui.add_child(hide_b)
 	_buttons["hide"] = hide_b

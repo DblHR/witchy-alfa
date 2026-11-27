@@ -563,14 +563,9 @@ func _process(delta: float) -> void:
 	var pile_hot := _update_pile_hover(p)
 	var hand := pile_hot or over != null or cauldron or _door_hot != "" or _dragging or star or toggle_hot or moon or mess_hot or bed_hot
 	var drag := _dragging or stars.is_grabbing()
-	# Под курсором героиня (не Воин) — курсор-рука (CursorFx), как на экране прикосновений.
-	var girl := not drag and over != null and not HAND_CURSOR_SKIP.has(over.unit_id)
-	if _talking == "":   ## открыт экран прикосновений / разговор — курсором управляет он
-		CursorFx_.set_touch_cursor(girl)
-	Input.set_default_cursor_shape(Input.CURSOR_DRAG if drag else (Input.CURSOR_POINTING_HAND if hand and not girl else Input.CURSOR_ARROW))
-
-## Над кем курсор-рука не появляется (не героини).
-const HAND_CURSOR_SKIP := ["warrior"]
+	# Курсор-рука (CursorFx) — только на интерактивных сценах (экран прикосновений, ферма,
+	# алхимия, главное меню), над чибиками в доме — обычный «палец».
+	Input.set_default_cursor_shape(Input.CURSOR_DRAG if drag else (Input.CURSOR_POINTING_HAND if hand else Input.CURSOR_ARROW))
 
 ## Магический круг у котла: курсор на котле дольше MAGIC_DELAY — проявляется за MAGIC_FADE_IN.
 ## magic_forced — круг включила ведьмочка (HubEvents, шаг "magic"): проявляется за MAGIC_FORCED_IN.

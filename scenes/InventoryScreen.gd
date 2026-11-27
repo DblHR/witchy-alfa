@@ -120,8 +120,9 @@ func _subscribe_state() -> void:
 
 # --- Уровень отряда: кружок с уровнем + полоса опыта ---------------------------
 const LEVEL_BOX_RECT := Rect2(970, 850, 578, 88)
-## Цвет кружка уровня и полосы опыта — как у кнопки «Карты» (Inventory.tscn, стиль cards_btn).
+## Цвет кружка уровня — как у кнопки «Карты» (Inventory.tscn, стиль cards_btn); полоса опыта — розовая.
 const LEVEL_COLOR := Color(0.25, 0.14, 0.28)
+const XP_COLOR := Color(0.64, 0.13, 0.37)
 const LEVEL_BORDER := Color(0.5, 0.33, 0.52)
 ## В разделе «Персонажи» правая страница занята карточкой — уровень отряда внизу левой страницы,
 ## а список героинь становится ниже на столько (ENTRIES_BOTTOM_CHARS — нижний край списка).
@@ -189,7 +190,7 @@ func _build_level_box() -> void:
 	bg.bg_color = Color(0.84, 0.81, 0.79)
 	bg.set_corner_radius_all(13)
 	var fill := StyleBoxFlat.new()
-	fill.bg_color = LEVEL_COLOR
+	fill.bg_color = XP_COLOR
 	fill.set_corner_radius_all(13)
 	_xp_bar.add_theme_stylebox_override("background", bg)
 	_xp_bar.add_theme_stylebox_override("fill", fill)
@@ -202,7 +203,7 @@ func _build_level_box() -> void:
 	_xp_text.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_xp_text.add_theme_font_size_override("font_size", 16)
 	_xp_text.add_theme_color_override("font_color", Color.WHITE)
-	_xp_text.add_theme_color_override("font_outline_color", LEVEL_COLOR)
+	_xp_text.add_theme_color_override("font_outline_color", Color(0.45, 0.08, 0.28))
 	_xp_text.add_theme_constant_override("outline_size", 6)
 	_xp_bar.add_child(_xp_text)
 	_upgrade_hint = Label.new()
@@ -245,7 +246,8 @@ func _select_section(section: int, reset_status: bool = true) -> void:
 		footer_label.text = ""
 	if section == Section.CHARACTERS and UnitRoster_ != null:
 		UnitRoster_.mark_upgrade_seen(UnitRoster_.UPGRADE_SEEN_CHARACTERS)
-	var chars := section == Section.CHARACTERS
+	# «Персонажи» и «Галерея»: справа карточка / картинки — уровень отряда внизу левой страницы.
+	var chars := section == Section.CHARACTERS or section == Section.GALLERY
 	if _level_box != null:
 		_level_box.position = LEVEL_BOX_POS_CHARS if chars else LEVEL_BOX_RECT.position
 		entries_scroll.offset_bottom = ENTRIES_BOTTOM_CHARS if chars else _entries_bottom
@@ -511,7 +513,7 @@ func _get_columns_for_section(section: int) -> int:
 		Section.CHARACTERS:
 			return 3
 		Section.GALLERY:
-			return 2
+			return 3 if _gallery_group == "characters" else 2   ## персонажи — большие плитки, как в «Персонажах»
 		_:
 			return 4
 
@@ -1366,6 +1368,8 @@ func _build_gallery_ui() -> void:
 	)
 
 func _build_gallery_entries() -> Array[Dictionary]:
+	if _gallery_group == "characters":
+		return _build_gallery_character_entries()
 	var out: Array[Dictionary] = []
 	_gallery_categories.clear()
 	for cat in GalleryData.categories(_gallery_group):
@@ -1384,6 +1388,56 @@ func _build_gallery_entries() -> Array[Dictionary]:
 			"compact": false,
 		})
 	return out
+
+## Галерея → «Персонажи»: большие плитки как в разделе «Персонажи», в том же порядке (герои,
+## НПС, слизнедевочки, остальные), каждая группа с новой строки. На плитке — «открыто / всего».
+## Закрытый раздел — «?» (нажимается: справа подсказка, как открыть).
+func _build_gallery_character_entries() -> Array[Dictionary]:
+	_gallery_categories.clear()
+	var by_id: Dictionary = {}
+	for cat in GalleryData.categories("characters"):
+		by_id[String(cat["id"])] = cat
+		_gallery_categories[String(cat["id"])] = cat
+	var main_id := StoryDialogueDB_.get_main_hero_id() if StoryDialogueDB_ != null else "witch"
+	var order: Array = [[main_id, "warrior" if main_id == "witch" else "witch"], CHARACTER_ROWS_NPC, CHARACTER_ROWS_HEROINES]
+	var used: Array = []
+	for g in order:
+		used.append_array(g)
+	var rest: Array = []
+	for id in by_id.keys():
+		if not used.has(id):
+			rest.append(id)
+	order.append(rest)
+	var out: Array[Dictionary] = []
+	var cols := _get_columns_for_section(Section.GALLERY)
+	for g in order:
+		var group: Array = []
+		for id in g:
+			if by_id.has(id):
+				group.append(_gallery_character_entry(by_id[id]))
+		if group.is_empty():
+			continue
+		while out.size() % cols != 0:
+			out.append({"spacer": true})
+		for e in group:
+			out.append(e)
+	return out
+
+func _gallery_character_entry(cat: Dictionary) -> Dictionary:
+	var id := String(cat["id"])
+	var n: int = cat["images"].size()
+	if not bool(cat["unlocked"]):
+		var u := _unknown_entry(0)
+		u["id"] = id
+		u["locked"] = false   ## «?», но нажимается — справа подсказка
+		return u
+	var e: Dictionary = _npc_entry(id) if CHARACTER_ROWS_NPC.has(id) else _character_entry(id)
+	if e.is_empty():
+		e = {"title": String(cat["title"]), "icon": (load(String(cat["icon_path"])) as Texture2D), "count": -1, "bust": true}
+	e["id"] = id
+	e["title"] = String(cat["title"])
+	e["badge"] = "%d/%d" % [int(cat["open_count"]), n]
+	return e
 
 static func _pictures_word(n: int) -> String:
 	var m10 := n % 10

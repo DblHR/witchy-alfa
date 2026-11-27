@@ -97,6 +97,14 @@ func setup(data: Dictionary) -> void:
 		title_label.add_theme_constant_override("outline_size", 0)
 		subtitle_label.visible = false
 		count_badge.visible = false
+		# Число на плитке (галерея: «открыто / всего») — в левом верхнем углу.
+		var badge := String(data.get("badge", ""))
+		if badge != "":
+			count_badge.visible = true
+			count_badge.text = badge
+			count_badge.position = Vector2(14, 12)
+			count_badge.size = Vector2(maxf(56.0, 16.0 + 11.0 * badge.length()), 30)
+			count_badge.add_theme_font_size_override("font_size", 20)
 
 	# Широкая строка без значка (энциклопедия): заголовок и подпись во всю ширину страницы.
 	if bool(data.get("wide", false)):

@@ -85,8 +85,8 @@ func _match_optional_resource(resource_key: String, resource: Resource) -> void:
             _apply_custom_cursor()
 
 
-## Курсор-рука над героиней, с которой можно взаимодействовать: экран прикосновений (LoveTouch),
-## персонажи в доме (Hub), ведьмочка на ферме, в алхимии и в главном меню (WitchZone).
+## Курсор-рука над героиней на интерактивных сценах: экран прикосновений (LoveTouch), ведьмочка
+## на ферме, в алхимии и в главном меню (WitchZone). Над чибиками в доме — не меняется.
 const TOUCH_CURSOR_PATH := "res://assets/ui/cursor/cursor_interactive.png"
 const TOUCH_CURSOR_SIZE := Vector2i(48, 55)
 const TOUCH_CURSOR_HOTSPOT := Vector2(22, 26)

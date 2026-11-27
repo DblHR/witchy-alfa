@@ -5,6 +5,7 @@
 [ext_resource type="Script" uid="uid://ebckabx3wtl0" path="res://scripts/dialogue/BattleSpeechLayer.gd" id="speechlayer"]
 [ext_resource type="Texture2D" path="res://assets/ui/battle/draw_pile.png" id="draw_pile"]
 [ext_resource type="Texture2D" path="res://assets/ui/battle/discard_pile.png" id="discard_pile"]
+[ext_resource type="Texture2D" path="res://assets/ui/battle/end_turn.png" id="end_turn"]
 
 [node name="CardBattle" type="Node2D" unique_id=2051366954]
 script = ExtResource("1_cardbattle")
@@ -142,9 +143,10 @@ vertical_alignment = 1
 [node name="DeckButton" type="Button" parent="UI/Hud" unique_id=580738439]
 unique_name_in_owner = true
 layout_mode = 0
-offset_top = 906.0
-offset_right = 104.0
-offset_bottom = 1076.0
+offset_left = 384.0
+offset_top = 888.0
+offset_right = 488.0
+offset_bottom = 1058.0
 tooltip_text = "Колода"
 focus_mode = 0
 mouse_default_cursor_shape = 2
@@ -175,10 +177,10 @@ vertical_alignment = 1
 [node name="DiscardButton" type="Button" parent="UI/Hud" unique_id=892902793]
 unique_name_in_owner = true
 layout_mode = 0
-offset_left = 1693.0
-offset_top = 892.0
-offset_right = 1797.0
-offset_bottom = 1062.0
+offset_left = 1446.0
+offset_top = 888.0
+offset_right = 1550.0
+offset_bottom = 1058.0
 tooltip_text = "Сброс"
 focus_mode = 0
 mouse_default_cursor_shape = 2
@@ -206,15 +208,19 @@ text = "0"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="EndTurnButton" type="Button" parent="UI/Hud" unique_id=190345526]
+[node name="EndTurnButton" type="TextureButton" parent="UI/Hud" unique_id=190345526]
 unique_name_in_owner = true
 layout_mode = 0
-offset_left = 1600.0
-offset_top = 766.0
-offset_right = 1890.0
-offset_bottom = 876.0
-theme_override_font_sizes/font_size = 30
-text = "Завершить ход"
+offset_left = 1632.0
+offset_top = 806.0
+offset_right = 1892.0
+offset_bottom = 1050.0
+tooltip_text = "Завершить ход"
+focus_mode = 0
+mouse_default_cursor_shape = 2
+texture_normal = ExtResource("end_turn")
+ignore_texture_size = true
+stretch_mode = 5
 
 [node name="BattleSpeechLayer" type="Control" parent="UI" unique_id=1697631593]
 unique_name_in_owner = true
