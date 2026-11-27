@@ -8,7 +8,8 @@
     "  У обнимашек (hug) позы нет: играет сценка из interactions.json (окно диалога и картинка обнимашек).",
     "touches — касания мышью, проверяются сверху вниз, срабатывает первое подходящее:",
     "  zone — имя зоны в сцене, hands — сколько рук (1 / 2, 0 — любое), pose — поза,",
-    "  hold_pose — поза, пока кнопку мыши держат дольше hold_after секунд (отпустили — снова pose),",
+    "  pull_pose — поза, пока кнопку мыши держат и тянут в сторону дальше pull_distance пикселей",
+    "    (отпустили или вернули курсор ближе — снова pose),",
     "  action — какое это действие (доверие раз в день и открытие по уровню — data/interactions/interactions.json).",
     "Поза от касания держится, пока не сменить число рук или не кликнуть мимо зон."
   ],
@@ -19,13 +20,13 @@
     "cheeks": {"pose": "2cheeks_active", "hold": 2.0},
     "hands": {"pose": "handholding", "hold": 2.0}
   },
-  "hold_after": 0.3,
+  "pull_distance": 45,
   "touches": [
     {"zone": "head", "hands": 0, "pose": "pat", "action": "pat"},
     {"zone": "chin", "hands": 1, "pose": "chin", "action": "cheeks"},
     {"zone": "cheek_left", "hands": 1, "pose": "chin", "action": "cheeks"},
     {"zone": "cheek_right", "hands": 1, "pose": "1cheek", "action": "cheeks"},
-    {"zone": "face", "hands": 2, "pose": "2cheeks_passive", "hold_pose": "2cheeks_active", "action": "cheeks"},
+    {"zone": "face", "hands": 2, "pose": "2cheeks_passive", "pull_pose": "2cheeks_active", "action": "cheeks"},
     {"zone": "body", "hands": 1, "pose": "handholding", "action": "hands"}
   ]
 }

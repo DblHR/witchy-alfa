@@ -24,6 +24,8 @@ const NAMES := {LOVE: "влюблённое", HAPPY: "радостное", NEUTR
 const FACTORS := ["talk", "gift", "run"]
 ## Дольше этого не пересчитываем (вдруг день прыгнул далеко) — всё равно уже на нуле.
 const MAX_DAYS := 60
+## Настроение — от 0 до MAX_VALUE.
+const MAX_VALUE := 100
 
 static var _data: Dictionary = {}
 

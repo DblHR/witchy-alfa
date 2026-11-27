@@ -5,7 +5,7 @@ shader_type canvas_item;
 // uv_* — где в текстуре начинается и кончается само сердечко (картинка может быть кусочком
 // атласа); edge — мягкость границы.
 uniform float fill : hint_range(0.0, 1.0) = 1.0;
-uniform int direction = 1;
+uniform int direction = 2;
 uniform float lift : hint_range(0.0, 1.0) = 0.6;
 uniform float uv_top = 0.0;
 uniform float uv_bottom = 1.0;

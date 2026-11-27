@@ -11,8 +11,11 @@ extends CanvasLayer
 ##    остальные — поза на пару секунд (touch.json -> buttons).
 ##  • Касания мышью по зонам на картинке (touch.json -> touches, зоны — сцена <id>_touch.tscn):
 ##    над зоной, которой можно коснуться, курсор — рука. Сколько рук — кругляшки справа внизу.
-##    Поза держится, пока не сменить число рук или не кликнуть мимо зон.
+##    Поза держится, пока не сменить число рук или не кликнуть мимо зон. Щёки двумя руками:
+##    зажать и потянуть в сторону — pull_pose, отпустить или вернуть курсор — снова pose.
 ##  • Кнопка-глаз — спрятать / показать кнопки.
+##  • Влюблённое настроение (Mood.LOVE) — снизу вверх по экрану летят сердечки (hearts_*).
+##  • ВРЕМЕННО (отладка): клик по смайлику настроения — на пару секунд «72 / 100».
 ## Сцена героини: scenes/love/<id>_touch.tscn (Background, Body, Body/Zones/<зона>: Polygon2D).
 ## Настройки: assets/characters/<id>/love/touch.json.
 
@@ -35,6 +38,16 @@ const BREATH_X := 0.004
 ## Руки (кругляшки): яркость включённой / выключенной.
 const HAND_ON := 1.0
 const HAND_OFF := 0.3
+## Отладка: сколько секунд видно число настроения после клика по смайлику.
+const MOOD_DEBUG_TIME := 2.5
+
+## Сердечки при влюблённом настроении: раз в hearts_every (от..до) с,
+## летят hearts_rise (от..до) с снизу через весь экран, размер hearts_size (от..до) пикселей.
+@export var hearts_every := Vector2(0.55, 1.0)
+@export var hearts_rise := Vector2(4.5, 6.5)
+@export var hearts_size := Vector2(34, 70)
+@export var hearts_spread := 520.0   ## насколько от центра Фуфу по горизонтали
+@export var hearts_alpha := 0.8
 
 @onready var world: Node2D = $World
 @onready var ui: Control = $UI
@@ -46,6 +59,8 @@ const HAND_OFF := 0.3
 @onready var hand_left: Button = %HandLeft
 @onready var hand_right: Button = %HandRight
 @onready var fade: ColorRect = $Fade
+@onready var hearts_layer: Node2D = $Hearts
+@onready var mood_debug: Label = %MoodDebug
 
 var char_id := ""
 var hands := 1
@@ -64,7 +79,8 @@ var _blink_on := 0.0
 var _pose_left := 0.0      ## поза от кнопки: сколько ещё держать
 var _touch: Dictionary = {} ## касание, от которого сейчас поза
 var _pressing := false
-var _press_time := 0.0
+var _press_pos := Vector2.ZERO
+var _hearts_left := 0.0
 var _ui_hidden := false
 var _closing := false
 var _tex_cache: Dictionary = {}
@@ -97,6 +113,8 @@ func _ready() -> void:
 	hide_button.pressed.connect(_toggle_ui)
 	hand_left.pressed.connect(_toggle_hands)
 	hand_right.pressed.connect(_toggle_hands)
+	mood_icon.gui_input.connect(_on_mood_input)
+	mood_debug.visible = false
 	_blink_left = _blink_interval()
 	_set_pose(STANDARD)
 	_refresh_hands()
@@ -237,7 +255,10 @@ func _refresh_hands() -> void:
 
 func _on_ui_input(event: InputEvent) -> void:
 	if event is InputEventMouseMotion:
-		_update_cursor((event as InputEventMouseMotion).position)
+		var mpos := (event as InputEventMouseMotion).position
+		if _pressing:
+			drag_to(mpos)
+		_update_cursor(mpos)
 	elif event is InputEventMouseButton and (event as InputEventMouseButton).button_index == MOUSE_BUTTON_LEFT:
 		if (event as InputEventMouseButton).pressed:
 			press_at((event as InputEventMouseButton).position)
@@ -262,13 +283,22 @@ func press_at(pos: Vector2) -> void:
 	_touch = rule
 	_pose_left = 0.0
 	_pressing = true
-	_press_time = 0.0
+	_press_pos = pos
 	_set_pose(String(rule.get("pose", STANDARD)))
 
 func release() -> void:
 	_pressing = false
-	if not _touch.is_empty() and pose == String(_touch.get("hold_pose", "")):
+	if not _touch.is_empty() and pose == String(_touch.get("pull_pose", "")):
 		_set_pose(String(_touch.get("pose", STANDARD)))
+
+## Тянут с зажатой кнопкой: отвели в сторону дальше pull_distance — pull_pose, вернули — pose.
+func drag_to(pos: Vector2) -> void:
+	if not _pressing or not _touch.has("pull_pose") or _busy():
+		return
+	var far := absf(pos.x - _press_pos.x) >= float(_cfg.get("pull_distance", 45))
+	var want := String(_touch["pull_pose"]) if far else String(_touch.get("pose", STANDARD))
+	if pose != want:
+		_set_pose(want)
 
 ## Какое касание в точке (с учётом числа рук и открытых действий); нет — {}.
 func touch_at(pos: Vector2) -> Dictionary:
@@ -328,11 +358,12 @@ func _process(delta: float) -> void:
 		_pose_left -= delta
 		if _pose_left <= 0.0:
 			_reset_pose()
-	# Держат мышь на лице двумя руками — поза посильнее.
-	if _pressing and _touch.has("hold_pose"):
-		_press_time += delta
-		if _press_time >= float(_cfg.get("hold_after", 0.3)) and pose != String(_touch["hold_pose"]):
-			_set_pose(String(_touch["hold_pose"]))
+	# Влюблена — летят сердечки.
+	if Mood.state(char_id) == Mood.LOVE:
+		_hearts_left -= delta
+		if _hearts_left <= 0.0:
+			_hearts_left = randf_range(hearts_every.x, hearts_every.y)
+			_spawn_heart()
 	# Моргание — только в обычной позе.
 	if pose == STANDARD:
 		if _blink_on > 0.0:
@@ -356,6 +387,48 @@ func _process(delta: float) -> void:
 	# Дышит: чуть вытягивается вверх от низа картинки.
 	var s := 0.5 + 0.5 * sin(_time * TAU / BREATH_PERIOD)
 	_body.scale = Vector2(1.0 - BREATH_X * s, 1.0 + BREATH_Y * s)
+
+# --- Сердечки (влюблённое настроение) ---------------------------------------------
+
+## Одно сердечко: снизу из-за края, по-над Фуфу, вверх через весь экран, чуть покачиваясь.
+func _spawn_heart() -> void:
+	var tex := HeartText.icon()
+	if tex == null:
+		return
+	var s := Sprite2D.new()
+	s.texture = tex
+	var px := randf_range(hearts_size.x, hearts_size.y)
+	s.scale = Vector2.ONE * px / float(tex.get_width())
+	var x := 960.0 + randf_range(-hearts_spread, hearts_spread)
+	s.position = Vector2(x, 1080.0 + px)
+	s.modulate.a = 0.0
+	s.rotation = randf_range(-0.25, 0.25)
+	hearts_layer.add_child(s)
+	var t := randf_range(hearts_rise.x, hearts_rise.y)
+	var sway := randf_range(30.0, 70.0) * (1.0 if randf() < 0.5 else -1.0)
+	var tw := s.create_tween().set_parallel(true)
+	tw.tween_property(s, "position:y", -px, t)
+	tw.tween_method(func(k: float) -> void:
+		s.position.x = x + sin(k * TAU * 1.5) * sway, 0.0, 1.0, t)
+	tw.tween_property(s, "modulate:a", hearts_alpha, 0.6)
+	tw.tween_property(s, "modulate:a", 0.0, 0.8).set_delay(t - 0.8)
+	tw.chain().tween_callback(s.queue_free)
+
+# --- Отладка: число настроения по клику на смайлик (ВРЕМЕННО) -------------------------
+
+func _on_mood_input(event: InputEvent) -> void:
+	if event is InputEventMouseButton and (event as InputEventMouseButton).pressed \
+			and (event as InputEventMouseButton).button_index == MOUSE_BUTTON_LEFT:
+		show_mood_debug()
+
+func show_mood_debug() -> void:
+	mood_debug.text = "%d / %d" % [Mood.value(char_id), Mood.MAX_VALUE]
+	mood_debug.visible = true
+	mood_debug.modulate.a = 1.0
+	var tw := mood_debug.create_tween()
+	tw.tween_interval(MOOD_DEBUG_TIME)
+	tw.tween_property(mood_debug, "modulate:a", 0.0, 0.3)
+	tw.tween_callback(func() -> void: mood_debug.visible = false)
 
 # --- Надпись «+N ♥ доверие» ---------------------------------------------------------
 
