@@ -24,6 +24,7 @@ func _ready() -> void:
 	portrait.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	name_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_update_style()
+	set_process(false)   ## включается только пока карточку тащат
 
 func set_frame_color(c: Color) -> void:
 	_border_color = c
@@ -184,6 +185,8 @@ func _gui_input(event: InputEvent) -> void:
 			_press_local_offset = event.position
 		else:
 			if _mouse_down and _drag_started:
+				_drag_started = false
+				set_process(false)
 				drag_released.emit(ui_index, get_global_mouse_position())
 			elif _mouse_down and can_pick:
 				pressed.emit(ui_index)
@@ -191,6 +194,7 @@ func _gui_input(event: InputEvent) -> void:
 	elif event is InputEventMouseMotion and _mouse_down and can_drag:
 		if not _drag_started and event.relative.length() > 3.0:
 			_drag_started = true
+			set_process(true)
 			drag_started.emit(ui_index, _press_local_offset)
 		if _drag_started:
 			drag_moved.emit(ui_index, get_global_mouse_position())
@@ -213,3 +217,21 @@ func _update_style() -> void:
 	sb.shadow_color = Color(0, 0, 0, 0.25)
 	sb.shadow_size = 6
 	add_theme_stylebox_override("panel", sb)
+
+## Отпускание кнопки «потерялось» (Alt+Tab, окно потеряло фокус) — карточку всё равно отпускаем,
+## иначе она так и висела на экране.
+func _process(_delta: float) -> void:
+	if _drag_started and not Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
+		_force_release()
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_APPLICATION_FOCUS_OUT or what == NOTIFICATION_WM_WINDOW_FOCUS_OUT:
+		if _drag_started:
+			_force_release()
+		_mouse_down = false
+
+func _force_release() -> void:
+	_drag_started = false
+	_mouse_down = false
+	set_process(false)
+	drag_released.emit(ui_index, get_global_mouse_position())

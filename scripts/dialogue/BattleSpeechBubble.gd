@@ -126,7 +126,10 @@ func _update_position() -> void:
 	if follow_target == null or not is_instance_valid(follow_target):
 		return
 
-	var pos := follow_target.get_global_transform_with_canvas().origin + world_offset
+	# Камера наехала (сцены босса) — отступ над головой растёт вместе с картинкой.
+	if not follow_target.is_inside_tree():
+		return
+	var pos := follow_target.get_global_transform_with_canvas().origin + world_offset * follow_target.get_viewport().get_canvas_transform().get_scale().y
 	var desired := pos - Vector2(size.x * 0.5, size.y)
 	var vp := get_viewport_rect().size
 

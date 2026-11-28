@@ -77,6 +77,10 @@ func _tick() -> bool:
 			return true
 		if c is RoomCardHand:
 			return _choose_room(c as RoomCardHand)
+	# Элита ждёт клика (спит / прыгает) — «кликнуть» по ней.
+	if battle._elite_prelude != null and battle._elite_prelude.is_waiting():
+		battle._elite_prelude.wake()
+		return true
 	var shrine := battle.right_world.get_node_or_null("StatueShrine") as StatueShrine
 	if shrine != null and not shrine.is_queued_for_deletion() and shrine.interactive:
 		return false   ## статуя — событие, решает игрок

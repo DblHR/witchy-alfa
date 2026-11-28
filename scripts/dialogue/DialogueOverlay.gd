@@ -110,6 +110,8 @@ var _fade: ColorRect
 var _choice_box: VBoxContainer
 var _choices: Array = []
 const CHOICES_POS := Vector2(70, 470)
+## Вариант вместо меню действий у героини с экраном прикосновений (Фуфу).
+const TOUCH_CHOICE_TEXT := "Подойти поближе"
 ## Значок у варианта ответа ("icon" в выборе) — ширина, px.
 const CHOICE_ICON_PX := 44
 const CHOICE_SIZE := Vector2(440, 66)
@@ -717,6 +719,15 @@ func _show_choices(choices: Array) -> void:
 	for c in choices:
 		if c is Dictionary and (c as Dictionary).has("interactions"):
 			var who_id := String(c.get("with", ""))
+			# У героини есть экран прикосновений (Фуфу) — вместо старого меню действий одна кнопка:
+			# разговор закрывается и открывается её экран (Hub.open_touch_by_id).
+			var touch := load("res://scripts/love/LoveTouchScreen.gd")
+			if touch != null and touch.supports(who_id):
+				_choices.append({"text": TOUCH_CHOICE_TEXT, "then": func() -> void:
+					var scene := get_tree().current_scene
+					if scene != null and scene.has_method("open_touch_by_id"):
+						scene.call_deferred("open_touch_by_id", who_id)})
+				continue
 			_choices.append_array(_interactions().choice_entries(who_id, String(c.get("interactions", "cute"))))
 			# Подарки (Gifts) — под действиями; смайлик настроения (Mood) — рядом с меню.
 			_choices.append_array(_gifts().choice_entries(who_id))

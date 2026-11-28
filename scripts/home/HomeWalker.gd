@@ -571,6 +571,7 @@ const DOOR_SHRINK := 0.82
 const DOOR_DARK := Color(0.35, 0.33, 0.5, 0.0)
 func walk_door(door: Vector2, time: float = 1.4, back: bool = false) -> void:
 	_kill_tween()
+	_in_door = true
 	var near := position
 	var far := Vector2(door.x, door.y)
 	var big := Vector2(_scale, _scale)
@@ -594,10 +595,12 @@ func walk_door(door: Vector2, time: float = 1.4, back: bool = false) -> void:
 	if is_instance_valid(bob):
 		bob.kill()
 	body.position.y = 0.0
+	_in_door = not back   ## ушла в дверь — так и остаётся нетрогаемой (её уберут); вышла — снова можно
 
 ## Испариться (выселили из дома): светлеет, вытягивается вверх, тает в облачке пара; потом удаляется.
 func evaporate(time: float = 0.9) -> void:
 	_kill_tween()
+	_vanishing = true
 	_lying = false
 	set_meta("frozen_from", State.IDLE)
 	state = State.FROZEN
@@ -687,6 +690,13 @@ func head_anchor() -> Node2D:
 	return _head
 
 ## Курсор над непрозрачной частью картинки.
+## Можно ли трогать мышью: не когда уходит в дверь / выходит из неё и не когда испаряется
+## (иначе анимация прерывалась и чибик оставался полупрозрачным или «в доме»).
+var _in_door := false
+var _vanishing := false
+func is_touchable() -> bool:
+	return not _in_door and not _vanishing and not is_queued_for_deletion()
+
 func is_over(global_point: Vector2) -> bool:
 	if body == null or body.texture == null or not visible:
 		return false

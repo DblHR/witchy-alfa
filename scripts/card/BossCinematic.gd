@@ -119,14 +119,17 @@ func _step(step: String, me: Unit, idx: int, ph: Dictionary) -> void:
 			EnemyFufu.set_phase(me, idx + 2)
 			battle._refresh_actor(actor)
 			_shake(actor)
-			_fly_mask_part(actor)
+			_fly_mask_part(actor, _cfg.get("mask_part", {}))
 			await _wait(float((_cfg.get("mask_part", {}) as Dictionary).get("time", 1.0)) * 0.6)
 		"unmask":
+			# Остаток маски (белый кусок) отлетает с картинки фазы 2, потом — лицо без маски.
+			_fly_mask_part(actor, _cfg.get("mask_part_white", {}))
 			EnemyFufu.unmask(me)
 			EnemyFufu.set_phase(me, idx + 2)
 			_flash(actor)
+			_shake(actor)
 			battle._refresh_actor(actor)
-			await _wait(0.5)
+			await _wait(0.7)
 		"turn_away":
 			await _turn(actor, true)
 		"turn_back":
@@ -145,27 +148,31 @@ func _step(step: String, me: Unit, idx: int, ph: Dictionary) -> void:
 
 func _ui_nodes() -> Array:
 	var out: Array = []
-	for p in ["UI/UIRoot", "UI/BottomPanel", "UI/Hud", "AutoLayer/AutoBattleButton", "UI/BattleSpeechLayer"]:
+	for p in ["UI/UIRoot", "UI/BottomPanel", "UI/Hud", "AutoLayer/AutoBattleButton"]:
 		var n := battle.get_node_or_null(p) as CanvasItem
 		if n != null:
 			out.append(n)
 	return out
 
 func _focus(actor: BattleActor) -> void:
-	_focused = true
+	await _focus_on(actor, _cam("zoom", 1.45))
+
+## Камера на персонажа (полосы и приглушённый интерфейс — если ещё не было).
+func _focus_on(actor: BattleActor, zoom: float) -> void:
 	var t := _cam("time", 0.6)
-	var zoom := _cam("zoom", 1.45)
 	var target := _clamp_center((actor.global_position if actor != null else SCREEN * 0.5) - Vector2(0, _cam("lift", 150.0)), zoom)
-	_camera.position = SCREEN * 0.5
-	_camera.zoom = Vector2.ONE
-	_camera.enabled = true
-	_camera.make_current()
 	var tw := create_tween().set_parallel(true).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	if not _focused:
+		_camera.position = SCREEN * 0.5
+		_camera.zoom = Vector2.ONE
+		_camera.enabled = true
+		_camera.make_current()
+		tw.tween_method(_place_bars, 0.0, 1.0, t * 0.8)
+		for n in _ui_nodes():
+			tw.tween_property(n, "modulate:a", _cam("ui_alpha", 0.12), t * 0.6)
+	_focused = true
 	tw.tween_property(_camera, "position", target, t)
 	tw.tween_property(_camera, "zoom", Vector2(zoom, zoom), t)
-	tw.tween_method(_place_bars, 0.0, 1.0, t * 0.8)
-	for n in _ui_nodes():
-		tw.tween_property(n, "modulate:a", _cam("ui_alpha", 0.12), t * 0.6)
 	await tw.finished
 
 func _unfocus() -> void:
@@ -227,8 +234,7 @@ func _shake(actor: BattleActor) -> void:
 	tw.tween_property(actor, "position", base, 0.05)
 
 ## Осколок маски отлетает с того места на картинке, где он был (mask_part.at — пиксели картинки).
-func _fly_mask_part(actor: BattleActor) -> void:
-	var mp: Dictionary = _cfg.get("mask_part", {})
+func _fly_mask_part(actor: BattleActor, mp: Dictionary) -> void:
 	var path := String(mp.get("texture", ""))
 	if actor == null or actor.sprite == null or path == "" or not ResourceLoader.exists(path):
 		return
@@ -299,19 +305,35 @@ func _swallow(me: Unit, actor: BattleActor) -> void:
 	CardActorFx.start_idle(actor)
 	battle._refresh_all_actors()
 
-## Реплики отряда в пузырях (lines — варианты, говорят до speakers_max живых героинь).
+## Реплики отряда по очереди: камера на того, кто говорит, он подпрыгивает, над ним — пузырь.
+## lines: {"<id героини>": [варианты], "any": [для всех остальных]} — у кого фраз нет, молчит.
+## Говорят до speakers_max живых (видимых) героинь.
 func _lines(ph: Dictionary) -> void:
-	var pool: Array = (ph.get("lines", []) as Array).duplicate()
 	var speech = battle.get_node_or_null("%BattleSpeechLayer")
-	if pool.is_empty() or speech == null:
+	var lines = ph.get("lines", {})
+	if speech == null:
 		return
-	pool.shuffle()
-	var heroes: Array = battle._combat.alive_heroes().duplicate()
-	heroes.shuffle()
-	var n := mini(int(ph.get("speakers_max", 2)), mini(heroes.size(), pool.size()))
-	for i in n:
-		var a: BattleActor = battle._find_actor(heroes[i])
-		if a != null and a.sprite != null and a.sprite.visible:
-			speech.show_line_for_actor(a, String(pool[i]))
-			await _wait(1.3)
-	await _wait(0.6)
+	if lines is Array:
+		lines = {"any": lines}
+	var used: Array = []
+	var said := 0
+	for h in battle._combat.alive_heroes():
+		if said >= int(ph.get("speakers_max", 2)):
+			break
+		var a: BattleActor = battle._find_actor(h)
+		if a == null or a.sprite == null or not a.sprite.visible:
+			continue
+		var pool: Array = ((lines as Dictionary).get(h.data.id, (lines as Dictionary).get("any", [])) as Array).duplicate()
+		for u in used:
+			pool.erase(u)
+		if pool.is_empty():
+			continue
+		var text := String(pool[randi() % pool.size()])
+		used.append(text)
+		await _focus_on(a, _cam("speaker_zoom", 1.35))
+		CardActorFx.hop(a)
+		speech.show_line_for_actor(a, text)
+		said += 1
+		await _wait(float(ph.get("line_time", 1.6)))
+	if said > 0 and speech.has_method("clear_lines"):
+		speech.clear_lines()

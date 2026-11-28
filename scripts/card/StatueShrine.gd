@@ -51,14 +51,15 @@ var _rays: CPUParticles2D
 var _call_color := CALL_COLOR_WHITE
 var _t := 0.0
 
-func setup(texture: Texture2D, black: bool = false) -> void:
+## k — масштаб картинки (статуя — SCALE; сундук в комнате-сундуке — крупнее).
+func setup(texture: Texture2D, black: bool = false, k: float = SCALE) -> void:
 	_call_color = CALL_COLOR_BLACK if black else CALL_COLOR_WHITE
 	_build_call()
 	_sprite = Sprite2D.new()
 	_sprite.texture = texture
 	GalleryData.mark_seen_texture(texture)
 	_sprite.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
-	_sprite.scale = Vector2(SCALE, SCALE)
+	_sprite.scale = Vector2(k, k)
 	if texture != null:
 		_sprite.offset = Vector2(0, -texture.get_height() * 0.5)   ## ноги статуи — в точке узла
 		_image = texture.get_image()

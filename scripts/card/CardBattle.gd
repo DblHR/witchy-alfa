@@ -138,6 +138,8 @@ var _enemy_drag_portrait: CardDragPortrait
 ## Сцены смены фаз босса (камера, полосы, анимации) — BossCinematic, data/battle/boss_fufu.json.
 var _cine: BossCinematic
 var _cine_running := false
+## Вход к элите: героиня занята (спит / прыгает между телами), бой — по клику по ней.
+var _elite_prelude: ElitePrelude
 
 ## Враги, которые ходят «как другой игрок» (пока Фуфу-босс): перед своим ходом не сразу, а с
 ## задержкой — справа выезжает её портрет, как будто с той стороны вытаскивают карту.
@@ -263,6 +265,10 @@ func _ready() -> void:
 	_cine.name = "BossCinematic"
 	add_child(_cine)
 	_cine.setup(self)
+	_elite_prelude = ElitePrelude.new()
+	_elite_prelude.name = "ElitePrelude"
+	add_child(_elite_prelude)
+	_elite_prelude.setup(self)
 	_enemy_drag_portrait = CardDragPortrait.new()
 	_enemy_drag_portrait.name = "EnemyDragPortrait"
 	_enemy_drag_portrait.from_right = true
@@ -1458,6 +1464,50 @@ func admin_lose() -> void:
 		admin_kill(h, false)
 	_check_end()
 
+## Админ: воскресить всех павших союзников (полное HP); их карты возвращаются в колоду добора.
+func admin_revive_allies() -> void:
+	if _ended:
+		return
+	var revived: Array[String] = []
+	for u in left_team:
+		if u != null and u.is_dead:
+			u.is_dead = false
+			u.hp = u.max_hp
+			_combat.statuses.erase(u)
+			revived.append(u.data.id)
+			var a := _find_actor(u)
+			if a != null:
+				if a.sprite != null:
+					a.sprite.visible = true
+					a.sprite.modulate = Color.WHITE
+				CardActorFx.start_idle(a)
+	if revived.is_empty():
+		return
+	for c in _build_battle_deck():
+		if revived.has(c.owner_id):
+			_deck.draw_pile.append(c)
+	_deck.draw_pile.shuffle()
+	_ults.refresh()
+	_refresh_pile_buttons()
+	_refresh_all_actors()
+
+## Админ: сразу в комнату босса (последняя комната забега). Не в ход врагов.
+func admin_go_to_boss() -> void:
+	if _ended or _combat.enemy_phase or _cine_running:
+		return
+	for e in _combat.alive_enemies():
+		enemy_vanish(e)
+	# Окна забега (выбор комнаты, событие, добыча) — закрыть.
+	if _ui_layer != null:
+		for c in _ui_layer.get_children():
+			if c is RoomCardHand or c is EventScreen or c is LootPopup:
+				c.queue_free()
+	_banter.stop()
+	_run.pending_choices.clear()
+	_run.index = _run.total_rooms() - 1
+	_run.rooms[_run.index] = _run.make_room(_run.index)
+	_start_room(_run.index)
+
 func admin_charge_ults() -> void:
 	if _ended:
 		return
@@ -2141,6 +2191,10 @@ func _set_battle_ui(on: bool) -> void:
 	for c in [hand_layer, end_turn_button, energy_orb, deck_button, discard_button, _ults, _sleeve, _potion_bar]:
 		if c != null:
 			c.visible = on
+	# «Автобой» — только во время боя (не поверх событий, лавки, выбора комнаты).
+	var auto_btn := get_node_or_null("%AutoBattleButton") as Control
+	if auto_btn != null:
+		auto_btn.visible = on and _tutorial == null
 
 ## Лагерь: враги убраны, герои стоят и болтают.
 func _enter_camp() -> void:
@@ -2186,24 +2240,26 @@ func _play_quest_intro(room: Dictionary) -> void:
 ## Первая встреча с элитной героиней (Аки / Луиса) — сценка VN, по разу на каждую.
 ## Реплики — data/dialogues/story/elite_intro.json (elite_intro_<id>), формы слов — по главному
 ## герою и числу живых в отряде ({…|…|мн. число}, StoryDialogueDB.hero_forms).
+## Сначала героиня занята своим делом (ElitePrelude, data/battle/elite_intros.json) и ждёт клика;
+## потом — VN при первой встрече, а дальше — короткая фраза пузырём.
 func _play_elite_intro(room: Dictionary) -> void:
-	if StoryDialogueDB_ == null or DialogueManager_ == null or StoryState_ == null:
-		return
-	var dlg_id := ""
-	for e in room.get("enemies", []):
-		var id := "elite_intro_" + String(e).trim_suffix("_enemy")
-		if not StoryDialogueDB_.get_dialogue(id).is_empty():
-			dlg_id = id
-	if dlg_id == "" or StoryState_.has_seen_dialogue(dlg_id):
-		return
-	StoryDialogueDB_.party_size_override = _combat.alive_heroes().size()
-	var lines := StoryDialogueDB_.resolve_lines(StoryDialogueDB_.get_dialogue(dlg_id))
-	StoryDialogueDB_.party_size_override = -1
-	StoryState_.mark_dialogue_seen(dlg_id)
-	if lines.is_empty():
-		return
 	_set_battle_ui(false)
-	await _show_lines_and_wait(lines)
+	await _elite_prelude.play(room)
+	var dlg_id := ""
+	if StoryDialogueDB_ != null:
+		for e in room.get("enemies", []):
+			var id := "elite_intro_" + String(e).trim_suffix("_enemy")
+			if not StoryDialogueDB_.get_dialogue(id).is_empty():
+				dlg_id = id
+	if dlg_id != "" and StoryState_ != null and DialogueManager_ != null and not StoryState_.has_seen_dialogue(dlg_id):
+		StoryDialogueDB_.party_size_override = _combat.alive_heroes().size()
+		var lines := StoryDialogueDB_.resolve_lines(StoryDialogueDB_.get_dialogue(dlg_id))
+		StoryDialogueDB_.party_size_override = -1
+		StoryState_.mark_dialogue_seen(dlg_id)
+		if not lines.is_empty():
+			await _show_lines_and_wait(lines)
+	elif _elite_prelude.say_wake_line():
+		await _wait(1.4)
 	_set_battle_ui(true)
 
 ## Вход в комнату босса — VN-приветствие (data/dialogues/story/boss_intro.json: boss_intro_<id>).
@@ -2339,6 +2395,18 @@ func _start_event_room(room: Dictionary) -> void:
 		## Статуя стоит справа на месте врагов; окно дара открывается по клику на неё.
 		shrine = _spawn_statue_shrine(room)
 		await shrine.clicked
+	elif String(room.get("event", "")) == "chest" and not bool(room.get("used", false)):
+		## Сундук тоже стоит справа; по клику — окно сундука на весь экран, а с шансом MIMIC_CHANCE —
+		## это мимик: бой с ним в этой же комнате.
+		var chest := _spawn_chest_prop()
+		await chest.clicked
+		chest.vanish()
+		if _run.rng.randf() < MIMIC_CHANCE:
+			room["kind"] = "battle"
+			room["enemies"] = [EnemyDefs.MIMIC_ID]
+			room["mimic"] = true
+			await _start_room(_run.index)
+			return
 	var screen := EventScreen.new()
 	screen.world_mode = is_statue
 	_ui_add(screen)
@@ -2358,6 +2426,18 @@ func _start_event_room(room: Dictionary) -> void:
 	await _choose_path_and_go()
 
 const STATUE_POS := Vector2(1390, 716)
+## Сундук в комнате-сундуке: картинка (вырезанный сундук), масштаб, шанс мимика.
+const CHEST_PROP_TEXTURE := "res://assets/ui/dreams/dream_chest.png"
+const CHEST_PROP_SCALE := 0.95
+const MIMIC_CHANCE := 0.10
+
+func _spawn_chest_prop() -> StatueShrine:
+	var chest := StatueShrine.new()
+	chest.name = "ChestProp"
+	chest.position = STATUE_POS
+	right_world.add_child(chest)
+	chest.setup(load(CHEST_PROP_TEXTURE) as Texture2D, false, CHEST_PROP_SCALE)
+	return chest
 
 func _spawn_statue_shrine(room: Dictionary) -> StatueShrine:
 	var shrine := StatueShrine.new()

@@ -1063,6 +1063,9 @@ func _ask_card_upgrade(card_key: String) -> void:
 # --- Админ: выдать любой предмет ---------------------------------------------
 
 var _admin_panel: PanelContainer
+## «Предмет» золото в списке админа (выдаёт DungRun.gold).
+const ADMIN_GOLD_ID := "gold"
+const ADMIN_GOLD_ICON := "res://assets/items/loot/coin.png"
 var _admin_item: OptionButton
 var _admin_amount: SpinBox
 var _admin_result: Label
@@ -1109,6 +1112,12 @@ func _build_admin_ui() -> void:
 	_admin_item.add_theme_font_size_override("font_size", 18)
 	var ids := RunItems.all_item_ids()
 	ids.sort_custom(func(a: String, b: String) -> bool: return RunItems.get_item_name(a) < RunItems.get_item_name(b))
+	# Первым — золото (не предмет: DungRun.gold).
+	_admin_item.add_item("Золото  (%s)" % ADMIN_GOLD_ID)
+	_admin_item.set_item_metadata(0, ADMIN_GOLD_ID)
+	if ResourceLoader.exists(ADMIN_GOLD_ICON):
+		_admin_item.set_item_icon(0, load(ADMIN_GOLD_ICON) as Texture2D)
+		_admin_item.get_popup().set_item_icon_max_width(0, 32)
 	for id in ids:
 		_admin_item.add_item("%s  (%s)" % [RunItems.get_item_name(id), id])
 		_admin_item.set_item_metadata(_admin_item.item_count - 1, id)
@@ -1124,7 +1133,7 @@ func _build_admin_ui() -> void:
 	box.add_child(row)
 	_admin_amount = SpinBox.new()
 	_admin_amount.min_value = 1
-	_admin_amount.max_value = 999
+	_admin_amount.max_value = 99999
 	_admin_amount.value = 1
 	_admin_amount.custom_minimum_size = Vector2(140, 44)
 	row.add_child(_admin_amount)
@@ -1232,6 +1241,10 @@ func _on_admin_give() -> void:
 		return
 	var id := String(_admin_item.get_item_metadata(_admin_item.selected))
 	var n := int(_admin_amount.value)
+	if id == ADMIN_GOLD_ID:
+		DungRun.gain_gold(n)
+		_admin_result.text = "Выдано: золото +%d (всего %d)" % [n, DungRun.gold]
+		return
 	var ok := Inventory_.add_item(id, n)
 	_admin_result.text = ("Выдано: %s ×%d" % [RunItems.get_item_name(id), n]) if ok else "Не удалось выдать %s" % id
 

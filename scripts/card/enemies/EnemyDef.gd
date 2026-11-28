@@ -17,6 +17,8 @@ var hp_min: int = 10
 var hp_max: int = 10
 ## Слизь с врага (алхимия).
 var drops_goop := true
+## Шейдер на картинку врага в бою (BattleActor), например фиолетовый мимик. "" — без.
+var sprite_shader := ""
 var moves: Array[EnemyMove] = []
 
 func _init(p_id: String = "", p_title: String = "", p_rank: String = "B") -> void:

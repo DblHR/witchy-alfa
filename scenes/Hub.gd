@@ -491,21 +491,21 @@ func _opaque(layer: TextureRect, p: Vector2) -> bool:
 ## перед котлом, котёл (никого), за котлом.
 func _walker_at(p: Vector2) -> HomeWalker:
 	for w in drag_layer.get_children():
-		if w is HomeWalker and w.is_over(p):
+		if w is HomeWalker and w.is_touchable() and w.is_over(p):
 			return w
 	if _opaque(foreground, p):
 		return null
 	var front := walkers_front.get_children()
 	front.sort_custom(func(a: Node, b: Node) -> bool: return (a as Node2D).position.y > (b as Node2D).position.y)
 	for w in front:
-		if w is HomeWalker and w.is_over(p):
+		if w is HomeWalker and w.is_touchable() and w.is_over(p):
 			return w
 	if _cauldron_at(p):
 		return null
 	var back := walkers_back.get_children()
 	back.sort_custom(func(a: Node, b: Node) -> bool: return (a as Node2D).position.y > (b as Node2D).position.y)
 	for w in back:
-		if w is HomeWalker and w.is_over(p):
+		if w is HomeWalker and w.is_touchable() and w.is_over(p):
 			return w
 	return null
 
@@ -593,6 +593,10 @@ func _input(event: InputEvent) -> void:
 			stars.release()
 			get_viewport().set_input_as_handled()
 		return
+	# Нажатого чибика начали убирать (испаряется / уходит в дверь) — отпускаем его.
+	if _pressed != null and (not is_instance_valid(_pressed) or not _pressed.is_touchable()):
+		_pressed = null
+		_dragging = false
 	# Отпускание / перетаскивание доводим до конца, даже если курсор над кнопкой.
 	if _pressed != null:
 		if event is InputEventMouseMotion:
@@ -944,6 +948,17 @@ func _open_touch(w: HomeWalker) -> void:
 	CursorFx_.set_touch_cursor(false)
 	var s := LoveTouchScreen.open(self, w.unit_id)
 	s.closed.connect(func() -> void: _on_talk_finished({}))
+
+## Открыть экран прикосновений героини по id (из VN-разговора: «Подойти поближе»).
+func open_touch_by_id(id: String) -> void:
+	# Ждём, пока разговор закроется (_on_talk_finished), и открываем экран.
+	var waited := 0.0
+	while (_talking != "" or DialogueManager_.is_showing()) and waited < 3.0:
+		await get_tree().process_frame
+		waited += get_process_delta_time()
+	var w: HomeWalker = walkers.get(id)
+	if w != null and _talking == "" and LoveTouchScreen.supports(id):
+		_open_touch(w)
 
 ## VN-меню взаимодействий с героиней: её приветствие (папка love) и выбор действия.
 func _open_interactions(w: HomeWalker) -> void:

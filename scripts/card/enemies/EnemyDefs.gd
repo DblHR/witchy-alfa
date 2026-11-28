@@ -46,6 +46,7 @@ static func _register_all() -> void:
 	_add(_aki())
 	_add(_luisa())
 	_add(EnemyFufu.new())
+	_add(_mimic())
 	_fufu_moves(get_def("fufu"))
 
 # --- B: слизни ---------------------------------------------------------------
@@ -127,6 +128,35 @@ static func _blob() -> EnemyDef:
 	m = d.add(_mv("swell", "Набухнуть", EnemyMove.Kind.DEFEND, 40))
 	m.shield = 22
 	m.max_in_row = 1
+	return d
+
+## Сундук-мимик: с шансом CardBattle.MIMIC_CHANCE вместо сундука в комнате-сундуке.
+## Картинка — открытый сундук (пасть) с фиолетовым шейдером (ui/mimic_tint.gdshader).
+const MIMIC_ID := "mimic"
+static func _mimic() -> EnemyDef:
+	var d := EnemyDef.new(MIMIC_ID, "Сундук-мимик", "B")
+	d.texture_path = "res://assets/ui/dreams/dream_chest_open.png"
+	d.sprite_shader = "res://ui/mimic_tint.gdshader"
+	d.drops_goop = false
+	d.hp_min = 120
+	d.hp_max = 136
+	d.visual_scale = 1.35
+	d.char_data().battle_offset_y = -145.0   ## низ сундука — на полу
+	var m := d.add(_mv("chomp", "Цап!", EnemyMove.Kind.ATTACK, 45))
+	m.damage = 18
+	m = d.add(_mv("coins", "Монетный плевок", EnemyMove.Kind.ATTACK, 30))
+	m.damage = 6
+	m.hits = 3
+	m.intent = "Плюётся монетами"
+	m = d.add(_mv("slam", "Захлопнуть крышку", EnemyMove.Kind.DEFEND, 25))
+	m.shield = 22
+	m.max_in_row = 1
+	m = d.add(_mv("greed", "Жадный блеск", EnemyMove.Kind.DEBUFF, 20))
+	m.status = CardStatuses.WEAK
+	m.status_turns = 2
+	m.aim = EnemyMove.Aim.ALL_HEROES
+	m.max_in_row = 1
+	m.intent = "Слабость всем"
 	return d
 
 static func _blob_mini() -> EnemyDef:

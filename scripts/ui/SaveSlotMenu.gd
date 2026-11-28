@@ -3,18 +3,24 @@ class_name SaveSlotMenu
 ## Выбор слота сохранения (главное меню): «Новая игра» — в какой слот начать (если там уже есть
 ## сохранение — переспрашивает), «Загрузить» — какое сохранение открыть (пустые слоты не нажать).
 ## Вид — как у паузы (GameUi). Esc: сначала закрывает вопрос, потом само окно.
+## Крестик справа от непустого слота — удалить сохранение (с вопросом).
 
 signal slot_chosen(slot: int, new_game: bool)
 
 const PANEL_SIZE := Vector2(720, 620)
 const SLOT_SIZE := Vector2(620, 120)
+const DELETE_SIZE := Vector2(64, 120)
 
 var _new_game := false
 var _title: Label
 var _slots: Array[Button] = []
+var _deletes: Array[Button] = []
 var _confirm: Control
+var _confirm_title: Label
 var _confirm_text: Label
+var _confirm_yes: Button
 var _confirm_slot := 0
+var _confirm_delete := false   ## вопрос «удалить?» (иначе — «начать заново?»)
 
 func _init() -> void:
 	name = "SaveSlotMenu"
@@ -42,12 +48,24 @@ func _init() -> void:
 	GameUi.style_title(_title, 50)
 	box.add_child(_title)
 	for i in range(1, SaveManager.SLOT_COUNT + 1):
+		var row := HBoxContainer.new()
+		row.add_theme_constant_override("separation", 12)
+		box.add_child(row)
 		var b := Button.new()
-		b.custom_minimum_size = SLOT_SIZE
-		GameUi.style_button(b, 26)
+		b.custom_minimum_size = Vector2(0, SLOT_SIZE.y)
+		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL   ## занимает строку, крестик — справа
+		GameUi.style_button(b, 24)
 		b.pressed.connect(_on_slot.bind(i))
-		box.add_child(b)
+		row.add_child(b)
 		_slots.append(b)
+		var x := Button.new()
+		x.text = "✕"
+		x.tooltip_text = "Удалить сохранение"
+		x.custom_minimum_size = DELETE_SIZE
+		GameUi.style_button(x, 34)
+		x.pressed.connect(_on_delete.bind(i))
+		row.add_child(x)
+		_deletes.append(x)
 	var back := Button.new()
 	back.text = "Назад"
 	back.custom_minimum_size = Vector2(0, 60)
@@ -79,10 +97,10 @@ func _build_confirm() -> void:
 	box.size = csize - Vector2(88, 56)
 	box.add_theme_constant_override("separation", 18)
 	panel.add_child(box)
-	var t := Label.new()
-	t.text = "Начать заново?"
-	GameUi.style_title(t, 44)
-	box.add_child(t)
+	_confirm_title = Label.new()
+	_confirm_title.text = "Начать заново?"
+	GameUi.style_title(_confirm_title, 44)
+	box.add_child(_confirm_title)
 	_confirm_text = Label.new()
 	_confirm_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_confirm_text.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -99,8 +117,14 @@ func _build_confirm() -> void:
 	GameUi.style_button(yes, 26)
 	yes.pressed.connect(func() -> void:
 		_confirm.visible = false
-		_choose(_confirm_slot))
+		if _confirm_delete:
+			if SaveManager_ != null:
+				SaveManager_.delete_save(_confirm_slot)
+			refresh()
+		else:
+			_choose(_confirm_slot))
 	row.add_child(yes)
+	_confirm_yes = yes
 	var no := Button.new()
 	no.text = "Отмена"
 	no.custom_minimum_size = Vector2(240, 60)
@@ -135,9 +159,21 @@ func refresh() -> void:
 			var played := "  ·  в игре %s" % SaveManager.format_play_time(secs) if secs >= 0 else ""
 			b.text = "Слот %d%s\nУровень отряда %d  ·  %d зол.%s" % [slot, played, int(info.get("party_level", 1)), int(info.get("gold", 0)), when]
 			b.disabled = false
+			_deletes[i].visible = true
 		else:
 			b.text = "Слот %d\nпусто" % slot
 			b.disabled = not _new_game
+			_deletes[i].visible = false
+
+
+## Крестик: удалить сохранение слота (с вопросом).
+func _on_delete(slot: int) -> void:
+	_confirm_slot = slot
+	_confirm_delete = true
+	_confirm_title.text = "Удалить сохранение?"
+	_confirm_yes.text = "Да, удалить"
+	_confirm_text.text = "Сохранение в слоте %d пропадёт насовсем." % slot
+	_confirm.visible = true
 
 static func _tz_bias() -> int:
 	return int(Time.get_time_zone_from_system().get("bias", 0)) * 60
@@ -145,6 +181,9 @@ static func _tz_bias() -> int:
 func _on_slot(slot: int) -> void:
 	if _new_game and SaveManager_ != null and SaveManager_.has_save(slot):
 		_confirm_slot = slot
+		_confirm_delete = false
+		_confirm_title.text = "Начать заново?"
+		_confirm_yes.text = "Да, начать"
 		_confirm_text.text = "В слоте %d уже есть сохранение — оно пропадёт." % slot
 		_confirm.visible = true
 		return

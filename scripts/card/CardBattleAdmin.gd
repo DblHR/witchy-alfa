@@ -55,6 +55,8 @@ func setup(battle: CardBattle) -> void:
 	_box.add_child(_make_button("Пройти комнату", func() -> void: _battle.admin_clear_room()))
 	_box.add_child(_make_button("Проиграть", func() -> void: _battle.admin_lose()))
 	_box.add_child(_make_button("Зарядить ульты", func() -> void: _battle.admin_charge_ults()))
+	_box.add_child(_make_button("Возродить союзников", func() -> void: _battle.admin_revive_allies()))
+	_box.add_child(_make_button("Перейти к боссу", func() -> void: _battle.admin_go_to_boss()))
 	_hint = Label.new()
 	_hint.text = "Кликните по любой цели\n(ПКМ — отмена)"
 	_hint.visible = false

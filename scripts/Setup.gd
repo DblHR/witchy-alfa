@@ -1136,6 +1136,17 @@ func _refresh_loadout_ui() -> void:
 	lure_button.tooltip_text = ("Приманка: берём в забег (в сумке %d)" % lures) if lure_button.button_pressed else ("Приманка: не берём (в сумке %d). Нажмите, чтобы взять." % lures if lures > 0 else "Приманок нет — их продаёт Рикка")
 	artifact_button.disabled = false
 	food_button.disabled = false
+	_refresh_loadout_badges()
+
+## «!» на пустом слоте посоха / еды / зелья, если подходящее лежит в сумке.
+func _refresh_loadout_badges() -> void:
+	NotifyBadge.attach(artifact_button, DungRun.selected_artifact_id == "" and not DungRun.get_selectable_artifact_ids().is_empty())
+	NotifyBadge.attach(food_button, DungRun.selected_food_id == "" and not DungRun.get_available_food_ids().is_empty())
+	var avail := DungRun.get_available_potion_ids()
+	for i in range(2):
+		var other := DungRun.selected_potion_ids[1 - i]
+		var free_ids := avail.filter(func(id: String) -> bool: return id != other)
+		NotifyBadge.attach(potion_button if i == 0 else potion_button2, DungRun.selected_potion_ids[i] == "" and not free_ids.is_empty())
 
 ## Воин уже в ростере, а в слоте еды пусто: один раз — сценка «на пустой желудок не пойду»
 ## (data/dialogues/story/warrior_food.json, "warrior_empty_stomach"): выдаётся желе и сразу кладётся

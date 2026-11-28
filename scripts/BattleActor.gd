@@ -148,6 +148,10 @@ func update_visual() -> void:
 	sprite.scale = Vector2(k, k)
 	sprite.offset.y = unit.data.battle_offset_y
 	sprite.flip_h = is_left != face_away
+	if sprite.material == null and unit.enemy_def != null and unit.enemy_def.sprite_shader != "" and ResourceLoader.exists(unit.enemy_def.sprite_shader):
+		var sm := ShaderMaterial.new()
+		sm.shader = load(unit.enemy_def.sprite_shader) as Shader
+		sprite.material = sm   ## мимик и т.п. (EnemyDef.sprite_shader)
 	_update_shadow()
 
 	# если юнит умер — картинка смерти (<id>_dead.png), а если её нет — серый цвет; глушим «красные» твины
