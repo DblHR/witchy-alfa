@@ -31,6 +31,8 @@ var _shield_num: Label
 var _shield_fill: ColorRect
 var unit: Unit
 var is_left := true
+## Развёрнут спиной (сцена босса BossCinematic: «отворачивается и призывает»).
+var face_away := false
 var show_hp_overhead := true
 var _flash_tween: Tween
 var _cast_tween: Tween
@@ -145,7 +147,7 @@ func update_visual() -> void:
 	var k := unit.data.battle_scale * unit.visual_scale
 	sprite.scale = Vector2(k, k)
 	sprite.offset.y = unit.data.battle_offset_y
-	sprite.flip_h = is_left
+	sprite.flip_h = is_left != face_away
 	_update_shadow()
 
 	# если юнит умер — картинка смерти (<id>_dead.png), а если её нет — серый цвет; глушим «красные» твины

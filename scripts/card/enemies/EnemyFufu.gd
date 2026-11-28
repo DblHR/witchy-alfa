@@ -1,13 +1,16 @@
 extends EnemyDef
 class_name EnemyFufu
-## Фуфу — босс 1-го этажа. Фазы на каждые 25% потерянного HP (намерение меняется сразу):
-##   75% — призывает двух случайных мини-слизней;
-##   50% — глотает переднюю героиню. Выплюнет, если Фуфу оглушить или за это время нанести ей
-##         SPIT_DAMAGE_SHARE от макс. HP. Иначе на своём следующем ходу «переваривает»:
-##         героиня получает DIGEST_SHARE от своего макс. HP (щит не спасает) и выходит наружу;
-##   25% — зовёт на помощь Аки и Луису.
+## Фуфу — босс 1-го этажа. Фазы на каждые 25% потерянного HP. Как только HP прошло порог
+## (даже в ход игрока), CardBattle показывает сцену смены фазы (BossCinematic, data/battle/boss_fufu.json):
+##   75% (фаза 2) — маска трескается, Фуфу разворачивается и призывает двух мини-слизней;
+##   50% (фаза 3) — маска слетает (дальше чиби как у игрока), подходит и глотает переднюю героиню.
+##         Свой следующий ход ничего не делает («переваривает»), в конце хода выплёвывает
+##         (урон — DIGEST_SHARE от макс. HP героини, 0 — без урона). Выплюнет раньше, если Фуфу
+##         оглушить / очаровать или нанести ей SPIT_DAMAGE_SHARE от её макс. HP;
+##   25% (фаза 4) — отряд подбадривает друг друга, Фуфу разворачивается и зовёт Аки и Луису.
 ## Убить Фуфу = победа: все призванные исчезают, добивать их не нужно.
-## Босс-Фуфу в маске (MASK_TEXTURE); на третьей фазе (25%) маска слетает — обычная картинка.
+## Картинки: фаза 1 — fufu_mask.png, 2 — fufu_mask_phase2.png, 3 и 4 — fufu_battle.png
+## (и fufu_battle_phase4.png, если появится); портрет хода — fufu_enemy_drag(_phaseN).png.
 ## Фуфу в отряде игрока — без маски (это другая картинка: CharDB).
 
 const PHASES: Array[float] = [0.75, 0.5, 0.25]
@@ -15,11 +18,12 @@ const PHASE_MOVES: Array[String] = ["summon_minis", "swallow", "summon_girls"]
 const MINI_POOL: Array[String] = ["mini_shlep", "mini_bubble", "mini_acid", "blob_mini"]
 const GIRLS: Array[String] = ["aki_enemy", "luisa_enemy"]
 const SPIT_DAMAGE_SHARE := 0.10
-const DIGEST_SHARE := 0.60
+## Урон, когда выплёвывает после «переваривания» (доля макс. HP героини, сквозь щит). 0 — без урона.
+const DIGEST_SHARE := 0.6
 const MASK_TEXTURE := "res://assets/characters/fufu/fufu_mask.png"
 const FACE_TEXTURE := "res://assets/characters/fufu/fufu_battle.png"
-## На какой фазе (номер в PHASES, с нуля) слетает маска: 2 — третья фаза, 25% HP.
-const UNMASK_PHASE := 2
+## Номер фазы Фуфу (1..4) — в me.ai["boss_phase"], его видит CharacterPhases.phase_of (картинки).
+## Очередь сцен смены фаз (номера в PHASES) — me.ai["cine"]: её разбирает CardBattle.
 ## Только в квестовом бою за воина (CardBattle выставляет quest_fight перед появлением врагов).
 static var quest_fight := false
 ## Недокачанный отряд: на каждый уровень отряда ниже RECOMMENDED_LEVEL Фуфу крепче и бьёт сильнее,
@@ -50,7 +54,7 @@ func _init() -> void:
 	_phase_moves["summon_minis"] = m
 
 	m = EnemyMove.new("swallow", "Проглотить", EnemyMove.Kind.SWALLOW)
-	m.tip = "Как помешать: оглушите или очаруйте Фуфу до её хода (приманка, танец Аки, слизь…) — тогда она пропустит ход.\nЕсли уже проглотила: оглушите или очаруйте её либо нанесите ей %d%% её здоровья — выплюнет. Иначе на следующем ходу переварит (урон сквозь щит)." % roundi(SPIT_DAMAGE_SHARE * 100.0)
+	m.tip = "Оглушите или очаруйте Фуфу либо нанесите ей %d%% её здоровья — выплюнет раньше." % roundi(SPIT_DAMAGE_SHARE * 100.0)
 	m.custom = func(api: EnemyApi, me: Unit, _mv: EnemyMove) -> void:
 		swallow(api, me)
 	_phase_moves["swallow"] = m
@@ -61,7 +65,8 @@ func _init() -> void:
 		api.summon(GIRLS, 0, me)
 	_phase_moves["summon_girls"] = m
 
-	_digest = EnemyMove.new("digest", "Переварить", EnemyMove.Kind.DIGEST)
+	_digest = EnemyMove.new("digest", "Переваривает", EnemyMove.Kind.DIGEST)
+	_digest.tip = "Пока переваривает, не атакует. В конце хода выплюнет. Оглушите, очаруйте или нанесите ей %d%% здоровья — выплюнет раньше." % roundi(SPIT_DAMAGE_SHARE * 100.0)
 	_digest.custom = func(api: EnemyApi, me: Unit, _mv: EnemyMove) -> void:
 		digest(api, me)
 
@@ -93,6 +98,11 @@ static func underlevel_gap() -> int:
 		lvl = maxi(1, int(DungRun.party_level))
 	return maxi(0, RECOMMENDED_LEVEL - lvl)
 
+## Фаза Фуфу (1..4) — для картинок (CharacterPhases.phase_of).
+static func set_phase(me: Unit, phase: int) -> void:
+	if me != null:
+		me.ai["boss_phase"] = phase
+
 static func unmask(me: Unit) -> void:
 	if me != null and me.data != null and ResourceLoader.exists(FACE_TEXTURE):
 		me.data.battle_texture = load(FACE_TEXTURE) as Texture2D
@@ -107,17 +117,13 @@ static func is_phase_move(move: EnemyMove) -> bool:
 func choose(api: EnemyApi, me: Unit) -> EnemyMove:
 	if me.ai.get("swallowed") != null:
 		return _digest
-	var pending: Array = me.ai.get("pending", [])
-	if not pending.is_empty():
-		return _phase_moves[pending[0]]
 	return super.choose(api, me)
 
-func act(api: EnemyApi, me: Unit, move: EnemyMove) -> void:
-	if is_phase_move(move):
-		var pending: Array = me.ai.get("pending", [])
-		pending.erase(move.id)
-		me.ai["pending"] = pending
-	super.act(api, me, move)
+## Действие смены фазы (из сцены BossCinematic): "summon_minis" / "swallow" / "summon_girls".
+func phase_action(api: EnemyApi, me: Unit, action_id: String) -> void:
+	var m: EnemyMove = _phase_moves.get(action_id)
+	if m != null and m.custom.is_valid():
+		m.custom.call(api, me, m)
 
 func on_hurt(api: EnemyApi, me: Unit, amount: int) -> void:
 	if not CardCombat.is_alive(me):
@@ -127,28 +133,19 @@ func on_hurt(api: EnemyApi, me: Unit, amount: int) -> void:
 		me.ai["swallow_taken"] = int(me.ai.get("swallow_taken", 0)) + amount
 		if int(me.ai["swallow_taken"]) >= ceili(float(me.max_hp) * SPIT_DAMAGE_SHARE):
 			spit(api, me)
-	# Пороги фаз.
+	# Пороги фаз: каждая прошедшая — в очередь сцен (CardBattle покажет её, как только сможет).
 	var done: Array = me.ai.get("phases_done", [])
-	var pending: Array = me.ai.get("pending", [])
-	var added := false
+	var cine: Array = me.ai.get("cine", [])
 	for i in range(PHASES.size()):
 		if done.has(i) or float(me.hp) > float(me.max_hp) * PHASES[i]:
 			continue
 		done.append(i)
-		pending.append(PHASE_MOVES[i])
-		added = true
-		if i == UNMASK_PHASE:
-			unmask(me)
+		cine.append(i)
 		var gap := int(me.ai.get("underlevel", 0))
 		if gap > 0:
 			api.combat.add_shield(me, roundi(float(me.max_hp) * UNDERLEVEL_PHASE_SHIELD * gap))
 	me.ai["phases_done"] = done
-	me.ai["pending"] = pending
-	# Новая фаза — намерение меняется сразу (если она сейчас не глотает/не переваривает).
-	if added and api.combat.intents.has(me):
-		var cur: EnemyMove = api.combat.intents[me]
-		if not is_phase_move(cur) and cur != _digest:
-			api.reroll(me)
+	me.ai["cine"] = cine
 
 func on_status(api: EnemyApi, me: Unit, status_id: String) -> void:
 	# Оглушение и очарование — проглоченного выплёвывает.
@@ -173,6 +170,9 @@ func swallow(api: EnemyApi, me: Unit) -> void:
 	me.ai["swallow_taken"] = 0
 	api.set_hero_hidden(hero, true)
 	api.say(me, "Ам!", Color(1.0, 0.45, 0.8))
+	# Следующий свой ход — «переваривает» (намерение меняется сразу).
+	if api.combat.intents.has(me):
+		api.reroll(me)
 
 func spit(api: EnemyApi, me: Unit) -> void:
 	var hero: Unit = me.ai.get("swallowed")
@@ -187,6 +187,7 @@ func spit(api: EnemyApi, me: Unit) -> void:
 	if CardCombat.is_alive(me) and api.combat.intents.get(me) == _digest:
 		api.reroll(me)
 
+## Ход «переваривает»: не атакует, в конце хода выплёвывает (урон — DIGEST_SHARE, 0 — без урона).
 func digest(api: EnemyApi, me: Unit) -> void:
 	var hero: Unit = me.ai.get("swallowed")
 	if hero == null:
@@ -196,5 +197,8 @@ func digest(api: EnemyApi, me: Unit) -> void:
 	me.ai.erase("swallow_taken")
 	api.combat.remove_stacks(hero, CardStatuses.SWALLOWED, 0, true)
 	api.set_hero_hidden(hero, false)
-	api.combat.remove_shield(hero)
-	api.combat.apply_damage(hero, dmg)
+	if dmg > 0:
+		api.combat.remove_shield(hero)
+		api.combat.apply_damage(hero, dmg)
+	else:
+		api.say(hero, "Выплюнута!", CardCombat.COL_HEAL)

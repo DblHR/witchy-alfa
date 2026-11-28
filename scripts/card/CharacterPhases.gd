@@ -16,6 +16,9 @@ static var _cache: Dictionary = {}
 static func phase_of(unit: Unit) -> int:
 	if unit == null or unit.max_hp <= 0:
 		return 1
+	# Босс со своими фазами (Фуфу: EnemyFufu.set_phase) — по сценам, а не по HP.
+	if unit.ai.has("boss_phase"):
+		return int(unit.ai["boss_phase"])
 	var r := float(unit.hp) / float(unit.max_hp)
 	for t in THRESHOLDS:
 		if r <= float(t[0]):

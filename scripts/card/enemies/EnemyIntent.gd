@@ -73,7 +73,9 @@ static func parts(api: EnemyApi, me: Unit, move: EnemyMove) -> Array:
 		return out
 
 	# --- Удар -----------------------------------------------------------------
-	if move.kind == EnemyMove.Kind.DIGEST:
+	if move.kind == EnemyMove.Kind.DIGEST and dmg <= 0:
+		out.append(_part("", "Переваривает", "", head + "Противник переваривает проглоченного персонажа: в этот ход не атакует, в конце хода выплюнет."))
+	elif move.kind == EnemyMove.Kind.DIGEST:
 		out.append(_part(ICON_ATTACK, "", str(dmg), head + "Противник переварит проглоченного персонажа: %d урона, щит не спасёт." % dmg))
 	elif move.damage > 0:
 		var hits := move.hits

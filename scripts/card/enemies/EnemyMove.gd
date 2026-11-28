@@ -97,7 +97,7 @@ func intent_text(effective_damage: int) -> String:
 			Kind.SWALLOW:
 				t = "Проглотить!"
 			Kind.DIGEST:
-				t = "Переварить {d}"
+				t = "Переварить {d}" if effective_damage > 0 else "Переваривает"
 			Kind.SPLIT:
 				t = "Делится"
 	return t.replace("{d}", str(effective_damage)).replace("{n}", str(hits))

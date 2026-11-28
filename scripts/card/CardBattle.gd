@@ -135,6 +135,9 @@ var _admin_kill_mode := false
 var _admin_pick := ""
 var _drag_portrait: CardDragPortrait
 var _enemy_drag_portrait: CardDragPortrait
+## Сцены смены фаз босса (камера, полосы, анимации) — BossCinematic, data/battle/boss_fufu.json.
+var _cine: BossCinematic
+var _cine_running := false
 
 ## Враги, которые ходят «как другой игрок» (пока Фуфу-босс): перед своим ходом не сразу, а с
 ## задержкой — справа выезжает её портрет, как будто с той стороны вытаскивают карту.
@@ -256,6 +259,10 @@ func _ready() -> void:
 	for u in left_team:
 		CardDragPortrait.warm_up(u.data)
 	# Враг-«игрок» (Фуфу): её портрет выезжает справа, пока она «вытаскивает карту».
+	_cine = BossCinematic.new()
+	_cine.name = "BossCinematic"
+	add_child(_cine)
+	_cine.setup(self)
 	_enemy_drag_portrait = CardDragPortrait.new()
 	_enemy_drag_portrait.name = "EnemyDragPortrait"
 	_enemy_drag_portrait.from_right = true
@@ -574,6 +581,8 @@ func _start_room(index: int) -> void:
 	_populate_world_slots()
 	if String(room.get("kind", "")) == "elite":
 		await _play_elite_intro(room)
+	elif String(room.get("kind", "")) == "boss":
+		await _play_boss_intro(room)
 	_ults.refresh()
 
 	_sleeve.clear()
@@ -1301,6 +1310,8 @@ func _on_end_turn_pressed() -> void:
 		if not rival.is_empty():
 			await _wait(float(rival.get("after", 0.4)))
 			_enemy_drag_portrait.hide_portrait()
+		# HP босса прошло порог в ход врагов — сцена сразу.
+		await _run_boss_cinematics()
 		await _wait(0.5)
 		if _check_end():
 			return
@@ -1322,17 +1333,18 @@ func _rival_config(enemy: Unit) -> Dictionary:
 	return RIVAL_ENEMIES.get(enemy.enemy_def.id, {})
 
 ## Картинка «вытаскивает карту» для врага-игрока.
+## Фаза босса — своя картинка: fufu_enemy_drag_phase2.png и т.д. (CharacterPhases).
 func _rival_drag_texture(enemy: Unit) -> Texture2D:
 	var cid := enemy.enemy_def.char_id if enemy.enemy_def.char_id != "" else enemy.enemy_def.id
 	for p in RIVAL_DRAG_PATHS:
 		var path := String(p) % [cid, cid]
 		if ResourceLoader.exists(path):
-			return load(path) as Texture2D
+			return CharacterPhases.texture(load(path) as Texture2D, CharacterPhases.phase_of(enemy))
 	return null
 
 ## Враг-игрок «тянет карту»: справа выезжает портрет, пауза think — потом удар.
 func _rival_draw_card(enemy: Unit, cfg: Dictionary) -> void:
-	_enemy_drag_portrait.show_texture(_rival_drag_texture(enemy), "rival:" + enemy.enemy_def.id)
+	_enemy_drag_portrait.show_texture(_rival_drag_texture(enemy), "rival:%s#%d" % [enemy.enemy_def.id, CharacterPhases.phase_of(enemy)])
 	await _wait(float(cfg.get("think", 0.8)))
 
 ## Порядок хода врагов: сначала ходы с приоритетом, дальше — по строю.
@@ -2193,6 +2205,45 @@ func _play_elite_intro(room: Dictionary) -> void:
 	_set_battle_ui(false)
 	await _show_lines_and_wait(lines)
 	_set_battle_ui(true)
+
+## Вход в комнату босса — VN-приветствие (data/dialogues/story/boss_intro.json: boss_intro_<id>).
+## Каждый раз, перед боем.
+func _play_boss_intro(room: Dictionary) -> void:
+	if StoryDialogueDB_ == null or DialogueManager_ == null:
+		return
+	var enemies: Array = room.get("enemies", [])
+	if enemies.is_empty():
+		return
+	var d := StoryDialogueDB_.get_dialogue("boss_intro_" + String(enemies[0]))
+	if d.is_empty():
+		return
+	StoryDialogueDB_.party_size_override = _combat.alive_heroes().size()
+	var lines := StoryDialogueDB_.resolve_lines(d)
+	StoryDialogueDB_.party_size_override = -1
+	if lines.is_empty():
+		return
+	_set_battle_ui(false)
+	await _show_lines_and_wait(lines)
+	_set_battle_ui(true)
+
+## Показать все ждущие сцены смены фаз босса. Пока идут — игрок ничего не делает (_busy);
+## потом бой продолжается с того же места (ход игрока — доходит, ход врагов — ходят дальше).
+func _run_boss_cinematics() -> void:
+	if _cine == null or _cine_running:
+		return
+	_cine_running = true
+	var was_busy := _busy
+	_busy = true
+	while not _ended:
+		var p := _cine.next_pending()
+		if p.is_empty():
+			break
+		await _cine.play(p["unit"], int(p["idx"]))
+		_refresh_all_actors()
+	_busy = was_busy
+	_cine_running = false
+	_refresh_energy()
+	_check_end()
 
 ## Показать реплики и дождаться конца (окно не появилось — не держим игрока).
 func _show_lines_and_wait(lines: Array) -> void:
